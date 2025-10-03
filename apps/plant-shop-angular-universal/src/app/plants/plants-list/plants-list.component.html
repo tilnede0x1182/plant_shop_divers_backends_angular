@@ -1,0 +1,28 @@
+<div class="container mt-4">
+	<h1 class="text-center my-4">🌿 Liste des Plantes</h1>
+
+	<div *ngIf="estAdmin" class="mb-3">
+		<a class="btn btn-success" [routerLink]="['/admin/plants/new']">
+			Ajouter une plante
+		</a>
+	</div>
+
+	<div class="row">
+		<div class="col-md-4 mb-4" *ngFor="let plant of plantes">
+			<div class="card h-100 shadow-sm">
+				<div class="card-body d-flex flex-column">
+					<h5 class="card-title">
+						<a [routerLink]="['/plants', plant.id]" class="text-decoration-none text-dark">
+							{{ plant.name }}
+						</a>
+					</h5>
+					<p class="card-text text-muted mb-1">Prix : {{ plant.price }} €</p>
+					<p *ngIf="estAdmin" class="card-text text-muted mb-1">Stock : {{ plant.stock }}</p>
+					<button class="btn btn-success mt-auto" (click)="addToCart(plant)">
+						Ajouter au panier
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

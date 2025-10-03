@@ -1,0 +1,12 @@
+.container {
+  max-width: 600px;
+  margin-left: 0; /* annule le centrage */
+  margin-right: 0;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+button {
+  min-width: 150px;
+}

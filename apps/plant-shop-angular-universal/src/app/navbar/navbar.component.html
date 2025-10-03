@@ -1,0 +1,59 @@
+<nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+	<div class="container">
+		<a class="navbar-brand" routerLink="/">🌿 PlantShop</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav ms-auto">
+
+				<!-- Nom utilisateur — affiché pour tout utilisateur connecté (admin ou non) -->
+				<li class="nav-item d-flex align-items-center text-white me-3" *ngIf="estConnecte && userName">
+					{{ userName }}
+					<span *ngIf="estAdmin">&nbsp;(Administrateur)</span>
+				</li>
+
+				<!-- Panier -->
+				<li class="nav-item">
+					<a routerLink="/cart" class="nav-link" id="cart-link">
+						Mon Panier<span *ngIf="nombreArticles > 0"> ({{ nombreArticles }})</span>
+					</a>
+				</li>
+
+				<!-- Connecté -->
+				<ng-container *ngIf="estConnecte; else blocPublic">
+					<li class="nav-item">
+						<a routerLink="/orders" class="nav-link">Mes Commandes</a>
+					</li>
+					<li class="nav-item">
+						<a routerLink="/profile" class="nav-link">Mon Profil</a>
+					</li>
+					<li class="nav-item dropdown" *ngIf="estAdmin">
+						<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+							Admin
+						</a>
+						<ul class="dropdown-menu">
+							<li><a routerLink="/admin/plants" class="dropdown-item">Gestion des Plantes</a></li>
+							<li><a routerLink="/admin/users" class="dropdown-item">Gestion des Utilisateurs</a></li>
+						</ul>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link logout-link" (click)="logout()">Déconnexion</a>
+					</li>
+				</ng-container>
+
+				<!-- Non connecté -->
+				<ng-template #blocPublic>
+					<li class="nav-item">
+						<a class="nav-link" routerLink="/register">S'inscrire</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" routerLink="/login">Se connecter</a>
+					</li>
+				</ng-template>
+
+			</ul>
+		</div>
+	</div>
+</nav>

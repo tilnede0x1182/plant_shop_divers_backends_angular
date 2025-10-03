@@ -1,0 +1,7 @@
+/* Même CSS que plants-new.component.css, adapté au besoin si custom */
+.container {
+	margin-top: 2rem;
+}
+.form-label {
+	font-weight: bold;
+}

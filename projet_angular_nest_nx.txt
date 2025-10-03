@@ -1,0 +1,5901 @@
+
+# ARBORESCENCE
+#
+/home/tilnede0x1182/code/tilnede0x1182/Personnel/2025/Entrainement/plant_shop/Javascript/AngularNestNx/plant_shop_nest_angular_nx
+├── angular.json
+├── apps
+│   ├── plant-shop-angular-universal
+│   │   ├── eslint.config.mjs
+│   │   ├── project.json
+│   │   ├── public
+│   │   │   └── favicon.ico
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── admin
+│   │   │   │   │   ├── plants
+│   │   │   │   │   │   ├── plant-new
+│   │   │   │   │   │   │   ├── plant-new.component.css
+│   │   │   │   │   │   │   ├── plant-new.component.html
+│   │   │   │   │   │   │   └── plant-new.component.ts
+│   │   │   │   │   │   ├── plants-edit
+│   │   │   │   │   │   │   ├── plants-edit.component.css
+│   │   │   │   │   │   │   ├── plants-edit.component.html
+│   │   │   │   │   │   │   └── plants-edit.component.ts
+│   │   │   │   │   │   └── plants-list
+│   │   │   │   │   │       ├── plants-list.component.css
+│   │   │   │   │   │       ├── plants-list.component.html
+│   │   │   │   │   │       └── plants-list.component.ts
+│   │   │   │   │   └── users
+│   │   │   │   │       ├── user-details
+│   │   │   │   │       │   ├── user-details.component.css
+│   │   │   │   │       │   ├── user-details.component.html
+│   │   │   │   │       │   └── user-details.component.ts
+│   │   │   │   │       ├── user-profile-edit
+│   │   │   │   │       │   ├── user-profile-edit.component.css
+│   │   │   │   │       │   ├── user-profile-edit.component.html
+│   │   │   │   │       │   └── user-profile-edit.component.ts
+│   │   │   │   │       └── users-list
+│   │   │   │   │           ├── users-list.component.css
+│   │   │   │   │           ├── users-list.component.html
+│   │   │   │   │           └── users-list.component.ts
+│   │   │   │   ├── app.config.server.ts
+│   │   │   │   ├── app.config.ts
+│   │   │   │   ├── app.css
+│   │   │   │   ├── app.html
+│   │   │   │   ├── app.routes.ts
+│   │   │   │   ├── app.spec.ts
+│   │   │   │   ├── app.ts
+│   │   │   │   ├── auth
+│   │   │   │   │   ├── admin.guard.ts
+│   │   │   │   │   ├── auth.guard.ts
+│   │   │   │   │   ├── auth.interceptor.ts
+│   │   │   │   │   ├── auth.service.ts
+│   │   │   │   │   ├── login
+│   │   │   │   │   │   ├── login.component.css
+│   │   │   │   │   │   ├── login.component.html
+│   │   │   │   │   │   └── login.component.ts
+│   │   │   │   │   └── register
+│   │   │   │   │       ├── register.component.css
+│   │   │   │   │       ├── register.component.html
+│   │   │   │   │       └── register.component.ts
+│   │   │   │   ├── cart
+│   │   │   │   │   ├── cart
+│   │   │   │   │   │   ├── cart.component.css
+│   │   │   │   │   │   ├── cart.component.html
+│   │   │   │   │   │   └── cart.component.ts
+│   │   │   │   │   ├── cart-item
+│   │   │   │   │   │   ├── cart-item.component.css
+│   │   │   │   │   │   └── cart-item.component.html
+│   │   │   │   │   └── cart.service.ts
+│   │   │   │   ├── components
+│   │   │   │   ├── navbar
+│   │   │   │   │   ├── navbar.component.css
+│   │   │   │   │   ├── navbar.component.html
+│   │   │   │   │   └── navbar.component.ts
+│   │   │   │   ├── orders
+│   │   │   │   │   ├── order-list
+│   │   │   │   │   │   ├── order-list.component.css
+│   │   │   │   │   │   ├── order-list.component.html
+│   │   │   │   │   │   └── order-list.component.ts
+│   │   │   │   │   └── order-new
+│   │   │   │   │       ├── order-new.component.css
+│   │   │   │   │       ├── order-new.component.html
+│   │   │   │   │       └── order-new.component.ts
+│   │   │   │   ├── plants
+│   │   │   │   │   ├── plant-detail
+│   │   │   │   │   │   ├── plant-detail.component.css
+│   │   │   │   │   │   ├── plant-detail.component.html
+│   │   │   │   │   │   └── plant-detail.component.ts
+│   │   │   │   │   └── plants-list
+│   │   │   │   │       ├── plants-list.component.css
+│   │   │   │   │       ├── plants-list.component.html
+│   │   │   │   │       └── plants-list.component.ts
+│   │   │   │   ├── services
+│   │   │   │   │   ├── api.service.ts
+│   │   │   │   │   └── api.spec.ts
+│   │   │   │   └── users
+│   │   │   │       ├── user-profile
+│   │   │   │       │   ├── user-profile.component.css
+│   │   │   │       │   ├── user-profile.component.html
+│   │   │   │       │   └── user-profile.component.ts
+│   │   │   │       └── user-profile-edit
+│   │   │   │           ├── user-profile-edit.component.css
+│   │   │   │           ├── user-profile-edit.component.html
+│   │   │   │           └── user-profile-edit.component.ts
+│   │   │   ├── environments
+│   │   │   │   ├── environment.prod.ts
+│   │   │   │   └── environment.ts
+│   │   │   ├── index.html
+│   │   │   ├── main.server.ts
+│   │   │   ├── main.ts
+│   │   │   ├── server.ts
+│   │   │   ├── styles.css
+│   │   │   └── test-setup.ts
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.server.json
+│   │   ├── tsconfig.spec.json
+│   │   └── vite.config.mts
+│   └── plant_shop_nest
+│       ├── eslint.config.mjs
+│       ├── jest.config.ts
+│       ├── project.json
+│       ├── src
+│       │   ├── app
+│       │   │   ├── app.controller.spec.ts
+│       │   │   ├── app.controller.ts
+│       │   │   ├── app.module.ts
+│       │   │   ├── app.service.spec.ts
+│       │   │   ├── app.service.ts
+│       │   │   ├── auth
+│       │   │   │   ├── auth.controller.ts
+│       │   │   │   ├── auth.module.ts
+│       │   │   │   ├── auth.service.ts
+│       │   │   │   ├── guards
+│       │   │   │   │   └── jwt-auth.guard.ts
+│       │   │   │   ├── jwt-auth.guard.ts
+│       │   │   │   ├── jwt.strategy.ts
+│       │   │   │   ├── local.strategy.ts
+│       │   │   │   ├── roles.decorator.ts
+│       │   │   │   ├── roles.guard.ts
+│       │   │   │   └── strategies
+│       │   │   ├── order-items
+│       │   │   │   ├── dto
+│       │   │   │   │   └── order-item.dto.ts
+│       │   │   │   ├── order-items.controller.ts
+│       │   │   │   ├── order-items.module.ts
+│       │   │   │   └── order-items.service.ts
+│       │   │   ├── orders
+│       │   │   │   ├── dto
+│       │   │   │   │   └── order.dto.ts
+│       │   │   │   ├── orders.controller.ts
+│       │   │   │   ├── orders.module.ts
+│       │   │   │   └── orders.service.ts
+│       │   │   ├── plants
+│       │   │   │   ├── admin-plants.controller.ts
+│       │   │   │   ├── dto
+│       │   │   │   │   └── plant.dto.ts
+│       │   │   │   ├── plants.controller.ts
+│       │   │   │   ├── plants.module.ts
+│       │   │   │   └── plants.service.ts
+│       │   │   └── users
+│       │   │       ├── admin-users.controller.ts
+│       │   │       ├── dto
+│       │   │       │   └── user.dto.ts
+│       │   │       ├── users.controller.ts
+│       │   │       ├── users.module.ts
+│       │   │       └── users.service.ts
+│       │   ├── assets
+│       │   ├── main.ts
+│       │   └── prisma
+│       │       ├── prisma.module.ts
+│       │       └── prisma.service.ts
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.spec.json
+│       └── webpack.config.js
+├── diagnose-ora.js
+├── eslint.config.mjs
+├── jest.config.ts
+├── jest.preset.js
+├── Makefile
+├── nx.json
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+├── prisma
+│   ├── migrations
+│   │   ├── 20250911153639_init
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
+│   ├── schema.prisma
+│   └── seed.ts
+├── prisma.config.ts
+├── projet.txt
+├── proxy.conf.json
+├── README_1.md
+├── README.md
+├── tests
+│   └── test_complet.js
+├── tsconfig.base.json
+├── tsconfig.json
+├── tsconfig.seed.json
+├── users.txt
+└── vitest.workspace.ts
+
+54 directories, 147 files
+
+# CONFIGURATION
+#
+## package.json
+
+{
+  "name": "@plant-shop-nest-angular-nx/source",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev-back": "SERVE_SSR=false PORT=4100 nx serve plant_shop_nest",
+    "dev-front": "nx serve plant-shop-angular-universal --port=8300 --proxy-config proxy.conf.json",
+    "test-e2e": "SERVE_SSR=false PORT=4100 nx serve plant_shop_nest",
+    "test-routes": "node tests/test_complet.js",
+    "build-backend": "nx build plant_shop_nest --configuration=production",
+    "build-frontend": "nx build plant-shop-angular-universal --configuration=production",
+    "build": "npm run build-backend && npm run build-frontend",
+    "start": "SERVE_SSR=true PORT=4150 node dist/apps/plant_shop_nest/main.js"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/common": "~20.2.0",
+    "@angular/compiler": "~20.2.0",
+    "@angular/core": "~20.2.0",
+    "@angular/forms": "~20.2.0",
+    "@angular/platform-browser": "~20.2.0",
+    "@angular/platform-server": "~20.2.0",
+    "@angular/router": "~20.2.0",
+    "@angular/ssr": "~20.2.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/platform-express": "^11.0.0",
+    "@prisma/client": "^6.16.1",
+    "axios": "^1.6.0",
+    "bcryptjs": "^3.0.2",
+    "bootstrap": "^5.3.8",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "~7.8.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@analogjs/vite-plugin-angular": "~1.19.1",
+    "@analogjs/vitest-angular": "~1.19.1",
+    "@angular-devkit/build-angular": "~20.2.0",
+    "@angular-devkit/core": "~20.2.0",
+    "@angular-devkit/schematics": "~20.2.0",
+    "@angular/build": "~20.2.0",
+    "@angular/cli": "~20.2.0",
+    "@angular/compiler-cli": "~20.2.0",
+    "@angular/language-service": "~20.2.0",
+    "@eslint/js": "^9.8.0",
+    "@faker-js/faker": "10.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.0",
+    "@nx/angular": "21.5.1",
+    "@nx/devkit": "21.5.1",
+    "@nx/eslint": "21.5.1",
+    "@nx/eslint-plugin": "21.5.1",
+    "@nx/jest": "21.5.1",
+    "@nx/js": "21.5.1",
+    "@nx/nest": "^21.5.1",
+    "@nx/node": "21.5.1",
+    "@nx/playwright": "21.5.1",
+    "@nx/vite": "21.5.1",
+    "@nx/web": "21.5.1",
+    "@nx/webpack": "21.5.1",
+    "@nx/workspace": "21.5.1",
+    "@playwright/test": "^1.36.0",
+    "@schematics/angular": "~20.2.0",
+    "@swc-node/register": "~1.9.1",
+    "@swc/core": "~1.5.7",
+    "@swc/helpers": "~0.5.11",
+    "@types/bcryptjs": "^3.0.0",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^30.0.0",
+    "@types/node": "20.19.9",
+    "@typescript-eslint/utils": "^8.40.0",
+    "@vitest/coverage-v8": "^3.0.5",
+    "@vitest/ui": "^3.0.0",
+    "angular-eslint": "^20.2.0",
+    "browser-sync": "^3.0.0",
+    "eslint": "^9.8.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-playwright": "^1.6.2",
+    "glob": "^11.0.3",
+    "jest": "^30.0.2",
+    "jest-environment-node": "^30.0.2",
+    "jest-util": "^30.0.2",
+    "jiti": "2.4.2",
+    "jsdom": "~22.1.0",
+    "node-fetch": "^3.3.2",
+    "nx": "21.5.1",
+    "ora": "6.3.1",
+    "prettier": "^2.6.2",
+    "prisma": "^6.16.1",
+    "ts-jest": "^29.4.0",
+    "ts-node": "10.9.2",
+    "tslib": "^2.3.0",
+    "tsx": "^4.20.5",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.40.0",
+    "vite": "^7.0.0",
+    "vitest": "^3.0.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "pnpm": {
+    "overrides": {
+      "ora": "5.4.1"
+    }
+  }
+}
+
+
+## tsconfig.json
+
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true
+  }
+}
+
+
+## nx.json
+
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "tui": {
+    "enabled": false
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": [
+      "default",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.mjs",
+      "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/src/test-setup.[jt]s",
+      "!{projectRoot}/jest.config.[jt]s",
+      "!{projectRoot}/test-setup.[jt]s"
+    ],
+    "sharedGlobals": []
+  },
+  "targetDefaults": {
+    "@angular-devkit/build-angular:browser": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
+    },
+    "@nx/eslint:lint": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.mjs"
+      ]
+    },
+    "@nx/vite:test": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
+    "server": {
+      "cache": true
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/playwright/plugin",
+      "options": {
+        "targetName": "e2e"
+      }
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "previewTargetName": "preview",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps",
+        "serveStaticTargetName": "serve-static"
+      }
+    },
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "test"
+      }
+    }
+  ],
+  "generators": {
+    "@nx/angular:application": {
+      "e2eTestRunner": "playwright",
+      "linter": "eslint",
+      "style": "css",
+      "unitTestRunner": "vitest"
+    },
+    "@nx/angular:component": {
+      "style": "css"
+    }
+  }
+}
+
+
+## tsconfig.base.json
+
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {}
+  },
+  "exclude": ["node_modules", "tmp"]
+}
+
+
+## pnpm-workspace.yaml
+
+autoInstallPeers: true
+strictPeerDependencies: false
+
+
+## eslint.config.mjs
+
+import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    ignores: [
+      '**/dist',
+      '**/vite.config.*.timestamp*',
+      '**/vitest.config.*.timestamp*',
+    ],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      '**/*.ts',
+      '**/*.tsx',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.js',
+      '**/*.jsx',
+      '**/*.cjs',
+      '**/*.mjs',
+    ],
+    // Override or add rules here
+    rules: {},
+  },
+];
+
+
+## jest.config.ts
+
+import type { Config } from 'jest';
+import { getJestProjectsAsync } from '@nx/jest';
+
+export default async (): Promise<Config> => ({
+  projects: await getJestProjectsAsync(),
+});
+
+
+## jest.preset.js
+
+const nxPreset = require('@nx/jest/preset').default;
+
+module.exports = { ...nxPreset };
+
+
+## vitest.workspace.ts
+
+export default [
+  '**/vite.config.{mjs,js,ts,mts}',
+  '**/vitest.config.{mjs,js,ts,mts}',
+];
+
+
+## proxy.conf.json
+
+{
+  "/api": {
+    "target": "http://localhost:4100",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
+
+
+
+# FICHIERS ANGULAR/NEST
+#
+## apps/plant-shop-angular-universal/project.json
+
+{
+  "name": "plant-shop-angular-universal",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/plant-shop-angular-universal/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/plant-shop-angular-universal/browser",
+        "index": "apps/plant-shop-angular-universal/src/index.html",
+        "main": "apps/plant-shop-angular-universal/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/plant-shop-angular-universal/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/plant-shop-angular-universal/public",
+            "output": "/"
+          }
+        ],
+        "styles": [
+          "node_modules/bootstrap/dist/css/bootstrap.min.css",
+          "apps/plant-shop-angular-universal/src/styles.css"
+        ],
+        "scripts": ["node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "plant-shop-angular-universal:build:production"
+        },
+        "development": {
+          "buildTarget": "plant-shop-angular-universal:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "plant-shop-angular-universal:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/apps/plant-shop-angular-universal"
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "plant-shop-angular-universal:build",
+        "port": 4200,
+        "spa": true
+      }
+    },
+    "server": {
+      "dependsOn": ["build"],
+      "executor": "@angular-devkit/build-angular:server",
+      "options": {
+        "outputPath": "dist/apps/plant-shop-angular-universal/server",
+        "main": "apps/plant-shop-angular-universal/src/server.ts",
+        "tsConfig": "apps/plant-shop-angular-universal/tsconfig.server.json"
+      },
+      "configurations": {
+        "production": {
+          "outputHashing": "media"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "sourceMap": true,
+          "extractLicenses": false,
+          "vendorChunk": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve-ssr": {
+      "continuous": true,
+      "executor": "@angular-devkit/build-angular:ssr-dev-server",
+      "configurations": {
+        "development": {
+          "browserTarget": "plant-shop-angular-universal:build:development",
+          "serverTarget": "plant-shop-angular-universal:server:development",
+          "proxyConfig": "proxy.conf.json"
+        },
+        "production": {
+          "browserTarget": "plant-shop-angular-universal:build:production",
+          "serverTarget": "plant-shop-angular-universal:server:production",
+          "proxyConfig": "proxy.conf.json"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "prerender": {
+      "executor": "@angular-devkit/build-angular:prerender",
+      "options": {
+        "routes": ["/"]
+      },
+      "configurations": {
+        "development": {
+          "browserTarget": "plant-shop-angular-universal:build:development",
+          "serverTarget": "plant-shop-angular-universal:server:development"
+        },
+        "production": {
+          "browserTarget": "plant-shop-angular-universal:build:production",
+          "serverTarget": "plant-shop-angular-universal:server:production"
+        }
+      },
+      "defaultConfiguration": "production"
+    }
+  }
+}
+
+
+## apps/plant-shop-angular-universal/tsconfig.json
+
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "target": "es2022",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "emitDecoratorMetadata": false,
+    "module": "preserve"
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "typeCheckHostBindings": true,
+    "strictTemplates": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "apps/plant-shop-angular-universal/tsconfig.server.json"
+    }
+  ]
+}
+
+
+## apps/plant-shop-angular-universal/tsconfig.app.json
+
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": []
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": [
+    "jest.config.ts",
+    "src/test-setup.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/main.server.ts",
+    "src/server.ts",
+    "src/app/app.config.server.ts"
+  ]
+}
+
+
+## apps/plant-shop-angular-universal/tsconfig.server.json
+
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/server",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "types": ["node"]
+  },
+  "files": ["src/main.server.ts", "src/server.ts"]
+}
+
+
+## apps/plant-shop-angular-universal/tsconfig.spec.json
+
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "vite/client",
+      "node",
+      "vitest"
+    ]
+  },
+  "include": [
+    "vite.config.ts",
+    "vite.config.mts",
+    "vitest.config.ts",
+    "vitest.config.mts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.js",
+    "src/**/*.spec.js",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.jsx",
+    "src/**/*.d.ts"
+  ],
+  "files": ["src/test-setup.ts"]
+}
+
+
+## apps/plant-shop-angular-universal/vite.config.mts
+
+/// <reference types='vitest' />
+import { defineConfig } from 'vite';
+import angular from '@analogjs/vite-plugin-angular';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
+
+export default defineConfig(() => ({
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/plant-shop-angular-universal',
+  plugins: [angular(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+  test: {
+    name: 'plant-shop-angular-universal',
+    watch: false,
+    globals: true,
+    environment: 'jsdom',
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    setupFiles: ['src/test-setup.ts'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/plant-shop-angular-universal',
+      provider: 'v8' as const,
+    },
+  },
+}));
+
+
+## apps/plant-shop-angular-universal/eslint.config.mjs
+
+import nx from '@nx/eslint-plugin';
+import baseConfig from '../../eslint.config.mjs';
+
+export default [
+  ...baseConfig,
+  ...nx.configs['flat/angular'],
+  ...nx.configs['flat/angular-template'],
+  {
+    files: ['**/*.ts'],
+    rules: {
+      '@angular-eslint/directive-selector': [
+        'error',
+        {
+          type: 'attribute',
+          prefix: 'app',
+          style: 'camelCase',
+        },
+      ],
+      '@angular-eslint/component-selector': [
+        'error',
+        {
+          type: 'element',
+          prefix: 'app',
+          style: 'kebab-case',
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.html'],
+    // Override or add rules here
+    rules: {},
+  },
+];
+
+
+
+# ANGULAR SOURCES COMPLETS
+#
+## apps/plant-shop-angular-universal/src/app/admin/plants/plant-new/plant-new.component.ts
+
+// # Importations
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
+
+// # Composant PlantNew (admin)
+@Component({
+  selector: 'app-plant-new',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './plant-new.component.html',
+  styleUrls: ['./plant-new.component.css'],
+})
+export class PlantNewComponent {
+  private api = inject(ApiService);
+  private router = inject(Router);
+
+  model = { name: '', price: 0, stock: 0, description: '' };
+  messageErreur: string | null = null;
+
+  /**
+   * Soumission du formulaire de création
+   */
+  onSubmit(event: Event) {
+    event.preventDefault();
+    this.messageErreur = null;
+    this.api.creerPlanteAdmin(this.model).subscribe({
+      next: () => {
+        this.router.navigate(['/plants']);
+      },
+      error: (err: any) => {
+        this.messageErreur =
+          err?.error?.message || 'Erreur inattendue lors de la création';
+      },
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/plants/plants-edit/plants-edit.component.ts
+
+// # Importations
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ApiService, Plante } from '../../../services/api.service';
+
+@Component({
+  selector: 'app-plants-edit',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './plants-edit.component.html',
+  styleUrls: ['./plants-edit.component.css'],
+})
+export class PlantsEditComponent implements OnInit {
+  plante: Plante = { id: 0, name: '', price: 0, stock: 0, description: '' };
+  erreurs: string[] = [];
+
+  constructor(
+    private route: ActivatedRoute,
+    private api: ApiService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (!id) {
+      this.erreurs = ['ID de plante invalide.'];
+      return;
+    }
+    this.api.unePlante(id).subscribe({
+      next: (data: Plante) => (this.plante = data),
+      error: () => (this.erreurs = ['Erreur de chargement de la plante.']),
+    });
+  }
+
+  onSubmit() {
+    this.api.majPlanteAdmin(this.plante.id, this.plante).subscribe({
+      next: () => this.router.navigate(['/admin/plants']),
+      error: (res: any) =>
+        (this.erreurs = res.error?.errors || ['Erreur de mise à jour.']),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/plants/plants-list/plants-list.component.ts
+
+// # Importations
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
+
+/**
+ * AdminPlantsListComponent – Liste des plantes (admin)
+ * Affiche un tableau CRUD des plantes (comme Rails / Next)
+ */
+@Component({
+  selector: 'app-admin-plants-list',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './plants-list.component.html',
+  styleUrls: ['./plants-list.component.css'],
+})
+export class AdminPlantsListComponent implements OnInit {
+  private api: ApiService = inject(ApiService);
+
+  protected plantes: any[] = [];
+  protected message = '';
+
+  ngOnInit(): void {
+    this.chargerPlantes();
+  }
+
+  /**
+   * Charge toutes les plantes depuis l’API
+   */
+  chargerPlantes(): void {
+    this.api.listerPlantesAdmin().subscribe({
+      next: (plants) => (this.plantes = plants),
+      error: () => (this.message = '❌ Erreur lors du chargement des plantes'),
+    });
+	}
+
+  /**
+   * Supprime une plante (avec confirmation)
+   * @id identifiant de la plante
+   */
+  supprimerPlante(id: number): void {
+    if (!confirm('Supprimer cette plante ?')) return;
+    this.api.supprimerPlanteAdmin(id).subscribe({
+      next: () => {
+        this.message = 'Plante supprimée ✅';
+        this.chargerPlantes();
+      },
+      error: () => (this.message = '❌ Erreur lors de la suppression'),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/user-details/user-details.component.ts
+
+// # Importations
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { ApiService, Utilisateur } from '../../../services/api.service';
+import { AuthService } from '../../../auth/auth.service';
+
+// # Composant
+@Component({
+  selector: 'app-user-details',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './user-details.component.html',
+  styleUrls: ['./user-details.component.css'],
+})
+export class UserDetailsComponent implements OnInit, OnDestroy {
+  private api = inject(ApiService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private auth = inject(AuthService);
+
+  protected utilisateur: Utilisateur | null = null;
+  protected erreurs: string[] = [];
+  protected est_admin = false;
+  protected chargement = true;
+
+  private destroy$ = new Subject<void>();
+
+  /**
+   * Récupère l'ID depuis l'URL.
+   */
+  private idDepuisUrl(): number | null {
+    const valeur = Number(this.route.snapshot.paramMap.get('id'));
+    return Number.isFinite(valeur) && valeur > 0 ? valeur : null;
+  }
+
+  /**
+   * Charge l'utilisateur par ID.
+   */
+  private chargerUtilisateur(id: number): void {
+    this.api
+      .unUtilisateur(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (donnees) => {
+          this.utilisateur = donnees;
+          this.chargement = false;
+        },
+        error: () => {
+          this.erreurs = ['Utilisateur introuvable'];
+          this.chargement = false;
+        },
+      });
+  }
+
+  /**
+   * Redirige vers la liste admin.
+   */
+  allerListe(): void {
+    this.router.navigate(['/admin/users']);
+  }
+
+  /**
+   * Supprime l’utilisateur puis revient à la liste.
+   */
+  supprimer(): void {
+    if (!this.utilisateur) return;
+    if (!confirm('Supprimer cet utilisateur ?')) return;
+    this.api
+      .supprimerUtilisateurAdmin(this.utilisateur.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.allerListe(),
+        error: () => (this.erreurs = ['Suppression impossible']),
+      });
+  }
+
+  /**
+   * Initialisation : récupère l'état admin et charge l'utilisateur.
+   */
+  ngOnInit(): void {
+    this.auth.user$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        (utilisateurCourant) => (this.est_admin = !!utilisateurCourant?.admin)
+      );
+
+    const identifiant = this.idDepuisUrl();
+    if (!identifiant) {
+      this.erreurs = ['ID utilisateur invalide'];
+      this.chargement = false;
+      return;
+    }
+    this.chargerUtilisateur(identifiant);
+  }
+
+  /**
+   * Nettoyage des abonnements.
+   */
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/user-profile-edit/user-profile-edit.component.ts
+
+// # Importations
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { ApiService, Utilisateur } from '../../../services/api.service';
+
+// # Données
+@Component({
+  standalone: true,
+  selector: 'app-user-edit',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './user-profile-edit.component.html',
+  styleUrls: ['./user-profile-edit.component.css'],
+})
+export class AdminUserEditComponent {
+  private api = inject(ApiService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  protected user: Utilisateur = { id: 0, email: '', name: '', admin: false };
+  protected erreurs: string[] = [];
+
+  /**
+   * Charge l'utilisateur ciblé par l'URL
+   */
+  ngOnInit() {
+    const userId = Number(this.route.snapshot.paramMap.get('id'));
+    if (!userId) {
+      this.erreurs = ['ID utilisateur invalide'];
+      return;
+    }
+    this.api.unUtilisateur(userId).subscribe({
+      next: (data) => (this.user = data),
+      error: () => (this.erreurs = ['Chargement utilisateur impossible']),
+    });
+  }
+
+  /**
+   * Soumet les changements (admin peut cocher/décocher admin)
+   */
+  enregistrer() {
+    const payload: Partial<Utilisateur> = {
+      name: this.user.name,
+      email: this.user.email,
+      admin: this.user.admin,
+    };
+    this.api.majUtilisateurAdmin(this.user.id, payload).subscribe({
+      next: () => this.router.navigate(['/admin/users']),
+      error: () => (this.erreurs = ['Erreur lors de la mise à jour']),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/users-list/users-list.component.ts
+
+// # Importations
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
+
+/**
+ * AdminUsersListComponent – Liste des utilisateurs (admin)
+ * Affiche un tableau CRUD des utilisateurs (comme Rails / Next)
+ */
+@Component({
+  selector: 'app-admin-users-list',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './users-list.component.html',
+  styleUrls: ['./users-list.component.css'],
+})
+export class AdminUsersListComponent implements OnInit {
+  private api: ApiService = inject(ApiService);
+
+  protected utilisateurs: any[] = [];
+  protected message = '';
+
+  ngOnInit(): void {
+    this.chargerUtilisateurs();
+  }
+
+  /**
+   * Charge tous les utilisateurs depuis l’API
+   */
+  chargerUtilisateurs(): void {
+    this.api.listerUtilisateursAdmin().subscribe({
+      next: (data) => (this.utilisateurs = data),
+      error: () =>
+        (this.message = '❌ Erreur lors du chargement des utilisateurs'),
+    });
+  }
+
+  /**
+   * Supprime un utilisateur (avec confirmation)
+   * @id identifiant de l’utilisateur
+   */
+  supprimerUtilisateur(id: number): void {
+    if (!confirm('Supprimer cet utilisateur ?')) return;
+    this.api.supprimerUtilisateurAdmin(id).subscribe({
+      next: () => {
+        this.message = 'Utilisateur supprimé ✅';
+        this.chargerUtilisateurs();
+      },
+      error: () => (this.message = '❌ Erreur lors de la suppression'),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/app.config.server.ts
+
+import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering } from '@angular/ssr';
+import { appConfig } from './app.config';
+
+const serverConfig: ApplicationConfig = {
+  providers: [provideServerRendering()],
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);
+
+
+## apps/plant-shop-angular-universal/src/app/app.config.ts
+
+// # Importations
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { appRoutes as routes } from './app.routes';
+import { authInterceptor } from './auth/auth.interceptor';
+
+// # Config application
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(withInterceptors([authInterceptor])),
+  ],
+};
+
+
+## apps/plant-shop-angular-universal/src/app/app.routes.ts
+
+// # Importations
+import { Route } from '@angular/router';
+import { AuthGuard } from './auth/auth.guard';
+import { AdminGuard } from './auth/admin.guard';
+
+export const appRoutes: Route[] = [
+  // 🌿 Produits
+  {
+    path: 'plants',
+    loadComponent: () =>
+      import('./plants/plants-list/plants-list.component').then(
+        (m) => m.PlantsListComponent
+      ),
+  },
+  {
+    path: 'admin/plants/new',
+    loadComponent: () =>
+      import('./admin/plants/plant-new/plant-new.component').then(
+        (m) => m.PlantNewComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'plants/:id',
+    loadComponent: () =>
+      import('./plants/plant-detail/plant-detail.component').then(
+        (m) => m.PlantDetailComponent
+      ),
+  },
+
+  // 👤 Auth
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./auth/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./auth/register/register.component').then(
+        (m) => m.RegisterComponent
+      ),
+  },
+
+  // 🛒 Panier
+  {
+    path: 'cart',
+    loadComponent: () =>
+      import('./cart/cart/cart.component').then((m) => m.CartComponent),
+  },
+
+  // 👤 Profil
+  {
+    path: 'profile',
+    loadComponent: () =>
+      import('./users/user-profile/user-profile.component').then(
+        (m) => m.UserProfileComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'profile/edit/:id',
+    loadComponent: () =>
+      import('./users/user-profile-edit/user-profile-edit.component').then(
+        (m) => m.UserProfileEditComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+
+  // 📦 Commandes
+  {
+    path: 'orders/new',
+    loadComponent: () =>
+      import('./orders/order-new/order-new.component').then(
+        (m) => m.OrderNewComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'orders',
+    loadComponent: () =>
+      import('./orders/order-list/order-list.component').then(
+        (m) => m.OrderListComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  // ⚙️ Admin
+  {
+    path: 'admin/users',
+    loadComponent: () =>
+      import('./admin/users/users-list/users-list.component').then(
+        (m) => m.AdminUsersListComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'admin/users/edit/:id',
+    loadComponent: () =>
+      import(
+        './admin/users/user-profile-edit/user-profile-edit.component'
+      ).then((m) => m.AdminUserEditComponent),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'admin/users/:id',
+    loadComponent: () =>
+      import('./admin/users/user-details/user-details.component').then(
+        (m) => m.UserDetailsComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'admin/plants',
+    loadComponent: () =>
+      import('./admin/plants/plants-list/plants-list.component').then(
+        (m) => m.AdminPlantsListComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'admin/plants/:id/edit',
+    loadComponent: () =>
+      import('./admin/plants/plants-edit/plants-edit.component').then(
+        (m) => m.PlantsEditComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+
+  // Route par défaut
+  { path: '', redirectTo: '/plants', pathMatch: 'full' },
+
+  // 404
+  { path: '**', redirectTo: '/plants' },
+];
+
+
+## apps/plant-shop-angular-universal/src/app/app.spec.ts
+
+import { TestBed } from '@angular/core/testing';
+import { App } from './app';
+import { NxWelcome } from './nx-welcome';
+
+describe('App', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [App, NxWelcome],
+    }).compileComponents();
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome plant-shop-angular-universal'
+    );
+  });
+});
+
+
+## apps/plant-shop-angular-universal/src/app/app.ts
+
+// # Importations
+import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { NavbarComponent } from './navbar/navbar.component';
+
+// # Composant racine
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterModule, NavbarComponent],
+  templateUrl: './app.html',
+  styleUrls: ['./app.css'],
+})
+export class App {}
+
+
+## apps/plant-shop-angular-universal/src/app/auth/admin.guard.ts
+
+// # Importations
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from './auth.service';
+import { map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+
+// # Guard Admin
+export const AdminGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  return auth.getCurrentUser().pipe(
+    map((user: any) => {
+      if (user && user.admin === true) {
+        return true;
+      } else {
+        router.navigate(['/login']);
+        return false;
+      }
+    }),
+    catchError(() => {
+      router.navigate(['/login']);
+      return of(false);
+    })
+  );
+};
+
+
+## apps/plant-shop-angular-universal/src/app/auth/auth.guard.ts
+
+// # Importations
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from './auth.service';
+import { map, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+
+// # Guard Auth
+export const AuthGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  return auth.getCurrentUser().pipe(
+    map((user: any) => {
+      if (user) {
+        return true;
+      } else {
+        router.navigate(['/login']);
+        return false;
+      }
+    }),
+    catchError(() => {
+      router.navigate(['/login']);
+      return of(false);
+    })
+  );
+};
+
+
+## apps/plant-shop-angular-universal/src/app/auth/auth.interceptor.ts
+
+// # Importations
+import {
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpHandlerFn,
+} from '@angular/common/http';
+
+/**
+ * Intercepteur Auth
+ * - On ne gère plus de JWT en localStorage
+ * - On force uniquement withCredentials pour inclure le cookie httpOnly
+ */
+export const authInterceptor: HttpInterceptorFn = (
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn
+) => {
+  const requeteAvecCreds = req.clone({ withCredentials: true });
+  return next(requeteAvecCreds);
+};
+
+
+## apps/plant-shop-angular-universal/src/app/auth/auth.service.ts
+
+// # Importations
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
+
+// # Service d'authentification
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private apiUrl = '/api/auth'; // proxy -> backend Nest
+  user$ = new BehaviorSubject<any | null>(null);
+
+  constructor(private http: HttpClient) {}
+
+  /** Enregistrer un utilisateur */
+  register(email: string, password: string, name?: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/register`,
+      { email, password, name },
+      { withCredentials: true }
+    );
+  }
+
+  /** Login utilisateur */
+  login(email: string, password: string): Observable<any> {
+    return this.http
+      .post<any>(
+        `${this.apiUrl}/login`,
+        { email, password },
+        { withCredentials: true }
+      )
+      .pipe(tap(() => this.refreshUser()));
+  }
+
+  /** Logout */
+  logout(): Observable<any> {
+    return this.http
+      .post(`${this.apiUrl}/logout`, {}, { withCredentials: true })
+      .pipe(tap(() => this.user$.next(null)));
+  }
+
+  /** Récupérer l’utilisateur courant (via cookie httpOnly) */
+  getCurrentUser(): Observable<any> {
+    return this.http
+      .get<any>(`${this.apiUrl}/me`, { withCredentials: true })
+      .pipe(tap((user) => this.user$.next(user)));
+  }
+
+  /** Utilitaire interne : recharge l’utilisateur après login/register */
+  private refreshUser(): void {
+    this.getCurrentUser().subscribe({
+      next: (user) => this.user$.next(user),
+      error: () => this.user$.next(null),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/auth/login/login.component.ts
+
+// # Importations
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../auth.service';
+
+// # Composant Login
+@Component({
+  selector: 'app-login',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './login.component.html',
+  styleUrls: ['./login.component.css'],
+})
+export class LoginComponent {
+  private auth = inject(AuthService);
+  private router = inject(Router);
+
+  email = '';
+  password = '';
+  message = '';
+
+  onSubmit() {
+    this.auth.login(this.email, this.password).subscribe({
+      next: () => {
+        this.message = 'Connexion réussie ✅';
+        this.router.navigate(['/plants']);
+      },
+
+      error: () => (this.message = '❌ Erreur lors de la connexion'),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/auth/register/register.component.ts
+
+// # Importations
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../auth.service';
+
+// # Composant Register
+@Component({
+  selector: 'app-register',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './register.component.html',
+  styleUrls: ['./register.component.css'],
+})
+export class RegisterComponent {
+  private auth = inject(AuthService);
+  private router = inject(Router);
+
+  name = '';
+  email = '';
+  password = '';
+  message = '';
+  passwordConfirmation: string = '';
+
+  onSubmit() {
+    if (this.password !== this.passwordConfirmation) {
+      this.message = '❌ Les mots de passe ne correspondent pas';
+      window.console.warn(
+        '[Register] mismatch',
+        this.password,
+        this.passwordConfirmation
+      );
+      return;
+    }
+
+    window.console.log('[Register] champs', {
+      name: this.name,
+      email: this.email,
+      password: this.password,
+      passwordConfirmation: this.passwordConfirmation,
+    });
+
+    this.auth.register(this.email, this.password, this.name).subscribe({
+      next: () => {
+        this.message = 'Compte créé ✅ – veuillez vous connecter';
+        window.console.log('[Register] succès', {
+          name: this.name,
+          email: this.email,
+        });
+        this.router.navigate(['/login']);
+      },
+      error: (err) => {
+        this.message = '❌ Erreur lors de la création du compte';
+        window.console.error('[Register] erreur', err);
+      },
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/cart/cart/cart.component.ts
+
+// # Importations
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { CartService, CartItem } from '../cart.service';
+import { FormsModule } from '@angular/forms';
+
+// # Composant Cart
+@Component({
+  selector: 'app-cart',
+  standalone: true,
+  imports: [CommonModule, RouterModule, FormsModule],
+  templateUrl: './cart.component.html',
+  styleUrls: ['./cart.component.css'],
+})
+export class CartComponent {
+  private timers: Record<number, any> = {};
+  private cart = inject(CartService);
+  protected items: CartItem[] = [];
+  private totalValue = 0;
+  private totalTimer: any;
+  private lineTotals: Record<number, number> = {};
+  private lineTimers: Record<number, any> = {};
+
+  ngOnInit(): void {
+    this.refresh(true);
+  }
+
+  private scheduleTotalUpdate() {
+    clearTimeout(this.totalTimer);
+    this.totalTimer = setTimeout(() => {
+      this.totalValue = this.items.reduce(
+        (sum, i) => sum + i.price * i.quantity,
+        0
+      );
+    }, 300);
+  }
+
+  getLineTotal(id: number): number {
+    return this.lineTotals[id] ?? 0;
+  }
+
+  private scheduleLineTotalUpdate(item: CartItem) {
+    clearTimeout(this.lineTimers[item.id]);
+    this.lineTimers[item.id] = setTimeout(() => {
+      this.lineTotals[item.id] = item.price * item.quantity;
+    }, 300);
+  }
+
+  refresh(initial: boolean = false) {
+    this.items = this.cart.getAll();
+
+    if (initial) {
+      // premier affichage → calcul instantané
+      this.totalValue = this.items.reduce(
+        (sum, i) => sum + i.price * i.quantity,
+        0
+      );
+      for (const item of this.items) {
+        this.lineTotals[item.id] = item.price * item.quantity;
+      }
+    } else {
+      // sinon → application du délai de 300 ms
+      this.scheduleTotalUpdate();
+      for (const item of this.items) {
+        this.scheduleLineTotalUpdate(item);
+      }
+    }
+  }
+
+  increment(item: CartItem) {
+    this.cart.update(item.id, item.quantity + 1);
+    this.refresh();
+  }
+
+  decrement(item: CartItem) {
+    if (item.quantity > 1) {
+      this.cart.update(item.id, item.quantity - 1);
+      this.refresh();
+    }
+  }
+
+  delayedUpdate(id: number, value: any) {
+    clearTimeout(this.timers[id]);
+    const num = Number(value);
+    this.timers[id] = setTimeout(() => {
+      const corrected = this.cart.update(id, num);
+      const item = this.items.find((i) => i.id === id);
+      if (item) {
+        item.quantity = corrected;
+        this.scheduleLineTotalUpdate(item);
+      }
+      this.refresh();
+    }, 300);
+  }
+
+  remove(id: number) {
+    this.cart.remove(id);
+    this.refresh();
+  }
+
+  clear() {
+    this.cart.clear();
+    this.refresh();
+  }
+
+  total(): number {
+    return this.totalValue;
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/cart/cart.service.ts
+
+// # Importations
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+// # Données
+export type CartItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  stock: number;
+};
+
+@Injectable({ providedIn: 'root' })
+export class CartService {
+  private storageKey = 'cart';
+  private items: Record<number, CartItem> = {};
+  cartCount$ = new BehaviorSubject<number>(0);
+
+  constructor() {
+    this.load();
+    this.updateCount();
+  }
+
+  /** Ajouter une plante */
+  add(id: number, name: string, price: number, stock: number) {
+    if (!this.items[id]) {
+      this.items[id] = { id, name, price, quantity: 0, stock };
+    }
+    if (this.items[id].quantity >= stock) {
+      this.showStockAlert(name, stock); // Modale custom
+      setTimeout(() => {
+        // Attente 300ms
+        this.items[id].quantity = stock; // Clamp au stock
+        this.save();
+        this.updateCount(); // Persistance + compteur
+      }, 300);
+      return;
+    }
+    this.items[id].quantity++; // Incrément normal
+    this.save();
+    this.updateCount(); // Persistance + compteur
+  }
+
+  /** Mettre à jour quantité */
+  update(id: number, quantity: number): number {
+    if (!this.items[id]) return 0;
+    const stock = this.items[id].stock;
+    const corrected = Math.min(Math.max(quantity, 1), stock);
+
+    // on garde la valeur brute immédiatement (comme en Rails)
+    this.items[id].quantity = corrected;
+    this.save();
+
+    // compteur et total mis à jour après 300ms
+    setTimeout(() => {
+      this.updateCount();
+    }, 300);
+
+    return corrected;
+  }
+
+  /** Supprimer un produit */
+  remove(id: number) {
+    delete this.items[id];
+    this.save();
+    this.updateCount();
+  }
+
+  /** Vider le panier */
+  clear() {
+    this.items = {};
+    localStorage.removeItem(this.storageKey);
+    this.updateCount();
+  }
+
+  /** Récupérer le contenu du panier */
+  getAll(): CartItem[] {
+    return Object.values(this.items);
+  }
+
+  /** Total général */
+  getTotal(): number {
+    return this.getAll().reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+  }
+
+  /** Payload API */
+  toOrderPayload() {
+    return this.getAll().map((item) => ({
+      plantId: item.id,
+      quantity: item.quantity,
+    }));
+  }
+
+  /** Charger depuis localStorage */
+  private load() {
+    const raw = localStorage.getItem(this.storageKey);
+    this.items = raw ? JSON.parse(raw) : {};
+  }
+
+  /** Sauvegarder dans localStorage */
+  private save() {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.items));
+  }
+
+  /** Modale stock insuffisant (alignée sur l'implémentation Rails) */
+  private showStockAlert(name: string, stock: number) {
+    if (typeof window === 'undefined' || !document?.body) return;
+    const alert = document.createElement('div');
+    alert.className =
+      'alert alert-warning fade position-absolute top-0 start-50 translate-middle-x mt-3 shadow';
+    alert.setAttribute('role', 'alert');
+    alert.setAttribute(
+      'style',
+      'z-index:1055;max-width:600px;pointer-events:none'
+    );
+    alert.append(
+      document.createTextNode('Stock insuffisant pour cette plante ('),
+      (() => {
+        const strong = document.createElement('strong');
+        strong.textContent = name;
+        return strong;
+      })(),
+      document.createTextNode(`), actuellement, il en reste ${stock}.`)
+    );
+    document.body.append(alert);
+    setTimeout(() => alert.classList.add('show'), 10); // animation d'apparition
+    setTimeout(() => {
+      // disparition + cleanup
+      alert.classList.remove('show');
+      alert.classList.add('fade');
+      setTimeout(() => alert.remove(), 300);
+    }, 3000);
+  }
+
+  /** Mettre à jour compteur */
+  private updateCount() {
+    const total = this.getAll().reduce((sum, item) => sum + item.quantity, 0);
+    this.cartCount$.next(total);
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/navbar/navbar.component.ts
+
+// # Importations
+import { Component, OnInit, inject } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../auth/auth.service';
+import { CommonModule } from '@angular/common';
+import { CartService } from '../cart/cart.service';
+
+/**
+ * Navbar – calquée sur Next (libellés/ordre identiques)
+ */
+@Component({
+  selector: 'app-navbar',
+  standalone: true,
+  imports: [RouterModule, CommonModule],
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.css'],
+})
+export class NavbarComponent implements OnInit {
+  private auth = inject(AuthService);
+  private router = inject(Router);
+  private cartService = inject(CartService);
+
+  nombreArticles = 0;
+  userName = '';
+  userId: number | null = null;
+  estAdmin = false;
+
+  ngOnInit(): void {
+    // compteur panier (inchangé)
+    this.cartService.cartCount$.subscribe(
+      (count) => (this.nombreArticles = count)
+    );
+
+    // récupérer l'utilisateur courant au chargement (important pour pages publiques)
+    this.auth.getCurrentUser().subscribe({
+      error: () => this.auth.user$.next(null),
+    });
+
+    // écoute des changements utilisateur
+    this.auth.user$.subscribe((u) => {
+      this.userName = this.capitalizeName(String(u?.name || ''));
+      this.userId = u?.id ?? null;
+      this.estAdmin = u?.admin === true;
+    });
+  }
+
+  logout(): void {
+    this.auth.logout().subscribe({
+      next: () => {
+        this.router.navigate(['/']);
+      },
+      error: () => {
+        this.router.navigate(['/']);
+      },
+    });
+  }
+
+  private capitalizeName(name: string): string {
+    return name
+      .split(' ')
+      .filter(Boolean)
+      .map((m) => m.charAt(0).toUpperCase() + m.slice(1))
+      .join(' ');
+  }
+
+  get estConnecte(): boolean {
+    return this.userId !== null;
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/orders/order-list/order-list.component.ts
+
+// # Importations
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ApiService, Commande } from '../../services/api.service';
+
+// # Fonctions utilitaires
+/** Formate la date ISO en locale */
+function formaterDate(dateIso: string): string {
+  return new Date(dateIso).toLocaleString();
+}
+
+// # Fonctions principales
+@Component({
+  standalone: true,
+  selector: 'app-order-list',
+  imports: [CommonModule, RouterModule],
+  templateUrl: './order-list.component.html',
+  styleUrls: ['./order-list.component.css'],
+})
+export class OrderListComponent implements OnInit {
+  private api = inject(ApiService);
+  protected commandes: Commande[] = [];
+
+  /** Charge les commandes de l’utilisateur courant */
+  ngOnInit() {
+    this.api.listerCommandes().subscribe((donnees: Commande[]) => {
+      this.commandes = donnees;
+    });
+  }
+
+  protected formater(dateIso: string) {
+    return formaterDate(dateIso);
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/orders/order-new/order-new.component.ts
+
+// # Importations
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { CartService } from '../../cart/cart.service';
+import { ApiService } from '../../services/api.service';
+import { RouterModule } from '@angular/router';
+
+// # Composant OrderNew
+@Component({
+  selector: 'app-order-new',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './order-new.component.html',
+  styleUrls: ['./order-new.component.css'],
+})
+export class OrderNewComponent {
+  protected cart = inject(CartService);
+  private api = inject(ApiService);
+  private router = inject(Router);
+
+  protected message = '';
+  protected total = 0;
+
+  ngOnInit() {
+    // calcul total dès l’affichage
+    const items = this.cart.getAll();
+    this.total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  }
+
+  passerCommande() {
+    const items = this.cart.toOrderPayload();
+
+    if (items.length === 0) {
+      this.message = '❌ Panier vide';
+      return;
+    }
+
+    // userId est injecté côté backend via le JWT
+    this.api.creerCommande({ items }).subscribe({
+      next: (res) => {
+        this.message = `✅ Commande #${res.id} créée`;
+        this.cart.clear();
+        // redirection vers la page des commandes
+        this.router.navigate(['/orders']);
+      },
+      error: () => {
+        this.message = '❌ Erreur lors de la commande';
+      },
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/plants/plant-detail/plant-detail.component.ts
+
+// # Importations
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ApiService, Plante } from '../../services/api.service';
+import { AuthService } from '../../auth/auth.service';
+import { CartService } from '../../cart/cart.service';
+
+// # Données
+type Cart = {
+  add: (id: number, name: string, price: number, stock: number) => void;
+};
+
+// # Fonctions utilitaires
+/** Décoder un JWT (payload uniquement, sans vérification) */
+function decodeJwt(token: string | null): any | null {
+  try {
+    if (!token) return null;
+    const base = token.split('.')[1];
+    return JSON.parse(atob(base));
+  } catch {
+    return null;
+  }
+}
+
+// # Fonctions utilitaires principales
+/** Récupère l'instance panier globale côté navigateur si disponible */
+function getCartInstance(): Cart | null {
+  const win = globalThis as unknown as { cartInstance?: Cart };
+  return win?.cartInstance ?? null;
+}
+
+// # Fonctions principales
+@Component({
+  standalone: true,
+  selector: 'app-plant-detail',
+  imports: [CommonModule, RouterModule],
+  templateUrl: './plant-detail.component.html',
+  styleUrls: ['./plant-detail.component.css'],
+})
+export class PlantDetailComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private api = inject(ApiService);
+  private authService = inject(AuthService);
+  private cartService = inject(CartService);
+
+  protected plante: Plante | null = null;
+  protected est_admin = false;
+
+  /** Charge la plante et l'état admin */
+  ngOnInit(): void {
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.api.unePlante(id).subscribe((plant: Plante) => (this.plante = plant));
+
+    this.authService.getCurrentUser().subscribe({
+      next: (user: any) => (this.est_admin = !!user?.admin),
+      error: () => (this.est_admin = false),
+    });
+  }
+
+  /** Ajoute la plante au panier (localStorage/instance globale) */
+  ajouterAuPanier() {
+    if (!this.plante) return;
+    this.cartService.add(
+      this.plante.id,
+      this.plante.name,
+      this.plante.price,
+      this.plante.stock
+    );
+  }
+
+  /** Supprime la plante (admin), puis redirige vers la liste */
+  supprimerPlante() {
+    if (!this.plante) return;
+    if (!confirm('Supprimer cette plante ?')) return;
+    this.api.supprimerPlanteAdmin(this.plante.id).subscribe({
+      next: () => this.router.navigate(['/plants']),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/plants/plants-list/plants-list.component.ts
+
+// # Importations
+import { Component, OnInit, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ApiService, Plante } from '../../services/api.service';
+import { AuthService } from '../../auth/auth.service';
+import { CartService } from '../../cart/cart.service';
+
+@Component({
+  selector: 'app-plants-list',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './plants-list.component.html',
+  styleUrls: ['./plants-list.component.css'],
+})
+export class PlantsListComponent implements OnInit {
+  private api = inject(ApiService);
+  private auth = inject(AuthService);
+  private cartService = inject(CartService);
+
+  protected plantes: Plante[] = [];
+  estAdmin = false;
+
+  /**
+   * Charge la liste des plantes et récupère le rôle admin
+   */
+  ngOnInit(): void {
+    this.api.listerPlantes().subscribe((donnees) => {
+      this.plantes = donnees
+        .filter((plante) => plante.stock > 0)
+        .sort((a, b) => a.name.localeCompare(b.name));
+    });
+
+    // Suit en continu l'état de l'utilisateur
+    this.auth.user$.subscribe((user) => {
+      this.estAdmin = !!user && user.admin === true;
+    });
+  }
+
+  /**
+   * Ajouter au panier
+   * @plante élément sélectionné
+   */
+  addToCart(plante: Plante): void {
+    this.cartService.add(plante.id, plante.name, plante.price, plante.stock);
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/services/api.service.ts
+
+// # Importations
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+// # Types simples
+export type Plante = {
+  id: number;
+  name: string;
+  price: number;
+  stock: number;
+  description?: string;
+};
+export type Utilisateur = {
+  id: number;
+  email: string;
+  name: string;
+  admin: boolean;
+};
+export type Commande = {
+  id: number;
+  userId: number;
+  status: string | null;
+  totalPrice: number | null;
+  createdAt: string;
+  orderItems: {
+    id: number;
+    quantity: number;
+    plant: Plante;
+  }[];
+};
+
+// # Service API
+@Injectable({ providedIn: 'root' })
+export class ApiService {
+  private http = inject(HttpClient);
+  private base = '/api'; // proxy vers backend Nest
+
+  /* ---------- Plantes ---------- */
+  listerPlantes(): Observable<Plante[]> {
+    return this.http.get<Plante[]>(`${this.base}/plants`);
+  }
+  unePlante(id: number): Observable<Plante> {
+    return this.http.get<Plante>(`${this.base}/plants/${id}`);
+  }
+  creerPlante(data: Partial<Plante>): Observable<Plante> {
+    console.log('[API CALL] POST /plants avec', data);
+    return this.http.post<Plante>(`${this.base}/plants`, data);
+  }
+  creerPlanteAdmin(data: Partial<Plante>): Observable<Plante> {
+    console.log('[API CALL] POST /admin/plants avec', data);
+    return this.http.post<Plante>(`${this.base}/admin/plants`, data);
+  }
+  majPlanteAdmin(id: number, data: Partial<Plante>): Observable<Plante> {
+    return this.http.patch<Plante>(`${this.base}/admin/plants/${id}`, data);
+  }
+  listerPlantesAdmin(): Observable<Plante[]> {
+    return this.http.get<Plante[]>(`${this.base}/admin/plants`);
+  }
+  supprimerPlanteAdmin(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/plants/${id}`);
+  }
+
+  /* ---------- Utilisateurs ---------- */
+  listerUtilisateurs(): Observable<Utilisateur[]> {
+    return this.http.get<Utilisateur[]>(`${this.base}/users`);
+  }
+  unUtilisateur(id: number): Observable<Utilisateur> {
+    return this.http.get<Utilisateur>(`${this.base}/users/${id}`);
+  }
+  majProfile(id: number, data: Partial<Utilisateur>): Observable<Utilisateur> {
+    return this.http.patch<Utilisateur>(`${this.base}/users/${id}`, data);
+  }
+  majUtilisateurAdmin(
+    id: number,
+    data: Partial<Utilisateur>
+  ): Observable<Utilisateur> {
+    return this.http.patch<Utilisateur>(`${this.base}/admin/users/${id}`, data);
+  }
+  listerUtilisateursAdmin(): Observable<Utilisateur[]> {
+    return this.http.get<Utilisateur[]>(`${this.base}/admin/users`);
+  }
+  supprimerUtilisateurAdmin(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/users/${id}`);
+  }
+
+  /* ---------- Commandes ---------- */
+  listerCommandes(): Observable<Commande[]> {
+    return this.http.get<Commande[]>(`${this.base}/orders`);
+  }
+  uneCommande(id: number): Observable<Commande> {
+    return this.http.get<Commande>(`${this.base}/orders/${id}`);
+  }
+  creerCommande(data: any): Observable<Commande> {
+    return this.http.post<Commande>(`${this.base}/orders`, data);
+  }
+  majCommande(id: number, data: any): Observable<Commande> {
+    return this.http.patch<Commande>(`${this.base}/orders/${id}`, data);
+  }
+  supprimerCommande(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/orders/${id}`);
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/services/api.spec.ts
+
+import { TestBed } from '@angular/core/testing';
+
+import { Api } from './';
+
+describe('Api', () => {
+  let service: Api;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(Api);
+  });
+
+  it('should be created', () => {
+    expect(service).toBeTruthy();
+  });
+});
+
+
+## apps/plant-shop-angular-universal/src/app/users/user-profile-edit/user-profile-edit.component.ts
+
+// # Importations
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
+import { ApiService, Utilisateur } from '../../services/api.service';
+
+// # Données
+@Component({
+  standalone: true,
+  selector: 'app-user-profile-edit',
+  imports: [CommonModule, FormsModule],
+  templateUrl: './user-profile-edit.component.html',
+  styleUrls: ['./user-profile-edit.component.css'],
+})
+export class UserProfileEditComponent {
+  private api = inject(ApiService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  protected user: Utilisateur = { id: 0, email: '', name: '', admin: false };
+  protected erreurs: string[] = [];
+
+  /**
+   * Charge le profil à éditer (utilisateur courant via :id de l'URL)
+   */
+  ngOnInit() {
+    const userId = Number(this.route.snapshot.paramMap.get('id'));
+    if (!userId) {
+      this.erreurs = ['ID utilisateur invalide'];
+      return;
+    }
+    this.api.unUtilisateur(userId).subscribe({
+      next: (data) => (this.user = data),
+      error: () => (this.erreurs = ['Impossible de charger vos données']),
+    });
+  }
+
+  /**
+   * Soumet Nom/Email uniquement (pas de case Admin côté non-admin)
+   */
+  enregistrer() {
+    const payload: Partial<Utilisateur> = {
+      name: this.user.name,
+      email: this.user.email,
+    };
+    this.api.majProfile(this.user.id, payload).subscribe({
+      next: () => this.router.navigate(['/profile']),
+      error: () => (this.erreurs = ['Erreur lors de la mise à jour']),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/users/user-profile/user-profile.component.ts
+
+// # Importations
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ApiService, Utilisateur } from '../../services/api.service';
+import { AuthService } from '../../auth/auth.service';
+import { RouterModule } from '@angular/router';
+
+@Component({
+  standalone: true,
+  selector: 'app-user-profile',
+  imports: [CommonModule, RouterModule],
+  templateUrl: './user-profile.component.html',
+  styleUrls: ['./user-profile.component.css'],
+})
+export class UserProfileComponent implements OnInit {
+  private api = inject(ApiService);
+  private auth = inject(AuthService);
+
+  protected user: Utilisateur | null = null;
+
+  ngOnInit(): void {
+    this.auth.getCurrentUser().subscribe({
+      next: (currentUser) => {
+        if (!currentUser) {
+          this.user = null;
+          return;
+        }
+
+        this.api.unUtilisateur(currentUser.id).subscribe((data) => {
+          this.user = data;
+        });
+      },
+      error: () => {
+        this.user = null;
+      },
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/plants/plant-new/plant-new.component.html
+
+<div class="container mt-4">
+	<h2>Nouvelle plante 🌱</h2>
+
+	<!-- Message d’erreur backend -->
+	<div *ngIf="messageErreur" class="alert alert-danger mb-3">
+		{{ messageErreur }}
+	</div>
+
+	<form (ngSubmit)="onSubmit($event)" #plantForm="ngForm" class="mt-3">
+
+		<!-- Nom -->
+		<div class="mb-3">
+			<label class="form-label">Nom</label>
+			<input type="text" class="form-control" [(ngModel)]="model.name" name="name" required #name="ngModel" />
+			<div class="text-danger" *ngIf="name.invalid && (name.dirty || name.touched)">
+				Nom obligatoire
+			</div>
+		</div>
+
+		<!-- Prix -->
+		<div class="mb-3">
+			<label class="form-label">Prix (€)</label>
+			<input type="number" class="form-control" [(ngModel)]="model.price" name="price" required min="0.01"
+				#price="ngModel" />
+			<div class="text-danger" *ngIf="price.invalid && (price.dirty || price.touched)">
+				Prix requis, supérieur à 0
+			</div>
+		</div>
+
+		<!-- Stock -->
+		<div class="mb-3">
+			<label class="form-label">Stock</label>
+			<input type="number" class="form-control" [(ngModel)]="model.stock" name="stock" required min="0"
+				#stock="ngModel" />
+			<div class="text-danger" *ngIf="stock.invalid && (stock.dirty || stock.touched)">
+				Stock requis, supérieur ou égal à 0
+			</div>
+		</div>
+
+		<!-- Description -->
+		<div class="mb-3">
+			<label class="form-label">Description</label>
+			<textarea class="form-control" rows="4" [(ngModel)]="model.description" name="description"></textarea>
+		</div>
+
+		<button type="submit" class="btn btn-success" [disabled]="plantForm.invalid">
+			Ajouter la plante
+		</button>
+	</form>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/admin/plants/plants-edit/plants-edit.component.html
+
+<div class="container mt-4">
+	<h2>Éditer la plante 🌱</h2>
+	<form (ngSubmit)="onSubmit()">
+		<div *ngIf="erreurs.length" class="alert alert-danger">
+			<ul>
+				<li *ngFor="let erreur of erreurs">{{ erreur }}</li>
+			</ul>
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Nom de la plante</label>
+			<input type="text" class="form-control" [(ngModel)]="plante.name" name="name" required />
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Prix (€)</label>
+			<input type="number" class="form-control" [(ngModel)]="plante.price" name="price" required />
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Description</label>
+			<textarea class="form-control" rows="4" [(ngModel)]="plante.description" name="description"></textarea>
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Stock (unités)</label>
+			<input type="number" class="form-control" [(ngModel)]="plante.stock" name="stock" required min="0" />
+		</div>
+		<button type="submit" class="btn btn-primary">Mettre à jour</button>
+	</form>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/admin/plants/plants-list/plants-list.component.html
+
+<div class="container mt-4">
+	<h1 class="text-center mb-4">🌿 Gestion des Plantes</h1>
+
+	<div class="mb-3">
+		<a routerLink="/admin/plants/new" class="btn btn-success">Nouvelle Plante</a>
+	</div>
+
+	<div *ngIf="message" class="alert alert-info">{{ message }}</div>
+
+	<table class="table table-striped table-hover shadow-sm">
+		<thead class="table-light">
+			<tr>
+				<th>Nom</th>
+				<th>Prix</th>
+				<th>Stock</th>
+				<th class="text-center">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr *ngFor="let plant of plantes">
+				<td>
+					<a [routerLink]="['/plants', plant.id]" class="text-decoration-none text-dark">
+						{{ plant.name }}
+					</a>
+				</td>
+				<td>{{ plant.price }} €</td>
+				<td>{{ plant.stock }}</td>
+				<td class="text-center">
+					<div class="d-flex justify-content-center gap-2">
+						<a [routerLink]="['/admin/plants', plant.id, 'edit']" class="btn btn-warning btn-sm">✏
+							Modifier</a>
+						<button (click)="supprimerPlante(plant.id)" class="btn btn-danger btn-sm">
+							🗑 Supprimer
+						</button>
+					</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/user-details/user-details.component.html
+
+<div class="container mt-4" *ngIf="!chargement">
+	<!-- Affichage erreurs -->
+	<div *ngIf="erreurs.length" class="alert alert-danger">
+		<ul>
+			<li *ngFor="let err of erreurs">{{ err }}</li>
+		</ul>
+	</div>
+
+	<!-- Si utilisateur trouvé -->
+	<div *ngIf="utilisateur">
+		<h1 class="mb-4">Détails Utilisateur</h1>
+
+		<p><strong>Email :</strong> {{ utilisateur.email }}</p>
+		<p><strong>Nom :</strong> {{ utilisateur.name }}</p>
+		<p><strong>Administrateur :</strong> {{ utilisateur.admin ? 'Oui' : 'Non' }}</p>
+
+		<!-- Boutons actions -->
+		<div class="mt-3 d-flex gap-2">
+			<a [routerLink]="['/admin/users/edit', utilisateur?.id]" class="btn btn-warning">
+				Modifier
+			</a>
+			<button class="btn btn-danger btn-sm" (click)="supprimer()">
+				🗑 Supprimer
+			</button>
+		</div>
+	</div>
+
+	<!-- Si pas d'utilisateur -->
+	<div *ngIf="!utilisateur && !erreurs.length" class="alert alert-info">
+		Chargement...
+	</div>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/user-profile-edit/user-profile-edit.component.html
+
+<div class="container mt-4" *ngIf="user">
+	<h2>✏️ Modifier un utilisateur</h2>
+
+	<form (ngSubmit)="enregistrer()">
+		<div *ngIf="erreurs.length" class="alert alert-danger">
+			<ul>
+				<li *ngFor="let err of erreurs">{{ err }}</li>
+			</ul>
+		</div>
+
+		<div class="mb-3">
+			<label class="form-label">Nom</label>
+			<input [(ngModel)]="user.name" name="name" class="form-control" required />
+		</div>
+
+		<div class="mb-3">
+			<label class="form-label">Email</label>
+			<input [(ngModel)]="user.email" name="email" class="form-control" required />
+		</div>
+
+		<div class="form-check mb-3">
+			<input id="admin" type="checkbox" [(ngModel)]="user.admin" name="admin" class="form-check-input" />
+			<label for="admin" class="form-check-label">Administrateur</label>
+		</div>
+
+		<button type="submit" class="btn btn-success">Mettre à jour</button>
+	</form>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/users-list/users-list.component.html
+
+<div class="container mt-4">
+	<h1 class="text-center mb-4">👥 Gestion des Utilisateurs</h1>
+
+	<div *ngIf="message" class="alert alert-info">{{ message }}</div>
+
+	<table class="table table-striped table-hover shadow-sm">
+		<thead class="table-light">
+			<tr>
+				<th>Nom</th>
+				<th>Email</th>
+				<th>Admin</th>
+				<th class="text-center">Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr *ngFor="let user of utilisateurs">
+				<td>
+					<a [routerLink]="['/admin/users', user.id]" class="text-decoration-none text-dark">
+						{{ user.name }}
+					</a>
+				</td>
+				<td>{{ user.email }}</td>
+				<td>
+					<span class="badge" [ngClass]="user.admin ? 'bg-success' : 'bg-secondary'">
+						{{ user.admin ? 'Oui' : 'Non' }}
+					</span>
+				</td>
+				<td class="text-center">
+					<div class="d-flex justify-content-center gap-2">
+						<a [routerLink]="['/admin/users/edit', user.id]" class="btn btn-warning btn-sm">✏ Modifier</a>
+						<button (click)="supprimerUtilisateur(user.id)" class="btn btn-danger btn-sm">
+							🗑 Supprimer
+						</button>
+					</div>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/app.html
+
+<!-- Navbar -->
+<app-navbar></app-navbar>
+
+<!-- Contenu principal -->
+<main class="container mt-4">
+	<router-outlet></router-outlet>
+</main>
+
+
+## apps/plant-shop-angular-universal/src/app/auth/login/login.component.html
+
+<div class="container mt-4">
+	<h2>Se connecter 🔑</h2>
+	<form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="mt-3">
+		<div class="mb-3">
+			<label class="form-label">Email</label>
+			<input type="email" class="form-control" style="width:40%" [(ngModel)]="email" name="email" required />
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Mot de passe</label>
+			<input type="password" class="form-control" style="width:40%" [(ngModel)]="password" name="password" required />
+		</div>
+		<button type="submit" class="btn btn-success">Se connecter</button>
+	</form>
+	<p class="mt-3 text-info">{{ message }}</p>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/auth/register/register.component.html
+
+<div class="container mt-4">
+	<h2>📝 Inscription</h2>
+	<form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="mt-3">
+		<div class="mb-3">
+			<label class="form-label">Nom</label>
+			<input type="text" class="form-control" [(ngModel)]="name" style="width:45%" name="name" />
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Email</label>
+			<input type="email" class="form-control" [(ngModel)]="email" style="width:45%" name="email" required />
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Mot de passe</label>
+			<input type="password" class="form-control" [(ngModel)]="password" style="width:45%" name="password" required />
+		</div>
+		<div class="mb-3">
+			<label for="passwordConfirmation" class="form-label">Confirmation du mot de passe</label>
+			<input type="password" id="passwordConfirmation" class="form-control" style="width:45%" [(ngModel)]="passwordConfirmation"
+				name="passwordConfirmation" required />
+		</div>
+		<button type="submit" class="btn btn-primary">Créer le compte</button>
+	</form>
+	<p class="mt-3 text-info">{{ message }}</p>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/cart/cart/cart.component.html
+
+<div class="container mt-4">
+	<h1 class="text-center mb-4">🛒 Mon Panier</h1>
+
+	<!-- Panier vide -->
+	<div *ngIf="items.length === 0" class="alert alert-info mt-3">
+		Votre panier est vide.
+	</div>
+
+	<!-- Panier rempli -->
+	<div *ngIf="items.length > 0">
+		<table class="table align-middle">
+			<thead class="table-light">
+				<tr>
+					<th>Plante</th>
+					<th style="width:120px;">Quantité</th>
+					<th>Total</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let item of items">
+					<td>
+						<a [routerLink]="['/plants', item.id]" class="text-decoration-none">
+							{{ item.name }}
+						</a>
+					</td>
+					<td style="width:120px;">
+						<input type="number" class="form-control form-control-sm" [(ngModel)]="item.quantity" [min]="1"
+							[max]="item.stock" (ngModelChange)="delayedUpdate(item.id, $event)">
+					</td>
+					<td>{{ getLineTotal(item.id) }} €</td>
+					<td>
+						<button class="btn btn-danger btn-sm" (click)="remove(item.id)">
+							Retirer
+						</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<!-- Ligne 1 : total -->
+		<p class="text-end fw-bold">Total : {{ total() }} €</p>
+
+		<!-- Ligne 2 : boutons -->
+		<div class="d-flex justify-content-between mt-2">
+			<button class="btn btn-outline-secondary btn-sm" (click)="clear()">Vider le panier</button>
+			<a class="btn btn-primary" routerLink="/orders/new">Passer la commande</a>
+		</div>
+	</div>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/cart/cart-item/cart-item.component.html
+
+<tr>
+	<td>{{ item.name }}</td>
+	<td>{{ item.price }} €</td>
+	<td>{{ item.quantity }}</td>
+	<td>{{ item.price * item.quantity }} €</td>
+	<td>
+		<button class="btn btn-sm btn-danger" (click)="onRemove()">Supprimer</button>
+	</td>
+</tr>
+
+
+## apps/plant-shop-angular-universal/src/app/navbar/navbar.component.html
+
+<nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+	<div class="container">
+		<a class="navbar-brand" routerLink="/">🌿 PlantShop</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav ms-auto">
+
+				<!-- Nom utilisateur — affiché pour tout utilisateur connecté (admin ou non) -->
+				<li class="nav-item d-flex align-items-center text-white me-3" *ngIf="estConnecte && userName">
+					{{ userName }}
+					<span *ngIf="estAdmin">&nbsp;(Administrateur)</span>
+				</li>
+
+				<!-- Panier -->
+				<li class="nav-item">
+					<a routerLink="/cart" class="nav-link" id="cart-link">
+						Mon Panier<span *ngIf="nombreArticles > 0"> ({{ nombreArticles }})</span>
+					</a>
+				</li>
+
+				<!-- Connecté -->
+				<ng-container *ngIf="estConnecte; else blocPublic">
+					<li class="nav-item">
+						<a routerLink="/orders" class="nav-link">Mes Commandes</a>
+					</li>
+					<li class="nav-item">
+						<a routerLink="/profile" class="nav-link">Mon Profil</a>
+					</li>
+					<li class="nav-item dropdown" *ngIf="estAdmin">
+						<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+							Admin
+						</a>
+						<ul class="dropdown-menu">
+							<li><a routerLink="/admin/plants" class="dropdown-item">Gestion des Plantes</a></li>
+							<li><a routerLink="/admin/users" class="dropdown-item">Gestion des Utilisateurs</a></li>
+						</ul>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link logout-link" (click)="logout()">Déconnexion</a>
+					</li>
+				</ng-container>
+
+				<!-- Non connecté -->
+				<ng-template #blocPublic>
+					<li class="nav-item">
+						<a class="nav-link" routerLink="/register">S'inscrire</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" routerLink="/login">Se connecter</a>
+					</li>
+				</ng-template>
+
+			</ul>
+		</div>
+	</div>
+</nav>
+
+
+## apps/plant-shop-angular-universal/src/app/orders/order-list/order-list.component.html
+
+<h1 class="text-center mb-4">📜 Mes Commandes</h1>
+
+<ng-container *ngIf="commandes.length > 0; else aucune">
+	<div class="card mb-3 shadow-sm" *ngFor="let commande of commandes; let index = index">
+		<div class="card-body">
+			<h5 class="card-title">
+				Commande n°{{ commandes.length - index }}
+			</h5>
+			<p class="mb-1 text-muted">
+				Passée le {{ formater(commande.createdAt) }} –
+				Total : {{ commande.totalPrice }} €
+			</p>
+			<ul class="mb-2">
+				<li *ngFor="let item of commande.orderItems">
+					<a [routerLink]="['/plants', item.plant.id]" class="text-decoration-none text-primary">
+						{{ item.plant.name }}
+					</a>
+					{{ item.quantity }} × {{ item.plant.price }} €
+				</li>
+			</ul>
+			<p><strong>Statut :</strong> {{ commande.status }}</p>
+		</div>
+	</div>
+</ng-container>
+
+<ng-template #aucune>
+	<p class="alert alert-info">Aucune commande pour le moment.</p>
+</ng-template>
+
+
+## apps/plant-shop-angular-universal/src/app/orders/order-new/order-new.component.html
+
+<div class="container-fluid mt-4">
+	<h1 class="mb-4">Valider ma commande</h1>
+
+	<!-- Panier vide -->
+	<div *ngIf="cart.getAll().length === 0" class="alert alert-info mt-3">
+		Votre panier est vide.
+	</div>
+
+	<!-- Panier rempli -->
+	<div *ngIf="cart.getAll().length > 0">
+		<table class="table table-striped table-bordered w-100 shadow bg-white">
+			<thead class="table-light">
+				<tr>
+					<th>Plante</th>
+					<th style="width:120px;">Quantité</th>
+					<th>Total</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let item of cart.getAll()">
+					<td>
+						<a [routerLink]="['/plants', item.id]" class="text-primary text-decoration-none">
+							{{ item.name }}
+						</a>
+					</td>
+					<td>{{ item.quantity }}</td>
+					<td>{{ item.price * item.quantity }} €</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<div class="text-end mt-2">
+			<strong>Total : {{ total }} €</strong>
+		</div>
+
+		<div class="mt-3">
+			<button class="btn btn-success w-100 py-2" (click)="passerCommande()">
+				Confirmer la commande
+			</button>
+		</div>
+	</div>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/plants/plant-detail/plant-detail.component.html
+
+<div class="card shadow-lg" *ngIf="plante as p; else chargement">
+	<div class="card-body">
+		<h1 class="card-title">{{ p.name }}</h1>
+		<p><strong>Prix :</strong> {{ p.price }} €</p>
+		<p><strong>Description :</strong> {{ p.description || '—' }}</p>
+		<p *ngIf="est_admin"><strong>Stock :</strong> {{ p.stock }} unités</p>
+
+		<div class="d-flex flex-wrap gap-2 mb-2">
+			<button type="button" class="btn btn-success" (click)="ajouterAuPanier()">
+				Ajouter au panier
+			</button>
+
+			<ng-container *ngIf="est_admin">
+				<a class="btn btn-warning" [routerLink]="['/admin/plants', plante.id, 'edit']" >
+					Modifier
+				</a>
+
+				<button type="button" class="btn btn-danger" (click)="supprimerPlante()">
+					Supprimer
+				</button>
+			</ng-container>
+		</div>
+
+		<div class="mt-3">
+			<a class="btn btn-secondary" routerLink="/plants">Retour à la liste</a>
+		</div>
+	</div>
+</div>
+
+<ng-template #chargement>
+	<p>Chargement…</p>
+</ng-template>
+
+
+## apps/plant-shop-angular-universal/src/app/plants/plants-list/plants-list.component.html
+
+<div class="container mt-4">
+	<h1 class="text-center my-4">🌿 Liste des Plantes</h1>
+
+	<div *ngIf="estAdmin" class="mb-3">
+		<a class="btn btn-success" [routerLink]="['/admin/plants/new']">
+			Ajouter une plante
+		</a>
+	</div>
+
+	<div class="row">
+		<div class="col-md-4 mb-4" *ngFor="let plant of plantes">
+			<div class="card h-100 shadow-sm">
+				<div class="card-body d-flex flex-column">
+					<h5 class="card-title">
+						<a [routerLink]="['/plants', plant.id]" class="text-decoration-none text-dark">
+							{{ plant.name }}
+						</a>
+					</h5>
+					<p class="card-text text-muted mb-1">Prix : {{ plant.price }} €</p>
+					<p *ngIf="estAdmin" class="card-text text-muted mb-1">Stock : {{ plant.stock }}</p>
+					<button class="btn btn-success mt-auto" (click)="addToCart(plant)">
+						Ajouter au panier
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/users/user-profile-edit/user-profile-edit.component.html
+
+<div class="container mt-4" *ngIf="user">
+	<h2>✏️ Modifier mon profil</h2>
+
+	<form (ngSubmit)="enregistrer()">
+		<div *ngIf="erreurs.length" class="alert alert-danger">
+			<ul>
+				<li *ngFor="let err of erreurs">{{ err }}</li>
+			</ul>
+		</div>
+
+		<div class="mb-3">
+			<label class="form-label">Nom</label>
+			<input [(ngModel)]="user.name" name="name" class="form-control" required />
+		</div>
+
+		<div class="mb-3">
+			<label class="form-label">Email</label>
+			<input [(ngModel)]="user.email" name="email" class="form-control" required />
+		</div>
+
+		<button type="submit" class="btn btn-success">Mettre à jour</button>
+	</form>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/users/user-profile/user-profile.component.html
+
+<div class="container mt-4" *ngIf="user">
+	<h2>👤 Mon Profil</h2>
+
+	<p><strong>Nom :</strong> {{ user.name }}</p>
+	<p><strong>Email :</strong> {{ user.email }}</p>
+
+	<div *ngIf="user.admin" class="alert alert-info p-2">
+		Administrateur
+	</div>
+	<a [routerLink]="['/profile/edit', user!.id]" class="btn btn-outline-primary">
+		Modifier mon profil
+	</a>
+</div>
+
+<div *ngIf="!user" class="container mt-4">
+	<p class="alert alert-warning">Chargement du profil...</p>
+</div>
+
+
+## apps/plant-shop-angular-universal/src/app/admin/plants/plant-new/plant-new.component.css
+
+h2 {
+	color: #2d572c;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/plants/plants-edit/plants-edit.component.css
+
+/* Même CSS que plants-new.component.css, adapté au besoin si custom */
+.container {
+	margin-top: 2rem;
+}
+.form-label {
+	font-weight: bold;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/plants/plants-list/plants-list.component.css
+
+h1 {
+	font-weight: bold;
+}
+
+.table td,
+.table th {
+	vertical-align: middle;
+}
+
+.btn-sm {
+	padding: 0.25rem 0.5rem;
+	font-size: 0.85rem;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/user-details/user-details.component.css
+
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/user-profile-edit/user-profile-edit.component.css
+
+.container {
+  max-width: 600px;
+  margin-left: 0; /* annule le centrage */
+  margin-right: 0;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+button {
+  min-width: 150px;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/admin/users/users-list/users-list.component.css
+
+h1 {
+	font-weight: bold;
+}
+
+.table td,
+.table th {
+	vertical-align: middle;
+}
+
+.badge {
+	font-size: 0.9rem;
+}
+
+.btn-sm {
+	padding: 0.25rem 0.5rem;
+	font-size: 0.85rem;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/app.css
+
+
+
+## apps/plant-shop-angular-universal/src/app/auth/login/login.component.css
+
+h2 {
+  color: #2d572c;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/auth/register/register.component.css
+
+h2 {
+  color: #2d572c;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/cart/cart/cart.component.css
+
+.container {
+	max-width: 100%;
+}
+
+h1 {
+	font-size: 1.8rem;
+	font-weight: 500;
+}
+
+.table td,
+.table th {
+	vertical-align: middle;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/cart/cart-item/cart-item.component.css
+
+td {
+  vertical-align: middle;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/navbar/navbar.component.css
+
+/* Couleur personnalisée pour la navbar */
+.custom-navbar {
+  background-color: #006576 !important;
+}
+.logout-link {
+  cursor: pointer;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/orders/order-list/order-list.component.css
+
+h2 {
+  color: #2d572c;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/orders/order-new/order-new.component.css
+
+
+
+## apps/plant-shop-angular-universal/src/app/plants/plant-detail/plant-detail.component.css
+
+.card-title {
+  color: #2d572c; /* vert personnalisé PlantShop */
+}
+
+
+## apps/plant-shop-angular-universal/src/app/plants/plants-list/plants-list.component.css
+
+h2 {
+  color: #2d572c; /* vert personnalisé */
+}
+
+
+## apps/plant-shop-angular-universal/src/app/users/user-profile-edit/user-profile-edit.component.css
+
+.container {
+  max-width: 600px;
+  margin-left: 0; /* annule le centrage */
+  margin-right: 0;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+button {
+  min-width: 150px;
+}
+
+
+## apps/plant-shop-angular-universal/src/app/users/user-profile/user-profile.component.css
+
+.container {
+  max-width: 600px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+button {
+  margin-top: 15px;
+}
+
+
+## apps/plant_shop_nest/project.json
+
+{
+  "name": "plant_shop_nest",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/plant_shop_nest/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "webpack-cli build",
+        "args": ["--node-env=production"],
+        "cwd": "apps/plant_shop_nest"
+      },
+      "configurations": {
+        "development": {
+          "args": ["--node-env=development"]
+        }
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/plant_shop_nest/package.json",
+        "{workspaceRoot}/dist/plant_shop_nest/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/plant_shop_nest/workspace_modules"],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "plant_shop_nest:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "plant_shop_nest:build:development"
+        },
+        "production": {
+          "buildTarget": "plant_shop_nest:build:production"
+        }
+      }
+    },
+    "test": {
+      "options": {
+        "passWithNoTests": true
+      }
+    }
+  }
+}
+
+
+## apps/plant_shop_nest/tsconfig.json
+
+{
+  "extends": "../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "compilerOptions": {
+    "esModuleInterop": true
+  }
+}
+
+
+## apps/plant_shop_nest/tsconfig.app.json
+
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "module": "commonjs",
+    "types": ["node"],
+    "emitDecoratorMetadata": true,
+    "target": "es2021"
+  },
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "include": ["src/**/*.ts"]
+}
+
+
+## apps/plant_shop_nest/tsconfig.spec.json
+
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "module": "commonjs",
+    "moduleResolution": "node10",
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.d.ts"
+  ]
+}
+
+
+## apps/plant_shop_nest/eslint.config.mjs
+
+import baseConfig from '../eslint.config.mjs';
+
+export default [...baseConfig];
+
+
+## apps/plant_shop_nest/jest.config.ts
+
+export default {
+  displayName: 'plant_shop_nest',
+  preset: '../jest.preset.js',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../coverage/plant_shop_nest',
+};
+
+
+## apps/plant_shop_nest/webpack.config.js
+
+const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../../dist/apps/plant_shop_nest'),
+    ...(process.env.NODE_ENV !== 'production' && {
+      devtoolModuleFilenameTemplate: '[absolute-resource-path]',
+    }),
+  },
+  plugins: [
+    new NxAppWebpackPlugin({
+      target: 'node',
+      compiler: 'tsc',
+      main: join(__dirname, 'src/main.ts'),
+      tsConfig: join(__dirname, 'tsconfig.app.json'),
+      assets: [join(__dirname, 'src/assets')],
+      optimization: false,
+      outputHashing: 'none',
+      generatePackageJson: true,
+      sourceMaps: true,
+    }),
+  ],
+};
+
+
+## prisma.config.ts
+
+import 'dotenv/config';
+
+import { defineConfig } from 'prisma/config';
+import path from 'node:path';
+
+export default defineConfig({
+  schema: path.join('prisma', 'schema.prisma'),
+  migrations: {
+    path: path.join('prisma', 'migrations'),
+    seed: 'tsx prisma/seed.ts',
+  },
+});
+
+
+## prisma/schema.prisma
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  email          String   @unique
+  name           String?
+  password       String
+  admin          Boolean  @default(false)
+  orders         Order[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Plant {
+  id          Int         @id @default(autoincrement())
+  name        String
+  price       Int
+  description String?
+  stock       Int         @default(0)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      Int
+  totalPrice  Int?
+  status      String?
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id       Int    @id @default(autoincrement())
+  orderId  Int
+  plantId  Int
+  quantity Int
+  order    Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  plant    Plant  @relation(fields: [plantId], references: [id], onDelete: Cascade)
+}
+
+
+## prisma/seed.ts
+
+// # Importations
+import { PrismaClient, Prisma } from '@prisma/client';
+import type { User, Plant } from '@prisma/client';
+import { faker } from '@faker-js/faker';
+import bcrypt from 'bcryptjs';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+// # Données
+const NB_ADMINS = 3;
+const NB_USERS = 20;
+const NB_PLANTS = 50;
+const MAX_ORDERS_PER_USER = 7;
+const PLANT_NAMES = [
+  'Rose',
+  'Tulipe',
+  'Lavande',
+  'Orchidée',
+  'Basilic',
+  'Menthe',
+  'Pivoine',
+  'Tournesol',
+  'Cactus (Echinopsis)',
+  'Bambou',
+  'Camomille (Matricaria recutita)',
+  'Sauge (Salvia officinalis)',
+  'Romarin (Rosmarinus officinalis)',
+  'Thym (Thymus vulgaris)',
+  'Laurier-rose (Nerium oleander)',
+  'Aloe vera',
+  'Jasmin (Jasminum officinale)',
+  'Hortensia (Hydrangea macrophylla)',
+  'Marguerite (Leucanthemum vulgare)',
+  'Géranium (Pelargonium graveolens)',
+  'Fuchsia (Fuchsia magellanica)',
+  'Anémone (Anemone coronaria)',
+  'Azalée (Rhododendron simsii)',
+  'Chrysanthème (Chrysanthemum morifolium)',
+  'Digitale pourpre (Digitalis purpurea)',
+  'Glaïeul (Gladiolus hortulanus)',
+  'Lys (Lilium candidum)',
+  'Violette (Viola odorata)',
+  'Muguet (Convallaria majalis)',
+  'Iris (Iris germanica)',
+  'Lavandin (Lavandula intermedia)',
+  'Érable du Japon (Acer palmatum)',
+  'Citronnelle (Cymbopogon citratus)',
+  'Pin parasol (Pinus pinea)',
+  'Cyprès (Cupressus sempervirens)',
+  'Olivier (Olea europaea)',
+  'Papyrus (Cyperus papyrus)',
+  'Figuier (Ficus carica)',
+  'Eucalyptus (Eucalyptus globulus)',
+  'Acacia (Acacia dealbata)',
+  'Bégonia (Begonia semperflorens)',
+  'Calathea (Calathea ornata)',
+  'Dieffenbachia (Dieffenbachia seguine)',
+  'Ficus elastica',
+  'Sansevieria (Sansevieria trifasciata)',
+  'Philodendron (Philodendron scandens)',
+  'Yucca (Yucca elephantipes)',
+  'Zamioculcas zamiifolia',
+  'Monstera deliciosa',
+  'Pothos (Epipremnum aureum)',
+  'Agave (Agave americana)',
+  'Cactus raquette (Opuntia ficus-indica)',
+  'Palmier-dattier (Phoenix dactylifera)',
+  'Amaryllis (Hippeastrum hybridum)',
+  'Bleuet (Centaurea cyanus)',
+  'Cœur-de-Marie (Lamprocapnos spectabilis)',
+  'Croton (Codiaeum variegatum)',
+  'Dracaena (Dracaena marginata)',
+  'Hosta (Hosta plantaginea)',
+  'Lierre (Hedera helix)',
+  'Mimosa (Acacia dealbata)',
+];
+
+// # Classe SeedService
+class SeedService {
+  private prisma = new PrismaClient();
+
+  // ## Reset
+  private reset = async (): Promise<void> => {
+    await this.prisma.orderItem.deleteMany();
+    await this.prisma.order.deleteMany();
+    await this.prisma.plant.deleteMany();
+    await this.prisma.user.deleteMany();
+  };
+
+  // ## Admins
+  private createAdmins = async () => {
+    const admins: { email: string; password: string }[] = [];
+    for (let idx = 0; idx < NB_ADMINS; idx++)
+      admins.push(await this.addAdmin(idx));
+    return admins;
+  };
+
+  private addAdmin = async (index: number) => {
+    const email = `admin${index + 1}@planteshop.com`;
+    const password = 'password';
+    await this.prisma.user.create({
+      data: {
+        email,
+        password: await bcrypt.hash(password, 10),
+        admin: true,
+        name: faker.person.fullName(),
+      },
+    });
+    return { email, password };
+  };
+
+  // ## Users
+  private createUsers = async () => {
+    const users: { email: string; password: string }[] = [];
+    for (let idx = 0; idx < NB_USERS; idx++) users.push(await this.addUser());
+    return users;
+  };
+
+  private addUser = async () => {
+    const password = faker.internet.password({ length: 12 });
+    const email = faker.internet.email().toLowerCase();
+    await this.prisma.user.create({
+      data: {
+        email,
+        password: await bcrypt.hash(password, 10),
+        admin: false,
+        name: faker.person.fullName(),
+      },
+    });
+    return { email, password };
+  };
+
+  // ## Plants
+  private createPlants = async () => {
+    const max = PLANT_NAMES.length;
+    const plants: Plant[] = [];
+    for (let idx = 0; idx < NB_PLANTS; idx++)
+      plants.push(await this.addPlant(idx, max));
+    return plants;
+  };
+
+  private addPlant = async (idx: number, max: number) => {
+    const base = PLANT_NAMES[idx % max];
+    const name =
+      NB_PLANTS > max ? `${base} ${Math.floor(idx / max) + 1}` : base;
+    return this.prisma.plant.create({
+      data: {
+        name,
+        price: faker.number.int({ min: 5, max: 50 }),
+        description: faker.lorem.sentence({ min: 10, max: 14 }),
+        stock: faker.number.int({ min: 5, max: 30 }),
+      },
+    });
+  };
+
+  // ## Orders
+  private createOrders = async (plants: Plant[]) => {
+    for (const user of await this.prisma.user.findMany()) {
+      const numberOfOrders = faker.number.int({
+        min: 0,
+        max: MAX_ORDERS_PER_USER,
+      });
+      for (let idx = 0; idx < numberOfOrders; idx++) {
+        await this.createOrderForUser(user, plants);
+      }
+    }
+  };
+
+  private createOrderForUser = async (user: User, plants: Plant[]) => {
+    let total = 0;
+    const order = await this.prisma.order.create({
+      data: {
+        userId: user.id,
+        totalPrice: 0,
+        status: faker.helpers.arrayElement([
+          'confirmed',
+          'pending',
+          'shipped',
+          'delivered',
+        ]),
+      },
+    });
+    for (let iter = 0; iter < 2; iter++)
+      total += await this.addItem(order.id, plants);
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: { totalPrice: total },
+    });
+  };
+
+  private addItem = async (orderId: number, plants: Plant[]) => {
+    const plant = plants[Math.floor(Math.random() * plants.length)];
+    if (!plant.stock) return 0;
+    const qty = Math.min(faker.number.int({ min: 1, max: 5 }), plant.stock);
+    if (!qty) return 0;
+    await this.prisma.orderItem.create({
+      data: { orderId, plantId: plant.id, quantity: qty },
+    });
+    await this.prisma.plant.update({
+      where: { id: plant.id },
+      data: { stock: plant.stock - qty },
+    });
+    plant.stock -= qty;
+    return plant.price * qty;
+  };
+
+  // ## users.txt
+  private writeUsersFile = (
+    admins: { email: string; password: string }[],
+    users: { email: string; password: string }[]
+  ) => {
+    const path = join(process.cwd(), 'users.txt');
+    let txt = 'Administrateurs :\n\n';
+    admins.forEach((admin) => (txt += `${admin.email} ${admin.password}\n`));
+    txt += '\nUtilisateurs :\n\n';
+    users.forEach((u) => (txt += `${u.email} ${u.password}\n`));
+    writeFileSync(path, txt, 'utf8');
+  };
+
+  // # Main
+  public run = async (): Promise<void> => {
+    await this.reset();
+    const admins = await this.createAdmins();
+    const users = await this.createUsers();
+    const plants = await this.createPlants();
+    this.writeUsersFile(admins, users);
+    await this.createOrders(plants);
+    console.log('✅ Seed terminée. Données créées & users.txt généré.');
+    await this.prisma.$disconnect();
+  };
+}
+
+// # Lancement
+new SeedService().run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+
+
+
+# PRISMA MODULE
+#
+## apps/plant_shop_nest/src/prisma/prisma.module.ts
+
+import { Module } from "@nestjs/common";
+import { PrismaService } from "./prisma.service";
+
+@Module({
+  providers: [PrismaService],
+  exports: [PrismaService],
+})
+export class PrismaModule {}
+
+
+## apps/plant_shop_nest/src/prisma/prisma.service.ts
+
+import { Injectable, OnModuleInit } from '@nestjs/common';
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit {
+  async onModuleInit() {
+    await this.$connect();
+  }
+
+  async enableShutdownHooks(app: any) {
+    this.$on('beforeExit' as any, async () => {
+      await app.close();
+    });
+  }
+}
+
+
+
+# MAIN
+#
+## apps/plant_shop_nest/src/main.ts
+
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app/app.module';
+import * as express from 'express';
+import { join } from 'path';
+import * as cookieParser from 'cookie-parser';
+
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+	app.use(cookieParser());
+  const server: express.Express = app.getHttpAdapter().getInstance();
+
+  // Log pour le débogage (vous pouvez le retirer en production finale)
+  app.use((req, res, next) => {
+    next();
+  });
+
+  // Étape A : Définir le préfixe de l'API
+  // Toutes les routes de vos contrôleurs Nest commenceront par /api.
+  app.setGlobalPrefix('api');
+
+  // Étape B : Configuration du SSR (uniquement si la variable d'environnement est activée)
+  if (process.env.SERVE_SSR === 'true') {
+    const browserDist = join(
+      process.cwd(),
+      'dist/apps/plant-shop-angular-universal/browser'
+    );
+    const indexHtml = join(browserDist, 'index.html');
+
+    // 2a. Servir les fichiers statiques d'Angular (JS, CSS, images...).
+    // Ce middleware est prioritaire et répondra avant le fallback.
+    server.use(express.static(browserDist, { maxAge: '1y', index: false }));
+
+    // 2b. Le fallback SSR pour les routes du frontend Angular.
+    // ====================== MODIFICATION IMPORTANTE ICI ======================
+    // On remplace '*' par une expression régulière qui intercepte tout SAUF /api.
+    // C'est la correction pour l'erreur "PathError: Missing parameter name".
+    server.get(
+      /^(?!\/api).*/,
+      (req: express.Request, res: express.Response) => {
+         res.sendFile(indexHtml);
+      }
+    );
+    // =========================================================================
+  }
+
+  // Configuration globale des pipes et de CORS
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    })
+  );
+
+  app.enableCors({
+    origin: [
+      'http://localhost:8300', // Port dev Angular
+      'http://localhost:3000',
+      'http://localhost:4150', // Port prod SSR
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    credentials: true,
+  });
+
+  // Étape C : Démarrage du serveur
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+
+  Logger.log(`🚀 Application démarrée sur: http://localhost:${port}`);
+}
+
+bootstrap();
+
+
+
+# APP MODULE
+#
+## apps/plant_shop_nest/src/app/app.controller.spec.ts
+
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+describe('AppController', () => {
+  let app: TestingModule;
+
+  beforeAll(async () => {
+    app = await Test.createTestingModule({
+      controllers: [AppController],
+      providers: [AppService],
+    }).compile();
+  });
+
+  describe('getData', () => {
+    it('should return "Hello API"', () => {
+      const appController = app.get<AppController>(AppController);
+      expect(appController.getData()).toEqual({ message: 'Hello API' });
+    });
+  });
+});
+
+
+## apps/plant_shop_nest/src/app/app.controller.ts
+
+import { Controller, Get } from '@nestjs/common';
+
+import { AppService } from './app.service';
+
+@Controller('')
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get('hello')
+  getData() {
+    return this.appService.getData();
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/app.module.ts
+
+// # Importations
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { PrismaModule } from '../prisma/prisma.module';
+import { UsersModule } from './users/users.module';
+import { PlantsModule } from './plants/plants.module';
+import { OrdersModule } from './orders/orders.module';
+import { OrderItemsModule } from './order-items/order-items.module';
+import { AuthModule } from './auth/auth.module';
+// import { AngularModule } from './angular/angular.module';
+
+// # Module principal
+@Module({
+  imports: [
+    PrismaModule,
+    UsersModule,
+    PlantsModule,
+    OrdersModule,
+    OrderItemsModule,
+    AuthModule,
+    // ...(process.env.SERVE_SSR === 'true' ? [AngularModule] : []),
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+
+## apps/plant_shop_nest/src/app/app.service.spec.ts
+
+import { Test } from '@nestjs/testing';
+import { AppService } from './app.service';
+
+describe('AppService', () => {
+  let service: AppService;
+
+  beforeAll(async () => {
+    const app = await Test.createTestingModule({
+      providers: [AppService],
+    }).compile();
+
+    service = app.get<AppService>(AppService);
+  });
+
+  describe('getData', () => {
+    it('should return "Hello API"', () => {
+      expect(service.getData()).toEqual({ message: 'Hello API' });
+    });
+  });
+});
+
+
+## apps/plant_shop_nest/src/app/app.service.ts
+
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class AppService {
+  getData(): { message: string } {
+    return { message: 'Hello API' };
+  }
+}
+
+
+
+# DTOs
+#
+## apps/plant_shop_nest/src/app/order-items/dto/order-item.dto.ts
+
+// # Importations
+import { IsInt, IsNotEmpty } from 'class-validator';
+
+// # Données (DTOs)
+export class CreateOrderItemDto {
+  @IsInt() @IsNotEmpty() orderId!: number;
+  @IsInt() @IsNotEmpty() plantId!: number;
+  @IsInt() @IsNotEmpty() quantity!: number;
+}
+
+export class UpdateOrderItemDto {
+  @IsInt() @IsNotEmpty() quantity!: number;
+}
+
+
+## apps/plant_shop_nest/src/app/orders/dto/order.dto.ts
+
+// # Importations
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsArray,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+
+// # Données (DTOs)
+export class OrderItemDto {
+  @IsInt() @IsNotEmpty() plantId!: number;
+  @IsInt() @IsNotEmpty() quantity!: number;
+}
+
+export class CreateOrderDto {
+  @IsInt() @IsNotEmpty() userId!: number;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  items!: OrderItemDto[];
+}
+
+export class UpdateOrderDto {
+  @IsString() @IsOptional() status?: string;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  @IsOptional()
+  items?: OrderItemDto[];
+}
+
+
+## apps/plant_shop_nest/src/app/plants/dto/plant.dto.ts
+
+// # Importations
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
+
+// # Données (DTOs)
+export class CreatePlantDto {
+  /** Nom de la plante */
+  @IsString() @IsNotEmpty() name!: string;
+  /** Prix unitaire */
+  @IsInt() @IsPositive() price!: number;
+  /** Description optionnelle */
+  @IsString() @IsOptional() description?: string;
+  /** Stock disponible */
+  @IsInt() @IsPositive() stock!: number;
+}
+
+export class UpdatePlantDto {
+  @IsString() @IsOptional() name?: string;
+  @IsInt() @IsPositive() @IsOptional() price?: number;
+  @IsString() @IsOptional() description?: string;
+  @IsInt() @IsPositive() @IsOptional() stock?: number;
+}
+
+
+## apps/plant_shop_nest/src/app/users/dto/user.dto.ts
+
+// # Importations
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsBoolean,
+} from 'class-validator';
+
+// # Données (DTOs)
+export class CreateUserDto {
+  @IsEmail() email!: string;
+  @IsString() @IsNotEmpty() name?: string;
+  @IsString() @IsNotEmpty() password!: string;
+  @IsBoolean() @IsOptional() admin?: boolean;
+}
+
+export class UpdateUserDto {
+  @IsEmail() @IsOptional() email?: string;
+  @IsString() @IsOptional() name?: string;
+  @IsString() @IsOptional() password?: string;
+  @IsBoolean() @IsOptional() admin?: boolean;
+}
+
+
+
+# CONTROLLERS
+#
+## apps/plant_shop_nest/src/app/auth/auth.controller.ts
+
+// # Importations
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Get,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { Response, Request } from 'express';
+import { AuthService } from './auth.service';
+import { JwtAuthGuard } from './jwt-auth.guard';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  // /** Inscription */
+  // @Post('register')
+  // async register(
+  //   @Body('email') email: string,
+  //   @Body('password') password: string,
+  //   @Body('name') name: string,
+  //   @Res({ passthrough: true }) res: Response
+  // ) {
+  //   const { access_token, user } = await this.authService.register(
+  //     email,
+  //     password,
+  //     name
+  //   );
+
+  //   // Dépose le cookie httpOnly
+  //   res.cookie('jwt', access_token, {
+  //     httpOnly: true,
+  //     secure: process.env.NODE_ENV === 'production',
+  //     sameSite: 'strict',
+  //     maxAge: 1000 * 60 * 60 * 24, // 1 jour
+  //   });
+
+  //   return { user };
+  // }
+
+  // /** Connexion */
+  // @Post('login')
+  // async login(
+  //   @Body('email') email: string,
+  //   @Body('password') password: string,
+  //   @Res({ passthrough: true }) res: Response
+  // ) {
+  //   const utilisateur = await this.authService.validateUser(email, password);
+  //   const { access_token, user } = await this.authService.login(utilisateur);
+
+  //   res.cookie('jwt', access_token, {
+  //     httpOnly: true,
+  //     secure: process.env.NODE_ENV === 'production',
+  //     sameSite: 'strict',
+  //     maxAge: 1000 * 60 * 60 * 24,
+  //   });
+
+  //   return { user }; // ✅ on renvoie simplement l'utilisateur
+  // }
+
+  /** Inscription */
+  @Post('register')
+  async register(
+    @Body('email') email: string,
+    @Body('password') password: string,
+    @Body('name') name: string,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    console.log('[AuthController] register() reçu', { email, name });
+
+    const { access_token, user } = await this.authService.register(
+      email,
+      password,
+      name
+    );
+
+    console.log('[AuthController] token généré', access_token);
+    console.log('[AuthController] utilisateur créé', user);
+
+    res.cookie('jwt', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 1000 * 60 * 60 * 24,
+    });
+    console.log('[AuthController] cookie jwt posé');
+
+    return { user };
+  }
+
+  /** Connexion */
+  @Post('login')
+  async login(
+    @Body('email') email: string,
+    @Body('password') password: string,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    console.log('[AuthController] login() reçu', { email });
+
+    const { access_token, user } = await this.authService.login(
+      email,
+      password
+    );
+
+    console.log('[AuthController] token généré', access_token);
+    console.log('[AuthController] utilisateur validé', user);
+
+    res.cookie('jwt', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 1000 * 60 * 60 * 24,
+    });
+    console.log('[AuthController] cookie jwt posé');
+
+    return { user };
+  }
+
+  /** Déconnexion */
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('jwt');
+    return { message: 'Déconnecté' };
+  }
+
+  /** Récupérer l’utilisateur courant */
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async me(@Req() req: Request) {
+    const user = (req as any).user;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      admin: user.admin,
+    };
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/order-items/order-items.controller.ts
+
+// # Importations
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import { OrderItemsService } from './order-items.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+
+// # Contrôleur OrderItems
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('order-items')
+export class OrderItemsController {
+  constructor(private readonly orderItemsService: OrderItemsService) {}
+
+  // ✅ Un admin peut voir tous les order-items
+  @Roles('admin')
+  @Get()
+  findAll() {
+    return this.orderItemsService.findAll();
+  }
+
+  // ✅ Un utilisateur peut consulter un order-item uniquement si lié à sa commande
+  @Get(':id')
+  findOne(@Param('id') id: string, @Req() req: any) {
+    const user = req.user;
+    return this.orderItemsService.findOneForUser(+id, user);
+  }
+
+  // ✅ Tout utilisateur connecté peut ajouter un item à sa commande
+  @Post()
+  create(@Body() data: any, @Req() req: any) {
+    const user = req.user;
+    return this.orderItemsService.create(data, user);
+  }
+
+  // ✅ Admin peut modifier un item (ex. quantité)
+  @Roles('admin')
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.orderItemsService.update(+id, data);
+  }
+
+  // ✅ Admin peut supprimer un item
+  @Roles('admin')
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.orderItemsService.remove(+id);
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/orders/orders.controller.ts
+
+// # Importations
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import { OrdersService } from './orders.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+import { Request } from 'express';
+
+// # Contrôleur Orders
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('orders')
+export class OrdersController {
+  constructor(private readonly ordersService: OrdersService) {}
+
+  // ✅ Tout utilisateur authentifié voit uniquement ses propres commandes
+  @Get()
+  findAll(@Req() req: any) {
+    const userId = req.user.id;
+    return this.ordersService.findAll(userId);
+  }
+
+  // ✅ Tout utilisateur authentifié peut créer une commande
+  @Post()
+  create(@Body() data: any, @Req() req: any) {
+    const user = req.user;
+    return this.ordersService.create(data, user);
+  }
+
+  // ✅ Un admin peut mettre à jour une commande (ex. statut)
+  @Roles('admin')
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.ordersService.update(+id, data);
+  }
+
+  // ✅ Un admin peut supprimer une commande
+  @Roles('admin')
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.ordersService.remove(+id);
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/plants/admin-plants.controller.ts
+
+// # Importations
+import {
+  Controller,
+  Get,
+  Delete,
+  Param,
+  UseGuards,
+  Post,
+  Patch,
+  Body,
+} from '@nestjs/common';
+import { PlantsService } from './plants.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+
+// # Controller Admin Plants
+@Controller('admin/plants')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class AdminPlantsController {
+  constructor(private readonly plantsService: PlantsService) {}
+
+  @Get()
+  @Roles('admin')
+  findAll() {
+    return this.plantsService.findAll();
+  }
+
+  @Post()
+  @Roles('admin')
+  create(@Body() data: any) {
+    return this.plantsService.create(data);
+  }
+
+  @Patch(':id')
+  @Roles('admin')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.plantsService.update(+id, data);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  remove(@Param('id') id: string) {
+    return this.plantsService.remove(+id);
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/plants/plants.controller.ts
+
+// # Importations
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
+import { PlantsService } from './plants.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+
+// # Contrôleur Plants
+@Controller('plants')
+export class PlantsController {
+  constructor(private readonly plantsService: PlantsService) {}
+
+  // Public
+  @Get()
+  findAll() {
+    return this.plantsService.findAll();
+  }
+
+  // Public
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.plantsService.findOne(+id);
+  }
+
+  // Admin
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post()
+  create(@Body() data: any) {
+    return this.plantsService.create(data);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.plantsService.update(+id, data);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.plantsService.remove(+id);
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/users/admin-users.controller.ts
+
+// # Importations
+import {
+  Controller,
+  Get,
+  Delete,
+  Param,
+  UseGuards,
+  Patch,
+  Body,
+} from '@nestjs/common';
+import { UsersService } from './users.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+
+// # Controller Admin Users
+@Controller('admin/users')
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class AdminUsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  @Roles('admin')
+  findAll() {
+    return this.usersService.findAll();
+  }
+
+  @Patch(':id')
+  @Roles('admin')
+  update(@Param('id') id: string, @Body() data: any) {
+    return this.usersService.update(+id, data);
+  }
+
+  @Delete(':id')
+  @Roles('admin')
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(+id);
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/users/users.controller.ts
+
+// # Importations
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  Req,
+  ForbiddenException,
+} from '@nestjs/common';
+import { UsersService } from './users.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+
+// # Contrôleur Users
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Roles('admin')
+  @Get()
+  findAll() {
+    return this.usersService.findAll();
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  async findOne(@Param('id') id: string, @Req() req) {
+    const userId = +id;
+    const currentUser = req.user;
+
+    // Admin → accès OK
+    if (currentUser.admin) {
+      return this.usersService.findOne(userId);
+    }
+
+    // Utilisateur → accès seulement à son propre profil
+    if (currentUser.id === userId) {
+      return this.usersService.findOne(userId);
+    }
+
+    throw new ForbiddenException('Accès refusé');
+  }
+
+  @Roles('admin')
+  @Post()
+  create(@Body() data: any) {
+    return this.usersService.create(data);
+  }
+
+  // Admin ou utilisateur propriétaire
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() data: any, @Req() req) {
+    const userId = +id;
+    const currentUser = req.user;
+
+    // Admin → peut modifier n’importe qui
+    if (currentUser.admin) {
+      return this.usersService.update(userId, data);
+    }
+
+    // Utilisateur → peut modifier uniquement son propre profil
+    if (currentUser.id === userId) {
+      // Sécurité : empêcher qu’il force `admin: true`
+      if ('admin' in data) delete data.admin;
+      return this.usersService.update(userId, data);
+    }
+
+    throw new ForbiddenException('Accès refusé');
+  }
+
+  @Roles('admin')
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(+id);
+  }
+}
+
+
+
+# SERVICES
+#
+## apps/plant_shop_nest/src/app/auth/auth.service.ts
+
+// # Importations
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UsersService } from '../users/users.service';
+import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
+
+// # Service d'authentification
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService
+  ) {}
+
+  // /**
+  //  * Valider un utilisateur via email/mot de passe
+  //  */
+  // async validateUser(email: string, password: string) {
+  //   const utilisateur = await this.usersService.findByEmail(email);
+  //   if (!utilisateur)
+  //     throw new UnauthorizedException('Utilisateur introuvable');
+
+  //   const valide = await bcrypt.compare(password, utilisateur.password);
+  //   if (!valide) throw new UnauthorizedException('Mot de passe invalide');
+
+  //   const { password: _, ...resultat } = utilisateur;
+  //   return resultat;
+  // }
+
+  // /**
+  //  * Générer un JWT pour un utilisateur
+  //  */
+  // async login(utilisateur: any) {
+  //   const payload = {
+  //     sub: utilisateur.id,
+  //     email: utilisateur.email,
+  //     admin: utilisateur.admin,
+  //     name: utilisateur.name,
+  //   };
+  //   return {
+  //     access_token: this.jwtService.sign(payload),
+  //     user: utilisateur,
+  //   };
+  // }
+
+  // async register(email: string, password: string, name: string) {
+  //   const hashed = await bcrypt.hash(password, 10);
+  //   const utilisateur = await this.usersService.create({
+  //     email,
+  //     password: hashed,
+  //     name,
+  //   });
+  //   const payload = {
+  //     sub: utilisateur.id,
+  //     email: utilisateur.email,
+  //     admin: utilisateur.admin,
+  //     name: utilisateur.name,
+  //   };
+  //   return {
+  //     access_token: this.jwtService.sign(payload),
+  //     user: utilisateur,
+  //   };
+  // }
+
+  async register(email: string, password: string, name?: string) {
+    console.log('[AuthService] register() appelé', { email, name });
+
+    const hashed = await bcrypt.hash(password, 10);
+    console.log('[AuthService] mot de passe hashé', hashed);
+
+    const utilisateur = await this.usersService.create({
+      email,
+      password: hashed,
+      name,
+    });
+    console.log('[AuthService] utilisateur inséré en base', utilisateur);
+
+    const payload = {
+      sub: utilisateur.id,
+      email: utilisateur.email,
+      admin: utilisateur.admin,
+    };
+    const access_token = await this.jwtService.signAsync(payload);
+
+    console.log('[AuthService] access_token généré', access_token);
+
+    return {
+      access_token,
+      user: {
+        id: utilisateur.id,
+        email: utilisateur.email,
+        name: utilisateur.name,
+      },
+    };
+  }
+
+  async validateUser(email: string, password: string) {
+    console.log('[AuthService] validateUser() pour', email);
+
+    const utilisateur = await this.usersService.findByEmail(email);
+    console.log('[AuthService] utilisateur trouvé', utilisateur);
+
+    if (!utilisateur) throw new UnauthorizedException('Utilisateur inexistant');
+
+    const valide = await bcrypt.compare(password, utilisateur.password);
+    console.log('[AuthService] résultat bcrypt.compare', valide);
+
+    if (!valide) throw new UnauthorizedException('Mot de passe invalide');
+
+    return utilisateur;
+  }
+
+  async login(email: string, password: string) {
+    console.log('[AuthService] login() appelé', { email });
+
+    const utilisateur = await this.validateUser(email, password);
+    console.log('[AuthService] utilisateur validé', utilisateur);
+
+    const payload = {
+      sub: utilisateur.id,
+      email: utilisateur.email,
+      admin: utilisateur.admin,
+    };
+    const access_token = await this.jwtService.signAsync(payload);
+
+    console.log('[AuthService] token JWT généré', access_token);
+
+    return {
+      access_token,
+      user: {
+        id: utilisateur.id,
+        email: utilisateur.email,
+        name: utilisateur.name,
+      },
+    };
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/order-items/order-items.service.ts
+
+// # Importations
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateOrderItemDto, UpdateOrderItemDto } from './dto/order-item.dto';
+import { User } from '@prisma/client';
+
+/**
+  Service métier OrderItems, accès base via Prisma
+  @constructor PrismaService service Prisma injecté
+*/
+@Injectable()
+export class OrderItemsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+    Liste tous les orderItems (inclut plante et commande)
+  */
+  async list() {
+    return this.prisma.orderItem.findMany({
+      include: { plant: true, order: true },
+    });
+  }
+
+  /**
+    Récupère un orderItem par id
+    @id identifiant numérique orderItem
+  */
+  async one(id: number) {
+    const orderItem = await this.prisma.orderItem.findUnique({
+      where: { id },
+      include: { plant: true, order: true },
+    });
+    if (!orderItem) throw new NotFoundException('OrderItem non trouvé');
+    return orderItem;
+  }
+
+  /**
+    findAll (alias de list pour cohérence)
+  */
+  async findAll() {
+    return this.list();
+  }
+
+  /**
+    recherche un item spécifique appartenant à un utilisateur
+    @id identifiant de l’item
+    @user utilisateur connecté
+  */
+  async findOneForUser(id: number, user: User) {
+    const orderItem = await this.prisma.orderItem.findFirst({
+      where: { id, order: { userId: user.id } },
+      include: { plant: true, order: true },
+    });
+    if (!orderItem)
+      throw new NotFoundException('OrderItem non trouvé pour cet utilisateur');
+    return orderItem;
+  }
+
+  /**
+    Création orderItem (corrigé pour prendre user et dto)
+    @dto données orderItem
+    @user utilisateur connecté
+  */
+  async create(dto: CreateOrderItemDto, user: User) {
+    // Approche 2 : Utiliser uniquement l'approche relationnelle
+    return this.prisma.orderItem.create({
+      data: {
+        quantity: dto.quantity,
+        plant: {
+          connect: { id: dto.plantId },
+        },
+        order: {
+          connect: { id: dto.orderId },
+        },
+      },
+    });
+  }
+
+  /**
+    Mise à jour orderItem (quantité)
+    @id identifiant orderItem
+    @dto données mises à jour
+  */
+  async update(id: number, dto: UpdateOrderItemDto) {
+    return this.prisma.orderItem.update({ where: { id }, data: dto });
+  }
+
+  /**
+    Suppression orderItem
+    @id identifiant orderItem
+  */
+  async remove(id: number) {
+    return this.prisma.orderItem.delete({ where: { id } });
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/orders/orders.service.ts
+
+// # Importations
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateOrderDto, UpdateOrderDto } from './dto/order.dto';
+import { User } from '@prisma/client';
+
+/**
+  Service métier des commandes, accès base via Prisma
+  @constructor PrismaService service Prisma injecté
+*/
+@Injectable()
+export class OrdersService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+    Liste toutes les commandes (optionnel : inclure items/plantes)
+  */
+  async list() {
+    return this.prisma.order.findMany({
+      include: { orderItems: { include: { plant: true } } },
+    });
+  }
+
+  /**
+   * Liste les commandes de l’utilisateur courant uniquement
+   * @userId identifiant de l’utilisateur connecté
+   */
+  async findAll(userId: number) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      include: { orderItems: { include: { plant: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /**
+    Détail commande par id (inclut items/plantes)
+    @id identifiant numérique commande
+  */
+  async one(id: number) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      include: { orderItems: { include: { plant: true } } },
+    });
+    if (!order) throw new NotFoundException('Commande non trouvée');
+    return order;
+  }
+
+  /**
+    retourne une commande pour un utilisateur donné
+    @id identifiant de la commande
+    @user utilisateur connecté
+  */
+  async findOneForUser(id: number, user: User) {
+    if (user.admin) {
+      return this.one(id); // admin → accès global
+    }
+    const order = await this.prisma.order.findFirst({
+      where: { id, userId: user.id },
+      include: { orderItems: { include: { plant: true } } },
+    });
+    if (!order)
+      throw new NotFoundException('Commande non trouvée pour cet utilisateur');
+    return order;
+  }
+
+  /**
+    Création commande (corrigé pour attendre aussi l’utilisateur)
+    @dto données commande
+    @user utilisateur connecté
+  */
+  async create(dto: CreateOrderDto, user: User) {
+    let total = 0;
+    const { items } = dto;
+
+    const order = await this.prisma.order.create({
+      data: { userId: user.id, status: 'confirmed', totalPrice: 0 },
+    });
+
+    for (const item of items) {
+      const plant = await this.prisma.plant.findUnique({
+        where: { id: item.plantId },
+      });
+      if (!plant || plant.stock < item.quantity) {
+        throw new BadRequestException(
+          `Stock insuffisant pour la plante ${item.plantId}`
+        );
+      }
+      total += plant.price * item.quantity;
+      await this.prisma.plant.update({
+        where: { id: plant.id },
+        data: { stock: plant.stock - item.quantity },
+      });
+      await this.prisma.orderItem.create({
+        data: { orderId: order.id, plantId: plant.id, quantity: item.quantity },
+      });
+    }
+
+    return this.prisma.order.update({
+      where: { id: order.id },
+      data: { totalPrice: total },
+    });
+  }
+
+  /**
+    Mise à jour commande (statut, items)
+    @id identifiant commande
+    @dto données mises à jour
+  */
+  async update(id: number, dto: UpdateOrderDto) {
+    return this.prisma.order.update({ where: { id }, data: dto });
+  }
+
+  /**
+    Suppression commande (+ suppression items liés)
+    @id identifiant commande
+  */
+  async remove(id: number) {
+    await this.prisma.orderItem.deleteMany({ where: { orderId: id } });
+    return this.prisma.order.delete({ where: { id } });
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/plants/plants.service.ts
+
+// # Importations
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreatePlantDto, UpdatePlantDto } from './dto/plant.dto';
+
+/**
+  Service métier des plantes, accès base via Prisma
+  @constructor PrismaService service Prisma injecté
+*/
+@Injectable()
+export class PlantsService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+    Retourne toutes les plantes disponibles (stock >= 1)
+  */
+  async list() {
+    return this.prisma.plant.findMany({
+      where: { stock: { gte: 1 } },
+      orderBy: { name: 'asc' },
+    });
+  }
+
+  /**
+    findAll (alias de list)
+  */
+  async findAll() {
+    return this.list();
+  }
+
+  /**
+    Retourne une plante par id
+    @id identifiant numérique plante
+  */
+  async one(id: number) {
+    const plant = await this.prisma.plant.findUnique({ where: { id } });
+    if (!plant) throw new NotFoundException('Plante non trouvée');
+    return plant;
+  }
+
+  /**
+    findOne (alias de one)
+  */
+  async findOne(id: number) {
+    return this.one(id);
+  }
+
+  /**
+    Création plante
+    @dto données plante
+  */
+  async create(dto: CreatePlantDto) {
+    return this.prisma.plant.create({ data: dto });
+  }
+
+  /**
+    Mise à jour plante
+    @id identifiant plante
+    @dto données mises à jour
+  */
+  async update(id: number, dto: UpdatePlantDto) {
+    return this.prisma.plant.update({ where: { id }, data: dto });
+  }
+
+  /**
+    Suppression plante
+    @id identifiant plante
+  */
+  async remove(id: number) {
+    return this.prisma.plant.delete({ where: { id } });
+  }
+}
+
+
+## apps/plant_shop_nest/src/app/users/users.service.ts
+
+// # Importations
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import * as bcrypt from 'bcryptjs';
+
+/**
+  Service métier des utilisateurs, accès base via Prisma
+  @constructor PrismaService service Prisma injecté
+*/
+@Injectable()
+export class UsersService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  /**
+    Liste tous les utilisateurs (admins d'abord, tri par nom)
+  */
+  async list() {
+    return this.prisma.user.findMany({
+      orderBy: [{ admin: 'desc' }, { name: 'asc' }],
+    });
+  }
+
+  /**
+    findAll (alias de list)
+  */
+  async findAll() {
+    return this.list();
+  }
+
+  /**
+    Récupère un utilisateur par id
+    @id identifiant numérique utilisateur
+  */
+  async one(id: number) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+    return user;
+  }
+
+  /**
+    findOne (alias de one)
+  */
+  async findOne(id: number) {
+    return this.one(id);
+  }
+
+  // /**
+  //   Création utilisateur (mot de passe hashé)
+  //   @dto données utilisateur
+  // */
+  // async create(dto: CreateUserDto) {
+  //   const data = { ...dto, password: await bcrypt.hash(dto.password, 10) };
+  //   return this.prisma.user.create({ data });
+  // }
+
+  // /**
+  //   Mise à jour utilisateur
+  //   @id identifiant utilisateur
+  //   @dto données mises à jour (hash password si présent)
+  // */
+  // async update(id: number, dto: UpdateUserDto) {
+  //   const data = { ...dto };
+  //   if (data.password) data.password = await bcrypt.hash(data.password, 10);
+  //   return this.prisma.user.update({ where: { id }, data });
+  // }
+
+  /**
+    Suppression utilisateur
+    @id identifiant utilisateur
+  */
+  async remove(id: number) {
+    return this.prisma.user.delete({ where: { id } });
+  }
+
+  // /**
+  //   Cherche un utilisateur par email
+  //   @param email email utilisateur
+  // */
+  // async findByEmail(email: string) {
+  //   return this.prisma.user.findUnique({ where: { email } });
+  // }
+
+  async create(dto: CreateUserDto) {
+    console.log('[UsersService] create() appelé', dto);
+    const user = await this.prisma.user.create({ data: dto });
+    console.log('[UsersService] utilisateur créé en base', user);
+    return user;
+  }
+
+  async findByEmail(email: string) {
+    console.log('[UsersService] findByEmail() appelé', email);
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    console.log('[UsersService] utilisateur trouvé', user);
+    return user;
+  }
+
+  async update(id: number, dto: UpdateUserDto) {
+    console.log('[UsersService] update() appelé', { id, ...dto });
+    const user = await this.prisma.user.update({ where: { id }, data: dto });
+    console.log('[UsersService] utilisateur mis à jour', user);
+    return user;
+  }
+}
+
+
+
+# MODULES
+#
+## apps/plant_shop_nest/src/app/auth/auth.module.ts
+
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { UsersModule } from '../users/users.module';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { LocalStrategy } from './local.strategy';
+import { JwtStrategy } from './jwt.strategy';
+import { RolesGuard } from './roles.guard';
+
+@Module({
+  imports: [
+    UsersModule,
+    PassportModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'dev_secret',
+      signOptions: { expiresIn: '1h' },
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, LocalStrategy, JwtStrategy, AuthService, LocalStrategy, JwtStrategy, RolesGuard],
+  exports: [AuthService],
+})
+export class AuthModule {}
+
+
+## apps/plant_shop_nest/src/app/order-items/order-items.module.ts
+
+import { Module } from '@nestjs/common';
+import { OrderItemsController } from './order-items.controller';
+import { OrderItemsService } from './order-items.service';
+import { PrismaModule } from '../../prisma/prisma.module';
+
+@Module({
+  imports: [PrismaModule],
+  controllers: [OrderItemsController],
+  providers: [OrderItemsService],
+  exports: [OrderItemsService],
+})
+export class OrderItemsModule {}
+
+
+## apps/plant_shop_nest/src/app/orders/orders.module.ts
+
+import { Module } from '@nestjs/common';
+import { OrdersController } from './orders.controller';
+import { OrdersService } from './orders.service';
+import { PrismaModule } from '../../prisma/prisma.module';
+
+@Module({
+  imports: [PrismaModule],
+  controllers: [OrdersController],
+  providers: [OrdersService],
+  exports: [OrdersService],
+})
+export class OrdersModule {}
+
+
+## apps/plant_shop_nest/src/app/plants/plants.module.ts
+
+import { Module } from '@nestjs/common';
+import { PlantsService } from './plants.service';
+import { PlantsController } from './plants.controller';
+import { AdminPlantsController } from './admin-plants.controller';
+import { PrismaModule } from '../../prisma/prisma.module';
+
+@Module({
+  imports: [PrismaModule],
+  controllers: [PlantsController, AdminPlantsController],
+  providers: [PlantsService],
+  exports: [PlantsService],
+})
+export class PlantsModule {}
+
+
+## apps/plant_shop_nest/src/app/users/users.module.ts
+
+import { Module } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { UsersController } from './users.controller';
+import { AdminUsersController } from './admin-users.controller';
+import { PrismaModule } from '../../prisma/prisma.module';
+
+@Module({
+  imports: [PrismaModule],
+  controllers: [UsersController, AdminUsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+
+
+
+# ANGULAR APP
+#
+## apps/plant-shop-angular-universal/src/app/app.config.server.ts
+
+import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering } from '@angular/ssr';
+import { appConfig } from './app.config';
+
+const serverConfig: ApplicationConfig = {
+  providers: [provideServerRendering()],
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);
+
+
+## apps/plant-shop-angular-universal/src/app/app.config.ts
+
+// # Importations
+import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { appRoutes as routes } from './app.routes';
+import { authInterceptor } from './auth/auth.interceptor';
+
+// # Config application
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideHttpClient(withInterceptors([authInterceptor])),
+  ],
+};
+
+
+## apps/plant-shop-angular-universal/src/app/app.routes.ts
+
+// # Importations
+import { Route } from '@angular/router';
+import { AuthGuard } from './auth/auth.guard';
+import { AdminGuard } from './auth/admin.guard';
+
+export const appRoutes: Route[] = [
+  // 🌿 Produits
+  {
+    path: 'plants',
+    loadComponent: () =>
+      import('./plants/plants-list/plants-list.component').then(
+        (m) => m.PlantsListComponent
+      ),
+  },
+  {
+    path: 'admin/plants/new',
+    loadComponent: () =>
+      import('./admin/plants/plant-new/plant-new.component').then(
+        (m) => m.PlantNewComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'plants/:id',
+    loadComponent: () =>
+      import('./plants/plant-detail/plant-detail.component').then(
+        (m) => m.PlantDetailComponent
+      ),
+  },
+
+  // 👤 Auth
+  {
+    path: 'login',
+    loadComponent: () =>
+      import('./auth/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    loadComponent: () =>
+      import('./auth/register/register.component').then(
+        (m) => m.RegisterComponent
+      ),
+  },
+
+  // 🛒 Panier
+  {
+    path: 'cart',
+    loadComponent: () =>
+      import('./cart/cart/cart.component').then((m) => m.CartComponent),
+  },
+
+  // 👤 Profil
+  {
+    path: 'profile',
+    loadComponent: () =>
+      import('./users/user-profile/user-profile.component').then(
+        (m) => m.UserProfileComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'profile/edit/:id',
+    loadComponent: () =>
+      import('./users/user-profile-edit/user-profile-edit.component').then(
+        (m) => m.UserProfileEditComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+
+  // 📦 Commandes
+  {
+    path: 'orders/new',
+    loadComponent: () =>
+      import('./orders/order-new/order-new.component').then(
+        (m) => m.OrderNewComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'orders',
+    loadComponent: () =>
+      import('./orders/order-list/order-list.component').then(
+        (m) => m.OrderListComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  // ⚙️ Admin
+  {
+    path: 'admin/users',
+    loadComponent: () =>
+      import('./admin/users/users-list/users-list.component').then(
+        (m) => m.AdminUsersListComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'admin/users/edit/:id',
+    loadComponent: () =>
+      import(
+        './admin/users/user-profile-edit/user-profile-edit.component'
+      ).then((m) => m.AdminUserEditComponent),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'admin/users/:id',
+    loadComponent: () =>
+      import('./admin/users/user-details/user-details.component').then(
+        (m) => m.UserDetailsComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'admin/plants',
+    loadComponent: () =>
+      import('./admin/plants/plants-list/plants-list.component').then(
+        (m) => m.AdminPlantsListComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+  {
+    path: 'admin/plants/:id/edit',
+    loadComponent: () =>
+      import('./admin/plants/plants-edit/plants-edit.component').then(
+        (m) => m.PlantsEditComponent
+      ),
+    canActivate: [AdminGuard],
+  },
+
+  // Route par défaut
+  { path: '', redirectTo: '/plants', pathMatch: 'full' },
+
+  // 404
+  { path: '**', redirectTo: '/plants' },
+];
+
+
+## apps/plant-shop-angular-universal/src/app/app.spec.ts
+
+import { TestBed } from '@angular/core/testing';
+import { App } from './app';
+import { NxWelcome } from './nx-welcome';
+
+describe('App', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [App, NxWelcome],
+    }).compileComponents();
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome plant-shop-angular-universal'
+    );
+  });
+});
+
+
+## apps/plant-shop-angular-universal/src/app/app.ts
+
+// # Importations
+import { Component } from '@angular/core';
+import { RouterModule } from '@angular/router';
+import { NavbarComponent } from './navbar/navbar.component';
+
+// # Composant racine
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterModule, NavbarComponent],
+  templateUrl: './app.html',
+  styleUrls: ['./app.css'],
+})
+export class App {}
+
+
+
+# ANGULAR SERVICES
+#
+## apps/plant-shop-angular-universal/src/app/auth/auth.service.ts
+
+// # Importations
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject, tap } from 'rxjs';
+
+// # Service d'authentification
+@Injectable({ providedIn: 'root' })
+export class AuthService {
+  private apiUrl = '/api/auth'; // proxy -> backend Nest
+  user$ = new BehaviorSubject<any | null>(null);
+
+  constructor(private http: HttpClient) {}
+
+  /** Enregistrer un utilisateur */
+  register(email: string, password: string, name?: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/register`,
+      { email, password, name },
+      { withCredentials: true }
+    );
+  }
+
+  /** Login utilisateur */
+  login(email: string, password: string): Observable<any> {
+    return this.http
+      .post<any>(
+        `${this.apiUrl}/login`,
+        { email, password },
+        { withCredentials: true }
+      )
+      .pipe(tap(() => this.refreshUser()));
+  }
+
+  /** Logout */
+  logout(): Observable<any> {
+    return this.http
+      .post(`${this.apiUrl}/logout`, {}, { withCredentials: true })
+      .pipe(tap(() => this.user$.next(null)));
+  }
+
+  /** Récupérer l’utilisateur courant (via cookie httpOnly) */
+  getCurrentUser(): Observable<any> {
+    return this.http
+      .get<any>(`${this.apiUrl}/me`, { withCredentials: true })
+      .pipe(tap((user) => this.user$.next(user)));
+  }
+
+  /** Utilitaire interne : recharge l’utilisateur après login/register */
+  private refreshUser(): void {
+    this.getCurrentUser().subscribe({
+      next: (user) => this.user$.next(user),
+      error: () => this.user$.next(null),
+    });
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/cart/cart.service.ts
+
+// # Importations
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+// # Données
+export type CartItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  stock: number;
+};
+
+@Injectable({ providedIn: 'root' })
+export class CartService {
+  private storageKey = 'cart';
+  private items: Record<number, CartItem> = {};
+  cartCount$ = new BehaviorSubject<number>(0);
+
+  constructor() {
+    this.load();
+    this.updateCount();
+  }
+
+  /** Ajouter une plante */
+  add(id: number, name: string, price: number, stock: number) {
+    if (!this.items[id]) {
+      this.items[id] = { id, name, price, quantity: 0, stock };
+    }
+    if (this.items[id].quantity >= stock) {
+      this.showStockAlert(name, stock); // Modale custom
+      setTimeout(() => {
+        // Attente 300ms
+        this.items[id].quantity = stock; // Clamp au stock
+        this.save();
+        this.updateCount(); // Persistance + compteur
+      }, 300);
+      return;
+    }
+    this.items[id].quantity++; // Incrément normal
+    this.save();
+    this.updateCount(); // Persistance + compteur
+  }
+
+  /** Mettre à jour quantité */
+  update(id: number, quantity: number): number {
+    if (!this.items[id]) return 0;
+    const stock = this.items[id].stock;
+    const corrected = Math.min(Math.max(quantity, 1), stock);
+
+    // on garde la valeur brute immédiatement (comme en Rails)
+    this.items[id].quantity = corrected;
+    this.save();
+
+    // compteur et total mis à jour après 300ms
+    setTimeout(() => {
+      this.updateCount();
+    }, 300);
+
+    return corrected;
+  }
+
+  /** Supprimer un produit */
+  remove(id: number) {
+    delete this.items[id];
+    this.save();
+    this.updateCount();
+  }
+
+  /** Vider le panier */
+  clear() {
+    this.items = {};
+    localStorage.removeItem(this.storageKey);
+    this.updateCount();
+  }
+
+  /** Récupérer le contenu du panier */
+  getAll(): CartItem[] {
+    return Object.values(this.items);
+  }
+
+  /** Total général */
+  getTotal(): number {
+    return this.getAll().reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+  }
+
+  /** Payload API */
+  toOrderPayload() {
+    return this.getAll().map((item) => ({
+      plantId: item.id,
+      quantity: item.quantity,
+    }));
+  }
+
+  /** Charger depuis localStorage */
+  private load() {
+    const raw = localStorage.getItem(this.storageKey);
+    this.items = raw ? JSON.parse(raw) : {};
+  }
+
+  /** Sauvegarder dans localStorage */
+  private save() {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.items));
+  }
+
+  /** Modale stock insuffisant (alignée sur l'implémentation Rails) */
+  private showStockAlert(name: string, stock: number) {
+    if (typeof window === 'undefined' || !document?.body) return;
+    const alert = document.createElement('div');
+    alert.className =
+      'alert alert-warning fade position-absolute top-0 start-50 translate-middle-x mt-3 shadow';
+    alert.setAttribute('role', 'alert');
+    alert.setAttribute(
+      'style',
+      'z-index:1055;max-width:600px;pointer-events:none'
+    );
+    alert.append(
+      document.createTextNode('Stock insuffisant pour cette plante ('),
+      (() => {
+        const strong = document.createElement('strong');
+        strong.textContent = name;
+        return strong;
+      })(),
+      document.createTextNode(`), actuellement, il en reste ${stock}.`)
+    );
+    document.body.append(alert);
+    setTimeout(() => alert.classList.add('show'), 10); // animation d'apparition
+    setTimeout(() => {
+      // disparition + cleanup
+      alert.classList.remove('show');
+      alert.classList.add('fade');
+      setTimeout(() => alert.remove(), 300);
+    }, 3000);
+  }
+
+  /** Mettre à jour compteur */
+  private updateCount() {
+    const total = this.getAll().reduce((sum, item) => sum + item.quantity, 0);
+    this.cartCount$.next(total);
+  }
+}
+
+
+## apps/plant-shop-angular-universal/src/app/services/api.service.ts
+
+// # Importations
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+// # Types simples
+export type Plante = {
+  id: number;
+  name: string;
+  price: number;
+  stock: number;
+  description?: string;
+};
+export type Utilisateur = {
+  id: number;
+  email: string;
+  name: string;
+  admin: boolean;
+};
+export type Commande = {
+  id: number;
+  userId: number;
+  status: string | null;
+  totalPrice: number | null;
+  createdAt: string;
+  orderItems: {
+    id: number;
+    quantity: number;
+    plant: Plante;
+  }[];
+};
+
+// # Service API
+@Injectable({ providedIn: 'root' })
+export class ApiService {
+  private http = inject(HttpClient);
+  private base = '/api'; // proxy vers backend Nest
+
+  /* ---------- Plantes ---------- */
+  listerPlantes(): Observable<Plante[]> {
+    return this.http.get<Plante[]>(`${this.base}/plants`);
+  }
+  unePlante(id: number): Observable<Plante> {
+    return this.http.get<Plante>(`${this.base}/plants/${id}`);
+  }
+  creerPlante(data: Partial<Plante>): Observable<Plante> {
+    console.log('[API CALL] POST /plants avec', data);
+    return this.http.post<Plante>(`${this.base}/plants`, data);
+  }
+  creerPlanteAdmin(data: Partial<Plante>): Observable<Plante> {
+    console.log('[API CALL] POST /admin/plants avec', data);
+    return this.http.post<Plante>(`${this.base}/admin/plants`, data);
+  }
+  majPlanteAdmin(id: number, data: Partial<Plante>): Observable<Plante> {
+    return this.http.patch<Plante>(`${this.base}/admin/plants/${id}`, data);
+  }
+  listerPlantesAdmin(): Observable<Plante[]> {
+    return this.http.get<Plante[]>(`${this.base}/admin/plants`);
+  }
+  supprimerPlanteAdmin(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/plants/${id}`);
+  }
+
+  /* ---------- Utilisateurs ---------- */
+  listerUtilisateurs(): Observable<Utilisateur[]> {
+    return this.http.get<Utilisateur[]>(`${this.base}/users`);
+  }
+  unUtilisateur(id: number): Observable<Utilisateur> {
+    return this.http.get<Utilisateur>(`${this.base}/users/${id}`);
+  }
+  majProfile(id: number, data: Partial<Utilisateur>): Observable<Utilisateur> {
+    return this.http.patch<Utilisateur>(`${this.base}/users/${id}`, data);
+  }
+  majUtilisateurAdmin(
+    id: number,
+    data: Partial<Utilisateur>
+  ): Observable<Utilisateur> {
+    return this.http.patch<Utilisateur>(`${this.base}/admin/users/${id}`, data);
+  }
+  listerUtilisateursAdmin(): Observable<Utilisateur[]> {
+    return this.http.get<Utilisateur[]>(`${this.base}/admin/users`);
+  }
+  supprimerUtilisateurAdmin(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/admin/users/${id}`);
+  }
+
+  /* ---------- Commandes ---------- */
+  listerCommandes(): Observable<Commande[]> {
+    return this.http.get<Commande[]>(`${this.base}/orders`);
+  }
+  uneCommande(id: number): Observable<Commande> {
+    return this.http.get<Commande>(`${this.base}/orders/${id}`);
+  }
+  creerCommande(data: any): Observable<Commande> {
+    return this.http.post<Commande>(`${this.base}/orders`, data);
+  }
+  majCommande(id: number, data: any): Observable<Commande> {
+    return this.http.patch<Commande>(`${this.base}/orders/${id}`, data);
+  }
+  supprimerCommande(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/orders/${id}`);
+  }
+}
+
+
+## Makefile
+
+# Run Dev SSR
+run: prod
+
+# Run non-SSR
+run-dev-back:
+	npm run dev-back
+
+run-dev-front:
+	npm run dev-front
+
+# Test des routes Nest
+test-e2e:
+	npm run test-e2e
+
+test-routes:
+	npm run test-routes
+
+# Build et run SSR prod
+build:
+	npm run build
+
+buid-back:
+	npm run build-backend
+
+build-front:
+	npm run build-frontend
+
+prod:
+	npm run start
+
+build-run-prod: build prod
+
+typage:
+	npx tsc --noEmit
+
+seed:
+	npx prisma db seed
+
+lint:
+	npm run lint
+
+

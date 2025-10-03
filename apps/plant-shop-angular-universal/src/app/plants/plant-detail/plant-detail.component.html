@@ -1,0 +1,32 @@
+<div class="card shadow-lg" *ngIf="plante as p; else chargement">
+	<div class="card-body">
+		<h1 class="card-title">{{ p.name }}</h1>
+		<p><strong>Prix :</strong> {{ p.price }} €</p>
+		<p><strong>Description :</strong> {{ p.description || '—' }}</p>
+		<p *ngIf="est_admin"><strong>Stock :</strong> {{ p.stock }} unités</p>
+
+		<div class="d-flex flex-wrap gap-2 mb-2">
+			<button type="button" class="btn btn-success" (click)="ajouterAuPanier()">
+				Ajouter au panier
+			</button>
+
+			<ng-container *ngIf="est_admin">
+				<a class="btn btn-warning" [routerLink]="['/admin/plants', plante.id, 'edit']" >
+					Modifier
+				</a>
+
+				<button type="button" class="btn btn-danger" (click)="supprimerPlante()">
+					Supprimer
+				</button>
+			</ng-container>
+		</div>
+
+		<div class="mt-3">
+			<a class="btn btn-secondary" routerLink="/plants">Retour à la liste</a>
+		</div>
+	</div>
+</div>
+
+<ng-template #chargement>
+	<p>Chargement…</p>
+</ng-template>

@@ -1,0 +1,153 @@
+{
+  "name": "plant-shop-angular-universal",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/plant-shop-angular-universal/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular-devkit/build-angular:browser",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/apps/plant-shop-angular-universal/browser",
+        "index": "apps/plant-shop-angular-universal/src/index.html",
+        "main": "apps/plant-shop-angular-universal/src/main.ts",
+        "polyfills": ["zone.js"],
+        "tsConfig": "apps/plant-shop-angular-universal/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/plant-shop-angular-universal/public",
+            "output": "/"
+          }
+        ],
+        "styles": [
+          "node_modules/bootstrap/dist/css/bootstrap.min.css",
+          "apps/plant-shop-angular-universal/src/styles.css"
+        ],
+        "scripts": ["node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"]
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "vendorChunk": true,
+          "extractLicenses": false,
+          "sourceMap": true,
+          "namedChunks": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "configurations": {
+        "production": {
+          "buildTarget": "plant-shop-angular-universal:build:production"
+        },
+        "development": {
+          "buildTarget": "plant-shop-angular-universal:build:development"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "buildTarget": "plant-shop-angular-universal:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/apps/plant-shop-angular-universal"
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "plant-shop-angular-universal:build",
+        "port": 4200,
+        "spa": true
+      }
+    },
+    "server": {
+      "dependsOn": ["build"],
+      "executor": "@angular-devkit/build-angular:server",
+      "options": {
+        "outputPath": "dist/apps/plant-shop-angular-universal/server",
+        "main": "apps/plant-shop-angular-universal/src/server.ts",
+        "tsConfig": "apps/plant-shop-angular-universal/tsconfig.server.json"
+      },
+      "configurations": {
+        "production": {
+          "outputHashing": "media"
+        },
+        "development": {
+          "buildOptimizer": false,
+          "optimization": false,
+          "sourceMap": true,
+          "extractLicenses": false,
+          "vendorChunk": true
+        }
+      },
+      "defaultConfiguration": "production"
+    },
+    "serve-ssr": {
+      "continuous": true,
+      "executor": "@angular-devkit/build-angular:ssr-dev-server",
+      "configurations": {
+        "development": {
+          "browserTarget": "plant-shop-angular-universal:build:development",
+          "serverTarget": "plant-shop-angular-universal:server:development",
+          "proxyConfig": "proxy.conf.json"
+        },
+        "production": {
+          "browserTarget": "plant-shop-angular-universal:build:production",
+          "serverTarget": "plant-shop-angular-universal:server:production",
+          "proxyConfig": "proxy.conf.json"
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "prerender": {
+      "executor": "@angular-devkit/build-angular:prerender",
+      "options": {
+        "routes": ["/"]
+      },
+      "configurations": {
+        "development": {
+          "browserTarget": "plant-shop-angular-universal:build:development",
+          "serverTarget": "plant-shop-angular-universal:server:development"
+        },
+        "production": {
+          "browserTarget": "plant-shop-angular-universal:build:production",
+          "serverTarget": "plant-shop-angular-universal:server:production"
+        }
+      },
+      "defaultConfiguration": "production"
+    }
+  }
+}

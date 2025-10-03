@@ -1,0 +1,50 @@
+<div class="container mt-4">
+	<h1 class="text-center mb-4">🛒 Mon Panier</h1>
+
+	<!-- Panier vide -->
+	<div *ngIf="items.length === 0" class="alert alert-info mt-3">
+		Votre panier est vide.
+	</div>
+
+	<!-- Panier rempli -->
+	<div *ngIf="items.length > 0">
+		<table class="table align-middle">
+			<thead class="table-light">
+				<tr>
+					<th>Plante</th>
+					<th style="width:120px;">Quantité</th>
+					<th>Total</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr *ngFor="let item of items">
+					<td>
+						<a [routerLink]="['/plants', item.id]" class="text-decoration-none">
+							{{ item.name }}
+						</a>
+					</td>
+					<td style="width:120px;">
+						<input type="number" class="form-control form-control-sm" [(ngModel)]="item.quantity" [min]="1"
+							[max]="item.stock" (ngModelChange)="delayedUpdate(item.id, $event)">
+					</td>
+					<td>{{ getLineTotal(item.id) }} €</td>
+					<td>
+						<button class="btn btn-danger btn-sm" (click)="remove(item.id)">
+							Retirer
+						</button>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<!-- Ligne 1 : total -->
+		<p class="text-end fw-bold">Total : {{ total() }} €</p>
+
+		<!-- Ligne 2 : boutons -->
+		<div class="d-flex justify-content-between mt-2">
+			<button class="btn btn-outline-secondary btn-sm" (click)="clear()">Vider le panier</button>
+			<a class="btn btn-primary" routerLink="/orders/new">Passer la commande</a>
+		</div>
+	</div>
+</div>

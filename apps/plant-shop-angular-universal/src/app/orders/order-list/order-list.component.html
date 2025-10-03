@@ -1,0 +1,28 @@
+<h1 class="text-center mb-4">📜 Mes Commandes</h1>
+
+<ng-container *ngIf="commandes.length > 0; else aucune">
+	<div class="card mb-3 shadow-sm" *ngFor="let commande of commandes; let index = index">
+		<div class="card-body">
+			<h5 class="card-title">
+				Commande n°{{ commandes.length - index }}
+			</h5>
+			<p class="mb-1 text-muted">
+				Passée le {{ formater(commande.createdAt) }} –
+				Total : {{ commande.totalPrice }} €
+			</p>
+			<ul class="mb-2">
+				<li *ngFor="let item of commande.orderItems">
+					<a [routerLink]="['/plants', item.plant.id]" class="text-decoration-none text-primary">
+						{{ item.plant.name }}
+					</a>
+					{{ item.quantity }} × {{ item.plant.price }} €
+				</li>
+			</ul>
+			<p><strong>Statut :</strong> {{ commande.status }}</p>
+		</div>
+	</div>
+</ng-container>
+
+<ng-template #aucune>
+	<p class="alert alert-info">Aucune commande pour le moment.</p>
+</ng-template>

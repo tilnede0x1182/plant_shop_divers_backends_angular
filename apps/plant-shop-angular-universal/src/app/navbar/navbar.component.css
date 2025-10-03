@@ -1,0 +1,7 @@
+/* Couleur personnalisée pour la navbar */
+.custom-navbar {
+  background-color: #006576 !important;
+}
+.logout-link {
+  cursor: pointer;
+}

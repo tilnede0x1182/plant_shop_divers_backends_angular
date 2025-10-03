@@ -1,0 +1,50 @@
+<div class="container mt-4">
+	<h2>Nouvelle plante 🌱</h2>
+
+	<!-- Message d’erreur backend -->
+	<div *ngIf="messageErreur" class="alert alert-danger mb-3">
+		{{ messageErreur }}
+	</div>
+
+	<form (ngSubmit)="onSubmit($event)" #plantForm="ngForm" class="mt-3">
+
+		<!-- Nom -->
+		<div class="mb-3">
+			<label class="form-label">Nom</label>
+			<input type="text" class="form-control" [(ngModel)]="model.name" name="name" required #name="ngModel" />
+			<div class="text-danger" *ngIf="name.invalid && (name.dirty || name.touched)">
+				Nom obligatoire
+			</div>
+		</div>
+
+		<!-- Prix -->
+		<div class="mb-3">
+			<label class="form-label">Prix (€)</label>
+			<input type="number" class="form-control" [(ngModel)]="model.price" name="price" required min="0.01"
+				#price="ngModel" />
+			<div class="text-danger" *ngIf="price.invalid && (price.dirty || price.touched)">
+				Prix requis, supérieur à 0
+			</div>
+		</div>
+
+		<!-- Stock -->
+		<div class="mb-3">
+			<label class="form-label">Stock</label>
+			<input type="number" class="form-control" [(ngModel)]="model.stock" name="stock" required min="0"
+				#stock="ngModel" />
+			<div class="text-danger" *ngIf="stock.invalid && (stock.dirty || stock.touched)">
+				Stock requis, supérieur ou égal à 0
+			</div>
+		</div>
+
+		<!-- Description -->
+		<div class="mb-3">
+			<label class="form-label">Description</label>
+			<textarea class="form-control" rows="4" [(ngModel)]="model.description" name="description"></textarea>
+		</div>
+
+		<button type="submit" class="btn btn-success" [disabled]="plantForm.invalid">
+			Ajouter la plante
+		</button>
+	</form>
+</div>

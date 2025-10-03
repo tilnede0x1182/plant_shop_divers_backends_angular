@@ -1,0 +1,27 @@
+<div class="container mt-4">
+	<h2>Éditer la plante 🌱</h2>
+	<form (ngSubmit)="onSubmit()">
+		<div *ngIf="erreurs.length" class="alert alert-danger">
+			<ul>
+				<li *ngFor="let erreur of erreurs">{{ erreur }}</li>
+			</ul>
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Nom de la plante</label>
+			<input type="text" class="form-control" [(ngModel)]="plante.name" name="name" required />
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Prix (€)</label>
+			<input type="number" class="form-control" [(ngModel)]="plante.price" name="price" required />
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Description</label>
+			<textarea class="form-control" rows="4" [(ngModel)]="plante.description" name="description"></textarea>
+		</div>
+		<div class="mb-3">
+			<label class="form-label">Stock (unités)</label>
+			<input type="number" class="form-control" [(ngModel)]="plante.stock" name="stock" required min="0" />
+		</div>
+		<button type="submit" class="btn btn-primary">Mettre à jour</button>
+	</form>
+</div>

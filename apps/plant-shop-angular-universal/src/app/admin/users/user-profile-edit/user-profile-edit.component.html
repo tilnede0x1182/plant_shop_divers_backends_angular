@@ -1,0 +1,28 @@
+<div class="container mt-4" *ngIf="user">
+	<h2>✏️ Modifier un utilisateur</h2>
+
+	<form (ngSubmit)="enregistrer()">
+		<div *ngIf="erreurs.length" class="alert alert-danger">
+			<ul>
+				<li *ngFor="let err of erreurs">{{ err }}</li>
+			</ul>
+		</div>
+
+		<div class="mb-3">
+			<label class="form-label">Nom</label>
+			<input [(ngModel)]="user.name" name="name" class="form-control" required />
+		</div>
+
+		<div class="mb-3">
+			<label class="form-label">Email</label>
+			<input [(ngModel)]="user.email" name="email" class="form-control" required />
+		</div>
+
+		<div class="form-check mb-3">
+			<input id="admin" type="checkbox" [(ngModel)]="user.admin" name="admin" class="form-check-input" />
+			<label for="admin" class="form-check-label">Administrateur</label>
+		</div>
+
+		<button type="submit" class="btn btn-success">Mettre à jour</button>
+	</form>
+</div>

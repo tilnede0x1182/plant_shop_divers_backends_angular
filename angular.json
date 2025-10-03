@@ -1,0 +1,134 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "defaultProject": "plant-shop-angular-universal",
+  "projects": {
+    "plant-shop-angular-universal": {
+      "projectType": "application",
+      "root": "apps/plant-shop-angular-universal",
+      "sourceRoot": "apps/plant-shop-angular-universal/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/apps/plant-shop-angular-universal/browser",
+            "index": "apps/plant-shop-angular-universal/src/index.html",
+            "main": "apps/plant-shop-angular-universal/src/main.ts",
+            "polyfills": [],
+            "tsConfig": "apps/plant-shop-angular-universal/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "apps/plant-shop-angular-universal/public",
+                "output": "/"
+              },
+              "apps/plant-shop-angular-universal/src/assets"
+            ],
+            "styles": [
+              "node_modules/bootstrap/dist/css/bootstrap.min.css",
+              "apps/plant-shop-angular-universal/src/styles.css"
+            ],
+            "scripts": [
+              "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "fileReplacements": [
+                {
+                  "replace": "apps/plant-shop-angular-universal/src/environments/environment.ts",
+                  "with": "apps/plant-shop-angular-universal/src/environments/environment.prod.ts"
+                }
+              ]
+            },
+            "development": {
+              "buildOptimizer": false,
+              "optimization": false,
+              "vendorChunk": true,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "namedChunks": true
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "plant-shop-angular-universal:build:production"
+            },
+            "development": {
+              "buildTarget": "plant-shop-angular-universal:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "build-ssr": {
+          "builder": "@angular-devkit/build-angular:server",
+          "options": {
+            "outputPath": "dist/apps/plant-shop-angular-universal/server",
+            "main": "apps/plant-shop-angular-universal/src/main.server.ts",
+            "tsConfig": "apps/plant-shop-angular-universal/tsconfig.server.json"
+          },
+          "configurations": {
+            "production": {
+              "sourceMap": false,
+              "optimization": true
+            },
+            "development": {
+              "sourceMap": true,
+              "optimization": false
+            }
+          }
+        },
+        "serve-ssr": {
+          "builder": "@nguniversal/builders:ssr-dev-server",
+          "options": {
+            "browserTarget": "plant-shop-angular-universal:build",
+            "serverTarget": "plant-shop-angular-universal:build-ssr"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "plant-shop-angular-universal:build:production",
+              "serverTarget": "plant-shop-angular-universal:build-ssr:production"
+            },
+            "development": {
+              "browserTarget": "plant-shop-angular-universal:build:development",
+              "serverTarget": "plant-shop-angular-universal:build-ssr:development"
+            }
+          }
+        }
+      }
+    },
+    "plant_shop_nest": {
+      "root": "apps/plant_shop_nest",
+      "sourceRoot": "apps/plant_shop_nest/src",
+      "projectType": "application",
+      "architect": {
+        "build": {
+          "builder": "@nrwl/node:build",
+          "options": {
+            "outputPath": "dist/apps/plant_shop_nest",
+            "main": "apps/plant_shop_nest/src/main.ts",
+            "tsConfig": "apps/plant_shop_nest/tsconfig.app.json",
+            "assets": ["apps/plant_shop_nest/src/assets"]
+          }
+        },
+        "serve": {
+          "builder": "@nrwl/node:execute",
+          "options": {
+            "buildTarget": "plant_shop_nest:build"
+          }
+        }
+      }
+    }
+  }
+}

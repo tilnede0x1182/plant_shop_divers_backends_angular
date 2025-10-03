@@ -1,0 +1,371 @@
+# manifest.yaml — backend en 1 fichier, calqué sur ton API Nest
+
+app:
+  name: plant-shop
+  basePath: /api
+  cors:
+    origins: ["http://localhost:8300"]
+    credentials: true
+  auth:
+    strategy: jwt_cookie
+    cookieName: jwt
+    cookie:
+      httpOnly: true
+      sameSite: strict
+      secureInProd: true
+      maxAgeSeconds: 86400
+    userModel: User
+    # champs login/password:
+    identityField: email
+    passwordField: passwordHash
+    # payload JWT minimal
+    jwt:
+      subjectField: id
+      claims:
+        id: "$user.id"
+        email: "$user.email"
+        admin: "$user.admin"
+
+database:
+  client: postgres
+  url: ${DATABASE_URL}
+
+models:
+  User:
+    table: users
+    fields:
+      id:        { type: int, primary: true, auto: true }
+      email:     { type: string, unique: true, required: true }
+      name:      { type: string, required: true }
+      passwordHash: { type: string, private: true } # stocké hashé
+      admin:     { type: boolean, default: false }
+      createdAt: { type: datetime, defaultNow: true }
+    views:
+      public: ["id","email","name","admin"]  # ce que renvoie /auth/me
+  Plant:
+    table: plants
+    fields:
+      id:          { type: int, primary: true, auto: true }
+      name:        { type: string, required: true }
+      price:       { type: number, required: true }
+      stock:       { type: int, required: true }
+      description: { type: string, nullable: true }
+      createdAt:   { type: datetime, defaultNow: true }
+  Order:
+    table: orders
+    fields:
+      id:         { type: int, primary: true, auto: true }
+      userId:     { type: int, required: true, ref: User.id, onDelete: cascade }
+      status:     { type: string, nullable: true }
+      totalPrice: { type: number, nullable: true }
+      createdAt:  { type: datetime, defaultNow: true }
+    relations:
+      user:       { belongsTo: User, localField: userId, foreignField: id }
+      orderItems: { hasMany: OrderItem, foreignField: orderId }
+  OrderItem:
+    table: order_items
+    fields:
+      id:        { type: int, primary: true, auto: true }
+      orderId:   { type: int, required: true, ref: Order.id, onDelete: cascade }
+      plantId:   { type: int, required: true, ref: Plant.id, onDelete: restrict }
+      quantity:  { type: int, required: true, min: 1 }
+    relations:
+      order: { belongsTo: Order, localField: orderId, foreignField: id }
+      plant: { belongsTo: Plant, localField: plantId, foreignField: id }
+
+security:
+  roles:
+    - name: admin
+      when: "$auth.admin === true"
+    - name: user
+      when: "$auth.id != null"
+  # helpers pour l'ownership
+  rules:
+    isOwnerOfOrder: |
+      SELECT COUNT(*)
+      FROM orders
+      WHERE id = $params.id AND userId = $auth.id
+
+routes:
+  # ---------- AUTH ----------
+  - path: /auth/register
+    method: POST
+    public: true
+    handler:
+      type: custom
+      steps:
+        - validate:
+            body:
+              email: { type: string, format: email, required: true }
+              password: { type: string, min: 6, required: true }
+              name: { type: string, required: true }
+        - derive:
+            # hash du mot de passe
+            passwordHash: "$hash($body.password)"
+        - db.create:
+            model: User
+            data:
+              email: "$body.email"
+              name: "$body.name"
+              passwordHash: "$vars.passwordHash"
+              admin: false
+        - auth.issueToken:
+            userId: "$result.id"
+        - auth.setCookie: {}  # met le cookie httpOnly 'jwt'
+        - respond:
+            json:
+              user:
+                id: "$result.id"
+                email: "$result.email"
+                name: "$result.name"
+                admin: "$result.admin"
+
+  - path: /auth/login
+    method: POST
+    public: true
+    handler:
+      type: custom
+      steps:
+        - validate:
+            body:
+              email: { type: string, format: email, required: true }
+              password: { type: string, required: true }
+        - db.findOne:
+            model: User
+            where: { email: "$body.email" }
+            assign: user
+        - ensure:
+            condition: "$verify($user.passwordHash, $body.password)"
+            message: "Identifiants invalides"
+            status: 401
+        - auth.issueToken:
+            userId: "$user.id"
+        - auth.setCookie: {}
+        - respond:
+            json:
+              user:
+                id: "$user.id"
+                email: "$user.email"
+                name: "$user.name"
+                admin: "$user.admin"
+
+  - path: /auth/logout
+    method: POST
+    auth: optional
+    handler:
+      type: custom
+      steps:
+        - auth.clearCookie: {}
+        - respond: { json: { message: "Déconnecté" } }
+
+  - path: /auth/me
+    method: GET
+    auth: required
+    handler:
+      type: custom
+      steps:
+        - db.findOne:
+            model: User
+            where: { id: "$auth.id" }
+            select: ["id","email","name","admin"]
+            assign: me
+        - respond: { json: "$me" }
+
+  # ---------- PLANTS ----------
+  - path: /plants
+    method: GET
+    public: true
+    handler:
+      type: db.list
+      model: Plant
+
+  - path: /plants/:id
+    method: GET
+    public: true
+    handler:
+      type: db.get
+      model: Plant
+      where: { id: "$params.id" }
+
+  # Admin CRUD sous /admin/plants (le front les appelle ainsi)
+  - path: /admin/plants
+    method: GET
+    role: admin
+    handler: { type: db.list, model: Plant }
+
+  - path: /admin/plants
+    method: POST
+    role: admin
+    handler:
+      type: db.create
+      model: Plant
+      data:
+        name: "$body.name"
+        price: "$body.price"
+        stock: "$body.stock"
+        description: "$body.description"
+
+  - path: /admin/plants/:id
+    method: PATCH
+    role: admin
+    handler:
+      type: db.update
+      model: Plant
+      where: { id: "$params.id" }
+      data: "$body"
+
+  - path: /admin/plants/:id
+    method: DELETE
+    role: admin
+    handler:
+      type: db.delete
+      model: Plant
+      where: { id: "$params.id" }
+
+  # ---------- USERS ----------
+  # Lecture/MAJ d'un profil par son propriétaire (le front PATCH /users/:id)
+  - path: /users/:id
+    method: PATCH
+    auth: required
+    handler:
+      type: custom
+      steps:
+        - ensure:
+            condition: "$auth.admin === true || $auth.id == $params.id"
+            message: "Interdit"
+            status: 403
+        - db.update:
+            model: User
+            where: { id: "$params.id" }
+            data:
+              name: "$body.name"
+              email: "$body.email"
+              admin: "$if($auth.admin, $body.admin, $current.admin)"
+        - respond:
+            json:
+              id: "$result.id"
+              email: "$result.email"
+              name: "$result.name"
+              admin: "$result.admin"
+
+  # Espace admin utilisateurs: list, patch, delete
+  - path: /admin/users
+    method: GET
+    role: admin
+    handler:
+      type: db.list
+      model: User
+      select: ["id","email","name","admin"]
+
+  - path: /admin/users/:id
+    method: PATCH
+    role: admin
+    handler:
+      type: db.update
+      model: User
+      where: { id: "$params.id" }
+      data: "$body"
+      select: ["id","email","name","admin"]
+
+  - path: /admin/users/:id
+    method: DELETE
+    role: admin
+    handler:
+      type: db.delete
+      model: User
+      where: { id: "$params.id" }
+
+  # ---------- ORDERS ----------
+  # GET /orders : seulement les commandes de l’utilisateur courant
+  - path: /orders
+    method: GET
+    auth: required
+    handler:
+      type: db.list
+      model: Order
+      where: { userId: "$auth.id" }
+      include:
+        orderItems:
+          include: { plant: true }
+
+  # POST /orders : crée une commande à partir d’un tableau items [{plantId, quantity}]
+  - path: /orders
+    method: POST
+    auth: required
+    handler:
+      type: custom
+      steps:
+        - validate:
+            body:
+              items:
+                type: array
+                items:
+                  type: object
+                  props:
+                    plantId: { type: int, required: true }
+                    quantity: { type: int, min: 1, required: true }
+        - db.create:
+            model: Order
+            data:
+              userId: "$auth.id"
+              status: null
+              totalPrice: null
+            assign: order
+        - loop:
+            over: "$body.items"
+            do:
+              - db.get:
+                  model: Plant
+                  where: { id: "$item.plantId" }
+                  select: ["id","price","stock","name"]
+                  assign: plant
+              - ensure:
+                  condition: "$plant.stock >= $item.quantity"
+                  message: "Stock insuffisant"
+                  status: 400
+              - db.create:
+                  model: OrderItem
+                  data:
+                    orderId: "$order.id"
+                    plantId: "$plant.id"
+                    quantity: "$item.quantity"
+              - db.update:
+                  model: Plant
+                  where: { id: "$plant.id" }
+                  data:
+                    stock: "$plant.stock - $item.quantity"
+        - db.update:
+            model: Order
+            where: { id: "$order.id" }
+            data:
+              totalPrice: |
+                SELECT COALESCE(SUM(oi.quantity * p.price),0)
+                FROM order_items oi
+                JOIN plants p ON p.id = oi.plantId
+                WHERE oi.orderId = $order.id
+        - db.get:
+            model: Order
+            where: { id: "$order.id" }
+            include:
+              orderItems:
+                include: { plant: true }
+            assign: finalOrder
+        - respond: { json: "$finalOrder" }
+
+  # PATCH /orders/:id & DELETE /orders/:id : admin only
+  - path: /orders/:id
+    method: PATCH
+    role: admin
+    handler:
+      type: db.update
+      model: Order
+      where: { id: "$params.id" }
+      data: "$body"
+
+  - path: /orders/:id
+    method: DELETE
+    role: admin
+    handler:
+      type: db.delete
+      model: Order
+      where: { id: "$params.id" }

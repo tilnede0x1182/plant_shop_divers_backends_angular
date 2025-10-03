@@ -1,125 +1,80 @@
-# 🌿 PlantShop – E-commerce Botanique (Angular / NestJS / Nx / Prisma)
+# 🔬 Multi-Backends Playground – Exploration backend avec Angular
 
-Application complète de vente de plantes construite avec **Angular** (frontend) et **NestJS** (backend), orchestrée par **Nx** dans un monorepo modulaire.
-Elle propose une interface moderne côté client 🌱 et un espace d’administration sécurisé 🔐 pour gérer plantes, utilisateurs et commandes.
-La base PostgreSQL est alimentée par un **seed réaliste** (plantes 🪴, comptes 👤, commandes 📦).
-
----
-
-## 🛠 Stack Technique
-
-### 🎨 Frontend
-
-* Angular 20 pour le rendu applicatif
-* Angular Universal (SSR) pour le rendu côté serveur en production
-* Nx 21 pour la gestion du monorepo (serve, build, tests, orchestration front/back)
-* Bootstrap 5 pour la mise en forme rapide et responsive
-* Proxy Angular → NestJS via `proxy.conf.json` en mode SPA
-
-### 🧩 Backend
-
-* NestJS 11 pour l’API REST et l’intégration SSR Angular Universal en mode production
-* Prisma ORM (PostgreSQL, migrations, seed réaliste)
-* Nx 21 également côté backend pour le build, le serve et la modularité des apps
-* Authentification sécurisée via JWT + cookies httpOnly
-* Guards NestJS (AuthGuard, AdminGuard) pour protéger les routes sensibles
-* Middleware Angular/Nest pour restreindre l’accès à `/admin`
-
-### ⚙️ Outils
-
-* FakerJS pour les données factices
-* BcryptJS pour le hachage des mots de passe
-* Nx CLI pour builds/tests
-* Tests end-to-end (NestJS + script Node)
+Ce repo Nx est un **laboratoire d’exploration backend** : un frontend Angular SSR unique sert d’interface, et plusieurs backends interchangeables exposent la même API REST et partagent la même base PostgreSQL.
+Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends sur un terrain concret : modèles, authentification, commandes.
 
 ---
 
-## ✨ Fonctionnalités
+## 🎯 Objectif
 
-### 👥 Côté client
-
-* Catalogue des plantes (filtrage par stock > 0, tri alphabétique)
-* Détail produit (nom, description, prix, stock)
-* Panier (quantités ajustables, total dynamique, persistance locale)
-* Commandes (création + historique)
-* Compte utilisateur (inscription / connexion, profil modifiable)
-
-### 🔧 Administration
-
-* CRUD complet des plantes
-* Gestion des utilisateurs avec rôles (`USER`, `ADMIN`)
-* Consultation et gestion des commandes
-* Sécurité via Guards côté serveur & client
+* Avoir un **frontend unique et stable** (Angular 20 + Universal) qui reste inchangé.
+* Développer et brancher **plusieurs backends différents** sur ce même frontend.
+* Vérifier que tous respectent un contrat API identique (mêmes routes, mêmes modèles, même schéma PostgreSQL).
+* Étudier la façon dont chaque backend gère : l’authentification, la modularité, la connexion à la base et l’organisation du code.
 
 ---
 
-## 🚀 Installation et lancement
+## 🛠 Stack utilisée
 
-### 🔧 Prérequis
+### 🎨 Frontend (socle commun)
 
-* Node.js ≥ 18
-* PostgreSQL ≥ 13
-* npm ou pnpm installé
+* Angular 20 + Angular Universal (SSR)
+* Nx 21 pour l’orchestration monorepo
+* Bootstrap 5 pour la mise en forme
+* Proxy Angular → backend actif
 
-### ⚙️ Étapes principales
+### 🗄️Base de données
 
-```bash
-# 1) Installer les dépendances
-pnpm install
-
-# 2) Créer la base et exécuter les migrations Prisma
-npx prisma migrate dev
-
-# 3) Alimenter la base avec données factices
-make seed
-```
-
-### 🖥️ Modes de lancement
-
-#### Développement
-
-```bash
-# Backend seul (NestJS API)
-make run-dev-back   # http://localhost:4100/api
-
-# Frontend seul (Angular SPA avec proxy backend)
-make run-dev-front  # http://localhost:8300
-
-# SSR Angular Universal (Angular + Nest)
-make run            # http://localhost:4150
-```
-
-#### Production
-
-```bash
-# Build front + back
-make build
-
-# Lancer le serveur SSR en prod
-make prod           # http://localhost:4150
-```
+* PostgreSQL 15.x
+* Prisma 5.x pour les migrations et seeds
 
 ---
 
-## 🧪 Test des routes Nest (back-end)
+## 📚 Contrat API (routes communes à tous les backends)
 
-```bash
-# Lancer serveur Nest en mode test
-make test-e2e
+### Authentification
 
-# Lancer script de tests complets sur les routes
-make test-routes
-```
+* `POST /auth/register` → inscription
+* `POST /auth/login` → connexion
+* `POST /auth/logout` → déconnexion
+* `GET /auth/me` → infos utilisateur connecté
+
+### Plantes
+
+* `GET /plants` → liste publique
+* `GET /plants/:id` → détail
+* `POST /admin/plants` → création (admin)
+* `PATCH /admin/plants/:id` → mise à jour (admin)
+* `DELETE /admin/plants/:id` → suppression (admin)
+
+### Utilisateurs
+
+* `PATCH /users/:id` → édition de son profil (ou par admin)
+* `GET /admin/users` → liste (admin)
+* `PATCH /admin/users/:id` → mise à jour (admin)
+* `DELETE /admin/users/:id` → suppression (admin)
+
+### Commandes
+
+* `GET /orders` → liste des commandes utilisateur
+* `POST /orders` → création d’une commande avec items
+* `PATCH /orders/:id` → mise à jour (admin)
+* `DELETE /orders/:id` → suppression (admin)
+
+## 🧩 Backends
+
+* **NestJS 11** : backend de référence, API REST + SSR Angular Universal.
+* **Manifest 0.30.x** : backend déclaratif en YAML, API REST branchée sur PostgreSQL.
 
 ---
 
-## 📦 Structure du projet
+## 📦 Structure du repo
 
 ```
 apps/
- ├─ plant-shop-angular-universal   → Frontend Angular Universal
- └─ plant_shop_nest                → Backend NestJS
-
+ ├─ plant-shop-angular-universal   → Frontend Angular (stable)
+ ├─ plant_shop_nest                → Backend NestJS
+ └─ plant_shop_manifest            → Backend Manifest
 prisma/    → Modèles + seed
-tests/     → Test des routes backend
+tests/     → Scripts de test des routes backend
 ```

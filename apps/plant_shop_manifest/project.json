@@ -1,0 +1,22 @@
+{
+  "name": "plant_shop_manifest",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/plant_shop_manifest",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "PORT=4100 pnpm dev",
+        "cwd": "apps/plant_shop_manifest"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm build",
+        "cwd": "apps/plant_shop_manifest"
+      }
+    }
+  }
+}

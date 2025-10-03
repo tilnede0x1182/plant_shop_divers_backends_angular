@@ -27,8 +27,10 @@ entities:
     single: true
     properties:
       - title
-      - { name: description, type: richText }
-      - { name: cover, ta# manifest.yaml — backend en 1 fichier, calqué sur ton API Nest
+      - name: description
+        type: richText
+      - name: cover
+        type: string
 
 app:
   name: plant-shop

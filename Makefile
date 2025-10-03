@@ -28,7 +28,19 @@ buid-back:
 run-manifest:
 	nx serve plant_shop_manifest
 
-# (plus tard tu pourras ajouter build/test Manifest ici si nécessaire)
+# Build Manifest backend
+build-manifest:
+	nx build plant_shop_manifest
+
+# Start Manifest backend (mode prod après build)
+prod-manifest:
+	nx start plant_shop_manifest
+
+build-prod: build-manifest prod-manifest
+
+# Seed database with Manifest
+seed-manifest:
+	nx seed plant_shop_manifest
 
 # ======================================================
 # 🎨 Frontend Angular

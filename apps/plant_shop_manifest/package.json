@@ -1,11 +1,13 @@
 {
-  "name": "plant_shop_manifest",
+  "name": "plantshopmanifest",
   "version": "0.1.0",
   "description": "A backend made with Manifest: https://manifest.build",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "start": "node node_modules/manifest/scripts/watch/watch.js",
+    "dev": "node node_modules/manifest/scripts/watch/watch.js",
+    "start": "node node_modules/manifest/scripts/start/start.js",
+    "build": "node node_modules/manifest/scripts/build/build.js",
     "seed": "node node_modules/manifest/dist/manifest/src/seed/scripts/seed.js"
   },
   "dependencies": {

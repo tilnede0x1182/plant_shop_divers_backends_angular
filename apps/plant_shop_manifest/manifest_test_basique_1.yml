@@ -2,11 +2,11 @@ name: plant-shop
 
 entities:
   User:
-    authenticable: true
     properties:
+      - "id int @id @default(autoincrement())"
       - "email string @unique"
       - "name string"
-      - "password string @private"
+      - "passwordHash string"
       - "admin boolean @default(false)"
       - "createdAt datetime @default(now())"
 

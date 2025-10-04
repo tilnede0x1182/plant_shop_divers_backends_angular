@@ -24,9 +24,12 @@ buid-back:
 # 🧩 Backend Manifest
 # ======================================================
 
+run-proxy-manifest:
+	node apps/plant_shop_manifest/proxy.js
+
 # Run Manifest backend (API seule)
 run-manifest:
-	nx serve plant_shop_manifest
+	PORT=4120 nx serve plant_shop_manifest
 
 # Build Manifest backend
 build-manifest:
@@ -34,13 +37,9 @@ build-manifest:
 
 # Start Manifest backend (mode prod après build)
 prod-manifest:
-	nx start plant_shop_manifest
+	PORT=4120 nx start plant_shop_manifest
 
 build-prod: build-manifest prod-manifest
-
-# Seed database with Manifest
-seed-manifest:
-	nx seed plant_shop_manifest
 
 # ======================================================
 # 🎨 Frontend Angular

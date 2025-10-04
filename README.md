@@ -64,7 +64,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 ## 🧩 Backends
 
 * **NestJS 11** : backend de référence, API REST + SSR Angular Universal.
-* **Manifest 0.30.x** : backend déclaratif en YAML, API REST branchée sur PostgreSQL.
+* **Manifest 4.17.8** : backend déclaratif en YAML, API REST branchée sur PostgreSQL. ABANDON (non débuggué)
 
 ---
 

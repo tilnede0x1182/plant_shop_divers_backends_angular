@@ -1,0 +1,36 @@
+{
+  "name": "plant_shop_manifest",
+  "projectType": "application",
+  "sourceRoot": "apps/plant_shop_manifest",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx dotenv -e .env -- node ../../node_modules/manifest/scripts/watch/watch.js manifest.yml",
+        "cwd": "apps/plant_shop_manifest"
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ../../node_modules/manifest/scripts/start/start.js manifest.yml",
+        "cwd": "apps/plant_shop_manifest"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ../../node_modules/manifest/scripts/build/build.js manifest.yml",
+        "cwd": "apps/plant_shop_manifest"
+      }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node ../../node_modules/manifest/dist/manifest/src/seed/scripts/seed.js manifest.yml",
+        "cwd": "apps/plant_shop_manifest"
+      }
+    }
+  },
+  "tags": []
+}

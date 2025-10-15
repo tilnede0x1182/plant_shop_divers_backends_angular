@@ -15,8 +15,8 @@ import (
 func AdminListPlants(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var plants []models.Plant
-		// Tri par date de création, du plus récent au plus ancien.
-		if err := db.Order("created_at DESC").Find(&plants).Error; err != nil {
+		// Tri par nom, par ordre alphabétique.
+		if err := db.Order("name ASC").Find(&plants).Error; err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}

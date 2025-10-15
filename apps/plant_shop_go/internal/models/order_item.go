@@ -14,4 +14,5 @@ type OrderItem struct {
 	OrderID   uint           `json:"orderId"`
 	PlantID   uint           `json:"plantId"`
 	Quantity  int            `json:"quantity"`
+	Plant     Plant          `json:"plant"`
 }

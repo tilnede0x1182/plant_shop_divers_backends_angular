@@ -14,5 +14,5 @@ type Order struct {
 	UserID     uint           `json:"userId"`
 	TotalPrice float64        `json:"totalPrice"`
 	Status     string         `json:"status"`
-	Items      []OrderItem    `json:"items,omitempty"`
+	Items      []OrderItem    `json:"orderItems,omitempty"`
 }

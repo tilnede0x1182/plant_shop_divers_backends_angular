@@ -33,13 +33,22 @@ func parseUintOrZero(s string) uint {
 }
 
 // ListUserOrders liste les commandes de l'utilisateur authentifié.
-// Dans votre fichier de handlers pour les commandes (ex: internal/http/handlers/orders.go)
-
-func ListOrders(db *gorm.DB) http.HandlerFunc {
+func ListUserOrders(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		raw := r.Context().Value("claims")
+		if raw == nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		claims := raw.(*security.Claims)
 		var orders []models.Order
 
-		if err := db.Order("created_at DESC").Preload("Items.Plant").Find(&orders).Error; err != nil {
+		err := db.Preload("Items.Plant").
+			Where("user_id = ?", parseUintOrZero(claims.UserID)).
+			Order("created_at DESC"). // Ajout du tri pour correspondre à NestJS
+			Find(&orders).Error
+
+		if err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}

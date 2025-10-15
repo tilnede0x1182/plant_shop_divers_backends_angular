@@ -1,10 +1,17 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type OrderItem struct {
-	gorm.Model
-	OrderID uint
-	PlantID uint
-	Quantity int
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	OrderID   uint           `json:"orderId"`
+	PlantID   uint           `json:"plantId"`
+	Quantity  int            `json:"quantity"`
 }

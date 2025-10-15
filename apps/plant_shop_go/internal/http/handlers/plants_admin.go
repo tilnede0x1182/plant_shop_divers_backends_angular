@@ -20,6 +20,9 @@ func AdminListPlants(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
+		for i := range plants {
+			plants[i].Price = float64(int(plants[i].Price*100)) / 100.0
+		}
 		_ = json.NewEncoder(w).Encode(plants)
 	}
 }

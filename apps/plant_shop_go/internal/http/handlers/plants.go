@@ -16,6 +16,9 @@ func PublicListPlants(db *gorm.DB) http.HandlerFunc {
 		var plants []models.Plant
 		// Tri par nom, par ordre alphabétique.
 		if err := db.Order("name ASC").Find(&plants).Error; err != nil { http.Error(w,"db error",500); return }
+		for i := range plants {
+			plants[i].Price = float64(int(plants[i].Price*100)) / 100.0
+		}
 		_ = json.NewEncoder(w).Encode(plants)
 	}
 }
@@ -28,6 +31,7 @@ func PublicGetPlant(db *gorm.DB) http.HandlerFunc {
 		id, err := strconv.Atoi(idStr); if err != nil { http.Error(w,"invalid id",400); return }
 		var p models.Plant
 		if err := db.First(&p, id).Error; err != nil { http.Error(w,"not found",404); return }
+		p.Price = float64(int(p.Price*100)) / 100.0
 		_ = json.NewEncoder(w).Encode(p)
 	}
 }

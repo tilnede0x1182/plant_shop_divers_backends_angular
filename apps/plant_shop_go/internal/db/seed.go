@@ -140,6 +140,7 @@ func createOrders(db *gorm.DB, plants []models.Plant) {
 			for j := 0; j < 2; j++ {
 				total += addItem(db, order.ID, plants)
 			}
+			total = math.Trunc(total*100) / 100
 			db.Model(&order).Update("total_price", total)
 		}
 	}

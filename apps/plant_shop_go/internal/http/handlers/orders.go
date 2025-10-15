@@ -58,7 +58,9 @@ func ListUserOrders(db *gorm.DB) http.HandlerFunc {
 		}
 
 		for i := range orders {
-			orders[i].TotalPrice = float64(int(orders[i].TotalPrice*100)) / 100.0
+			for j := range orders[i].Items {
+				orders[i].Items[j].Plant.Price = float64(int(orders[i].Items[j].Plant.Price*100)) / 100.0
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -165,6 +167,9 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
+		for j := range order.Items {
+			order.Items[j].Plant.Price = float64(int(order.Items[j].Plant.Price*100)) / 100.0
+		}
 		order.TotalPrice = float64(int(order.TotalPrice*100)) / 100.0
 		_ = json.NewEncoder(w).Encode(order)
 	}

@@ -46,7 +46,16 @@ func ListUserOrders(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-		_ = json.NewEncoder(w).Encode(map[string]any{"data": orders})
+
+		// *** LA CORRECTION EST ICI ***
+		// Si aucune commande n'est trouvée, `orders` sera `nil`.
+		// On s'assure de renvoyer un tableau JSON vide `[]` au lieu de `null`.
+		if orders == nil {
+			orders = make([]models.Order, 0)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(orders)
 	}
 }
 
@@ -141,7 +150,7 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 
-		if err := db.First(&order, order.ID).Error; err != nil {
+		if err := db.Preload("Items").First(&order, order.ID).Error; err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}

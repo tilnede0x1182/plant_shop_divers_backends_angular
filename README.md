@@ -65,6 +65,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 
 * **NestJS 11** : backend de référence, API REST + SSR Angular Universal.
 * **Manifest 4.17.8** : backend déclaratif en YAML, API REST branchée sur PostgreSQL. ABANDON (non débuggué)
+* **Go (GORM)** : backend en Go structuré, sans framework web tiers, API REST implémentée manuellement avec `net/http`, GORM et JWT cookie sécurisé.
 
 ---
 

@@ -50,9 +50,14 @@ func NewRouter(db *gorm.DB) *mux.Router {
 		middleware.AdminGuard(middleware.AuthGuard(handlers.DeleteOrder(db))),
 	).Methods("DELETE")
 
+	// Route POST /auth/login : authentifie un utilisateur avec email et mot de passe, renvoie un cookie de session (JWT).
+	// Route POST /auth/register : inscrit un nouvel utilisateur, renvoie un cookie de session (JWT).
+	r.HandleFunc("/auth/login", handlers.Login).Methods("POST")
+	r.HandleFunc("/auth/register", handlers.Register).Methods("POST")
+
 	// Route index pour test rapide
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte("plant_shop_go OK"))
 	})
 

@@ -116,7 +116,7 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(order)
 	}
 }

@@ -57,6 +57,10 @@ func ListUserOrders(db *gorm.DB) http.HandlerFunc {
 			orders = make([]models.Order, 0)
 		}
 
+		for i := range orders {
+			orders[i].TotalPrice = float64(int(orders[i].TotalPrice*100)) / 100.0
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(orders)
 	}
@@ -109,14 +113,16 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
 		for _, it := range in.Items {
 			var plantID uint
 			switch v := firstNonNil(it.PlantIDAny, it.PlantIDAlt).(type) {
-			case string:
-				if n, err := strconv.Atoi(v); err == nil {
-					plantID = uint(n)
-				}
-			case float64:
-				plantID = uint(v)
-			case int:
-				plantID = uint(v)
+				case string:
+					if n, err := strconv.ParseFloat(v, 64); err == nil {
+						plantID = uint(n)
+					}
+				case float64:
+					plantID = uint(v)
+				case int:
+					plantID = uint(v)
+				default:
+					plantID = 0 // défaut si rien
 			}
 
 			var p models.Plant
@@ -148,6 +154,7 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
 			total += float64(it.Quantity) * p.Price
 		}
 
+		total = float64(int(total*100)) / 100.0
 		if err := db.Model(&order).Update("total_price", total).Error; err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
@@ -158,6 +165,7 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
+		order.TotalPrice = float64(int(order.TotalPrice*100)) / 100.0
 		_ = json.NewEncoder(w).Encode(order)
 	}
 }

@@ -39,7 +39,7 @@ func AdminCreatePlant(db *gorm.DB) http.HandlerFunc {
 		}
 		p := models.Plant{
 			Name:        in.Name,
-			Price:       in.Price,
+			Price:       float64(int(in.Price*100)) / 100.0, // troncature à 2 décimales
 			Stock:       in.Stock,
 			Description: in.Description,
 		}
@@ -85,7 +85,8 @@ func AdminUpdatePlant(db *gorm.DB) http.HandlerFunc {
 			p.Name = *in.Name
 		}
 		if in.Price != nil {
-			p.Price = *in.Price
+			val := float64(int(*in.Price*100)) / 100.0
+			p.Price = val
 		}
 		if in.Stock != nil {
 			p.Stock = *in.Stock

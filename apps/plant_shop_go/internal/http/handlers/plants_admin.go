@@ -15,7 +15,8 @@ import (
 func AdminListPlants(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var plants []models.Plant
-		if err := db.Find(&plants).Error; err != nil {
+		// Tri par date de création, du plus récent au plus ancien.
+		if err := db.Order("created_at DESC").Find(&plants).Error; err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
@@ -46,7 +47,7 @@ func AdminCreatePlant(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusCreated) // Le test attend 201
+		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(p)
 	}
 }
@@ -118,6 +119,6 @@ func AdminDeletePlant(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK) // Le test attend 200
+		w.WriteHeader(http.StatusOK)
 	}
 }

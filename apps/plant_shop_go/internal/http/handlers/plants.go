@@ -14,7 +14,8 @@ import (
 func PublicListPlants(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var plants []models.Plant
-		if err := db.Find(&plants).Error; err != nil { http.Error(w,"db error",500); return }
+		// Tri par nom, par ordre alphabétique.
+		if err := db.Order("name ASC").Find(&plants).Error; err != nil { http.Error(w,"db error",500); return }
 		_ = json.NewEncoder(w).Encode(plants)
 	}
 }

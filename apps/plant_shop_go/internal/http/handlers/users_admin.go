@@ -18,7 +18,8 @@ GET /api/admin/users ou /api/users (pour admin)
 func AdminListUsers(w http.ResponseWriter, r *http.Request) {
 	var list []models.User
 	// On sélectionne les champs publics pour ne pas exposer le hash du mot de passe
-	db.Connect().Select("id", "created_at", "updated_at", "email", "name", "admin").Find(&list)
+	// Tri par date de création, du plus récent au plus ancien.
+	db.Connect().Select("id", "created_at", "updated_at", "email", "name", "admin").Order("created_at DESC").Find(&list)
 
 	// *** LA CORRECTION EST ICI ***
 	// Garantit un tableau JSON vide `[]` au lieu de `null` si aucun utilisateur n'est trouvé.

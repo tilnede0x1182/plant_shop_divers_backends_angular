@@ -57,3 +57,15 @@ users.txt
 
 # Autres fichiers
 projet.txt
+
+# --- Fichiers spécifiques au backend Go ---
+
+# Binaire compilé (résultat de 'go build -o bin/server ...')
+/bin/
+
+# Dépendances locales (si 'go mod vendor' est utilisé)
+/vendor/
+
+# Fichiers de couverture de test et autres artefacts de build
+*.out
+*.test

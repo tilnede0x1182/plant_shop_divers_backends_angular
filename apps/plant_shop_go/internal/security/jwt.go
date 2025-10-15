@@ -28,12 +28,11 @@ func secret() []byte {
 	return []byte(key)
 }
 
-// GenerateToken génère un JWT signé contenant uid et durée d'expiration.
-// Signature compatible avec les appels existants : GenerateToken(userID, duration)
-func GenerateToken(userID string, duration time.Duration) (string, error) {
+// GenerateToken génère un JWT signé contenant uid, le rôle admin et la durée d'expiration.
+func GenerateToken(userID string, admin bool, duration time.Duration) (string, error) {
 	claims := &Claims{
 		UserID: userID,
-		Admin:  false, // valeur par défaut. Si besoin, mettez true depuis l'appelant.
+		Admin:  admin,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -58,7 +57,6 @@ func ParseToken(tokenString string) (*Claims, error) {
 }
 
 // SetCookie écrit le cookie httpOnly "ps_token" sur la réponse.
-// Signature compatible avec les appels existants : SetCookie(w, token)
 func SetCookie(w http.ResponseWriter, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "ps_token",
@@ -66,7 +64,7 @@ func SetCookie(w http.ResponseWriter, token string) {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		Secure:   false,
+		Secure:   false, // Mettre à true en production (HTTPS)
 	})
 }
 
@@ -79,6 +77,6 @@ func ClearCookie(w http.ResponseWriter) {
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   -1,
-		Secure:   false,
+		Secure:   false, // Mettre à true en production (HTTPS)
 	})
 }

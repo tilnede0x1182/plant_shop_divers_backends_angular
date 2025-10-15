@@ -3,25 +3,30 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"strings"
+
+	"plant_shop_go/internal/models"
+	"gorm.io/gorm"
 )
 
-/*
-GET /plants et GET /plants/{id}
-Stubs en attendant la DB.
-*/
-func Plants(response http.ResponseWriter, request *http.Request) {
-	if request.URL.Path == "/plants" {
-		json.NewEncoder(response).Encode([]map[string]any{
-			{"id": "p1", "name": "Monstera"},
-			{"id": "p2", "name": "Ficus"},
-		})
-		return
+// GET /api/plants
+func PublicListPlants(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var plants []models.Plant
+		if err := db.Find(&plants).Error; err != nil { http.Error(w,"db error",500); return }
+		_ = json.NewEncoder(w).Encode(plants)
 	}
-	parts := strings.Split(strings.TrimPrefix(request.URL.Path, "/plants/"), "/")
-	if len(parts) >= 1 && parts[0] != "" {
-		json.NewEncoder(response).Encode(map[string]any{"id": parts[0], "name": "Plant " + parts[0]})
-		return
+}
+
+// GET /api/plants/{id}
+func PublicGetPlant(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(r.URL.Path, "/")
+		idStr := parts[len(parts)-1]
+		id, err := strconv.Atoi(idStr); if err != nil { http.Error(w,"invalid id",400); return }
+		var p models.Plant
+		if err := db.First(&p, id).Error; err != nil { http.Error(w,"not found",404); return }
+		_ = json.NewEncoder(w).Encode(p)
 	}
-	http.NotFound(response, request)
 }

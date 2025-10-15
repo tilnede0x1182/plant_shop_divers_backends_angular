@@ -18,7 +18,11 @@ POST /api/auth/register
 Crée un user, renvoie 201 + cookie JWT.
 */
 func Register(w http.ResponseWriter, r *http.Request) {
-	type inp struct{ Email, Password string }
+	type inp struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Name     string `json:"name"`
+	}
 	var in inp
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -32,16 +36,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	hash, _ := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
-	user := models.User{Email: in.Email, Password: string(hash)}
+	user := models.User{Email: in.Email, Password: string(hash), Name: in.Name, Admin: false}
 	d.Create(&user)
-	token, _ := security.GenerateToken(fmt.Sprint(user.ID), 24*time.Hour)
+	token, _ := security.GenerateToken(fmt.Sprint(user.ID), user.Admin, 24*time.Hour)
+
 	security.SetCookie(w, token)
 	w.WriteHeader(http.StatusCreated)
 }
 
 /*
 POST /api/auth/login
-Valide credentials, renvoie cookie JWT.
+Valide credentials, renvoie 201 + cookie JWT.
 */
 func Login(w http.ResponseWriter, r *http.Request) {
 	type inp struct{ Email, Password string }
@@ -60,7 +65,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid creds", http.StatusUnauthorized)
 		return
 	}
-	token, _ := security.GenerateToken(fmt.Sprint(user.ID), 24*time.Hour)
+	token, _ := security.GenerateToken(fmt.Sprint(user.ID), user.Admin, 24*time.Hour)
 	security.SetCookie(w, token)
 	w.WriteHeader(http.StatusCreated)
 }
@@ -70,7 +75,12 @@ GET /api/auth/me
 Retourne {id,email,name,admin} du token.
 */
 func Me(w http.ResponseWriter, r *http.Request) {
-	claims := r.Context().Value("claims").(*security.Claims)
+	claims, ok := r.Context().Value("claims").(*security.Claims)
+	if !ok {
+		http.Error(w, "claims not found in context", http.StatusInternalServerError)
+		return
+	}
+
 	d := db.Connect()
 	var user models.User
 	d.First(&user, claims.UserID)

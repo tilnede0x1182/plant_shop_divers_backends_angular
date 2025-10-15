@@ -10,9 +10,20 @@ import (
 	"gorm.io/gorm"
 )
 
-// CreatePlantHandler retourne un http.HandlerFunc qui crée une plante (admin).
-// Usage dans le routeur : router.Handle("/api/admin/plants", CreatePlantHandler(db)).Methods("POST")
-func CreatePlantHandler(db *gorm.DB) http.HandlerFunc {
+// AdminListPlants liste toutes les plantes (route admin).
+func AdminListPlants(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var plants []models.Plant
+		if err := db.Find(&plants).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(plants)
+	}
+}
+
+// AdminCreatePlant crée une plante (route admin).
+func AdminCreatePlant(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var in struct {
 			Name        string  `json:"name"`
@@ -34,26 +45,13 @@ func CreatePlantHandler(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(p)
 	}
 }
 
-// ListPlantsHandler liste toutes les plantes (admin ou public selon route).
-func ListPlantsHandler(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var plants []models.Plant
-		if err := db.Find(&plants).Error; err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
-			return
-		}
-		_ = json.NewEncoder(w).Encode(plants)
-	}
-}
-
-// UpdatePlantHandler met à jour une plante. Attente d'un query param id.
-// Exemple : PATCH /api/admin/plants?id=123
-func UpdatePlantHandler(db *gorm.DB) http.HandlerFunc {
+// AdminUpdatePlant met à jour une plante par query param id.
+func AdminUpdatePlant(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.URL.Query().Get("id")
 		if idStr == "" {
@@ -100,9 +98,8 @@ func UpdatePlantHandler(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// DeletePlantHandler supprime une plante par query param id.
-// Exemple : DELETE /api/admin/plants?id=123
-func DeletePlantHandler(db *gorm.DB) http.HandlerFunc {
+// AdminDeletePlant supprime une plante par query param id.
+func AdminDeletePlant(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.URL.Query().Get("id")
 		if idStr == "" {

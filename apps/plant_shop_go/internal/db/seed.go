@@ -188,3 +188,12 @@ func Seed(db *gorm.DB) {
 	createOrders(db, plants)
 	log.Println("✅ Seed terminée.")
 }
+
+// # Main pour exécution directe (go run internal/db/seed.go)
+func main() {
+	conn := Connect()
+	if conn == nil {
+		log.Fatal("db connection failed")
+	}
+	Seed(conn)
+}

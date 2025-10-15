@@ -1,109 +1,60 @@
 package httpserver
 
 import (
-	"net/http"
-	"strings"
-
 	"plant_shop_go/internal/http/handlers"
 	"plant_shop_go/internal/http/middleware"
+
+	"github.com/gorilla/mux"
+	"gorm.io/gorm"
+	"net/http"
 )
 
-func NewRouter() http.Handler {
-	mux := http.NewServeMux()
+// NewRouter construit et retourne le routeur principal.
+// Il attend que les handlers soient des constructeurs: func(*gorm.DB) http.HandlerFunc
+func NewRouter(db *gorm.DB) *mux.Router {
+	r := mux.NewRouter()
 
-	// Auth (public + me)
-	mux.HandleFunc("/api/auth/register", handlers.Register)
-	mux.HandleFunc("/api/auth/login", handlers.Login)
-	mux.Handle("/api/auth/logout", middleware.AuthGuard(http.HandlerFunc(handlers.Logout)))
-	mux.Handle("/api/auth/me", middleware.AuthGuard(http.HandlerFunc(handlers.Me)))
+	// Admin plants
+	r.Handle("/api/admin/plants",
+		middleware.AdminGuard(middleware.AuthGuard(handlers.AdminListPlants(db))),
+	).Methods("GET")
+	r.Handle("/api/admin/plants",
+		middleware.AdminGuard(middleware.AuthGuard(handlers.AdminCreatePlant(db))),
+	).Methods("POST")
+	r.Handle("/api/admin/plants",
+		middleware.AdminGuard(middleware.AuthGuard(handlers.AdminUpdatePlant(db))),
+	).Methods("PATCH")
+	r.Handle("/api/admin/plants",
+		middleware.AdminGuard(middleware.AuthGuard(handlers.AdminDeletePlant(db))),
+	).Methods("DELETE")
 
-	// Plants (public)
-	mux.HandleFunc("/api/plants", handlers.Plants)
-	mux.HandleFunc("/api/plants/", handlers.Plants)
+	// Orders (admin and user)
+	// Liste des commandes (admin)
+	r.Handle("/api/admin/orders",
+		middleware.AdminGuard(middleware.AuthGuard(handlers.ListOrders(db))),
+	).Methods("GET")
 
-	// Admin Plants CRUD
-	adminPlants := middleware.AdminGuard(
-		middleware.AuthGuard(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch r.Method {
-			case http.MethodGet:
-				handlers.AdminListPlants(w, r)
-			case http.MethodPost:
-				handlers.AdminCreatePlant(w, r)
-			case http.MethodPatch:
-				handlers.AdminUpdatePlant(w, r)
-			case http.MethodDelete:
-				handlers.AdminDeletePlant(w, r)
-			default:
-				http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
-			}
-		})),
-	)
-	mux.Handle("/api/admin/plants", adminPlants)
-	mux.Handle("/api/admin/plants/", adminPlants)
+	// Création d'une commande (user authentifié)
+	r.Handle("/api/orders",
+		middleware.AuthGuard(handlers.CreateOrder(db)),
+	).Methods("POST")
 
-	// Users (owner)
-	userRoute := middleware.OwnerGuard(
-		middleware.AuthGuard(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch r.Method {
-			case http.MethodGet:
-				handlers.GetUser(w, r)
-			case http.MethodPatch:
-				handlers.UpdateUser(w, r)
-			default:
-				http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
-			}
-		})),
-	)
-	mux.Handle("/api/users/", userRoute)
+	// Détails / modification / suppression d'une commande (admin)
+	r.Handle("/api/admin/orders/get",
+		middleware.AdminGuard(middleware.AuthGuard(handlers.GetOrder(db))),
+	).Methods("GET")
+	r.Handle("/api/admin/orders",
+		middleware.AdminGuard(middleware.AuthGuard(handlers.UpdateOrder(db))),
+	).Methods("PATCH")
+	r.Handle("/api/admin/orders",
+		middleware.AdminGuard(middleware.AuthGuard(handlers.DeleteOrder(db))),
+	).Methods("DELETE")
 
-	// Admin Users CRUD
-	adminUsers := middleware.AdminGuard(
-		middleware.AuthGuard(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch r.Method {
-			case http.MethodGet:
-				handlers.AdminListUsers(w, r)
-			case http.MethodPatch:
-				handlers.AdminUpdateUser(w, r)
-			case http.MethodDelete:
-				handlers.AdminDeleteUser(w, r)
-			default:
-				http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
-			}
-		})),
-	)
-	mux.Handle("/api/admin/users", adminUsers)
-	mux.Handle("/api/admin/users/", adminUsers)
+	// Route index pour test rapide
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("plant_shop_go OK"))
+	})
 
-	// Orders (user)
-	userOrders := middleware.AuthGuard(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch {
-		case r.URL.Path == "/api/orders" && r.Method == http.MethodGet:
-			handlers.ListOrders(w, r)
-		case r.URL.Path == "/api/orders" && r.Method == http.MethodPost:
-			handlers.CreateOrder(w, r)
-		case strings.HasPrefix(r.URL.Path, "/api/orders/") && r.Method == http.MethodGet:
-			handlers.GetOrder(w, r)
-		default:
-			http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
-		}
-	}))
-	mux.Handle("/api/orders", userOrders)
-	mux.Handle("/api/orders/", userOrders)
-
-	// Admin Orders (PATCH & DELETE)
-	adminOrders := middleware.AdminGuard(
-		middleware.AuthGuard(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			switch r.Method {
-			case http.MethodPatch:
-				handlers.UpdateOrder(w, r)
-			case http.MethodDelete:
-				handlers.DeleteOrder(w, r)
-			default:
-				http.Error(w, "méthode non autorisée", http.StatusMethodNotAllowed)
-			}
-		})),
-	)
-	mux.Handle("/api/orders/", adminOrders)
-
-	return mux
+	return r
 }

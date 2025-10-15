@@ -18,6 +18,10 @@ func main() {
 	_ = godotenv.Load(".env")
 
 	conn := db.Connect()
+	if conn == nil {
+		log.Fatal("db connection failed")
+	}
+
 	if err := conn.AutoMigrate(
 		&models.User{},
 		&models.Plant{},
@@ -27,9 +31,9 @@ func main() {
 		log.Fatalf("migration failed: %v", err)
 	}
 
-	db.Seed(conn)
+	// Seed retiré volontairement. Utilisez ./cmd/seed pour lancer le seed.
 
-	router := httpserver.NewRouter()
+	router := httpserver.NewRouter(conn)
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:8300"},
 		AllowCredentials: true,

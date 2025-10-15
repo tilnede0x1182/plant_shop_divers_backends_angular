@@ -53,6 +53,9 @@ run-dev-front:
 build-front:
 	npm run build-frontend
 
+prod-front:
+	npm run start-frontend
+
 # ======================================================
 # ⚙️ Commun
 # ======================================================

@@ -36,7 +36,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	d.Create(&user)
 	token, _ := security.GenerateToken(fmt.Sprint(user.ID), 24*time.Hour)
 	security.SetCookie(w, token)
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 }
 
 /*

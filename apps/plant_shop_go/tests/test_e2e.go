@@ -1,23 +1,54 @@
 // # Importations
-package tests
+package main
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
-	"net/http/httptest"
 	"os"
-	"testing"
+	"strconv"
+	"strings"
 	"time"
-
-	httpserver "plant_shop_go/internal/http"
-
-	"github.com/joho/godotenv"
 )
 
-// # Fonctions utilitaires
-func req(t *testing.T, m, url string, body any, c *http.Cookie) *http.Response {
+/* ---------- variables globales ---------- */
+var cookieJars = map[string]string{
+	"admin": "",
+	"user":  "",
+}
+var maintenant = time.Now().Format("20060102150405")
+
+/* ---------- configuration ---------- */
+var config = struct {
+	apiBase  string
+	logLevel string
+	adminE   string
+	adminP   string
+}{
+	apiBase:  getenv("API_BASE_URL", "http://localhost:4100/api"),
+	logLevel: "verbose", // silent | normal | verbose
+	adminE:   getenv("ADMIN_EMAIL", "admin1@planteshop.com"),
+	adminP:   getenv("ADMIN_PASSWORD", "password"),
+}
+
+/* ---------- utilitaires ---------- */
+func getenv(k, def string) string {
+	if v := os.Getenv(k); v != "" {
+		return v
+	}
+	return def
+}
+func logf(fmtStr string, v ...any) {
+	if config.logLevel != "silent" {
+		log.Printf(fmtStr, v...)
+	}
+}
+func hit(method, route string, expect int, body any, who string) map[string]any {
+	url := config.apiBase + route
+	label := method + " " + route
+
 	var rdr *bytes.Reader
 	if body != nil {
 		b, _ := json.Marshal(body)
@@ -25,123 +56,180 @@ func req(t *testing.T, m, url string, body any, c *http.Cookie) *http.Response {
 	} else {
 		rdr = bytes.NewReader(nil)
 	}
-	r, _ := http.NewRequest(m, url, rdr)
-	if body != nil {
-		r.Header.Set("Content-Type", "application/json")
+
+	req, _ := http.NewRequest(method, url, rdr)
+	req.Header.Set("Content-Type", "application/json")
+	if ck := cookieJars[who]; ck != "" {
+		req.Header.Set("Cookie", ck)
 	}
-	if c != nil {
-		r.AddCookie(c)
-	}
-	res, err := http.DefaultClient.Do(r)
+
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		t.Fatalf("%s %s: %v", m, url, err)
+		log.Fatalf("❌ %s: connexion impossible (%v)", label, err)
 	}
-	return res
-}
-func readJSON(t *testing.T, res *http.Response, v any) {
-	defer res.Body.Close()
-	if err := json.NewDecoder(res.Body).Decode(v); err != nil {
-		t.Fatalf("parse: %v", err)
+	/* --- cookie éventuel --- */
+	if set := res.Header.Get("Set-Cookie"); set != "" {
+		cookieJars[who] = strings.Split(strings.Split(set, ",")[0], ";")[0]
 	}
-}
 
-// # Fonctions principales
-func TestE2E(t *testing.T) {
-	runE2E(t)
-}
-
-func runE2E(t testing.TB) {
-	_ = godotenv.Load("../.env")
-	srv := httptest.NewServer(httpserver.NewRouter())
-	defer srv.Close()
-
-	user := register(t, srv.URL)
-	admin := login(t, srv.URL, "admin1@planteshop.com", "password")
-	uid := me(t, srv.URL, user)
-
-	publicPlants(t, srv.URL)
-	pid := adminPlants(t, srv.URL, admin)
-	users(t, srv.URL, uid, user, admin)
-	oid := ordersUser(t, srv.URL, pid, user)
-	ordersAdmin(t, srv.URL, oid, admin)
-}
-
-// ## Auth
-func register(t testing.TB, base string) *http.Cookie {
-	data := map[string]string{"email": time.Now().Format("user_150405@ex.com"), "password": "pwd12345"}
-	res := req(t, "POST", base+"/api/auth/register", data, nil)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("register %d", res.StatusCode)
+	ok := res.StatusCode == expect
+	logf("%s %s [%d]", map[bool]string{true: "✅", false: "❌"}[ok], label, res.StatusCode)
+	if !ok {
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(res.Body)
+		log.Fatalf("API %s → %d (attendu %d)\n%s", label, res.StatusCode, expect, buf.String())
 	}
-	return res.Cookies()[0]
-}
-func login(t testing.TB, b, mail, pwd string) *http.Cookie {
-	res := req(t, "POST", b+"/api/auth/login", map[string]string{"email": mail, "password": pwd}, nil)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("login %d", res.StatusCode)
-	}
-	return res.Cookies()[0]
-}
-func me(t testing.TB, base string, c *http.Cookie) string {
-	var out struct{ ID uint }
-	res := req(t, "GET", base+"/api/auth/me", nil, c)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("/me %d", res.StatusCode)
-	}
-	readJSON(t, res, &out)
-	return fmt.Sprint(out.ID)
-}
 
-// ## Plants
-func publicPlants(t testing.TB, base string) {
-	res := req(t, "GET", base+"/api/plants", nil, nil)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("plants list %d", res.StatusCode)
+	var out map[string]any
+	_ = json.NewDecoder(res.Body).Decode(&out)
+	return out
+}
+func assertEq(obj map[string]any, key string, expected any) {
+	actual := obj[key]
+	ok := actual == expected
+	logf("   %s ↳ %s=%v (attendu %v)", map[bool]string{true: "✅", false: "❌"}[ok], key, actual, expected)
+	if !ok {
+		log.Fatalf("Assertion échouée: %s=%v, attendu %v", key, actual, expected)
 	}
 }
-func adminPlants(t testing.TB, b string, c *http.Cookie) string {
-	testPlant := map[string]any{"name": "TestPlant", "price": 9, "stock": 3}
-	res := req(t, "POST", b+"/api/admin/plants", testPlant, c)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("create plant %d", res.StatusCode)
+
+/* ---------- helpers ---------- */
+func login(email, pwd, who string) { hit("POST", "/auth/login", 201, M{"email": email, "password": pwd}, who) }
+func registerUser(name, email, pwd, who string) {
+	hit("POST", "/auth/register", 201, M{"name": name, "email": email, "password": pwd}, who)
+}
+func findUserIdByEmail(adminWho, email string) int {
+	users := hit("GET", "/users", 200, nil, adminWho)["data"].([]any)
+	for _, u := range users {
+		m := u.(map[string]any)
+		if m["email"] == email {
+			return int(m["id"].(float64))
+		}
 	}
-	var p struct{ ID uint }
-	readJSON(t, res, &p)
-	id := fmt.Sprint(p.ID)
-	req(t, "PATCH", b+"/api/admin/plants/"+id, map[string]any{"stock": 5}, c)
-	req(t, "DELETE", b+"/api/admin/plants/"+id, nil, c)
-	return id
-}
-
-// ## Users
-func users(t testing.TB, b, uid string, user, admin *http.Cookie) {
-	req(t, "GET", b+"/api/users/"+uid, nil, user)
-	req(t, "PATCH", b+"/api/users/"+uid, map[string]any{"name": "X"}, user)
-	req(t, "GET", b+"/api/admin/users", nil, admin)
-}
-
-// ## Orders
-func ordersUser(t testing.TB, b, pid string, c *http.Cookie) string {
-	items := []map[string]any{{"plantId": pid, "quantity": 1}}
-	res := req(t, "POST", b+"/api/orders", map[string]any{"items": items}, c)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("create order %d", res.StatusCode)
-	}
-	var o struct{ ID uint }
-	readJSON(t, res, &o)
-	return fmt.Sprint(o.ID)
-}
-func ordersAdmin(t testing.TB, b, oid string, c *http.Cookie) {
-	req(t, "PATCH", b+"/api/orders/"+oid, map[string]any{"status": "shipped"}, c)
-	req(t, "DELETE", b+"/api/orders/"+oid, nil, c)
-}
-
-// # Main
-func main() {
-	os.Exit(runMain())
-}
-func runMain() int {
-	t := &testing.T{}
-	runE2E(t)
+	log.Fatalf("User %s introuvable", email)
 	return 0
 }
+
+/* ---------- alias map ---------- */
+type M = map[string]any
+
+/* ---------- modules de test ---------- */
+func testPlants(who string) {
+	log.Println("\n📌 TEST MODULE: PLANTS (admin)")
+	p := M{"name": "Test Plant", "price": 10, "stock": 5}
+	obj := hit("POST", "/admin/plants", 201, p, who)
+	id := int(obj["id"].(float64))
+
+	assertEq(hit("GET", "/plants/"+itoa(id), 200, nil, who), "name", p["name"])
+	hit("PATCH", "/admin/plants/"+itoa(id), 200, M{"price": 15}, who)
+	assertEq(hit("GET", "/plants/"+itoa(id), 200, nil, who), "price", 15.0)
+	hit("DELETE", "/admin/plants/"+itoa(id), 200, nil, who)
+}
+func testUsers(who string) {
+	log.Println("\n📌 TEST MODULE: USERS (admin)")
+	user := M{
+		"email":    "utilisateur_test_" + maintenant + "@example.com",
+		"name":     "Utilisateur " + maintenant,
+		"password": "pass123",
+	}
+	obj := hit("POST", "/users", 201, user, who)
+	id := int(obj["id"].(float64))
+	hit("PATCH", "/users/"+itoa(id), 200, M{"name": "Tester Update"}, who)
+	assertEq(hit("GET", "/users/"+itoa(id), 200, nil, who), "name", "Tester Update")
+	hit("DELETE", "/users/"+itoa(id), 200, nil, who)
+}
+func testOrders(adminWho, userWho string) {
+	log.Println("\n📌 TEST MODULE: ORDERS & ORDER ITEMS")
+	plant := M{"name": "Plante_"+maintenant, "price": 10, "stock": 5}
+	pid := int(hit("POST", "/admin/plants", 201, plant, adminWho)["id"].(float64))
+
+	order := hit("POST", "/orders", 201, M{"items": []M{{"plantId": pid, "quantity": 2}}}, userWho)
+	oid := int(order["id"].(float64))
+
+	hit("PATCH", "/orders/"+itoa(oid), 200, M{"status": "shipped"}, adminWho)
+	cmds := hit("GET", "/orders", 200, nil, userWho)["data"].([]any)
+	found := false
+	for _, o := range cmds {
+		m := o.(map[string]any)
+		if int(m["id"].(float64)) == oid {
+			assertEq(m, "status", "shipped")
+			found = true
+		}
+	}
+	if !found {
+		log.Fatalf("Commande %d introuvable", oid)
+	}
+	hit("DELETE", "/orders/"+itoa(oid), 200, nil, adminWho)
+	hit("DELETE", "/admin/plants/"+itoa(pid), 200, nil, adminWho)
+}
+func testUserProfile(adminWho, userWho, email string) {
+	log.Println("\n📌 TEST MODULE: USER PROFILE (user)")
+	uid := findUserIdByEmail(adminWho, email)
+
+	assertEq(hit("GET", "/users/"+itoa(uid), 200, nil, userWho), "id", float64(uid))
+	newName := "Utilisateur_" + maintenant
+	hit("PATCH", "/users/"+itoa(uid), 200, M{"name": newName}, userWho)
+	assertEq(hit("GET", "/users/"+itoa(uid), 200, nil, userWho), "name", newName)
+
+	hit("PATCH", "/users/"+itoa(uid), 200, M{"admin": true}, userWho)
+	assertEq(hit("GET", "/users/"+itoa(uid), 200, nil, adminWho), "admin", false)
+}
+func testAuthRoles(adminWho, userWho string) {
+	log.Println("\n📌 TEST MODULE: ROLES")
+	hit("POST", "/admin/plants", 403, M{"name": "Bad", "price": 1, "stock": 1}, userWho)
+	pid := int(hit("POST", "/admin/plants", 201, M{"name": "Good", "price": 1, "stock": 1}, adminWho)["id"].(float64))
+	hit("DELETE", "/admin/plants/"+itoa(pid), 200, nil, adminWho)
+	hit("GET", "/users", 403, nil, userWho)
+}
+func testAdminPlants(who string) {
+	log.Println("\n📌 TEST MODULE: ADMIN PLANTS")
+	hit("GET", "/admin/plants", 200, nil, who)
+	p := M{"name": "Plante_admin_" + maintenant, "price": 99, "stock": 12}
+	id := int(hit("POST", "/admin/plants", 201, p, who)["id"].(float64))
+	hit("PATCH", "/admin/plants/"+itoa(id), 200, M{"price": 123}, who)
+	hit("DELETE", "/admin/plants/"+itoa(id), 200, nil, who)
+}
+func testAdminUsers(who string) {
+	log.Println("\n📌 TEST MODULE: ADMIN USERS")
+	usrs := hit("GET", "/admin/users", 200, nil, who)["data"].([]any)
+	if len(usrs) == 0 {
+		log.Fatalf("Pas d'utilisateurs admin trouvés")
+	}
+	u := usrs[0].(map[string]any)
+	newName := "Admin_mod_" + maintenant
+	uid := int(u["id"].(float64))
+	hit("PATCH", "/admin/users/"+itoa(uid), 200, M{"name": newName}, who)
+	assertEq(hit("GET", "/users/"+itoa(uid), 200, nil, who), "name", newName)
+}
+func testAuthMe(who string) {
+	log.Println("\n📌 TEST MODULE: AUTH /me")
+	me := hit("GET", "/auth/me", 200, nil, who)
+	if me["email"] == nil {
+		log.Fatalf("Réponse invalide pour /auth/me")
+	}
+	logf("   ↳ Utilisateur connecté: %s (%s)", me["email"], me["name"])
+}
+
+/* ---------- exécution ---------- */
+func main() {
+	fmt.Printf("🧪 Démarrage des tests: %s\n", config.apiBase)
+
+	login(config.adminE, config.adminP, "admin")
+	userEmail := "utilisateur_"+maintenant+"@example.com"
+	registerUser("User", userEmail, "pass123", "user")
+
+	testPlants("admin")
+	testUsers("admin")
+	testOrders("admin", "user")
+	testUserProfile("admin", "user", userEmail)
+	testAuthRoles("admin", "user")
+	testAdminPlants("admin")
+	testAdminUsers("admin")
+	testAuthMe("user")
+
+	fmt.Println("\n🎉 Tous les tests ont réussi!")
+	os.Exit(0)
+}
+
+/* ---------- helpers mineurs ---------- */
+func itoa(i int) string { return strconv.Itoa(i) }

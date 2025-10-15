@@ -9,6 +9,7 @@
     "test-routes": "node tests/test_complet.js",
     "build-backend": "nx build plant_shop_nest --configuration=production",
     "build-frontend": "nx build plant-shop-angular-universal --configuration=production",
+		"start-frontend": "nx run plant-shop-angular-universal:serve-static --port=8300",
     "build": "npm run build-backend && npm run build-frontend",
     "start": "SERVE_SSR=true PORT=4150 node dist/apps/plant_shop_nest/main.js"
   },

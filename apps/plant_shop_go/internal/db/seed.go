@@ -4,6 +4,7 @@ package db
 import (
 	"fmt"
 	"log"
+	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -11,10 +12,9 @@ import (
 
 	"plant_shop_go/internal/models"
 
-	"gorm.io/gorm"
-
 	"github.com/bxcodec/faker/v3"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // # Données
@@ -70,7 +70,7 @@ func createAdmins(db *gorm.DB) []map[string]string {
 			Email:    email,
 			Password: string(hash),
 			Admin:    true,
-			Name:     faker.Person().Name(),
+			Name:     faker.Name(),
 		})
 		admins = append(admins, map[string]string{"email": email, "password": password})
 	}
@@ -81,14 +81,14 @@ func createAdmins(db *gorm.DB) []map[string]string {
 func createUsers(db *gorm.DB) []map[string]string {
 	var users []map[string]string
 	for i := 0; i < NB_USERS; i++ {
-		password := faker.Internet().Password(12, 0, 0, false, false)
-		email := faker.Internet().Email()
+		password := faker.Password()
+		email := faker.Email()
 		hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
 		db.Create(&models.User{
 			Email:    email,
 			Password: string(hash),
 			Admin:    false,
-			Name:     faker.Person().Name(),
+			Name:     faker.Name(),
 		})
 		users = append(users, map[string]string{"email": email, "password": password})
 	}
@@ -105,11 +105,17 @@ func createPlants(db *gorm.DB) []models.Plant {
 		if NB_PLANTS > max {
 			name = fmt.Sprintf("%s %d", base, (i/max)+1)
 		}
+
+		// prix entre 5.00 et 50.00 arrondis à 2 décimales
+		price := math.Round((rand.Float64()*45.0+5.0)*100) / 100
+		desc := faker.Sentence()
+		stock := rand.Intn(26) + 5
+
 		p := models.Plant{
 			Name:        name,
-			Price:       faker.Number().NumberInt(2),
-			Description: faker.Lorem().Sentence(12),
-			Stock:       faker.Number().NumberInt(2),
+			Price:       price,
+			Description: desc,
+			Stock:       stock,
 		}
 		db.Create(&p)
 		plants = append(plants, p)
@@ -125,10 +131,10 @@ func createOrders(db *gorm.DB, plants []models.Plant) {
 	for _, u := range users {
 		n := rand.Intn(MAX_ORDERS_PER_USER + 1)
 		for i := 0; i < n; i++ {
-			total := 0
+			total := 0.0
 			order := models.Order{
 				UserID:     u.ID,
-				TotalPrice: 0,
+				TotalPrice: 0.0,
 				Status:     statuses[rand.Intn(len(statuses))],
 			}
 			db.Create(&order)
@@ -140,7 +146,7 @@ func createOrders(db *gorm.DB, plants []models.Plant) {
 	}
 }
 
-func addItem(db *gorm.DB, orderID uint, plants []models.Plant) int {
+func addItem(db *gorm.DB, orderID uint, plants []models.Plant) float64 {
 	p := plants[rand.Intn(len(plants))]
 	if p.Stock <= 0 {
 		return 0
@@ -151,7 +157,7 @@ func addItem(db *gorm.DB, orderID uint, plants []models.Plant) int {
 	}
 	db.Create(&models.OrderItem{OrderID: orderID, PlantID: p.ID, Quantity: qty})
 	db.Model(&p).Update("stock", p.Stock-qty)
-	return p.Price * qty
+	return float64(qty) * p.Price
 }
 
 // ## users.txt

@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	httpserver "internal/http"
+	httpserver "plant_shop_go/internal/http"
 
 	"github.com/joho/godotenv"
 )

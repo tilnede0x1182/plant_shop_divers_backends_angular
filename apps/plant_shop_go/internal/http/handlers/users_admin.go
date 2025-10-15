@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"internal/db"
-	"internal/models"
+	"plant_shop_go/internal/db"
+	"plant_shop_go/internal/models"
 )
 
 /*

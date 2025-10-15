@@ -1,14 +1,15 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 
-	"internal/security"
+	"plant_shop_go/internal/security"
 )
 
 /*
 Middleware d’authentification par cookie httpOnly "ps_token"
-@next handler suivant
+Injecte les claims dans le contexte de la requête sous la clé "claims".
 */
 func AuthGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -17,11 +18,13 @@ func AuthGuard(next http.Handler) http.Handler {
 			http.Error(response, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		_, err = security.ParseToken(cookie.Value)
+		claims, err := security.ParseToken(cookie.Value)
 		if err != nil {
 			http.Error(response, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		next.ServeHTTP(response, request)
+		// injecter les claims dans le contexte pour que AdminGuard / OwnerGuard y accèdent
+		ctx := context.WithValue(request.Context(), "claims", claims)
+		next.ServeHTTP(response, request.WithContext(ctx))
 	})
 }

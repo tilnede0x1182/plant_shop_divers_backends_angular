@@ -1,14 +1,17 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
+
+	"plant_shop_go/internal/security"
 )
 
 // OwnerGuard protège /users/:id en acceptant le propriétaire ou l’admin.
 func OwnerGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		claims, ok := r.Context().Value("claims").(*Claims)
+		claims, ok := r.Context().Value("claims").(*security.Claims)
 		if !ok {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return

@@ -1,33 +1,39 @@
 package security
 
 import (
-	"time"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 /*
-Génère et vérifie des JWT HMAC pour cookie httpOnly "ps_token"
-@userID identifiant utilisateur
-@duration durée de validité
+Gestion simple des JWT HMAC et du cookie httpOnly "ps_token".
+Claims expose UserID et Admin (bool) utilisés par les middlewares.
 */
+
 type Claims struct {
 	UserID string `json:"uid"`
+	Admin  bool   `json:"admin"`
 	jwt.RegisteredClaims
 }
 
 func secret() []byte {
 	key := os.Getenv("JWT_SECRET")
 	if key == "" {
-		key = "dev-insecure" // à remplacer en prod
+		// Valeur de secours pour dev ; en production définir JWT_SECRET.
+		key = "dev-insecure"
 	}
 	return []byte(key)
 }
 
+// GenerateToken génère un JWT signé contenant uid et durée d'expiration.
+// Signature compatible avec les appels existants : GenerateToken(userID, duration)
 func GenerateToken(userID string, duration time.Duration) (string, error) {
 	claims := &Claims{
 		UserID: userID,
+		Admin:  false, // valeur par défaut. Si besoin, mettez true depuis l'appelant.
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -37,6 +43,7 @@ func GenerateToken(userID string, duration time.Duration) (string, error) {
 	return token.SignedString(secret())
 }
 
+// ParseToken vérifie le JWT et retourne les claims.
 func ParseToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return secret(), nil
@@ -48,4 +55,30 @@ func ParseToken(tokenString string) (*Claims, error) {
 		return claims, nil
 	}
 	return nil, jwt.ErrTokenInvalidClaims
+}
+
+// SetCookie écrit le cookie httpOnly "ps_token" sur la réponse.
+// Signature compatible avec les appels existants : SetCookie(w, token)
+func SetCookie(w http.ResponseWriter, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "ps_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false,
+	})
+}
+
+// ClearCookie supprime le cookie "ps_token".
+func ClearCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "ps_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+		Secure:   false,
+	})
 }

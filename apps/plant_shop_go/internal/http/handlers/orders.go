@@ -33,23 +33,17 @@ func parseUintOrZero(s string) uint {
 }
 
 // ListUserOrders liste les commandes de l'utilisateur authentifié.
-func ListUserOrders(db *gorm.DB) http.HandlerFunc {
+// Dans votre fichier de handlers pour les commandes (ex: internal/http/handlers/orders.go)
+
+func ListOrders(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		raw := r.Context().Value("claims")
-		if raw == nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-		claims := raw.(*security.Claims)
 		var orders []models.Order
-		if err := db.Where("user_id = ?", parseUintOrZero(claims.UserID)).Find(&orders).Error; err != nil {
+
+		if err := db.Order("created_at DESC").Preload("Items.Plant").Find(&orders).Error; err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
 
-		// *** LA CORRECTION EST ICI ***
-		// Si aucune commande n'est trouvée, `orders` sera `nil`.
-		// On s'assure de renvoyer un tableau JSON vide `[]` au lieu de `null`.
 		if orders == nil {
 			orders = make([]models.Order, 0)
 		}

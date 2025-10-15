@@ -25,7 +25,8 @@ export class OrderNewComponent {
   ngOnInit() {
     // calcul total dès l’affichage
     const items = this.cart.getAll();
-    this.total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const rawTotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    this.total = Number((Math.round(rawTotal * 100) / 100).toFixed(2));
   }
 
   passerCommande() {

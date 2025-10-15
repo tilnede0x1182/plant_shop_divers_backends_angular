@@ -37,7 +37,8 @@ export class CartComponent {
   }
 
   getLineTotal(id: number): number {
-    return this.lineTotals[id] ?? 0;
+    const val = this.lineTotals[id] ?? 0;
+    return Math.round(val * 100) / 100;
   }
 
   private scheduleLineTotalUpdate(item: CartItem) {
@@ -105,6 +106,6 @@ export class CartComponent {
   }
 
   total(): number {
-    return this.totalValue;
+    return Math.round(this.totalValue * 100) / 100;
   }
 }

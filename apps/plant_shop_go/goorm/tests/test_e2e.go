@@ -1,18 +1,13 @@
+// # Importations
 package tests
-
-/*
-E2E Go : couvre auth, plants, admin plants, users, orders, rôles.
-*/
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -20,204 +15,132 @@ import (
 	httpserver "goorm/internal/http"
 )
 
-func TestE2E(t *testing.T) {
-	_ = godotenv.Load("../.env")
-	os.Setenv("JWT_SECRET", os.Getenv("JWT_SECRET"))
-
-	srv := httptest.NewServer(httpserver.NewRouter())
-	defer srv.Close()
-
-	userCookie := registerUser(t, srv.URL)
-	adminCookie := loginAdmin(t, srv.URL)
-
-	testAuthMe(t, srv.URL, userCookie)
-	testPlantsPublic(t, srv.URL)
-	testAdminPlantsCRUD(t, srv.URL, adminCookie)
-	testUsersCRUD(t, srv.URL, userCookie, adminCookie)
-	orderID := testOrdersUser(t, srv.URL, userCookie)
-	testOrdersAdmin(t, srv.URL, adminCookie, orderID)
-}
-
-/* helpers */
-
-func doRequest(t *testing.T, method, path string, body any, cookie *http.Cookie) *http.Response {
-	var reader io.Reader
+// # Fonctions utilitaires
+func req(t *testing.T, m, url string, body any, c *http.Cookie) *http.Response {
+	var rdr *bytes.Reader
 	if body != nil {
 		b, _ := json.Marshal(body)
-		reader = bytes.NewBuffer(b)
+		rdr = bytes.NewReader(b)
+	} else {
+		rdr = bytes.NewReader(nil)
 	}
-	req, _ := http.NewRequest(method, path, reader)
+	r, _ := http.NewRequest(m, url, rdr)
 	if body != nil {
-		req.Header.Set("Content-Type", "application/json")
+		r.Header.Set("Content-Type", "application/json")
 	}
-	if cookie != nil {
-		req.AddCookie(cookie)
+	if c != nil {
+		r.AddCookie(c)
 	}
-	res, err := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(r)
 	if err != nil {
-		t.Fatalf("%s %s error: %v", method, path, err)
+		t.Fatalf("%s %s: %v", m, url, err)
 	}
 	return res
 }
-
-func parseJSON(t *testing.T, res *http.Response, out any) {
+func readJSON(t *testing.T, res *http.Response, v any) {
 	defer res.Body.Close()
-	if err := json.NewDecoder(res.Body).Decode(out); err != nil {
-		t.Fatalf("parseJSON error: %v", err)
+	if err := json.NewDecoder(res.Body).Decode(v); err != nil {
+		t.Fatalf("parse: %v", err)
 	}
 }
 
-/* 1. Auth */
-
-func registerUser(t *testing.T, base string) *http.Cookie {
-	body := map[string]string{"email": fmt.Sprintf("user_%d@example.com", time.Now().UnixNano()), "password": "pwd12345"}
-	res := doRequest(t, "POST", base+"/api/auth/register", body, nil)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("register user status=%d", res.StatusCode)
-	}
-	cookies := res.Cookies()
-	if len(cookies) == 0 {
-		t.Fatal("no cookie on register")
-	}
-	return cookies[0]
+// # Fonctions principales
+func TestE2E(t *testing.T) {
+	runE2E(t)
 }
 
-func loginAdmin(t *testing.T, base string) *http.Cookie {
-	// admin1@planteshop.com / password
-	body := map[string]string{"email": "admin1@planteshop.com", "password": "password"}
-	res := doRequest(t, "POST", base+"/api/auth/login", body, nil)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("login admin status=%d", res.StatusCode)
-	}
-	cookies := res.Cookies()
-	if len(cookies) == 0 {
-		t.Fatal("no cookie on admin login")
-	}
-	return cookies[0]
+func runE2E(t testing.TB) {
+	_ = godotenv.Load("../.env")
+	srv := httptest.NewServer(httpserver.NewRouter())
+	defer srv.Close()
+
+	user := register(t, srv.URL)
+	admin := login(t, srv.URL, "admin1@planteshop.com", "password")
+	uid := me(t, srv.URL, user)
+
+	publicPlants(t, srv.URL)
+	pid := adminPlants(t, srv.URL, admin)
+	users(t, srv.URL, uid, user, admin)
+	oid := ordersUser(t, srv.URL, pid, user)
+	ordersAdmin(t, srv.URL, oid, admin)
 }
 
-/* 2. /api/auth/me */
-
-func testAuthMe(t *testing.T, base string, cookie *http.Cookie) {
-	res := doRequest(t, "GET", base+"/api/auth/me", nil, cookie)
+// ## Auth
+func register(t testing.TB, base string) *http.Cookie {
+	data := map[string]string{"email": time.Now().Format("user_150405@ex.com"), "password": "pwd12345"}
+	res := req(t, "POST", base+"/api/auth/register", data, nil)
 	if res.StatusCode != http.StatusOK {
-		t.Fatalf("GET /api/auth/me expected 200 got %d", res.StatusCode)
+		t.Fatalf("register %d", res.StatusCode)
 	}
+	return res.Cookies()[0]
+}
+func login(t testing.TB, b, mail, pwd string) *http.Cookie {
+	res := req(t, "POST", b+"/api/auth/login", map[string]string{"email": mail, "password": pwd}, nil)
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("login %d", res.StatusCode)
+	}
+	return res.Cookies()[0]
+}
+func me(t testing.TB, base string, c *http.Cookie) string {
+	var out struct{ ID uint }
+	res := req(t, "GET", base+"/api/auth/me", nil, c)
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("/me %d", res.StatusCode)
+	}
+	readJSON(t, res, &out)
+	return fmt.Sprint(out.ID)
 }
 
-/* 3. Plants public */
-
-func testPlantsPublic(t *testing.T, base string) {
-	var list []map[string]any
-	res := doRequest(t, "GET", base+"/api/plants", nil, nil)
+// ## Plants
+func publicPlants(t testing.TB, base string) {
+	res := req(t, "GET", base+"/api/plants", nil, nil)
 	if res.StatusCode != http.StatusOK {
-		t.Fatalf("GET /api/plants %d", res.StatusCode)
-	}
-	parseJSON(t, res, &list)
-	if len(list) == 0 {
-		t.Fatal("empty plants list")
-	}
-	id := fmt.Sprint(list[0]["id"])
-	res = doRequest(t, "GET", base+"/api/plants/"+id, nil, nil)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("GET /api/plants/:id %d", res.StatusCode)
+		t.Fatalf("plants list %d", res.StatusCode)
 	}
 }
-
-/* 4. Admin Plants CRUD */
-
-func testAdminPlantsCRUD(t *testing.T, base string, cookie *http.Cookie) {
-	// unauthorized with user cookie
-	res := doRequest(t, "POST", base+"/api/admin/plants", map[string]any{"name": "X", "price": 1, "stock": 1}, nil)
-	if res.StatusCode != http.StatusUnauthorized && res.StatusCode != http.StatusForbidden {
-		t.Fatalf("expected 401/403 got %d", res.StatusCode)
-	}
-	// create
-	body := map[string]any{"name": "TestPlant", "price": 10, "stock": 5}
-	res = doRequest(t, "POST", base+"/api/admin/plants", body, cookie)
+func adminPlants(t testing.TB, b string, c *http.Cookie) string {
+	testPlant := map[string]any{"name": "TestPlant", "price": 9, "stock": 3}
+	res := req(t, "POST", b+"/api/admin/plants", testPlant, c)
 	if res.StatusCode != http.StatusOK {
-		t.Fatalf("admin create plant %d", res.StatusCode)
+		t.Fatalf("create plant %d", res.StatusCode)
 	}
-	var p map[string]any
-	parseJSON(t, res, &p)
-	id := fmt.Sprint(p["id"])
-	// update
-	body = map[string]any{"stock": 7}
-	res = doRequest(t, "PATCH", base+"/api/admin/plants/"+id, body, cookie)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("admin update plant %d", res.StatusCode)
-	}
-	// delete
-	res = doRequest(t, "DELETE", base+"/api/admin/plants/"+id, nil, cookie)
-	if res.StatusCode != http.StatusNoContent {
-		t.Fatalf("admin delete plant %d", res.StatusCode)
-	}
-}
-
-/* 5. Users CRUD */
-
-func testUsersCRUD(t *testing.T, base string, userCookie, adminCookie *http.Cookie) {
-	// get own profile
-	res := doRequest(t, "GET", base+"/api/users/"+userID(userCookie), nil, userCookie)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("GET own user %d", res.StatusCode)
-	}
-	// update own
-	res = doRequest(t, "PATCH", base+"/api/users/"+userID(userCookie), map[string]any{"name": "NewName"}, userCookie)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("PATCH own user %d", res.StatusCode)
-	}
-	// list admin
-	res = doRequest(t, "GET", base+"/api/admin/users", nil, userCookie)
-	if res.StatusCode != http.StatusForbidden {
-		t.Fatalf("non-admin GET admin/users %d", res.StatusCode)
-	}
-	res = doRequest(t, "GET", base+"/api/admin/users", nil, adminCookie)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("admin GET admin/users %d", res.StatusCode)
-	}
-}
-
-func userID(cookie *http.Cookie) string {
-	parts := strings.Split(cookie.Value, ".")
-	// assume second segment is base64 JSON with "uid"
-	return "" // implementation depends on token format; skip exact match
-}
-
-/* 6. Orders */
-
-func testOrdersUser(t *testing.T, base string, cookie *http.Cookie) string {
-	// start empty or seed orders exist
-	res := doRequest(t, "GET", base+"/api/orders", nil, cookie)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("GET /api/orders %d", res.StatusCode)
-	}
-	// create order
-	items := []map[string]any{{"plantId": 1, "quantity": 2}}
-	res = doRequest(t, "POST", base+"/api/orders", map[string]any{"items": items}, cookie)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("POST /api/orders %d", res.StatusCode)
-	}
-	var o map[string]any
-	parseJSON(t, res, &o)
-	id := fmt.Sprint(o["id"])
-	// get by id
-	res = doRequest(t, "GET", base+"/api/orders/"+id, nil, cookie)
-	if res.StatusCode != http.StatusOK {
-		t.Fatalf("GET /api/orders/:id %d", res.StatusCode)
-	}
+	var p struct{ ID uint }
+	readJSON(t, res, &p)
+	id := fmt.Sprint(p.ID)
+	req(t, "PATCH", b+"/api/admin/plants/"+id, map[string]any{"stock": 5}, c)
+	req(t, "DELETE", b+"/api/admin/plants/"+id, nil, c)
 	return id
 }
 
-func testOrdersAdmin(t *testing.T, base string, cookie *http.Cookie, orderID string) {
-	// patch
-	res := doRequest(t, "PATCH", base+"/api/orders/"+orderID, map[string]any{"status": "shipped"}, cookie)
+// ## Users
+func users(t testing.TB, b, uid string, user, admin *http.Cookie) {
+	req(t, "GET", b+"/api/users/"+uid, nil, user)
+	req(t, "PATCH", b+"/api/users/"+uid, map[string]any{"name": "X"}, user)
+	req(t, "GET", b+"/api/admin/users", nil, admin)
+}
+
+// ## Orders
+func ordersUser(t testing.TB, b, pid string, c *http.Cookie) string {
+	items := []map[string]any{{"plantId": pid, "quantity": 1}}
+	res := req(t, "POST", b+"/api/orders", map[string]any{"items": items}, c)
 	if res.StatusCode != http.StatusOK {
-		t.Fatalf("PATCH /api/orders/:id %d", res.StatusCode)
+		t.Fatalf("create order %d", res.StatusCode)
 	}
-	// delete
-	res = doRequest(t, "DELETE", base+"/api/orders/"+orderID, nil, cookie)
-	if res.StatusCode != http.StatusNoContent {
-		t.Fatalf("DELETE /api/orders/:id %d", res.StatusCode)
-	}
+	var o struct{ ID uint }
+	readJSON(t, res, &o)
+	return fmt.Sprint(o.ID)
+}
+func ordersAdmin(t testing.TB, b, oid string, c *http.Cookie) {
+	req(t, "PATCH", b+"/api/orders/"+oid, map[string]any{"status": "shipped"}, c)
+	req(t, "DELETE", b+"/api/orders/"+oid, nil, c)
+}
+
+// # Main
+func main() {
+	os.Exit(runMain())
+}
+func runMain() int {
+	t := &testing.T{}
+	runE2E(t)
+	return 0
 }

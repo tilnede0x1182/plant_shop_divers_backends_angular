@@ -42,6 +42,24 @@ prod-manifest:
 build-prod: build-manifest prod-manifest
 
 # ======================================================
+# 🐹 Backend Go
+# ======================================================
+
+run-backend-go:
+	go run apps/plant_shop_go/main.go --serve
+
+compile-backend-go:
+	go build -o apps/plant_shop_go/bin/server apps/plant_shop_go/main.go
+
+seed-backend-go:
+	go run apps/plant_shop_go/cmd/seed.go
+
+compile-run-backend-go: compile-backend-go run-backend-go
+
+prod-backend-go:
+	go build -o apps/plant_shop_go/bin/server apps/plant_shop_go/main.go && apps/plant_shop_go/bin/server --serve
+
+# ======================================================
 # 🎨 Frontend Angular
 # ======================================================
 

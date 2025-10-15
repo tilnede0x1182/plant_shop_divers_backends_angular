@@ -12,11 +12,24 @@ import (
 	"plant_shop_go/internal/security"
 )
 
+// firstNonNil est un utilitaire pour gérer les deux formats de plantId.
 func firstNonNil(a, b any) any {
 	if a != nil {
 		return a
 	}
 	return b
+}
+
+// parseUintOrZero tente de convertir une string en uint; retourne 0 si échec.
+func parseUintOrZero(s string) uint {
+	if s == "" {
+		return 0
+	}
+	v, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return uint(v)
 }
 
 // ListUserOrders liste les commandes de l'utilisateur authentifié.
@@ -132,12 +145,12 @@ func CreateOrder(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusCreated) // Le test attend 201
+		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(order)
 	}
 }
 
-// UpdateOrder met à jour une commande (status et/ou total_price).
+// UpdateOrder met à jour une commande (status).
 func UpdateOrder(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -192,6 +205,6 @@ func DeleteOrder(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK) // Le test attend 200
+		w.WriteHeader(http.StatusOK)
 	}
 }

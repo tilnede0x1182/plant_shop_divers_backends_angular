@@ -3,7 +3,6 @@ package httpserver
 import (
 	"net/http"
 
-	"plant_shop_go/internal/db"
 	"plant_shop_go/internal/http/handlers"
 	"plant_shop_go/internal/http/middleware"
 	"plant_shop_go/internal/models"
@@ -51,7 +50,7 @@ func NewRouter(db *gorm.DB) *mux.Router {
 	adminUsers := api.PathPrefix("/admin/users").Subrouter()
 	adminUsers.Use(middleware.AuthGuard, middleware.AdminGuard)
 	adminUsers.Handle("", http.HandlerFunc(handlers.AdminListUsers)).Methods("GET")
-	adminUsers.Handle("/{id:[0-g]+}", http.HandlerFunc(handlers.AdminUpdateUser)).Methods("PATCH")
+	adminUsers.Handle("/{id:[0-9]+}", http.HandlerFunc(handlers.AdminUpdateUser)).Methods("PATCH")
 	adminUsers.Handle("/{id:[0-9]+}", http.HandlerFunc(handlers.AdminDeleteUser)).Methods("DELETE")
 
 	// --- Orders ---

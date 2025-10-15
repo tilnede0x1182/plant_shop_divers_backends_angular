@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"goorm/internal/security"
+	"internal/security"
 )
 
 /*

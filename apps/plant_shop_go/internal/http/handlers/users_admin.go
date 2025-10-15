@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"goorm/internal/db"
-	"goorm/internal/models"
+	"internal/db"
+	"internal/models"
 )
 
 /*
@@ -15,7 +15,7 @@ GET /api/admin/users
 */
 func AdminListUsers(w http.ResponseWriter, r *http.Request) {
 	var list []models.User
-	db.Connect().Select("id","email","name","admin").Find(&list)
+	db.Connect().Select("id", "email", "name", "admin").Find(&list)
 	json.NewEncoder(w).Encode(list)
 }
 

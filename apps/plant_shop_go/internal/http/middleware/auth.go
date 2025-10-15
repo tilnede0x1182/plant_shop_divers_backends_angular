@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"goorm/internal/security"
+	"internal/security"
 )
 
 /*

@@ -9,7 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"plant_shop_go/goorm/internal/models"
+	"plant_shop_go/internal/models"
+
 	"gorm.io/gorm"
 
 	"github.com/bxcodec/faker/v3"

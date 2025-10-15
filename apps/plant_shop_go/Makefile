@@ -10,3 +10,5 @@ compile:
 
 test:
 	go run tests/test_e2e.go
+tidy:
+	go mod tidy

@@ -21,7 +21,7 @@ buid-back:
 	npm run build-backend
 
 # ======================================================
-# 🧩 Backend Manifest ABANDON
+# 📜 Backend Manifest ABANDON
 # ======================================================
 
 run-proxy-manifest:

@@ -1,17 +1,21 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+# ─────────────────────────────────────────────────────────────────────────────
+# 🌳 Monorepo Plant Shop – .gitignore global (frontend + Go + Rust)
+# ─────────────────────────────────────────────────────────────────────────────
 
-# compiled output
+# ─── 📦 Sorties compilées (Angular / Vite / autres) ─────────────────────────
 dist
 tmp
 out-tsc
+.angular
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
 
-# dependencies
+# ─── 📦 Dépendances Node / Yarn / pnpm ──────────────────────────────────────
 *node_modules/
 node_modules/
 apps/plant_shop_manifest_ABANDON/node_modules/
 
-
-# IDEs and editors
+# ─── 🧑‍💻 Fichiers projet des IDE / éditeurs ────────────────────────────────
 /.idea
 .project
 .classpath
@@ -20,14 +24,14 @@ apps/plant_shop_manifest_ABANDON/node_modules/
 .settings/
 *.sublime-workspace
 
-# IDE - VSCode
+# ─── 💻 VS Code – garder seulement la config utile ──────────────────────────
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# misc
+# ─── 🧹 Caches, logs & divers JS/TS ─────────────────────────────────────────
 /.sass-cache
 /connect.lock
 /coverage
@@ -37,38 +41,55 @@ yarn-error.log
 testem.log
 /typings
 
-# System Files
+# ─── 🖥️ Fichiers système ───────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 
+# ─── 🛠️ Nx / outils monorepo ───────────────────────────────────────────────
 .nx/cache
 .nx/workspace-data
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
-.angular
+# ─── 🔑 Environnements & secrets (toutes stacks) ────────────────────────────
+.env            # fichier principal
+.env.*          # variantes (.env.local, .env.dev, …)
 
-vite.config.*.timestamp*
-vitest.config.*.timestamp*
-
-# Env & secrets
-.env
-
-# Prisma
+# ─── 📝 Prisma (backend Node) ───────────────────────────────────────────────
 prisma/*.tsbuildinfo
 users.txt
 
-# Autres fichiers
+# ─── 📄 Fichier agrégat de projet (dump) ────────────────────────────────────
 projet.txt
 
-# --- Fichiers spécifiques au backend Go ---
+# ─────────────────────────────────────────────────────────────────────────────
+# 🐹 Backend Go – fichiers spécifiques
+# ─────────────────────────────────────────────────────────────────────────────
+/bin/           # binaire compilé (go build -o bin/server …)
+/vendor/        # dépendances locales si 'go mod vendor'
+*.out           # couverture de test Go
+*.test          # artefacts de build/tests Go
 
-# Binaire compilé (résultat de 'go build -o bin/server ...')
-/bin/
+# ─────────────────────────────────────────────────────────────────────────────
+# 🦀 Backend Rust – fichiers spécifiques
+# ─────────────────────────────────────────────────────────────────────────────
+/bin/           # binaire compilé (out-dir bin)
+/target/        # dossier de compilation Rust
+/*.exe          # binaire Windows
+/*.dll          # librairie dynamique Windows
+/*.so           # librairie dynamique Linux
+/*.dylib        # librairie dynamique macOS
 
-# Dépendances locales (si 'go mod vendor' est utilisé)
-/vendor/
+Cargo.lock      # lockfile Rust (optionnel pour lib, conseillé pour bin)
 
-# Fichiers de couverture de test et autres artefacts de build
-*.out
-*.test
+# 🗄️ SQLx / migrations
+sqlx-data.json  # cache d'introspection SQLx
+
+# 🗒️ Logs & fichiers temporaires
+*.log
+*.swp
+*.swo
+
+# 🧑‍💻 Fichiers IDE (rappel)
+.idea/
+.vscode/

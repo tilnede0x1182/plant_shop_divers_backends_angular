@@ -1,11 +1,13 @@
 
 # ARBORESCENCE
 #
-/home/tilnede0x1182/code/tilnede0x1182/Personnel/2025/Entrainement/plant_shop/Javascript/AngularNestNx/plant_shop_nest_angular_nx
+/home/tilnede0x1182/code/tilnede0x1182/Personnel/2025/Entrainement/plant_shop/DiversBackends
 ├── angular.json
 ├── apps
 │   ├── plant-shop-angular-universal
 │   │   ├── eslint.config.mjs
+│   │   ├── Makefile
+│   │   ├── package.json
 │   │   ├── project.json
 │   │   ├── public
 │   │   │   └── favicon.ico
@@ -67,7 +69,6 @@
 │   │   │   │   │   │   ├── cart-item.component.css
 │   │   │   │   │   │   └── cart-item.component.html
 │   │   │   │   │   └── cart.service.ts
-│   │   │   │   ├── components
 │   │   │   │   ├── navbar
 │   │   │   │   │   ├── navbar.component.css
 │   │   │   │   │   ├── navbar.component.html
@@ -116,64 +117,128 @@
 │   │   ├── tsconfig.server.json
 │   │   ├── tsconfig.spec.json
 │   │   └── vite.config.mts
-│   └── plant_shop_nest
-│       ├── eslint.config.mjs
-│       ├── jest.config.ts
-│       ├── project.json
-│       ├── src
-│       │   ├── app
-│       │   │   ├── app.controller.spec.ts
-│       │   │   ├── app.controller.ts
-│       │   │   ├── app.module.ts
-│       │   │   ├── app.service.spec.ts
-│       │   │   ├── app.service.ts
-│       │   │   ├── auth
-│       │   │   │   ├── auth.controller.ts
-│       │   │   │   ├── auth.module.ts
-│       │   │   │   ├── auth.service.ts
-│       │   │   │   ├── guards
-│       │   │   │   │   └── jwt-auth.guard.ts
-│       │   │   │   ├── jwt-auth.guard.ts
-│       │   │   │   ├── jwt.strategy.ts
-│       │   │   │   ├── local.strategy.ts
-│       │   │   │   ├── roles.decorator.ts
-│       │   │   │   ├── roles.guard.ts
-│       │   │   │   └── strategies
-│       │   │   ├── order-items
-│       │   │   │   ├── dto
-│       │   │   │   │   └── order-item.dto.ts
-│       │   │   │   ├── order-items.controller.ts
-│       │   │   │   ├── order-items.module.ts
-│       │   │   │   └── order-items.service.ts
-│       │   │   ├── orders
-│       │   │   │   ├── dto
-│       │   │   │   │   └── order.dto.ts
-│       │   │   │   ├── orders.controller.ts
-│       │   │   │   ├── orders.module.ts
-│       │   │   │   └── orders.service.ts
-│       │   │   ├── plants
-│       │   │   │   ├── admin-plants.controller.ts
-│       │   │   │   ├── dto
-│       │   │   │   │   └── plant.dto.ts
-│       │   │   │   ├── plants.controller.ts
-│       │   │   │   ├── plants.module.ts
-│       │   │   │   └── plants.service.ts
-│       │   │   └── users
-│       │   │       ├── admin-users.controller.ts
-│       │   │       ├── dto
-│       │   │       │   └── user.dto.ts
-│       │   │       ├── users.controller.ts
-│       │   │       ├── users.module.ts
-│       │   │       └── users.service.ts
-│       │   ├── assets
-│       │   ├── main.ts
-│       │   └── prisma
-│       │       ├── prisma.module.ts
-│       │       └── prisma.service.ts
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       ├── tsconfig.spec.json
-│       └── webpack.config.js
+│   ├── plant_shop_c
+│   ├── plant_shop_cpp
+│   ├── plant_shop_go
+│   │   ├── bin
+│   │   │   └── server
+│   │   ├── cmd
+│   │   │   └── seed.go
+│   │   ├── go.mod
+│   │   ├── go.sum
+│   │   ├── internal
+│   │   │   ├── db
+│   │   │   │   ├── connect.go
+│   │   │   │   └── seed.go
+│   │   │   ├── http
+│   │   │   │   ├── handlers
+│   │   │   │   │   ├── auth.go
+│   │   │   │   │   ├── orders.go
+│   │   │   │   │   ├── plants_admin.go
+│   │   │   │   │   ├── plants.go
+│   │   │   │   │   ├── users_admin.go
+│   │   │   │   │   └── users_owner.go
+│   │   │   │   ├── middleware
+│   │   │   │   │   ├── admin_guard.go
+│   │   │   │   │   ├── auth.go
+│   │   │   │   │   └── owner_guard.go
+│   │   │   │   └── router.go
+│   │   │   ├── models
+│   │   │   │   ├── order.go
+│   │   │   │   ├── order_item.go
+│   │   │   │   ├── plant.go
+│   │   │   │   └── user.go
+│   │   │   └── security
+│   │   │       └── jwt.go
+│   │   ├── main.go
+│   │   ├── Makefile
+│   │   ├── projet.txt
+│   │   ├── tests
+│   │   │   └── test_e2e.go
+│   │   └── users.txt
+│   ├── plant_shop_manifest_ABANDON
+│   │   ├── manifest_test_basique_1.yml
+│   │   ├── manifest_test_complexe_1.yml
+│   │   ├── manifest.yml
+│   │   ├── package.json
+│   │   ├── package-lock.json
+│   │   ├── project.json
+│   │   ├── proxy.js
+│   │   ├── public
+│   │   │   └── storage
+│   │   │       └── homepage
+│   │   │           └── cover
+│   │   │               └── Oct2025
+│   │   │                   ├── bz47fvmgbe5u1j-medium.jpg
+│   │   │                   └── bz47fvmgbe5u1j-thumbnail.jpg
+│   │   └── tests
+│   │       └── test1.js
+│   ├── plant_shop_nest
+│   │   ├── eslint.config.mjs
+│   │   ├── jest.config.ts
+│   │   ├── Makefile
+│   │   ├── package.json
+│   │   ├── project.json
+│   │   ├── src
+│   │   │   ├── app
+│   │   │   │   ├── app.controller.spec.ts
+│   │   │   │   ├── app.controller.ts
+│   │   │   │   ├── app.module.ts
+│   │   │   │   ├── app.service.spec.ts
+│   │   │   │   ├── app.service.ts
+│   │   │   │   ├── auth
+│   │   │   │   │   ├── auth.controller.ts
+│   │   │   │   │   ├── auth.module.ts
+│   │   │   │   │   ├── auth.service.ts
+│   │   │   │   │   ├── guards
+│   │   │   │   │   │   └── jwt-auth.guard.ts
+│   │   │   │   │   ├── jwt-auth.guard.ts
+│   │   │   │   │   ├── jwt.strategy.ts
+│   │   │   │   │   ├── local.strategy.ts
+│   │   │   │   │   ├── roles.decorator.ts
+│   │   │   │   │   └── roles.guard.ts
+│   │   │   │   ├── order-items
+│   │   │   │   │   ├── dto
+│   │   │   │   │   │   └── order-item.dto.ts
+│   │   │   │   │   ├── order-items.controller.ts
+│   │   │   │   │   ├── order-items.module.ts
+│   │   │   │   │   └── order-items.service.ts
+│   │   │   │   ├── orders
+│   │   │   │   │   ├── dto
+│   │   │   │   │   │   └── order.dto.ts
+│   │   │   │   │   ├── orders.controller.ts
+│   │   │   │   │   ├── orders.module.ts
+│   │   │   │   │   └── orders.service.ts
+│   │   │   │   ├── plants
+│   │   │   │   │   ├── admin-plants.controller.ts
+│   │   │   │   │   ├── dto
+│   │   │   │   │   │   └── plant.dto.ts
+│   │   │   │   │   ├── plants.controller.ts
+│   │   │   │   │   ├── plants.module.ts
+│   │   │   │   │   └── plants.service.ts
+│   │   │   │   └── users
+│   │   │   │       ├── admin-users.controller.ts
+│   │   │   │       ├── dto
+│   │   │   │       │   └── user.dto.ts
+│   │   │   │       ├── users.controller.ts
+│   │   │   │       ├── users.module.ts
+│   │   │   │       └── users.service.ts
+│   │   │   ├── assets
+│   │   │   ├── main.ts
+│   │   │   └── prisma
+│   │   │       ├── prisma.module.ts
+│   │   │       └── prisma.service.ts
+│   │   ├── tsconfig.app.json
+│   │   ├── tsconfig.json
+│   │   ├── tsconfig.spec.json
+│   │   └── webpack.config.js
+│   └── plant_shop_rust
+│       ├── DB
+│       │   └── seed.rs
+│       ├── Makefile
+│       ├── projet.txt
+│       └── tests
+│           └── test_e2e.rs
 ├── diagnose-ora.js
 ├── eslint.config.mjs
 ├── jest.config.ts
@@ -191,9 +256,9 @@
 │   ├── schema.prisma
 │   └── seed.ts
 ├── prisma.config.ts
+├── projet_angular_nest_nx.txt
 ├── projet.txt
 ├── proxy.conf.json
-├── README_1.md
 ├── README.md
 ├── tests
 │   └── test_complet.js
@@ -203,7 +268,7 @@
 ├── users.txt
 └── vitest.workspace.ts
 
-54 directories, 147 files
+75 directories, 191 files
 
 # CONFIGURATION
 #
@@ -220,6 +285,7 @@
     "test-routes": "node tests/test_complet.js",
     "build-backend": "nx build plant_shop_nest --configuration=production",
     "build-frontend": "nx build plant-shop-angular-universal --configuration=production",
+		"start-frontend": "nx run plant-shop-angular-universal:serve-static --port=8300",
     "build": "npm run build-backend && npm run build-frontend",
     "start": "SERVE_SSR=true PORT=4150 node dist/apps/plant_shop_nest/main.js"
   },
@@ -246,6 +312,8 @@
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
+    "http-proxy-middleware": "^3.0.5",
+    "morgan": "^1.10.1",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "reflect-metadata": "^0.1.13",
@@ -294,6 +362,7 @@
     "@vitest/ui": "^3.0.0",
     "angular-eslint": "^20.2.0",
     "browser-sync": "^3.0.0",
+    "dotenv-cli": "^10.0.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-playwright": "^1.6.2",
@@ -303,6 +372,7 @@
     "jest-util": "^30.0.2",
     "jiti": "2.4.2",
     "jsdom": "~22.1.0",
+    "manifest": "^4.17.8",
     "node-fetch": "^3.3.2",
     "nx": "21.5.1",
     "ora": "6.3.1",
@@ -1703,20 +1773,9 @@ export class RegisterComponent {
       return;
     }
 
-    window.console.log('[Register] champs', {
-      name: this.name,
-      email: this.email,
-      password: this.password,
-      passwordConfirmation: this.passwordConfirmation,
-    });
-
     this.auth.register(this.email, this.password, this.name).subscribe({
       next: () => {
         this.message = 'Compte créé ✅ – veuillez vous connecter';
-        window.console.log('[Register] succès', {
-          name: this.name,
-          email: this.email,
-        });
         this.router.navigate(['/login']);
       },
       error: (err) => {
@@ -1769,7 +1828,8 @@ export class CartComponent {
   }
 
   getLineTotal(id: number): number {
-    return this.lineTotals[id] ?? 0;
+    const val = this.lineTotals[id] ?? 0;
+    return Math.round(val * 100) / 100;
   }
 
   private scheduleLineTotalUpdate(item: CartItem) {
@@ -1837,7 +1897,7 @@ export class CartComponent {
   }
 
   total(): number {
-    return this.totalValue;
+    return Math.round(this.totalValue * 100) / 100;
   }
 }
 
@@ -2131,7 +2191,8 @@ export class OrderNewComponent {
   ngOnInit() {
     // calcul total dès l’affichage
     const items = this.cart.getAll();
-    this.total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const rawTotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    this.total = Number((Math.round(rawTotal * 100) / 100).toFixed(2));
   }
 
   passerCommande() {
@@ -2342,11 +2403,9 @@ export class ApiService {
     return this.http.get<Plante>(`${this.base}/plants/${id}`);
   }
   creerPlante(data: Partial<Plante>): Observable<Plante> {
-    console.log('[API CALL] POST /plants avec', data);
     return this.http.post<Plante>(`${this.base}/plants`, data);
   }
   creerPlanteAdmin(data: Partial<Plante>): Observable<Plante> {
-    console.log('[API CALL] POST /admin/plants avec', data);
     return this.http.post<Plante>(`${this.base}/admin/plants`, data);
   }
   majPlanteAdmin(id: number, data: Partial<Plante>): Observable<Plante> {
@@ -4189,78 +4248,16 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // /** Inscription */
-  // @Post('register')
-  // async register(
-  //   @Body('email') email: string,
-  //   @Body('password') password: string,
-  //   @Body('name') name: string,
-  //   @Res({ passthrough: true }) res: Response
-  // ) {
-  //   const { access_token, user } = await this.authService.register(
-  //     email,
-  //     password,
-  //     name
-  //   );
-
-  //   // Dépose le cookie httpOnly
-  //   res.cookie('jwt', access_token, {
-  //     httpOnly: true,
-  //     secure: process.env.NODE_ENV === 'production',
-  //     sameSite: 'strict',
-  //     maxAge: 1000 * 60 * 60 * 24, // 1 jour
-  //   });
-
-  //   return { user };
-  // }
-
-  // /** Connexion */
-  // @Post('login')
-  // async login(
-  //   @Body('email') email: string,
-  //   @Body('password') password: string,
-  //   @Res({ passthrough: true }) res: Response
-  // ) {
-  //   const utilisateur = await this.authService.validateUser(email, password);
-  //   const { access_token, user } = await this.authService.login(utilisateur);
-
-  //   res.cookie('jwt', access_token, {
-  //     httpOnly: true,
-  //     secure: process.env.NODE_ENV === 'production',
-  //     sameSite: 'strict',
-  //     maxAge: 1000 * 60 * 60 * 24,
-  //   });
-
-  //   return { user }; // ✅ on renvoie simplement l'utilisateur
-  // }
-
-  /** Inscription */
+  /**
+   * Inscription : crée un compte
+   */
   @Post('register')
   async register(
     @Body('email') email: string,
     @Body('password') password: string,
-    @Body('name') name: string,
-    @Res({ passthrough: true }) res: Response
+    @Body('name') name: string
   ) {
-    console.log('[AuthController] register() reçu', { email, name });
-
-    const { access_token, user } = await this.authService.register(
-      email,
-      password,
-      name
-    );
-
-    console.log('[AuthController] token généré', access_token);
-    console.log('[AuthController] utilisateur créé', user);
-
-    res.cookie('jwt', access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 1000 * 60 * 60 * 24,
-    });
-    console.log('[AuthController] cookie jwt posé');
-
+    const user = await this.authService.register(email, password, name);
     return { user };
   }
 
@@ -4271,15 +4268,8 @@ export class AuthController {
     @Body('password') password: string,
     @Res({ passthrough: true }) res: Response
   ) {
-    console.log('[AuthController] login() reçu', { email });
-
-    const { access_token, user } = await this.authService.login(
-      email,
-      password
-    );
-
-    console.log('[AuthController] token généré', access_token);
-    console.log('[AuthController] utilisateur validé', user);
+    const utilisateur = await this.authService.validateUser(email, password);
+    const { access_token, user } = await this.authService.login(utilisateur);
 
     res.cookie('jwt', access_token, {
       httpOnly: true,
@@ -4287,7 +4277,6 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: 1000 * 60 * 60 * 24,
     });
-    console.log('[AuthController] cookie jwt posé');
 
     return { user };
   }
@@ -4689,126 +4678,44 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  // /**
-  //  * Valider un utilisateur via email/mot de passe
-  //  */
-  // async validateUser(email: string, password: string) {
-  //   const utilisateur = await this.usersService.findByEmail(email);
-  //   if (!utilisateur)
-  //     throw new UnauthorizedException('Utilisateur introuvable');
-
-  //   const valide = await bcrypt.compare(password, utilisateur.password);
-  //   if (!valide) throw new UnauthorizedException('Mot de passe invalide');
-
-  //   const { password: _, ...resultat } = utilisateur;
-  //   return resultat;
-  // }
-
-  // /**
-  //  * Générer un JWT pour un utilisateur
-  //  */
-  // async login(utilisateur: any) {
-  //   const payload = {
-  //     sub: utilisateur.id,
-  //     email: utilisateur.email,
-  //     admin: utilisateur.admin,
-  //     name: utilisateur.name,
-  //   };
-  //   return {
-  //     access_token: this.jwtService.sign(payload),
-  //     user: utilisateur,
-  //   };
-  // }
-
-  // async register(email: string, password: string, name: string) {
-  //   const hashed = await bcrypt.hash(password, 10);
-  //   const utilisateur = await this.usersService.create({
-  //     email,
-  //     password: hashed,
-  //     name,
-  //   });
-  //   const payload = {
-  //     sub: utilisateur.id,
-  //     email: utilisateur.email,
-  //     admin: utilisateur.admin,
-  //     name: utilisateur.name,
-  //   };
-  //   return {
-  //     access_token: this.jwtService.sign(payload),
-  //     user: utilisateur,
-  //   };
-  // }
-
   async register(email: string, password: string, name?: string) {
-    console.log('[AuthService] register() appelé', { email, name });
-
     const hashed = await bcrypt.hash(password, 10);
-    console.log('[AuthService] mot de passe hashé', hashed);
-
     const utilisateur = await this.usersService.create({
       email,
       password: hashed,
       name,
     });
-    console.log('[AuthService] utilisateur inséré en base', utilisateur);
-
-    const payload = {
-      sub: utilisateur.id,
-      email: utilisateur.email,
-      admin: utilisateur.admin,
-    };
-    const access_token = await this.jwtService.signAsync(payload);
-
-    console.log('[AuthService] access_token généré', access_token);
 
     return {
-      access_token,
-      user: {
-        id: utilisateur.id,
-        email: utilisateur.email,
-        name: utilisateur.name,
-      },
+      id: utilisateur.id,
+      email: utilisateur.email,
+      name: utilisateur.name,
+      admin: utilisateur.admin,
     };
   }
 
   async validateUser(email: string, password: string) {
-    console.log('[AuthService] validateUser() pour', email);
-
     const utilisateur = await this.usersService.findByEmail(email);
-    console.log('[AuthService] utilisateur trouvé', utilisateur);
-
     if (!utilisateur) throw new UnauthorizedException('Utilisateur inexistant');
-
     const valide = await bcrypt.compare(password, utilisateur.password);
-    console.log('[AuthService] résultat bcrypt.compare', valide);
-
     if (!valide) throw new UnauthorizedException('Mot de passe invalide');
 
     return utilisateur;
   }
 
-  async login(email: string, password: string) {
-    console.log('[AuthService] login() appelé', { email });
-
-    const utilisateur = await this.validateUser(email, password);
-    console.log('[AuthService] utilisateur validé', utilisateur);
-
+  /**
+   * Générer un JWT pour un utilisateur
+   */
+  async login(utilisateur: any) {
     const payload = {
       sub: utilisateur.id,
       email: utilisateur.email,
       admin: utilisateur.admin,
+      name: utilisateur.name,
     };
-    const access_token = await this.jwtService.signAsync(payload);
-
-    console.log('[AuthService] token JWT généré', access_token);
-
     return {
-      access_token,
-      user: {
-        id: utilisateur.id,
-        email: utilisateur.email,
-        name: utilisateur.name,
-      },
+      access_token: this.jwtService.sign(payload),
+      user: utilisateur,
     };
   }
 }
@@ -5168,60 +5075,43 @@ export class UsersService {
     return this.one(id);
   }
 
-  // /**
-  //   Création utilisateur (mot de passe hashé)
-  //   @dto données utilisateur
-  // */
-  // async create(dto: CreateUserDto) {
-  //   const data = { ...dto, password: await bcrypt.hash(dto.password, 10) };
-  //   return this.prisma.user.create({ data });
-  // }
+  /**
+    Création utilisateur
+    @dto données utilisateur (CreateUserDto)
+    @return utilisateur créé
+  */
+  async create(dto: CreateUserDto) {
+    const user = await this.prisma.user.create({ data: dto });
+    return user;
+  }
 
-  // /**
-  //   Mise à jour utilisateur
-  //   @id identifiant utilisateur
-  //   @dto données mises à jour (hash password si présent)
-  // */
-  // async update(id: number, dto: UpdateUserDto) {
-  //   const data = { ...dto };
-  //   if (data.password) data.password = await bcrypt.hash(data.password, 10);
-  //   return this.prisma.user.update({ where: { id }, data });
-  // }
+  /**
+    Recherche utilisateur par email
+    @param email adresse email
+    @return utilisateur trouvé ou null
+  */
+  async findByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    return user;
+  }
 
   /**
     Suppression utilisateur
     @id identifiant utilisateur
+    @return utilisateur supprimé
   */
   async remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
   }
 
-  // /**
-  //   Cherche un utilisateur par email
-  //   @param email email utilisateur
-  // */
-  // async findByEmail(email: string) {
-  //   return this.prisma.user.findUnique({ where: { email } });
-  // }
-
-  async create(dto: CreateUserDto) {
-    console.log('[UsersService] create() appelé', dto);
-    const user = await this.prisma.user.create({ data: dto });
-    console.log('[UsersService] utilisateur créé en base', user);
-    return user;
-  }
-
-  async findByEmail(email: string) {
-    console.log('[UsersService] findByEmail() appelé', email);
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    console.log('[UsersService] utilisateur trouvé', user);
-    return user;
-  }
-
+  /**
+    Mise à jour utilisateur
+    @id identifiant utilisateur
+    @dto données à mettre à jour (UpdateUserDto)
+    @return utilisateur mis à jour
+  */
   async update(id: number, dto: UpdateUserDto) {
-    console.log('[UsersService] update() appelé', { id, ...dto });
     const user = await this.prisma.user.update({ where: { id }, data: dto });
-    console.log('[UsersService] utilisateur mis à jour', user);
     return user;
   }
 }
@@ -5796,11 +5686,9 @@ export class ApiService {
     return this.http.get<Plante>(`${this.base}/plants/${id}`);
   }
   creerPlante(data: Partial<Plante>): Observable<Plante> {
-    console.log('[API CALL] POST /plants avec', data);
     return this.http.post<Plante>(`${this.base}/plants`, data);
   }
   creerPlanteAdmin(data: Partial<Plante>): Observable<Plante> {
-    console.log('[API CALL] POST /admin/plants avec', data);
     return this.http.post<Plante>(`${this.base}/admin/plants`, data);
   }
   majPlanteAdmin(id: number, data: Partial<Plante>): Observable<Plante> {
@@ -5857,45 +5745,104 @@ export class ApiService {
 
 ## Makefile
 
-# Run Dev SSR
+# ======================================================
+# 🧩 Backend NestJS
+# ======================================================
+
+# Run Nest + Angular SSR
 run: prod
 
-# Run non-SSR
+# Run Nest backend seul (API, sans SSR Angular)
 run-dev-back:
 	npm run dev-back
 
-run-dev-front:
-	npm run dev-front
-
-# Test des routes Nest
+# Tests Nest
 test-e2e:
 	npm run test-e2e
 
 test-routes:
 	npm run test-routes
 
-# Build et run SSR prod
-build:
-	npm run build
-
+# Build Nest
 buid-back:
 	npm run build-backend
 
+# ======================================================
+# 📜 Backend Manifest ABANDON
+# ======================================================
+
+run-proxy-manifest:
+	node apps/plant_shop_manifest/proxy.js
+
+# Run Manifest backend (API seule)
+run-manifest:
+	PORT=4120 nx serve plant_shop_manifest
+
+# Build Manifest backend
+build-manifest:
+	nx build plant_shop_manifest
+
+# Start Manifest backend (mode prod après build)
+prod-manifest:
+	PORT=4120 nx start plant_shop_manifest
+
+build-prod: build-manifest prod-manifest
+
+# ======================================================
+# 🐹 Backend Go
+# ======================================================
+
+run-backend-go:
+	go run apps/plant_shop_go/main.go --serve
+
+compile-backend-go:
+	go build -o apps/plant_shop_go/bin/server apps/plant_shop_go/main.go
+
+seed-backend-go:
+	go run apps/plant_shop_go/cmd/seed.go
+
+compile-run-backend-go: compile-backend-go run-backend-go
+
+prod-backend-go:
+	go build -o apps/plant_shop_go/bin/server apps/plant_shop_go/main.go && apps/plant_shop_go/bin/server --serve
+
+# ======================================================
+# 🎨 Frontend Angular
+# ======================================================
+
+# Run Angular SPA seul (avec proxy backend actif)
+run-dev-front:
+	npm run dev-front
+
+# Build Frontend Angular
 build-front:
 	npm run build-frontend
+
+prod-front:
+	npm run start-frontend
+
+# ======================================================
+# ⚙️ Commun
+# ======================================================
+
+# Build global + SSR
+build:
+	npm run build
 
 prod:
 	npm run start
 
 build-run-prod: build prod
 
+# Typage / lint
 typage:
 	npx tsc --noEmit
 
-seed:
-	npx prisma db seed
-
 lint:
 	npm run lint
+
+# Seed de la base
+seed:
+	npx prisma db seed
 
 

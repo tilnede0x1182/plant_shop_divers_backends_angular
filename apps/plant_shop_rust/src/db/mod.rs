@@ -2,6 +2,7 @@
 use sqlx::{PgPool, postgres::PgPoolOptions};
 
 pub mod migrations;
+pub mod seed;
 
 pub async fn connect_pool(database_url: &str) -> PgPool {
 	PgPoolOptions::new()

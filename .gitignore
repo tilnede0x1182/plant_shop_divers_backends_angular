@@ -81,6 +81,9 @@ projet.txt
 **/target/
 apps/plant_shop_rust/bin/
 apps/plant_shop_rust/target/
+.sqlx/
+*.sqlx/
+**.sqlx/
 *.exe
 *.dll
 *.so

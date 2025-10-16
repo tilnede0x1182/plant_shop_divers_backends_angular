@@ -40,6 +40,7 @@ async fn main() -> Result<(), std::io::Error> {
 
 	// Définir toutes les routes REST
 	let app = Route::new()
+		// /api/auth/*
 		.nest("/api/auth",
 			Route::new()
 				.at("/login", post(login))
@@ -47,49 +48,44 @@ async fn main() -> Result<(), std::io::Error> {
 				.at("/me", get(me))
 				.at("/logout", post(logout))
 		)
-        .nest("/api/admin",
-            Route::new()
-                .nest("/plants",
-                    Route::new()
-                        .at("/", get(list_plants))
-                        .at("/", post(create_plant))
-                        .at("/:id", patch(update_plant))
-                        .at("/:id", delete(delete_plant))
-                )
-                .nest("/users",
-                    Route::new()
-                        .at("/", get(list_users))
-                        .at("/:id", patch(update_user))
-                )
-        )
+		// /api/admin/plants (GET liste, POST create, PATCH/DELETE by id)
+		.nest("/api/admin/plants",
+			Route::new()
+				.at("/", get(list_plants).post(create_plant))
+				.at("/:id", patch(update_plant).delete(delete_plant))
+		)
+		// /api/admin/users (GET liste admin, PATCH by id)
+		.nest("/api/admin/users",
+			Route::new()
+				.at("/", get(list_users))
+				.at("/:id", patch(update_user))
+		)
+		// /api/users (POST create via admin, GET liste pour admin) + /api/users/:id
 		.nest("/api/users",
 			Route::new()
-				.at("/", post(create_user)) // Le test crée un user via /users, pas /auth/register
-				.at("/:id", get(get_user))
-				.at("/:id", patch(update_user))
-				.at("/:id", delete(delete_user))
+				.at("/", post(create_user).get(list_users))
+				.at("/:id", get(get_user).patch(update_user).delete(delete_user))
 		)
+		// /api/plants (public GET) + /api/plants/:id
 		.nest("/api/plants",
 			Route::new()
 				.at("/", get(list_plants))
 				.at("/:id", get(get_plant))
 		)
+		// /api/orders (user GET liste, POST create) + /api/orders/:id (GET/PATCH/DELETE)
 		.nest("/api/orders",
 			Route::new()
-				.at("/", post(create_order))
-				.at("/", get(list_orders))
-				.at("/:id", get(get_order))
-				.at("/:id", patch(update_order))
-				.at("/:id", delete(delete_order))
+				.at("/", get(list_orders).post(create_order))
+				.at("/:id", get(get_order).patch(update_order).delete(delete_order))
 		)
+		// /api/order_items/:id (GET/PATCH/DELETE)
 		.nest("/api/order_items",
 			Route::new()
-				.at("/:id", get(get_order_item))
-				.at("/:id", patch(update_order_item))
-				.at("/:id", delete(delete_order_item))
+				.at("/:id", get(get_order_item).patch(update_order_item).delete(delete_order_item))
 		)
 		.with(AddData::new(pool))
-        .with(cors);
+		.with(cors);
+
 
 	// Lancer serveur HTTP sur le port 4100
 	println!("🚀 Serveur démarré sur http://0.0.0.0:4100");

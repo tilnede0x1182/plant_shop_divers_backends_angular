@@ -14,7 +14,6 @@
     "dev": "npx dotenv -e .env -- node ../../node_modules/manifest/scripts/watch/watch.js manifest.yml",
     "build": "node ../../node_modules/manifest/scripts/build/build.js manifest.yml",
     "start": "node ../../node_modules/manifest/scripts/start/start.js manifest.yml",
-    "seed": "node ../../node_modules/manifest/dist/manifest/src/seed/scripts/seed.js manifest.yml",
-    "clean": "rm -rf dist .manifest"
+    "seed": "node ../../node_modules/manifest/dist/manifest/src/seed/scripts/seed.js manifest.yml"
   }
 }

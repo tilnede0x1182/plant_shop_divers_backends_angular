@@ -73,12 +73,12 @@ projet.txt
 # ─────────────────────────────────────────────────────────────────────────────
 # 🦀 Backend Rust – fichiers spécifiques
 # ─────────────────────────────────────────────────────────────────────────────
-/bin/           # binaire compilé (out-dir bin)
-/target/        # dossier de compilation Rust
-/*.exe          # binaire Windows
-/*.dll          # librairie dynamique Windows
-/*.so           # librairie dynamique Linux
-/*.dylib        # librairie dynamique macOS
+*/bin/           # binaire compilé (out-dir bin)
+*/target/        # dossier de compilation Rust
+*.exe          # binaire Windows
+*.dll          # librairie dynamique Windows
+*.so           # librairie dynamique Linux
+*.dylib        # librairie dynamique macOS
 
 Cargo.lock      # lockfile Rust (optionnel pour lib, conseillé pour bin)
 

@@ -15,6 +15,8 @@ compile:
 	mkdir -p bin
 	cargo build --bin plant_shop_rust
 
+prepare:
+	unset SQLX_OFFLINE && cargo sqlx prepare --workspace
 seed:
 	mkdir -p bin
 	sqlx database setup

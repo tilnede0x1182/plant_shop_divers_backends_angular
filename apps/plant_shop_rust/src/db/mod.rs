@@ -1,6 +1,8 @@
 /// Initialisation et accès base de données SQLx
 use sqlx::{PgPool, postgres::PgPoolOptions};
 
+pub mod migrations;
+
 pub async fn connect_pool(database_url: &str) -> PgPool {
 	PgPoolOptions::new()
 		.max_connections(5)

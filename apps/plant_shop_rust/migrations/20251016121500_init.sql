@@ -22,15 +22,16 @@ CREATE TABLE plants (
 
 CREATE TABLE orders (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+	user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- ON DELETE SET NULL pour garder l'historique
 	total NUMERIC(10,2) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- Ajout de la colonne status
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE order_items (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 	order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
-	plant_id UUID REFERENCES plants(id) ON DELETE CASCADE,
+	plant_id UUID REFERENCES plants(id) ON DELETE SET NULL, -- ON DELETE SET NULL pour ne pas perdre l'item si la plante est supprimée
 	quantity INTEGER NOT NULL,
 	price NUMERIC(10,2) NOT NULL
 );

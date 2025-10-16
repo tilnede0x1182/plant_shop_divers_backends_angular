@@ -1,5 +1,5 @@
 /// Handlers Poem pour gestion des commandes
-use poem::{handler, web::{Data, Json, Path}, Result as PoemResult, IntoResponse};
+use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
 use serde::Deserialize; // Import manquant
 use sqlx::PgPool;
 use uuid::Uuid;

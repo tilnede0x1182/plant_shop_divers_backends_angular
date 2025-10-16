@@ -1,5 +1,5 @@
 /// Handlers Poem pour gestion utilisateurs
-use poem::{handler, web::{Data, Json, Path}, Result as PoemResult, IntoResponse};
+use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
 use sqlx::PgPool;
 use uuid::Uuid;
 use crate::errors::AppError;

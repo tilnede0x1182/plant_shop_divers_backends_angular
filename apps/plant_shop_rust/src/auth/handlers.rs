@@ -1,5 +1,5 @@
 /// Handlers Poem pour auth (login, register, me, logout)
-use poem::{handler, web::{Json, Data}, Result as PoemResult, IntoResponse};
+use poem::{handler, web::{Json, Data}, Result as PoemResult};
 use poem::web::cookie::{CookieJar, Cookie};
 use sqlx::PgPool;
 use crate::errors::AppError;

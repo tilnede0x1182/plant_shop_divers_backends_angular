@@ -1,7 +1,5 @@
 /// Structures liées à l'authentification (DTO, User minimal)
 use serde::{Serialize, Deserialize};
-use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize)]
 pub struct AuthPayload {

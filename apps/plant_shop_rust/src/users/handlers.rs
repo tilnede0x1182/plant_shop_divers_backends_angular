@@ -4,6 +4,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 use crate::errors::AppError;
 use super::models::{User, UpdateUser, NewUser};
+use poem::http::StatusCode;
 
 #[handler]
 pub async fn list_users(
@@ -23,7 +24,7 @@ pub async fn list_users(
 pub async fn create_user(
     Data(pool): Data<&PgPool>,
     Json(payload): Json<NewUser>,
-) -> PoemResult<Json<User>> {
+) -> PoemResult<(StatusCode, Json<User>)> {
     let bcrypt_cost = std::env::var("BCRYPT_COST").unwrap_or("12".to_string()).parse::<u32>().unwrap_or(12);
     let password_hash = bcrypt::hash(payload.password, bcrypt_cost).map_err(|_| AppError::Internal)?;
 
@@ -38,7 +39,7 @@ pub async fn create_user(
     .await.map_err(|e| AppError::DatabaseError(e))?
 ;
 
-    Ok(Json(user))
+    Ok((StatusCode::CREATED, Json(user)))
 }
 
 
@@ -46,7 +47,7 @@ pub async fn create_user(
 pub async fn get_user(
 	Data(pool): Data<&PgPool>,
 	Path(user_id): Path<Uuid>,
-) -> PoemResult<Json<User>> {
+) -> PoemResult<(StatusCode, Json<User>)> {
 	let user = sqlx::query_as!(
 		User,
 		"SELECT id, email, username, is_admin, created_at FROM users WHERE id = $1",
@@ -55,7 +56,7 @@ pub async fn get_user(
 	.fetch_one(pool)
 	.await
 	.map_err(|_| AppError::NotFound)?;
-	Ok(Json(user))
+	Ok((StatusCode::CREATED, Json(user)))
 }
 
 #[handler]
@@ -63,7 +64,7 @@ pub async fn update_user(
 	Data(pool): Data<&PgPool>,
 	Path(user_id): Path<Uuid>,
 	Json(payload): Json<UpdateUser>,
-) -> PoemResult<Json<User>> {
+) -> PoemResult<(StatusCode, Json<User>)> {
 	let user = sqlx::query_as!(
 		User,
 		"UPDATE users SET
@@ -78,7 +79,7 @@ pub async fn update_user(
 	.fetch_one(pool)
 	.await.map_err(|e| AppError::DatabaseError(e))?
 ;
-	Ok(Json(user))
+	Ok((StatusCode::CREATED, Json(user)))
 }
 
 #[handler]

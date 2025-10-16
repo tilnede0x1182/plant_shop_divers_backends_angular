@@ -84,6 +84,7 @@ async fn main() -> Result<(), std::io::Error> {
 				.at("/:id", get(get_order_item).patch(update_order_item).delete(delete_order_item))
 		)
 		.with(AddData::new(pool))
+		.with(poem::middleware::CookieJarManager::new())
 		.with(cors);
 
 

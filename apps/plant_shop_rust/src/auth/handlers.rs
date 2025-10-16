@@ -6,13 +6,14 @@ use crate::errors::AppError;
 use super::models::{AuthPayload, UserAuth};
 use super::jwt::{generate_jwt, verify_jwt};
 use bcrypt::{verify, hash};
+use poem::http::StatusCode;
 
 #[handler]
 pub async fn login(
 	Data(pool): Data<&PgPool>,
 	Json(payload): Json<AuthPayload>,
 	jar: &CookieJar,
-) -> PoemResult<Json<UserAuth>> {
+) -> PoemResult<(StatusCode, Json<UserAuth>)> {
 	let user: UserAuth = sqlx::query_as!(
 		UserAuth,
 		"SELECT id, email, username, password_hash, is_admin, created_at FROM users WHERE email = $1",
@@ -32,14 +33,14 @@ pub async fn login(
 
 	jar.add(Cookie::new("auth_token", jwt));
 
-	Ok(Json(user))
+	Ok((StatusCode::CREATED, Json(user)))
 }
 
 #[handler]
 pub async fn register(
 	Data(pool): Data<&PgPool>,
 	Json(payload): Json<AuthPayload>,
-) -> PoemResult<Json<UserAuth>> {
+) -> PoemResult<(StatusCode, Json<UserAuth>)> {
     let bcrypt_cost = std::env::var("BCRYPT_COST")
         .and_then(|s| s.parse::<u32>().map_err(|_| std::env::VarError::NotPresent))
         .unwrap_or(12);
@@ -61,14 +62,14 @@ pub async fn register(
             AppError::DatabaseError(e)
         }
     })?;
-	Ok(Json(user))
+	Ok((StatusCode::CREATED, Json(user)))
 }
 
 #[handler]
 pub async fn me(
 	Data(pool): Data<&PgPool>,
 	jar: &CookieJar,
-) -> PoemResult<Json<UserAuth>> {
+) -> PoemResult<(StatusCode, Json<UserAuth>)> {
 	let token = jar.get("auth_token").map(|c| c.value_str().to_string()).ok_or(AppError::Unauthorized)?;
 	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
 	let claims = verify_jwt(&token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
@@ -82,7 +83,7 @@ pub async fn me(
 	.await.map_err(|e| AppError::DatabaseError(e))?
 ;
 
-	Ok(Json(user))
+	Ok((StatusCode::CREATED, Json(user)))
 }
 
 #[handler]

@@ -22,11 +22,20 @@ create-db:
 migrate-db:
 	sqlx migrate run
 
+seed-build:
+	cargo build --release --bin seed
+
 seed:
 	sqlx database setup
 	sqlx migrate run
-	cargo build --bin seed
-	./target/debug/seed
+	@if [ -f ./target/release/seed ]; then \
+		./target/release/seed; \
+	elif [ -f ./target/debug/seed ]; then \
+		./target/debug/seed; \
+	else \
+		cargo build --bin seed; \
+		./target/debug/seed; \
+	fi
 
 test:
 	cargo build --bin test_e2e

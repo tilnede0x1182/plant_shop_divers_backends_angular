@@ -76,7 +76,7 @@ apps/
  ├─ plant-shop-angular-universal   → Frontend Angular
  ├─ plant_shop_nest                → Backend NestJS
  ├─ plant_shop_manifest            → Backend Manifest
- └─ plant_shop_go               → Backend Golang
+ └─ plant_shop_go                  → Backend Golang
 prisma/    → Modèles + seed
 tests/     → Scripts de test des routes backend
 ```

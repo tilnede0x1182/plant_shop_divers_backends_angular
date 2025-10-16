@@ -80,7 +80,7 @@ pub async fn delete_order(
 	Data(pool): Data<&PgPool>,
 	Path(order_id): Path<Uuid>,
 ) -> PoemResult<(), AppError> {
-	sqlx::query!("DELETE FROM orders WHERE id = $1", order_id)
+	sqlx::query!("DELETE FROM orders WHERE id = $1", (order_id,))
 		.execute(pool)
 		.await
 		.map_err(|_| AppError::NotFound)?;

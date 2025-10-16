@@ -1,0 +1,102 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+
+# dependencies
+*node_modules/
+node_modules/
+apps/plant_shop_manifest_ABANDON/node_modules/
+
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.nx/cache
+.nx/workspace-data
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+.angular
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+
+# Env & secrets
+.env
+
+# Prisma
+prisma/*.tsbuildinfo
+users.txt
+
+# Autres fichiers
+projet.txt
+
+# --- Fichiers spécifiques au backend Go ---
+
+# Binaire compilé (résultat de 'go build -o bin/server ...')
+/bin/
+
+# Dépendances locales (si 'go mod vendor' est utilisé)
+/vendor/
+
+# Fichiers de couverture de test et autres artefacts de build
+*.out
+*.test
+
+
+# Binaries
+/bin/
+/target/
+/*.exe
+/*.dll
+/*.so
+/*.dylib
+
+# Rust
+Cargo.lock
+
+# Environments
+.env
+.env.*
+
+# SQLx / Database
+sqlx-data.json
+
+# Logs
+*.log
+
+# IDEs/Editors
+*.swp
+*.swo
+.idea/
+.vscode/

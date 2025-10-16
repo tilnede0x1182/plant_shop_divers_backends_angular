@@ -1,4 +1,5 @@
 use poem::{listener::TcpListener, Route, Server, middleware::AddData, web::Data, EndpointExt};
+use poem::{get, post, patch, put, delete};
 use sqlx::postgres::PgPoolOptions;
 use dotenvy::dotenv;
 use std::env;
@@ -40,40 +41,40 @@ async fn main() -> Result<(), std::io::Error> {
 	let app = Route::new()
 		.nest("/api/auth",
 			Route::new()
-				.post("/login", login)
-				.post("/register", register)
-				.get("/me", me)
-				.post("/logout", logout)
+				.at("/login", post(login))
+				.at("/register", post(register))
+				.at("/me", get(me))
+				.at("/logout", post(logout))
 		)
 		.nest("/api/users",
 			Route::new()
-				.get("/:id", get_user)
-				.put("/:id", update_user)
-				.delete("/:id", delete_user)
+				.at("/:id", get(get_user))
+				.at("/:id", put(update_user))
+				.at("/:id", delete(delete_user))
 		)
 		.nest("/api/plants",
 			Route::new()
-				.post("/", create_plant)
-				.get("/", list_plants)
-				.get("/:id", get_plant)
-				.patch("/:id", update_plant)
-				.delete("/:id", delete_plant)
+				.at("/", post(create_plant))
+				.at("/", get(list_plants))
+				.at("/:id", get(get_plant))
+				.at("/:id", patch(update_plant))
+				.at("/:id", delete(delete_plant))
 		)
 		.nest("/api/orders",
 			Route::new()
-				.post("/", create_order)
-				.get("/", list_orders)
-				.get("/:id", get_order)
-				.patch("/:id", update_order)
-				.delete("/:id", delete_order)
+				.at("/", post(create_order))
+				.at("/", get(list_orders))
+				.at("/:id", get(get_order))
+				.at("/:id", patch(update_order))
+				.at("/:id", delete(delete_order))
 		)
 		.nest("/api/order_items",
 			Route::new()
-				.get("/:id", get_order_item)
-				.patch("/:id", update_order_item)
-				.delete("/:id", delete_order_item)
+				.at("/:id", get(get_order_item))
+				.at("/:id", patch(update_order_item))
+				.at("/:id", delete(delete_order_item))
 		)
-		.with(AddData::new(Data::new(shared_db)));
+		.with(AddData::new(shared_db.clone()));
 
 	// Lancer serveur HTTP
 	Server::new(TcpListener::bind("0.0.0.0:3000"))

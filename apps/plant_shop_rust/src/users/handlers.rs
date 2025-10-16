@@ -49,7 +49,7 @@ pub async fn delete_user(
 	Data(pool): Data<&PgPool>,
 	Path(user_id): Path<Uuid>,
 ) -> PoemResult<(), AppError> {
-	sqlx::query!("DELETE FROM users WHERE id = $1", user_id)
+	sqlx::query!("DELETE FROM users WHERE id = $1", (user_id,))
 		.execute(pool)
 		.await
 		.map_err(|_| AppError::NotFound)?;

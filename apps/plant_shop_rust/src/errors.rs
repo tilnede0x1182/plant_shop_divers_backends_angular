@@ -1,17 +1,30 @@
 /// Définition centralisée des erreurs application
-use poem::{Error, http::StatusCode};
-use thiserror::Error;
+use poem::{http::StatusCode};
+use std::fmt;
 
-#[derive(Error, Debug)]
 pub enum AppError {
-	#[error("Non autorisé")]
 	Unauthorized,
-	#[error("Ressource non trouvée")]
 	NotFound,
-	#[error("Conflit de données")]
 	Conflict,
-	#[error("Erreur interne")]
 	Internal,
+}
+
+impl fmt::Display for AppError {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		let msg = match self {
+			AppError::Unauthorized => "Non autorisé",
+			AppError::NotFound => "Ressource non trouvée",
+			AppError::Conflict => "Conflit de données",
+			AppError::Internal => "Erreur interne",
+		};
+		write!(f, "{msg}")
+	}
+}
+
+impl std::fmt::Debug for AppError {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		fmt::Display::fmt(self, f)
+	}
 }
 
 impl poem::IntoResponse for AppError {

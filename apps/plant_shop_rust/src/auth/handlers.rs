@@ -1,5 +1,6 @@
 /// Handlers Poem pour auth (login, register, me, logout)
-use poem::{handler, web::{Json, Data, CookieJar}, Result as PoemResult};
+use poem::{handler, web::{Json, Data}, Result as PoemResult};
+use poem::web::cookie::CookieJar;
 use sqlx::PgPool;
 use crate::{config::Config, errors::AppError};
 use super::models::{AuthPayload, UserAuth};
@@ -10,7 +11,7 @@ use bcrypt::{verify, hash, DEFAULT_COST};
 pub async fn login(
 	Data(pool): Data<&PgPool>,
 	Json(payload): Json<AuthPayload>,
-	CookieJar jar: CookieJar,
+	jar: &CookieJar,
 ) -> PoemResult<Json<UserAuth>, AppError> {
 	let user: UserAuth = sqlx::query_as!(
 		UserAuth,
@@ -51,7 +52,7 @@ pub async fn register(
 #[handler]
 pub async fn me(
 	Data(pool): Data<&PgPool>,
-	CookieJar jar: CookieJar,
+	jar: &CookieJar,
 ) -> PoemResult<Json<UserAuth>, AppError> {
 	let token = jar.get("auth_token").ok_or(AppError::Unauthorized)?.value();
 	let claims = verify_jwt(token, &std::env::var("JWT_SECRET").unwrap()).map_err(|_| AppError::Unauthorized)?;
@@ -67,7 +68,7 @@ pub async fn me(
 }
 
 #[handler]
-pub async fn logout(CookieJar jar: CookieJar) -> PoemResult<(), AppError> {
+pub async fn logout(jar: &CookieJar) -> PoemResult<(), AppError> {
 	jar.remove("auth_token");
 	Ok(())
 }

@@ -1,5 +1,5 @@
 use poem::{listener::TcpListener, Route, Server, middleware::{AddData, Cors}, EndpointExt};
-use poem::{get, post, patch, delete};
+use poem::{get, post, patch};
 use sqlx::postgres::PgPoolOptions;
 use dotenvy::dotenv;
 use std::env;

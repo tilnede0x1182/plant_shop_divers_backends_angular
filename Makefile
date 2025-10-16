@@ -97,3 +97,9 @@ lint:
 # Seed de la base
 seed:
 	npx prisma db seed
+
+# ======================================================
+# 🛠️ Utilitaire
+# ======================================================
+tree:
+	tree -L 6 -I "node_modules" -I "target"

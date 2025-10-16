@@ -1,8 +1,0 @@
-bin/           # binaire compilé (out-dir bin)
-target/        # dossier de compilation Rust
-/bin/           # binaire compilé (out-dir bin)
-/target/        # dossier de compilation Rust
-*/bin/          # binaire compilé (out-dir bin)
-*/target/       # dossier de compilation Rust
-**/bin/          # binaire compilé (out-dir bin)
-**/target/       # dossier de compilation Rust

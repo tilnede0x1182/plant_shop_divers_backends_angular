@@ -27,18 +27,19 @@ buid-back:
 run-proxy-manifest:
 	node apps/plant_shop_manifest/proxy.js
 
-# Run Manifest backend (API seule)
+# Run Manifest backend (API seule, mode dev)
 run-manifest:
-	PORT=4120 nx serve plant_shop_manifest
+	PORT=4120 pnpm run --prefix apps/plant_shop_manifest dev
 
 # Build Manifest backend
 build-manifest:
-	nx build plant_shop_manifest
+	pnpm run --prefix apps/plant_shop_manifest build
 
-# Start Manifest backend (mode prod après build)
+# Start Manifest backend (mode prod)
 prod-manifest:
-	PORT=4120 nx start plant_shop_manifest
+	PORT=4120 pnpm run --prefix apps/plant_shop_manifest start
 
+# Build puis exécution en prod
 build-prod: build-manifest prod-manifest
 
 # ======================================================

@@ -73,20 +73,20 @@ projet.txt
 # ─────────────────────────────────────────────────────────────────────────────
 # 🦀 Backend Rust – fichiers spécifiques
 # ─────────────────────────────────────────────────────────────────────────────
+
 /bin/
- /target/
- */bin/
- */target/
- **/bin/*
- **/target/
- **/target/*
- apps/plant_shop_rust/bin/
- apps/plant_shop_rust/target/
- *.exe
- *.dll
- *.so
- *.dylib
- Cargo.lock
+/target/
+*/bin/
+*/target/
+**/bin/
+**/target/
+apps/plant_shop_rust/bin/
+apps/plant_shop_rust/target/
+*.exe
+*.dll
+*.so
+*.dylib
+Cargo.lock
 
 # 🗄️ SQLx / migrations
 sqlx-data.json  # cache d'introspection SQLx

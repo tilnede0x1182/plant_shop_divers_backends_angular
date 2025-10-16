@@ -73,9 +73,10 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 
 ```
 apps/
- ├─ plant-shop-angular-universal   → Frontend Angular (stable)
+ ├─ plant-shop-angular-universal   → Frontend Angular
  ├─ plant_shop_nest                → Backend NestJS
- └─ plant_shop_manifest            → Backend Manifest
+ ├─ plant_shop_manifest            → Backend Manifest
+ └─ plant_shop_go               → Backend Golang
 prisma/    → Modèles + seed
 tests/     → Scripts de test des routes backend
 ```

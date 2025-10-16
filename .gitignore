@@ -73,8 +73,8 @@ projet.txt
 # ─────────────────────────────────────────────────────────────────────────────
 # 🦀 Backend Rust – fichiers spécifiques
 # ─────────────────────────────────────────────────────────────────────────────
-*/bin/           # binaire compilé (out-dir bin)
-*/target/        # dossier de compilation Rust
+apps/plant_shop_rust/target/bin/         # binaire compilé (out-dir bin)
+apps/plant_shop_rust/target/target/      # dossier de compilation Rust
 *.exe          # binaire Windows
 *.dll          # librairie dynamique Windows
 *.so           # librairie dynamique Linux

@@ -19,7 +19,8 @@ pub async fn login(
 		payload.email
 	)
 	.fetch_optional(pool)
-	.await?
+	.await.map_err(|e| AppError::DatabaseError(e))?
+
 	.ok_or(AppError::Unauthorized)?;
 
 	if !verify(&payload.password, &user.password_hash).unwrap_or(false) {
@@ -78,7 +79,8 @@ pub async fn me(
 		claims.sub
 	)
 	.fetch_one(pool)
-	.await?;
+	.await.map_err(|e| AppError::DatabaseError(e))?
+;
 
 	Ok(Json(user))
 }

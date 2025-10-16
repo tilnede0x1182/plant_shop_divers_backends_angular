@@ -47,10 +47,14 @@ struct TempUser {
 // ## Reset
 async fn reset_db(pool: &Pool<Postgres>) -> Result<(), sqlx::Error> {
     println!("🧹 Nettoyage de la base de données...");
-    sqlx::query!("DELETE FROM order_items").execute(pool).await?;
-    sqlx::query!("DELETE FROM orders").execute(pool).await?;
-    sqlx::query!("DELETE FROM plants").execute(pool).await?;
-    sqlx::query!("DELETE FROM users").execute(pool).await?;
+    sqlx::query!("DELETE FROM order_items").execute(pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
+    sqlx::query!("DELETE FROM orders").execute(pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
+    sqlx::query!("DELETE FROM plants").execute(pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
+    sqlx::query!("DELETE FROM users").execute(pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
     println!("✅ Base de données nettoyée.");
     Ok(())
 }
@@ -73,7 +77,7 @@ async fn create_users(pool: &Pool<Postgres>, cost: u32) -> Result<(Vec<(String, 
             email,
             format!("admin{}", i),
             password_hash
-        ).fetch_one(pool).await?;
+        ).fetch_one(pool).await.map_err(|_| AppError::Internal)?;
         temp_users.push(user);
         admins_creds.push((email, password));
     }
@@ -90,7 +94,7 @@ async fn create_users(pool: &Pool<Postgres>, cost: u32) -> Result<(Vec<(String, 
             email,
             format!("user{}", i),
             password_hash
-        ).fetch_one(pool).await?;
+        ).fetch_one(pool).await.map_err(|_| AppError::Internal)?;
         temp_users.push(user);
         users_creds.push((email, password));
     }
@@ -114,7 +118,7 @@ async fn create_plants(pool: &Pool<Postgres>) -> Result<Vec<TempPlant>, sqlx::Er
             TempPlant,
             "INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING id, price, stock",
             name, description, price, stock
-        ).fetch_one(pool).await?;
+        ).fetch_one(pool).await.map_err(|_| AppError::Internal)?;
         temp_plants.push(plant);
     }
     println!("✅ {} plantes créées.", temp_plants.len());
@@ -136,7 +140,7 @@ async fn create_orders(pool: &Pool<Postgres>, users: Vec<TempUser>, mut plants: 
                 "INSERT INTO orders (user_id, total, status) VALUES ($1, 0, $2) RETURNING id",
                 user.id,
                 status
-            ).fetch_one(pool).await?;
+            ).fetch_one(pool).await.map_err(|_| AppError::Internal)?;
 
             let mut order_total = BigDecimal::from(0);
             let num_items = rng.gen_range(1..=3);
@@ -149,12 +153,14 @@ async fn create_orders(pool: &Pool<Postgres>, users: Vec<TempUser>, mut plants: 
                         sqlx::query!(
                             "INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1, $2, $3, $4)",
                             order.id, plant.id, quantity, plant.price
-                        ).execute(pool).await?;
+                        ).execute(pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
 
                         sqlx::query!(
                             "UPDATE plants SET stock = stock - $1 WHERE id = $2",
                             quantity, plant.id
-                        ).execute(pool).await?;
+                        ).execute(pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
 
                         plant.stock -= quantity;
                         order_total += &plant.price * BigDecimal::from(quantity);
@@ -165,7 +171,8 @@ async fn create_orders(pool: &Pool<Postgres>, users: Vec<TempUser>, mut plants: 
             sqlx::query!(
                 "UPDATE orders SET total = $1 WHERE id = $2",
                 order_total, order.id
-            ).execute(pool).await?;
+            ).execute(pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
             total_orders += 1;
         }
     }
@@ -198,16 +205,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bcrypt_cost = env::var("BCRYPT_COST").unwrap_or("12".to_string()).parse::<u32>()?;
 
     println!("🔌 Connexion à la base de données...");
-    let pool = sqlx::PgPool::connect(&database_url).await?;
+    let pool = sqlx::PgPool::connect(&database_url).await.map_err(|e| AppError::DatabaseError(e))?
+;
     println!("✅ Connecté.");
 
-    reset_db(&pool).await?;
-    let (admins_creds, users_creds, temp_users) = create_users(&pool, bcrypt_cost).await?;
-    let temp_plants = create_plants(&pool).await?;
+    reset_db(&pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
+    let (admins_creds, users_creds, temp_users) = create_users(&pool, bcrypt_cost).await.map_err(|e| AppError::DatabaseError(e))?
+;
+    let temp_plants = create_plants(&pool).await.map_err(|e| AppError::DatabaseError(e))?
+;
 
     write_users_file(admins_creds, users_creds)?;
 
-    create_orders(&pool, temp_users, temp_plants).await?;
+    create_orders(&pool, temp_users, temp_plants).await.map_err(|e| AppError::DatabaseError(e))?
+;
 
     println!("\n🎉 Seed terminé avec succès !");
     Ok(())

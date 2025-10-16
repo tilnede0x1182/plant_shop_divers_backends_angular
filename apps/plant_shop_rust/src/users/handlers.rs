@@ -14,7 +14,8 @@ pub async fn list_users(
         "SELECT id, email, username, is_admin, created_at FROM users"
     )
     .fetch_all(pool)
-    .await?;
+    .await.map_err(|e| AppError::DatabaseError(e))?
+;
     Ok(Json(users))
 }
 
@@ -34,7 +35,8 @@ pub async fn create_user(
         password_hash
     )
     .fetch_one(pool)
-    .await?;
+    .await.map_err(|e| AppError::DatabaseError(e))?
+;
 
     Ok(Json(user))
 }
@@ -74,7 +76,8 @@ pub async fn update_user(
 		user_id
 	)
 	.fetch_one(pool)
-	.await?;
+	.await.map_err(|e| AppError::DatabaseError(e))?
+;
 	Ok(Json(user))
 }
 
@@ -85,7 +88,8 @@ pub async fn delete_user(
 ) -> PoemResult<()> {
 	let result = sqlx::query!("DELETE FROM users WHERE id = $1", user_id)
 		.execute(pool)
-		.await?;
+		.await.map_err(|e| AppError::DatabaseError(e))?
+;
 
     if result.rows_affected() == 0 {
         return Err(AppError::NotFound.into());

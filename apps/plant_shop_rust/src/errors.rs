@@ -26,10 +26,3 @@ impl ResponseError for AppError {
         }
     }
 }
-
-// Implémenter From<sqlx::Error> pour poem::Error
-impl From<sqlx::Error> for poem::Error {
-    fn from(err: sqlx::Error) -> Self {
-        AppError::DatabaseError(err).into()
-    }
-}

@@ -17,6 +17,7 @@ compile:
 
 prepare:
 	unset SQLX_OFFLINE && cargo sqlx prepare --workspace
+
 seed:
 	mkdir -p bin
 	sqlx database setup

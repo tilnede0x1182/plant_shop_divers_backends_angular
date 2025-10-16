@@ -77,8 +77,9 @@ projet.txt
  /target/
  */bin/
  */target/
- **/bin/
+ **/bin/*
  **/target/
+ **/target/*
  apps/plant_shop_rust/bin/
  apps/plant_shop_rust/target/
  *.exe

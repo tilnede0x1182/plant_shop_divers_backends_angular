@@ -3,7 +3,7 @@ use bigdecimal::BigDecimal;
 use dotenvy::dotenv;
 use rand::seq::SliceRandom;
 use rand::Rng;
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Transaction};
 use std::env;
 use std::fs::File;
 use std::io::Write;
@@ -57,11 +57,39 @@ async fn reset_db(pool: &Pool<Postgres>) -> Result<(), AppError> {
 }
 
 /// Crée admins + users et renvoie (creds_admins, creds_users, users_temp)
+
+/// Génère un email réaliste (prénom.nom[numéro]@[fournisseur])
+fn generate_realistic_email(index: u32) -> String {
+	let prenoms = ["charles", "brain", "roy", "zackary", "vincenza", "kyle", "christelle", "berenice", "greg", "bart", "maybelle", "amanda", "gabe", "brooklyn", "tanner", "malachi", "dana", "kaelyn", "nickolas", "kathryne"];
+	let noms = ["lubowitz", "bernier", "tremblay", "gusikowski", "mohr", "cormier", "wolf", "mraz", "blick", "wisoky", "prohaska"];
+	let domaines = ["gmail.com", "yahoo.com", "hotmail.com"];
+	let prenom = prenoms[(index as usize) % prenoms.len()];
+	let nom = noms[(index as usize) % noms.len()];
+	let numero = 20 + index;
+	let domaine = domaines[(index as usize) % domaines.len()];
+	format!("{}_{}{}@{}", prenom, nom, numero, domaine)
+}
+
+/// Génère un mot de passe aléatoire de 12 caractères
+fn generate_random_password() -> String {
+	use rand::distributions::Alphanumeric;
+	use rand::{thread_rng, Rng};
+	thread_rng()
+		.sample_iter(&Alphanumeric)
+		.take(12)
+		.map(char::from)
+		.collect()
+}
+
 async fn create_users(
 	pool: &Pool<Postgres>,
 	cost: u32,
 ) -> Result<(Vec<(String, String)>, Vec<(String, String)>, Vec<TempUser>), AppError> {
 	println!("👤 Création des utilisateurs et admins...");
+
+	// ─── Transaction pour batcher toutes les insertions ───────────────
+	let mut tx: Transaction<'_, Postgres> = pool.begin().await?;
+
 	let mut admins_creds = Vec::new();
 	let mut users_creds = Vec::new();
 	let mut temp_users = Vec::new();
@@ -84,15 +112,16 @@ async fn create_users(
 	}
 
 	// Users
-	for index in 1..=NB_USERS {
-		let password = format!("password{:03}", index);
-		let email = format!("user{}@example.com", index);
+	for index in 0..NB_USERS {
+		let email = generate_realistic_email(index);
+		let password = generate_random_password();
 		let password_hash = bcrypt::hash(&password, cost).map_err(|_| AppError::Internal)?;
+		let username = email.split('@').next().unwrap_or("user").replace('.', "_");
 		let user = sqlx::query_as!(
 			TempUser,
 			"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1, $2, $3, false) RETURNING id",
 			email,
-			format!("user{}", index),
+			username,
 			password_hash
 		)
 		.fetch_one(pool).await?;

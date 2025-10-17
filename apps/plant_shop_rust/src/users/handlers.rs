@@ -1,5 +1,6 @@
 /// Handlers Poem pour gestion utilisateurs
-use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
+use poem::{handler, web::{Data, Json, Path, CookieJar}, Result as PoemResult};
+use crate::auth::jwt::verify_jwt;
 use sqlx::PgPool;
 use uuid::Uuid;
 use crate::errors::AppError;
@@ -42,12 +43,11 @@ pub async fn create_user(
     Ok((StatusCode::CREATED, Json(user)))
 }
 
-
 #[handler]
 pub async fn get_user(
 	Data(pool): Data<&PgPool>,
 	Path(user_id): Path<Uuid>,
-) -> PoemResult<(StatusCode, Json<User>)> {
+) -> PoemResult<Json<User>> {
 	let user = sqlx::query_as!(
 		User,
 		"SELECT id, email, username, is_admin, created_at FROM users WHERE id = $1",
@@ -56,7 +56,7 @@ pub async fn get_user(
 	.fetch_one(pool)
 	.await
 	.map_err(|_| AppError::NotFound)?;
-	Ok((StatusCode::CREATED, Json(user)))
+	Ok(Json(user))
 }
 
 #[handler]
@@ -64,7 +64,7 @@ pub async fn update_user(
 	Data(pool): Data<&PgPool>,
 	Path(user_id): Path<Uuid>,
 	Json(payload): Json<UpdateUser>,
-) -> PoemResult<(StatusCode, Json<User>)> {
+) -> PoemResult<Json<User>> {
 	let user = sqlx::query_as!(
 		User,
 		"UPDATE users SET
@@ -72,14 +72,14 @@ pub async fn update_user(
 			email = COALESCE($2, email)
 		 WHERE id = $3
 		 RETURNING id, email, username, is_admin, created_at",
-		payload.username,
+		payload.name,
 		payload.email,
 		user_id
 	)
 	.fetch_one(pool)
-	.await.map_err(|e| AppError::DatabaseError(e))?
-;
-	Ok((StatusCode::CREATED, Json(user)))
+	.await
+	.map_err(|e| AppError::DatabaseError(e))?;
+	Ok(Json(user))
 }
 
 #[handler]

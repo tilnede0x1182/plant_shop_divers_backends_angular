@@ -12,90 +12,82 @@ pub struct NewOrderPayload {
     pub items: Vec<OrderItemPayload>,
 }
 
+/// Création de commande utilisateur courant (@jar cookie JWT → user_id, 201 en sortie)
 #[handler]
 pub async fn create_order(
 	Data(pool): Data<&PgPool>,
-    // TODO: Récupérer user_id depuis le token JWT
+	jar: &CookieJar,
 	Json(payload): Json<NewOrderPayload>,
-) -> PoemResult<Json<OrderWithItems>> {
-    let user_id = Uuid::new_v4(); // Temporaire: à remplacer par l'ID de l'utilisateur authentifié
-    let mut tx = pool.begin().await.map_err(|e| AppError::DatabaseError(e))?
-;
-    let mut total = sqlx::types::BigDecimal::from(0);
+) -> PoemResult<(StatusCode, Json<OrderWithItems>)> {
+	let token = jar.get("auth_token").map(|c| c.value_str().to_string()).ok_or(AppError::Unauthorized)?;
+	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+	let claims = verify_jwt(&token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
+	let user_id = claims.sub;
 
-    // Créer la commande avec un total de 0 pour l'instant
-    let order = sqlx::query_as!(
-        Order,
-        "INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id, user_id, total, status, created_at",
-        user_id,
-        total
-    )
-    .fetch_one(&mut *tx)
-    .await.map_err(|e| AppError::DatabaseError(e))?
-;
+	let mut tx = pool.begin().await.map_err(|e| AppError::DatabaseError(e))?;
+	let mut total = sqlx::types::BigDecimal::from(0);
 
-    let mut created_items = Vec::new();
+	let order = sqlx::query_as!(
+		Order,
+		"INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id, user_id, total, status, created_at",
+		user_id,
+		total
+	)
+	.fetch_one(&mut *tx)
+	.await.map_err(|e| AppError::DatabaseError(e))?;
 
-    for item in payload.items {
-        let plant = sqlx::query!("SELECT price, stock FROM plants WHERE id = $1", item.plant_id)
-            .fetch_optional(&mut *tx)
-            .await.map_err(|e| AppError::DatabaseError(e))?
+	let mut created_items = Vec::new();
+	for item in payload.items {
+		let plant = sqlx::query!("SELECT price, stock FROM plants WHERE id = $1", item.plant_id)
+			.fetch_optional(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?
+			.ok_or(AppError::NotFound)?;
+		if plant.stock < item.quantity as i32 {
+			tx.rollback().await.map_err(|e| AppError::DatabaseError(e))?;
+			return Err(AppError::Conflict.into());
+		}
+		let item_price = plant.price.clone();
+		let item_total = item_price.clone() * sqlx::types::BigDecimal::from(item.quantity);
+		total += item_total;
+		let order_item = sqlx::query_as!(
+			crate::order_items::models::OrderItem,
+			"INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING *",
+			order.id, item.plant_id, item.quantity as i32, item_price
+		)
+		.fetch_one(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?;
+		created_items.push(order_item);
+	}
 
-            .ok_or(AppError::NotFound)?;
+	sqlx::query!("UPDATE orders SET total = $1 WHERE id = $2", total, order.id)
+		.execute(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?;
+	tx.commit().await.map_err(|e| AppError::DatabaseError(e))?;
 
-        if plant.stock < item.quantity as i32 {
-            tx.rollback().await.map_err(|e| AppError::DatabaseError(e))?
-;
-            return Err(AppError::Conflict.into());
-        }
-
-        let item_price = plant.price.clone();
-        let item_total = item_price.clone() * sqlx::types::BigDecimal::from(item.quantity);
-        total += item_total;
-
-        let order_item = sqlx::query_as!(
-            crate::order_items::models::OrderItem,
-            "INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING *",
-            order.id, item.plant_id, item.quantity as i32, item_price
-        ).fetch_one(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?
-;
-        created_items.push(order_item);
-    }
-
-    // Mettre à jour le total final de la commande
-    sqlx::query!(
-        "UPDATE orders SET total = $1 WHERE id = $2",
-        total,
-        order.id
-    ).execute(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?
-;
-
-    tx.commit().await.map_err(|e| AppError::DatabaseError(e))?
-;
-
-    let response = OrderWithItems {
-        id: order.id,
-        user_id: order.user_id,
-        total,
-        status: order.status,
-        created_at: order.created_at,
-        items: created_items,
-    };
-
-	Ok(Json(response))
+	let response = OrderWithItems {
+		id: order.id,
+		user_id: order.user_id,
+		total,
+		status: order.status,
+		created_at: order.created_at,
+		items: created_items,
+	};
+	Ok((StatusCode::CREATED, Json(response)))
 }
 
 #[handler]
 pub async fn list_orders(
-	Data(pool): Data<&PgPool>
+	Data(pool): Data<&PgPool>,
+	jar: &CookieJar,
 ) -> PoemResult<Json<Vec<Order>>> {
+	let token = jar.get("auth_token").map(|c| c.value_str().to_string()).ok_or(AppError::Unauthorized)?;
+	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+	let claims = verify_jwt(&token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
+
 	let orders = sqlx::query_as!(
 		Order,
-		"SELECT id, user_id, total, status, created_at FROM orders"
+		"SELECT id, user_id, total, status, created_at FROM orders WHERE user_id = $1",
+		claims.sub
 	)
 	.fetch_all(pool)
-	.await.map_err(|e| AppError::DatabaseError(e))?
-;
+	.await.map_err(|e| AppError::DatabaseError(e))?;
 	Ok(Json(orders))
 }
 

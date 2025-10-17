@@ -3,7 +3,7 @@ use sqlx::types::BigDecimal;
 use chrono::{DateTime, Utc};
 use bigdecimal::ToPrimitive;
 
-fn serialize_bigdecimal_as_i32<S>(value: &BigDecimal, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize_bigdecimal_as_i32<S>(value: &BigDecimal, serializer: S) -> Result<S::Ok, S::Error>
 where
 	S: Serializer
 {

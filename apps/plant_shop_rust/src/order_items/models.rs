@@ -8,7 +8,8 @@ pub struct OrderItem {
     pub order_id: Option<i32>,
     pub plant_id: Option<i32>,
     pub quantity: i32,
-    pub price: BigDecimal,
+		#[serde(serialize_with = "crate::plants::models::serialize_bigdecimal_as_i32")]
+		pub price: BigDecimal,
 }
 
 #[derive(Deserialize)]

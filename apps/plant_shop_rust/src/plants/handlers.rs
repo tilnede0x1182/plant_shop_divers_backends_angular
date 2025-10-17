@@ -42,7 +42,7 @@ pub async fn list_plants(
 ) -> PoemResult<Json<Vec<Plant>>, AppError> {
 	let plants = sqlx::query_as!(
 		Plant,
-		"SELECT * FROM plants"
+		"SELECT * FROM plants ORDER BY name ASC"
 	)
 	.fetch_all(pool)
 	.await

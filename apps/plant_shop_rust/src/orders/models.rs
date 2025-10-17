@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 use sqlx::types::BigDecimal;
-use chrono::{DateTime, Utc};
+use chrono::{NaiveDateTime, DateTime, Utc};
 use crate::order_items::models::OrderItem;
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
@@ -13,16 +13,32 @@ pub struct Order {
     pub created_at: DateTime<Utc>,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
+pub struct PlantBasic {
+    pub id: Uuid,
+    pub name: String,
+    pub price: BigDecimal,
+    pub stock: i32,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct OrderItemWithPlant {
+    pub id: Uuid,
+    pub quantity: i32,
+    pub price: BigDecimal,
+    pub plant: PlantBasic,
+}
+
+#[derive(Debug, Serialize)]
 pub struct OrderWithItems {
     pub id: Uuid,
     pub user_id: Option<Uuid>,
     pub total: BigDecimal,
     pub status: String,
     pub created_at: DateTime<Utc>,
-    pub items: Vec<OrderItem>,
+    pub items: Vec<OrderItemWithPlant>,
 }
-
 
 #[derive(Deserialize)]
 pub struct OrderItemPayload {

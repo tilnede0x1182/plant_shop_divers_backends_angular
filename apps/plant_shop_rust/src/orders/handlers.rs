@@ -1,13 +1,27 @@
-/// Handlers Poem pour gestion des commandes
-use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
-use poem::web::cookie::CookieJar;
-use poem::http::StatusCode;
+// Gestion des commandes (handlers Poem)
+use poem::{
+	handler,
+	web::{Data, Json, Path},
+	web::cookie::CookieJar,
+	http::StatusCode,
+	Result as PoemResult,
+};
 use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
+use chrono::NaiveDateTime;
+use bigdecimal::BigDecimal;
+
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
-use super::models::{Order, UpdateOrder, OrderItemPayload, OrderWithItems};
+use super::models::{
+	Order,
+	UpdateOrder,
+	OrderItemPayload,
+	OrderWithItems,
+	OrderItemWithPlant,
+	PlantBasic,
+};
 
 // Structure pour le payload de création de commande
 #[derive(Deserialize)]
@@ -75,12 +89,12 @@ pub async fn create_order(
 	tx.commit().await.map_err(|e| AppError::DatabaseError(e))?;
 
 	let response = OrderWithItems {
-		id: order.id,
-		user_id: order.user_id,
-		total,
-		status: order.status,
-		created_at: order.created_at,
-		items: created_items,
+			id: order.id,
+			user_id: order.user_id,
+			total,
+			status: order.status,
+			created_at: order.created_at,
+			items: vec![],
 	};
 	Ok((StatusCode::CREATED, Json(response)))
 }
@@ -89,19 +103,62 @@ pub async fn create_order(
 pub async fn list_orders(
 	Data(pool): Data<&PgPool>,
 	jar: &CookieJar,
-) -> PoemResult<Json<Vec<Order>>> {
-	let token = jar.get("auth_token").map(|c| c.value_str().to_string()).ok_or(AppError::Unauthorized)?;
-	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-	let claims = verify_jwt(&token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
+) -> Result<Json<Vec<OrderWithItems>>, AppError> {
+	let token = jar
+		.get("auth_token")
+		.map(|c| c.value_str().to_string())
+		.ok_or(AppError::Unauthorized)?;
+	let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+	let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
+	let user_id = claims.sub;
 
-	let orders = sqlx::query_as!(
-		Order,
+	// Requête principale : commandes du user
+	let orders = sqlx::query!(
 		"SELECT id, user_id, total, status, created_at FROM orders WHERE user_id = $1",
-		claims.sub
+		user_id
 	)
 	.fetch_all(pool)
-	.await.map_err(|e| AppError::DatabaseError(e))?;
-	Ok(Json(orders))
+	.await
+	.map_err(AppError::DatabaseError)?;
+
+	let mut results = Vec::new();
+
+	for order in orders {
+		let items = sqlx::query!(
+			"SELECT oi.id, oi.quantity, oi.price, p.id as plant_id, p.name, p.price as plant_price, p.stock, p.description
+			 FROM order_items oi
+			 JOIN plants p ON oi.plant_id = p.id
+			 WHERE oi.order_id = $1",
+			order.id
+		)
+		.fetch_all(pool)
+		.await
+		.map_err(AppError::DatabaseError)?
+		.into_iter()
+		.map(|row| OrderItemWithPlant {
+			id: row.id,
+			quantity: row.quantity,
+			price: row.price,
+			plant: PlantBasic {
+				id: row.plant_id,
+				name: row.name,
+				price: row.plant_price,
+				stock: row.stock,
+				description: row.description,
+			},
+		})
+		.collect();
+
+		results.push(OrderWithItems {
+				id: order.id,
+				user_id: order.user_id,
+				total: order.total,
+				status: order.status,
+				created_at: order.created_at,
+				items,
+		});
+	}
+	Ok(Json(results))
 }
 
 #[handler]

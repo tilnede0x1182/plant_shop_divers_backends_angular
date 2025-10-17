@@ -25,7 +25,7 @@ pub async fn list_users(
 
     let users = sqlx::query_as!(
         User,
-        "SELECT id, email, username, is_admin, created_at FROM users"
+        "SELECT id, email, username, is_admin, created_at FROM users ORDER BY email ASC"
     )
     .fetch_all(pool)
     .await

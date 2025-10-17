@@ -1,5 +1,7 @@
 /// Handlers Poem pour gestion utilisateurs
 use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
+use poem::middleware::AddData;
+use poem::Request;
 use sqlx::PgPool;
 use crate::errors::AppError;
 use super::models::{User, UpdateUser, NewUser};
@@ -85,24 +87,66 @@ pub async fn get_user(
 
 #[handler]
 pub async fn update_user(
+	jar: &CookieJar,
 	Data(pool): Data<&PgPool>,
 	Path(user_id): Path<i32>,
 	Json(payload): Json<UpdateUser>,
 ) -> PoemResult<Json<User>> {
+	println!(
+		"[DEBUG] PATCH /users -> name={:?}, email={:?}, admin={:?}",
+		payload.name, payload.email, payload.admin
+	);
+	println!(
+		"[DEBUG] Corps JSON reçu brut: {}",
+		serde_json::to_string(&payload).unwrap_or_default()
+	);
+
+	// Auth + utilisateur courant depuis le JWT
+	let token = jar
+		.get("auth_token")
+		.map(|c| c.value_str().to_string())
+		.ok_or(AppError::Unauthorized)?;
+	let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+	let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
+
+	// Charger rôle courant (source de vérité DB)
+	let current = sqlx::query!(
+		r#"SELECT id, is_admin FROM users WHERE id = $1"#,
+		claims.sub
+	)
+	.fetch_one(pool)
+	.await
+	.map_err(AppError::DatabaseError)?;
+
+	// Ignorer la tentative d’élévation de privilèges par un non-admin
+	let admin_value = if current.is_admin {
+			payload.admin
+	} else {
+			None
+	};
+
+	// Interdire édition d'un autre user si non-admin
+	if !current.is_admin && current.id != user_id {
+		return Err(AppError::Forbidden.into());
+	}
+
 	let user = sqlx::query_as!(
 		User,
-		"UPDATE users SET
+		r#"UPDATE users SET
 			username = COALESCE($1, username),
-			email = COALESCE($2, email)
-		 WHERE id = $3
-		 RETURNING id,email, username, is_admin, created_at",
+			email    = COALESCE($2, email),
+			is_admin = COALESCE($3, is_admin)
+		WHERE id = $4
+		RETURNING id, email, username, is_admin, created_at"#,
 		payload.name,
 		payload.email,
+		admin_value,
 		user_id
 	)
 	.fetch_one(pool)
 	.await
-	.map_err(|e| AppError::DatabaseError(e))?;
+	.map_err(AppError::DatabaseError)?;
+
 	Ok(Json(user))
 }
 

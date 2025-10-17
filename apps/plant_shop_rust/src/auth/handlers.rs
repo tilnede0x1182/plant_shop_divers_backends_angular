@@ -16,7 +16,7 @@ pub async fn login(
 ) -> PoemResult<(StatusCode, Json<UserAuth>)> {
 	let user: UserAuth = sqlx::query_as!(
 		UserAuth,
-		"SELECT id, email, username, password_hash, is_admin, created_at FROM users WHERE email = $1",
+		"SELECT id,email, username, password_hash, is_admin, created_at FROM users WHERE email = $1",
 		payload.email
 	)
 	.fetch_optional(pool)
@@ -53,7 +53,7 @@ pub async fn register(
 	let hash_str = hash(&payload.password, bcrypt_cost).map_err(|_| AppError::Internal)?;
 	let user: UserAuth = sqlx::query_as!(
 		UserAuth,
-		"INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING *",
+		"INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id, email, username, password_hash, is_admin, created_at",
 		payload.email,
 		payload.email,
 		hash_str
@@ -92,7 +92,7 @@ pub async fn me(
 
 	let user: UserAuth = sqlx::query_as!(
 		UserAuth,
-		"SELECT id, email, username, password_hash, is_admin, created_at FROM users WHERE id = $1",
+		"SELECT id,email, username, password_hash, is_admin, created_at FROM users WHERE id = $1",
 		claims.sub
 	)
 	.fetch_one(pool)

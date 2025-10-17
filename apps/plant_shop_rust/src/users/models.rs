@@ -1,10 +1,10 @@
 use serde::{Serialize, Deserialize};
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
-	pub id: Uuid,
+	pub id: i32,
+	#[serde(skip_serializing)]
 	pub email: String,
 	#[serde(rename = "name")]
 	pub username: String,

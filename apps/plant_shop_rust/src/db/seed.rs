@@ -3,11 +3,10 @@ use bigdecimal::BigDecimal;
 use dotenvy::dotenv;
 use rand::seq::SliceRandom;
 use rand::Rng;
-use sqlx::{Pool, Postgres, Transaction};
+use sqlx::{Pool, Postgres};
 use std::env;
 use std::fs::File;
 use std::io::Write;
-use uuid::Uuid;
 
 // # Constantes
 const NB_ADMINS: u32 = 3;
@@ -36,22 +35,32 @@ const PLANT_NAMES: &[&str] = &[
 // Structures temporaires
 #[derive(Clone)]
 struct TempPlant {
-	id: Uuid,
+	id: i32,
 	price: BigDecimal,
 	stock: i32,
 }
 
 struct TempUser {
-	id: Uuid,
+	id: i32,
+}
+
+/// Exécute une requête SQL, affiche l’erreur sans panique.
+/// @pool   Connexion/Pool
+/// @query  Requête SQL (texte)
+/// @tag    Tag log pour affichage
+async fn safe_execute(pool: &Pool<Postgres>, query: &str, tag: &str) {
+	if let Err(e) = sqlx::query(query).execute(pool).await {
+		println!("[ERREUR][{tag}] {e}");
+	}
 }
 
 /// Nettoyage complet des tables (sans DROP)
 async fn reset_db(pool: &Pool<Postgres>) -> Result<(), AppError> {
 	println!("🧹 Nettoyage de la base de données...");
-	sqlx::query!("DELETE FROM order_items").execute(pool).await?;
-	sqlx::query!("DELETE FROM orders").execute(pool).await?;
-	sqlx::query!("DELETE FROM plants").execute(pool).await?;
-	sqlx::query!("DELETE FROM users").execute(pool).await?;
+	safe_execute(pool, "DELETE FROM order_items", "order_items").await;
+	safe_execute(pool, "DELETE FROM orders", "orders").await;
+	safe_execute(pool, "DELETE FROM plants", "plants").await;
+	safe_execute(pool, "DELETE FROM users", "users").await;
 	println!("✅ Base de données nettoyée.");
 	Ok(())
 }
@@ -86,9 +95,6 @@ async fn create_users(
 ) -> Result<(Vec<(String, String)>, Vec<(String, String)>, Vec<TempUser>), AppError> {
 	println!("👤 Création des utilisateurs et admins...");
 
-	// ─── Transaction locale pour regrouper les insertions ─────────────
-	let mut tx: Transaction<'_, Postgres> = pool.begin().await?;
-
 	let mut admins_creds = Vec::new();
 	let mut users_creds = Vec::new();
 	let mut temp_users = Vec::new();
@@ -98,15 +104,14 @@ async fn create_users(
 		let email = format!("admin{}@planteshop.com", index);
 		let password = "password".to_string();
 		let password_hash = bcrypt::hash(&password, cost).map_err(|_| AppError::Internal)?;
-		let user = sqlx::query_as!(
-			TempUser,
+		let row = sqlx::query!(
 			"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1, $2, $3, true) RETURNING id",
 			email,
 			format!("admin{}", index),
 			password_hash
 		)
-		.fetch_one(&mut *tx).await?;
-		temp_users.push(user);
+		.fetch_one(pool).await?;
+		temp_users.push(TempUser { id: row.id });
 		admins_creds.push((email, password));
 	}
 
@@ -116,20 +121,18 @@ async fn create_users(
 		let password = generate_random_password();
 		let password_hash = bcrypt::hash(&password, cost).map_err(|_| AppError::Internal)?;
 		let username = email.split('@').next().unwrap_or("user").replace('.', "_");
-		let user = sqlx::query_as!(
-			TempUser,
+		let row = sqlx::query!(
 			"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1, $2, $3, false) RETURNING id",
 			email,
 			username,
 			password_hash
 		)
-		.fetch_one(&mut *tx).await?;
-		temp_users.push(user);
+		.fetch_one(pool).await?;
+		temp_users.push(TempUser { id: row.id });
 		users_creds.push((email, password));
 	}
 
-	tx.commit().await?;
-	println!("✅ {} utilisateurs créés.", temp_users.len());
+	println!("✅ {} utilisateurs créés.", (NB_ADMINS + NB_USERS));
 	Ok((admins_creds, users_creds, temp_users))
 }
 
@@ -139,26 +142,31 @@ async fn create_plants(pool: &Pool<Postgres>) -> Result<Vec<TempPlant>, AppError
 	let mut rng = rand::thread_rng();
 	let mut temp_plants = Vec::new();
 
-	// ─── Transaction locale pour regrouper les insertions ─────────────
-	let mut tx: Transaction<'_, Postgres> = pool.begin().await?;
-
 	for idx in 0..NB_PLANTS {
-		let name = PLANT_NAMES[idx as usize % PLANT_NAMES.len()].to_string();
+		let name = format!("{} #{}",
+			PLANT_NAMES[idx as usize % PLANT_NAMES.len()],
+			idx); // Ajout d'un numéro pour éviter les doublons
 		let price = BigDecimal::from(rng.gen_range(5..51));
 		let stock = rng.gen_range(5..31);
 		let description = format!("Une description pour la plante {}.", name);
 
-		let plant = sqlx::query_as!(
-			TempPlant,
-			"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4)
-			 RETURNING id, price, stock",
+		// Ajout de gestion d'erreur explicite
+		match sqlx::query!(
+			"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING id",
 			name, description, price, stock
 		)
-		.fetch_one(&mut *tx).await?;
-		temp_plants.push(plant);
+		.fetch_one(pool).await {
+			Ok(row) => {
+				temp_plants.push(TempPlant { id: row.id, price: price.clone(), stock });
+				// println!("  ✓ Plante {} créée (id: {})", name, row.id);
+			}
+			Err(e) => {
+				println!("  ✗ ERREUR lors de la création de '{}': {}", name, e);
+				return Err(e.into());
+			}
+		}
 	}
 
-	tx.commit().await?;
 	println!("✅ {} plantes créées.", temp_plants.len());
 	Ok(temp_plants)
 }
@@ -174,18 +182,15 @@ async fn create_orders(
 	let statuses = ["pending", "confirmed", "shipped", "delivered"];
 	let mut total_orders = 0;
 
-	// ─── Transaction locale pour regrouper inserts/updates ────────────
-	let mut tx: Transaction<'_, Postgres> = pool.begin().await?;
-
 	for user in users {
 		let num_orders = rng.gen_range(0..=MAX_ORDERS_PER_USER);
 		for _ in 0..num_orders {
 			let status = statuses.choose(&mut rng).unwrap().to_string();
-			let order = sqlx::query!(
+			let row = sqlx::query!(
 				"INSERT INTO orders (user_id, total, status) VALUES ($1, 0, $2) RETURNING id",
 				user.id, status
 			)
-			.fetch_one(&mut *tx).await?;
+			.fetch_one(pool).await?;
 
 			let mut order_total = BigDecimal::from(0);
 			let num_items = rng.gen_range(1..=3);
@@ -198,15 +203,15 @@ async fn create_orders(
 						sqlx::query!(
 							"INSERT INTO order_items (order_id, plant_id, quantity, price)
 							 VALUES ($1, $2, $3, $4)",
-							order.id, plant.id, quantity, plant.price
+							row.id, plant.id, quantity, plant.price
 						)
-						.execute(&mut *tx).await?;
+						.execute(pool).await?;
 
 						sqlx::query!(
 							"UPDATE plants SET stock = stock - $1 WHERE id = $2",
 							quantity, plant.id
 						)
-						.execute(&mut *tx).await?;
+						.execute(pool).await?;
 
 						plant.stock -= quantity;
 						order_total += &plant.price * BigDecimal::from(quantity);
@@ -216,14 +221,13 @@ async fn create_orders(
 
 			sqlx::query!(
 				"UPDATE orders SET total = $1 WHERE id = $2",
-				order_total, order.id
+				order_total, row.id
 			)
-			.execute(&mut *tx).await?;
+			.execute(pool).await?;
 			total_orders += 1;
 		}
 	}
 
-	tx.commit().await?;
 	println!("✅ {} commandes créées.", total_orders);
 	Ok(())
 }
@@ -234,7 +238,13 @@ fn write_users_file(
 	users: Vec<(String, String)>
 ) -> Result<(), AppError> {
 	println!("✍️  Génération du fichier users.txt...");
-	let mut file = File::create("users.txt").map_err(|_| AppError::Internal)?;
+	let mut file = match File::create("users.txt") {
+		Ok(f) => f,
+		Err(e) => {
+			println!("[ERREUR][create users.txt] {e}");
+			return Ok(());
+		}
+	};
 	let mut content = String::from("Administrateurs :\n\n");
 	for (email, password) in admins {
 		content.push_str(&format!("{} {}\n", email, password));
@@ -243,7 +253,9 @@ fn write_users_file(
 	for (email, password) in users {
 		content.push_str(&format!("{} {}\n", email, password));
 	}
-	file.write_all(content.as_bytes()).map_err(|_| AppError::Internal)?;
+	if let Err(e) = file.write_all(content.as_bytes()) {
+		println!("[ERREUR][write users.txt] {e}");
+	}
 	println!("✅ Fichier users.txt généré.");
 	Ok(())
 }

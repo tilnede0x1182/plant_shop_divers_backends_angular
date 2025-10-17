@@ -6,7 +6,7 @@
     "dev-back": "SERVE_SSR=false PORT=4100 nx serve plant_shop_nest",
     "dev-front": "nx serve plant-shop-angular-universal --port=8300 --proxy-config proxy.conf.json",
     "test-e2e": "SERVE_SSR=false PORT=4100 nx serve plant_shop_nest",
-    "test-routes": "node tests/test_complet.js",
+    "test-routes": "node tests/test_complet_V1.1.js",
     "build-backend": "nx build plant_shop_nest --configuration=production",
     "build-frontend": "nx build plant-shop-angular-universal --configuration=production",
     "start-frontend": "nx run plant-shop-angular-universal:serve-static --port=8300",

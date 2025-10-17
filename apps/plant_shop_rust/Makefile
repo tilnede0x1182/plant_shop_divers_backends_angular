@@ -32,6 +32,14 @@ create-db:
 migrate-db:
 	sqlx migrate run
 
+drop-db:
+	sqlx database drop
+
+reset-db:
+	sqlx database drop
+	sqlx database setup
+	sqlx migrate run
+
 # ======================================================
 # 🌱 Seed base de données (données de test)
 # ======================================================

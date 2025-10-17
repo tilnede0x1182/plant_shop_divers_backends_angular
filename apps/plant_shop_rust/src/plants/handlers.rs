@@ -2,7 +2,6 @@
 use poem::{handler, web::{Data, Json, Path, cookie::CookieJar}, http::StatusCode, Result as PoemResult};
 use crate::auth::jwt::verify_jwt;
 use sqlx::PgPool;
-use uuid::Uuid;
 use crate::errors::AppError;
 use super::models::{Plant, NewPlant, UpdatePlant};
 
@@ -24,7 +23,7 @@ pub async fn create_plant(
 	}
 	let plant = sqlx::query_as!(
 		Plant,
-		"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING *",
+		"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING id, name, description, price, stock, created_at",
 		payload.name,
 		payload.description,
 		payload.price,
@@ -42,7 +41,7 @@ pub async fn list_plants(
 ) -> PoemResult<Json<Vec<Plant>>, AppError> {
 	let plants = sqlx::query_as!(
 		Plant,
-		"SELECT * FROM plants ORDER BY name ASC"
+		"SELECT id, name, description, price, stock, created_at FROM plants ORDER BY name ASC",
 	)
 	.fetch_all(pool)
 	.await
@@ -52,12 +51,13 @@ pub async fn list_plants(
 
 #[handler]
 pub async fn get_plant(
-	Data(pool): Data<&PgPool>,
-	Path(plant_id): Path<Uuid>,
-) -> PoemResult<Json<Plant>, AppError> {
+    Data(pool): Data<&PgPool>,
+    Path(plant_id): Path<i32>,
+) -> PoemResult<Json<Plant>> {
 	let plant = sqlx::query_as!(
 		Plant,
-		"SELECT * FROM plants WHERE id = $1",
+		"SELECT id, name, description, price, stock, created_at
+ 		FROM plants WHERE id = $1",
 		plant_id
 	)
 	.fetch_one(pool)
@@ -68,10 +68,10 @@ pub async fn get_plant(
 
 #[handler]
 pub async fn update_plant(
-	Data(pool): Data<&PgPool>,
-	Path(plant_id): Path<Uuid>,
-	Json(payload): Json<UpdatePlant>,
-) -> PoemResult<Json<Plant>, AppError> {
+    Data(pool): Data<&PgPool>,
+    Path(plant_id): Path<i32>,
+    Json(payload): Json<UpdatePlant>,
+) -> PoemResult<Json<Plant>> {
 	let plant = sqlx::query_as!(
 		Plant,
 		"UPDATE plants SET
@@ -80,7 +80,7 @@ pub async fn update_plant(
 			price = COALESCE($3, price),
 			stock = COALESCE($4, stock)
 		 WHERE id = $5
-		 RETURNING *",
+		 RETURNING id, name, description, price, stock, created_at",
 		payload.name,
 		payload.description,
 		payload.price,
@@ -93,12 +93,11 @@ pub async fn update_plant(
 	Ok(Json(plant))
 }
 
-
 #[handler]
 pub async fn delete_plant(
-	Data(pool): Data<&PgPool>,
-	Path(plant_id): Path<Uuid>,
-) -> PoemResult<(), AppError> {
+    Data(pool): Data<&PgPool>,
+    Path(plant_id): Path<i32>,
+) -> PoemResult<()> {
 	sqlx::query!("DELETE FROM plants WHERE id = $1", plant_id)
 		.execute(pool)
 		.await

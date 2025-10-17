@@ -1,7 +1,6 @@
 /// Handlers Poem pour gestion utilisateurs
 use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
 use sqlx::PgPool;
-use uuid::Uuid;
 use crate::errors::AppError;
 use super::models::{User, UpdateUser, NewUser};
 use poem::http::StatusCode;
@@ -11,7 +10,7 @@ use crate::auth::jwt::verify_jwt;
 #[handler]
 pub async fn list_users(
     Data(pool): Data<&PgPool>,
-    jar: &CookieJar,                    // ← nouveau
+    jar: &CookieJar,
 ) -> PoemResult<Json<Vec<User>>, AppError> {
     let token = jar
         .get("auth_token")
@@ -19,13 +18,13 @@ pub async fn list_users(
         .ok_or(AppError::Unauthorized)?;
     let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
     let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
-    if !claims.is_admin {               // ← contrôle rôle
+    if !claims.is_admin {
         return Err(AppError::Forbidden.into());
     }
 
     let users = sqlx::query_as!(
         User,
-        "SELECT id, email, username, is_admin, created_at FROM users ORDER BY email ASC"
+        "SELECT id,email, username, is_admin, created_at FROM users ORDER BY email ASC"
     )
     .fetch_all(pool)
     .await
@@ -33,7 +32,6 @@ pub async fn list_users(
 
     Ok(Json(users))
 }
-
 
 #[handler]
 pub async fn create_user(
@@ -45,7 +43,7 @@ pub async fn create_user(
 
     let user = sqlx::query_as!(
         User,
-        "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, email, username, is_admin, created_at",
+        "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id,email, username, is_admin, created_at",
         payload.name,
         payload.email,
         password_hash
@@ -60,11 +58,11 @@ pub async fn create_user(
 #[handler]
 pub async fn get_user(
 	Data(pool): Data<&PgPool>,
-	Path(user_id): Path<Uuid>,
+	Path(user_id): Path<i32>,
 ) -> PoemResult<Json<User>> {
 	let user = sqlx::query_as!(
 		User,
-		"SELECT id, email, username, is_admin, created_at FROM users WHERE id = $1",
+		"SELECT id,email, username, is_admin, created_at FROM users WHERE id = $1",
 		user_id
 	)
 	.fetch_one(pool)
@@ -76,7 +74,7 @@ pub async fn get_user(
 #[handler]
 pub async fn update_user(
 	Data(pool): Data<&PgPool>,
-	Path(user_id): Path<Uuid>,
+	Path(user_id): Path<i32>,
 	Json(payload): Json<UpdateUser>,
 ) -> PoemResult<Json<User>> {
 	let user = sqlx::query_as!(
@@ -85,7 +83,7 @@ pub async fn update_user(
 			username = COALESCE($1, username),
 			email = COALESCE($2, email)
 		 WHERE id = $3
-		 RETURNING id, email, username, is_admin, created_at",
+		 RETURNING id,email, username, is_admin, created_at",
 		payload.name,
 		payload.email,
 		user_id
@@ -99,15 +97,15 @@ pub async fn update_user(
 #[handler]
 pub async fn delete_user(
 	Data(pool): Data<&PgPool>,
-	Path(user_id): Path<Uuid>,
+	Path(user_id): Path<i32>,
 ) -> PoemResult<()> {
 	let result = sqlx::query!("DELETE FROM users WHERE id = $1", user_id)
 		.execute(pool)
-		.await.map_err(|e| AppError::DatabaseError(e))?
-;
+		.await
+		.map_err(|e| AppError::DatabaseError(e))?;
 
-    if result.rows_affected() == 0 {
-        return Err(AppError::NotFound.into());
-    }
+	if result.rows_affected() == 0 {
+		return Err(AppError::NotFound.into());
+	}
 	Ok(())
 }

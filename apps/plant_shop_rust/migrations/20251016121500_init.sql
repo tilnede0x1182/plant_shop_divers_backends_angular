@@ -3,7 +3,7 @@
 -- ───────────────────────────────
 
 CREATE TABLE users (
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	id SERIAL PRIMARY KEY,
 	email VARCHAR(255) UNIQUE NOT NULL,
 	username VARCHAR(64) UNIQUE NOT NULL,
 	password_hash VARCHAR(255) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE plants (
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+	id SERIAL PRIMARY KEY,
 	name VARCHAR(100) NOT NULL,
 	description TEXT,
 	price NUMERIC(10,2) NOT NULL,
@@ -21,17 +21,17 @@ CREATE TABLE plants (
 );
 
 CREATE TABLE orders (
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- ON DELETE SET NULL pour garder l'historique
+	id SERIAL PRIMARY KEY,
+	user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- ON DELETE SET NULL pour garder l'historique
 	total NUMERIC(10,2) NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- Ajout de la colonne status
+	status VARCHAR(50) NOT NULL DEFAULT 'pending', -- Ajout de la colonne status
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE order_items (
-	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-	order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
-	plant_id UUID REFERENCES plants(id) ON DELETE SET NULL, -- ON DELETE SET NULL pour ne pas perdre l'item si la plante est supprimée
+	id SERIAL PRIMARY KEY,
+	order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
+	plant_id INTEGER REFERENCES plants(id) ON DELETE SET NULL, -- ON DELETE SET NULL pour ne pas perdre l'item si la plante est supprimée
 	quantity INTEGER NOT NULL,
 	price NUMERIC(10,2) NOT NULL
 );

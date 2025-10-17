@@ -1,5 +1,4 @@
 use serde::{Serialize, Deserialize, Serializer};
-use uuid::Uuid;
 use sqlx::types::BigDecimal;
 use chrono::{DateTime, Utc};
 use bigdecimal::ToPrimitive;
@@ -14,12 +13,12 @@ where
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Plant {
-	pub id: Uuid,
+	pub id: i32,
+	#[serde(skip_serializing)]
 	pub name: String,
-	pub description: Option<String>,
-	#[serde(serialize_with = "serialize_bigdecimal_as_i32")]
 	pub price: BigDecimal,
 	pub stock: i32,
+	pub description: Option<String>,
 	pub created_at: DateTime<Utc>,
 }
 

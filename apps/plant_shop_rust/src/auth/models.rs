@@ -9,11 +9,12 @@ pub struct AuthPayload {
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserAuth {
-    pub id: uuid::Uuid,
+    pub id: i32,
+    #[serde(skip_serializing)]
     pub email: String,
     pub username: String,
     pub password_hash: String,
-		#[serde(rename = "admin")]
+    #[serde(rename = "admin")]
     pub is_admin: bool,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }

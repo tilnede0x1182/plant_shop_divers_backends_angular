@@ -8,9 +8,6 @@ use poem::{
 };
 use serde::Deserialize;
 use sqlx::PgPool;
-use uuid::Uuid;
-use chrono::NaiveDateTime;
-use bigdecimal::BigDecimal;
 
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
@@ -56,7 +53,7 @@ pub async fn create_order(
 
 	let order = sqlx::query_as!(
 		Order,
-		"INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id, user_id, total, status, created_at",
+		"INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id,user_id, total, status, created_at",
 		user_id,
 		total
 	)
@@ -77,7 +74,7 @@ pub async fn create_order(
 		total += item_total;
 		let order_item = sqlx::query_as!(
 			crate::order_items::models::OrderItem,
-			"INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING *",
+			"INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING id, order_id, plant_id, quantity, price",
 			order.id, item.plant_id, item.quantity as i32, item_price
 		)
 		.fetch_one(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?;
@@ -94,7 +91,26 @@ pub async fn create_order(
 			total,
 			status: order.status,
 			created_at: order.created_at,
-			items: vec![],
+			items: {
+				let mut items_vec = Vec::new();
+				for order_item in &created_items {
+					let plant = sqlx::query_as!(
+						PlantBasic,
+						"SELECT id,name, price, stock, description FROM plants WHERE id = $1",
+						order_item.plant_id
+					)
+					.fetch_one(pool)
+					.await
+					.map_err(|e| AppError::DatabaseError(e))?;
+					items_vec.push(OrderItemWithPlant {
+						id: order_item.id,
+						quantity: order_item.quantity,
+						price: order_item.price.clone(),
+						plant,
+					});
+				}
+				items_vec
+			},
 	};
 	Ok((StatusCode::CREATED, Json(response)))
 }
@@ -114,7 +130,7 @@ pub async fn list_orders(
 
 	// Requête principale : commandes du user
 	let orders = sqlx::query!(
-		"SELECT id, user_id, total, status, created_at FROM orders WHERE user_id = $1",
+		"SELECT id,user_id, total, status, created_at FROM orders WHERE user_id = $1",
 		user_id
 	)
 	.fetch_all(pool)
@@ -163,32 +179,67 @@ pub async fn list_orders(
 
 #[handler]
 pub async fn get_order(
-	Data(pool): Data<&PgPool>,
-	Path(order_id): Path<Uuid>,
-) -> PoemResult<Json<Order>> {
+    Data(pool): Data<&PgPool>,
+    Path(order_id): Path<i32>,
+) -> PoemResult<Json<OrderWithItems>> {
 	let order = sqlx::query_as!(
 		Order,
-		"SELECT id, user_id, total, status, created_at FROM orders WHERE id = $1",
+		"SELECT id,user_id, total, status, created_at FROM orders WHERE id = $1",
 		order_id
 	)
 	.fetch_one(pool)
-	.await.map_err(|e| AppError::DatabaseError(e))?
-;
-	Ok(Json(order))
+	.await
+	.map_err(|e| AppError::DatabaseError(e))?;
+
+	let items = sqlx::query!(
+		"SELECT oi.id, oi.quantity, oi.price, p.id as plant_id, p.name, p.price as plant_price, p.stock, p.description
+		 FROM order_items oi
+		 JOIN plants p ON oi.plant_id = p.id
+		 WHERE oi.order_id = $1",
+		order.id
+	)
+	.fetch_all(pool)
+	.await
+	.map_err(AppError::DatabaseError)?
+	.into_iter()
+	.map(|row| OrderItemWithPlant {
+		id: row.id,
+		quantity: row.quantity,
+		price: row.price,
+		plant: PlantBasic {
+			id: row.plant_id,
+			name: row.name,
+			price: row.plant_price,
+			stock: row.stock,
+			description: row.description,
+		},
+	})
+	.collect();
+
+	let order_with_items = OrderWithItems {
+		id: order.id,
+		user_id: order.user_id,
+		total: order.total,
+		status: order.status,
+		created_at: order.created_at,
+		items,
+	};
+	Ok(Json(order_with_items))
 }
+
 
 #[handler]
 pub async fn update_order(
-	Data(pool): Data<&PgPool>,
-	Path(order_id): Path<Uuid>,
-	Json(payload): Json<UpdateOrder>,
+    Data(pool): Data<&PgPool>,
+    Path(order_id): Path<i32>,
+    Json(payload): Json<UpdateOrder>,
 ) -> PoemResult<Json<Order>> {
 	let order = sqlx::query_as!(
 		Order,
 		"UPDATE orders SET
 			status = COALESCE($1, status)
 		 WHERE id = $2
-		 RETURNING id, user_id, total, status, created_at",
+		 RETURNING id,user_id, total, status, created_at",
 		payload.status,
 		order_id
 	)
@@ -200,8 +251,8 @@ pub async fn update_order(
 
 #[handler]
 pub async fn delete_order(
-	Data(pool): Data<&PgPool>,
-	Path(order_id): Path<Uuid>,
+    Data(pool): Data<&PgPool>,
+    Path(order_id): Path<i32>,
 ) -> PoemResult<()> {
 	let result = sqlx::query!("DELETE FROM orders WHERE id = $1", order_id)
 		.execute(pool)

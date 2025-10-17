@@ -92,15 +92,6 @@ pub async fn update_user(
 	Path(user_id): Path<i32>,
 	Json(payload): Json<UpdateUser>,
 ) -> PoemResult<Json<User>> {
-	println!(
-		"[DEBUG] PATCH /users -> name={:?}, email={:?}, admin={:?}",
-		payload.name, payload.email, payload.admin
-	);
-	println!(
-		"[DEBUG] Corps JSON reçu brut: {}",
-		serde_json::to_string(&payload).unwrap_or_default()
-	);
-
 	// Auth + utilisateur courant depuis le JWT
 	let token = jar
 		.get("auth_token")

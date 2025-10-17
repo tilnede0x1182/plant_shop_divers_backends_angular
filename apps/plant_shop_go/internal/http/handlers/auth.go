@@ -38,6 +38,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
 	user := models.User{Email: in.Email, Password: string(hash), Name: in.Name, Admin: false}
 	d.Create(&user)
+	// fmt.Printf("[DEBUG] Utilisateur créé : email=%s id=%d\n", user.Email, user.ID)
 	token, _ := security.GenerateToken(fmt.Sprint(user.ID), user.Admin, 24*time.Hour)
 
 	security.SetCookie(w, token)
@@ -56,6 +57,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	d := db.Connect()
+	// fmt.Printf("[DEBUG] Tentative de login pour email=%s\n", in.Email)
 	var user models.User
 	if err := d.Where("email = ?", in.Email).First(&user).Error; err != nil {
 		http.Error(w, "invalid creds", http.StatusUnauthorized)

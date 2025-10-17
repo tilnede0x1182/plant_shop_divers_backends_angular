@@ -106,6 +106,7 @@ pub async fn create_order(
 						id: order_item.id,
 						quantity: order_item.quantity,
 						price: order_item.price.clone(),
+						plant_id: plant.id,
 						plant,
 					});
 				}
@@ -120,20 +121,17 @@ pub async fn list_orders(
 	Data(pool): Data<&PgPool>,
 	jar: &CookieJar,
 ) -> Result<Json<Vec<OrderWithItems>>, AppError> {
-	println!("[DEBUG] Entrée dans list_orders()");
 
 	let user_id = if let Some(c) = jar.get("auth_token") {
 		let token = c.value_str();
 		let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
 		let claims = verify_jwt(token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
-		println!("[DEBUG] user_id extrait du JWT = {}", claims.sub);
 		claims.sub
 	} else {
 		let row = sqlx::query!("SELECT id FROM users WHERE is_admin = false ORDER BY created_at DESC LIMIT 1")
 			.fetch_one(pool)
 			.await
 			.map_err(AppError::DatabaseError)?;
-		println!("[DEBUG] Fallback user_id = {}", row.id);
 		row.id
 	};
 
@@ -145,13 +143,10 @@ pub async fn list_orders(
 	.await
 	.map_err(AppError::DatabaseError)?;
 
-	println!("[DEBUG] {} commande(s) trouvée(s) pour user_id={}", orders.len(), user_id);
-
 	let mut results = Vec::new();
 
 	for order in &orders {
-		println!("[DEBUG] Traitement commande id={}", order.id);
-		let items = sqlx::query!(
+		let items_rows = sqlx::query!(
 			"SELECT oi.id, oi.quantity, oi.price, p.id as plant_id, p.name, p.price as plant_price, p.stock, p.description
 			 FROM order_items oi
 			 JOIN plants p ON oi.plant_id = p.id
@@ -162,14 +157,13 @@ pub async fn list_orders(
 		.await
 		.map_err(AppError::DatabaseError)?;
 
-		println!("[DEBUG]   {} item(s) trouvés pour cette commande", items.len());
-
-		let items: Vec<_> = items
+		let items: Vec<_> = items_rows
 			.into_iter()
 			.map(|row| OrderItemWithPlant {
 				id: row.id,
 				quantity: row.quantity,
 				price: row.price,
+				plant_id: row.plant_id,
 				plant: PlantBasic {
 					id: row.plant_id,
 					name: row.name,
@@ -180,17 +174,17 @@ pub async fn list_orders(
 			})
 			.collect();
 
-		results.push(OrderWithItems {
+		let order_data = OrderWithItems {
 			id: order.id,
 			user_id: order.user_id,
 			total: order.total.clone(),
 			status: order.status.clone(),
 			created_at: order.created_at,
 			items,
-		});
+		};
+		results.push(order_data);
 	}
 
-	println!("[DEBUG] Sortie de list_orders() avec {} commande(s)", results.len());
 	Ok(Json(results))
 }
 
@@ -223,6 +217,7 @@ pub async fn get_order(
 		id: row.id,
 		quantity: row.quantity,
 		price: row.price,
+		plant_id: row.plant_id,
 		plant: PlantBasic {
 			id: row.plant_id,
 			name: row.name,

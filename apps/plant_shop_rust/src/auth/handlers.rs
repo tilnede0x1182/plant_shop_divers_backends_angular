@@ -85,21 +85,38 @@ pub async fn register(
 pub async fn me(
 	Data(pool): Data<&PgPool>,
 	jar: &CookieJar,
-) -> PoemResult<(StatusCode, Json<UserAuth>)> {
-	let token = jar.get("auth_token").map(|c| c.value_str().to_string()).ok_or(AppError::Unauthorized)?;
+) -> PoemResult<(StatusCode, Json<AuthMeResponse>)> {
+	let token = jar
+		.get("auth_token")
+		.map(|c| c.value_str().to_string())
+		.ok_or(AppError::Unauthorized)?;
 	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
 	let claims = verify_jwt(&token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
 
-	let user: UserAuth = sqlx::query_as!(
-		UserAuth,
-		"SELECT id,email, username, password_hash, is_admin, created_at FROM users WHERE id = $1",
+	let user = sqlx::query!(
+		"SELECT id, email, username, is_admin FROM users WHERE id = $1",
 		claims.sub
 	)
 	.fetch_one(pool)
-	.await.map_err(|e| AppError::DatabaseError(e))?
-;
+	.await
+	.map_err(AppError::DatabaseError)?;
 
-	Ok((StatusCode::OK, Json(user)))
+	let response = AuthMeResponse {
+		id: user.id,
+		email: user.email,
+		name: user.username,
+		admin: user.is_admin,
+	};
+
+	Ok((StatusCode::OK, Json(response)))
+}
+
+#[derive(serde::Serialize)]
+struct AuthMeResponse {
+	id: i32,
+	email: String,
+	name: String,
+	admin: bool,
 }
 
 #[handler]

@@ -8,29 +8,41 @@ use poem::web::cookie::CookieJar;
 use crate::auth::jwt::verify_jwt;
 
 #[handler]
-pub async fn list_users(
-    Data(pool): Data<&PgPool>,
-    jar: &CookieJar,
-) -> PoemResult<Json<Vec<User>>, AppError> {
-    let token = jar
-        .get("auth_token")
-        .map(|c| c.value_str().to_string())
-        .ok_or(AppError::Unauthorized)?;
-    let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-    let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
-    if !claims.is_admin {
-        return Err(AppError::Forbidden.into());
-    }
+pub async fn list_users(Data(pool): Data<&PgPool>, jar: &CookieJar) -> Result<Json<Vec<User>>, AppError> {
+	// Extraction du token JWT depuis le cookie
+	let token = jar
+		.get("auth_token")
+		.map(|c| c.value_str().to_string())
+		.ok_or(AppError::Unauthorized)?;
 
-    let users = sqlx::query_as!(
-        User,
-        "SELECT id,email, username, is_admin, created_at FROM users ORDER BY email ASC"
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(AppError::DatabaseError)?;
+	let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+	let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
 
-    Ok(Json(users))
+	// Vérification du rôle admin
+	let user = sqlx::query!(
+		"SELECT id, is_admin FROM users WHERE id = $1",
+		claims.sub
+	)
+	.fetch_one(pool)
+	.await
+	.map_err(AppError::DatabaseError)?;
+
+	if !user.is_admin {
+		return Err(AppError::Forbidden);
+	}
+
+	// Récupération de tous les utilisateurs
+	let users = sqlx::query_as!(
+		User,
+		r#"SELECT id, email, username, is_admin, created_at
+			FROM users
+			ORDER BY is_admin DESC, username COLLATE "und-x-icu" ASC"#
+	)
+	.fetch_all(pool)
+	.await
+	.map_err(AppError::DatabaseError)?;
+
+	Ok(Json(users))
 }
 
 #[handler]

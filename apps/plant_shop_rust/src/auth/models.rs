@@ -13,6 +13,7 @@ pub struct UserAuth {
     pub email: String,
     pub username: String,
     pub password_hash: String,
+		#[serde(rename = "admin")]
     pub is_admin: bool,
     pub created_at: chrono::DateTime<chrono::Utc>,
 }

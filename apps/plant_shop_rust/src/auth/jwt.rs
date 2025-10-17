@@ -20,8 +20,10 @@ pub fn generate_jwt(user_id: Uuid, is_admin: bool, secret: &str) -> Result<Strin
 }
 
 pub fn verify_jwt(token: &str, secret: &str) -> Result<Claims, JwtError> {
+	// Nettoie d’éventuelles guillemets ajoutés par certains clients HTTP
+	let cleaned = token.trim_matches('"');
 	let data = decode::<Claims>(
-		token,
+		cleaned,
 		&DecodingKey::from_secret(secret.as_bytes()),
 		&Validation::new(Algorithm::HS256),
 	)?;

@@ -1,8 +1,18 @@
-use poem::{listener::TcpListener, Route, Server, middleware::{AddData, Cors}, EndpointExt};
-use poem::{get, post, patch};
-use sqlx::postgres::PgPoolOptions;
-use dotenvy::dotenv;
 use std::env;
+use dotenvy::dotenv;
+use sqlx::postgres::PgPoolOptions;
+
+use poem::{
+    listener::TcpListener,
+    Route,
+    Server,
+    get,
+    post,
+    patch,
+    http::Method,
+    middleware::{AddData, Cors, CookieJarManager},
+    EndpointExt,
+};
 
 mod config;
 mod errors;
@@ -13,12 +23,14 @@ mod plants;
 mod orders;
 mod order_items;
 
-use crate::auth::handlers::{login, register, me, logout};
-use crate::db::migrations::run_migrations;
-use crate::order_items::handlers::{get_order_item, update_order_item, delete_order_item};
-use crate::orders::handlers::{create_order, list_orders, get_order, update_order, delete_order};
-use crate::plants::handlers::{create_plant, list_plants, get_plant, update_plant, delete_plant};
-use crate::users::handlers::{get_user, update_user, delete_user, list_users, create_user};
+use crate::{
+    auth::handlers::{login, register, me, logout},
+    db::migrations::run_migrations,
+    order_items::handlers::{get_order_item, update_order_item, delete_order_item},
+    orders::handlers::{create_order, list_orders, get_order, update_order, delete_order},
+    plants::handlers::{create_plant, list_plants, get_plant, update_plant, delete_plant},
+    users::handlers::{get_user, update_user, delete_user, list_users, create_user},
+};
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
@@ -36,7 +48,13 @@ async fn main() -> Result<(), std::io::Error> {
         eprintln!("Erreur lors de l'application des migrations: {}", e);
     }
 
-    let cors = Cors::new();
+	let cors = Cors::new()
+		.allow_credentials(true)
+		.allow_origin("http://localhost:8300")
+		.allow_methods(vec![
+				Method::GET, Method::POST, Method::PUT,
+				Method::DELETE, Method::PATCH,
+		]);
 
 	// Définir toutes les routes REST
 	let app = Route::new()

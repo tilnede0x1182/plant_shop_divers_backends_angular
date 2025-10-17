@@ -31,7 +31,11 @@ pub async fn login(
 	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
 	let jwt = generate_jwt(user.id, user.is_admin, &jwt_secret).map_err(|_| AppError::Internal)?;
 
-	jar.add(Cookie::new("auth_token", jwt));
+	let mut cookie = Cookie::new("auth_token", jwt.clone());
+	cookie.set_path("/api");
+	cookie.set_http_only(false);
+	cookie.set_secure(false);
+	jar.add(cookie);
 
 	Ok((StatusCode::CREATED, Json(user)))
 }
@@ -40,10 +44,11 @@ pub async fn login(
 pub async fn register(
 	Data(pool): Data<&PgPool>,
 	Json(payload): Json<AuthPayload>,
+	jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserAuth>)> {
-    let bcrypt_cost = std::env::var("BCRYPT_COST")
-        .and_then(|s| s.parse::<u32>().map_err(|_| std::env::VarError::NotPresent))
-        .unwrap_or(12);
+	let bcrypt_cost = std::env::var("BCRYPT_COST")
+		.and_then(|v| v.parse::<u32>().map_err(|_| std::env::VarError::NotPresent))
+		.unwrap_or(12);
 
 	let hash_str = hash(&payload.password, bcrypt_cost).map_err(|_| AppError::Internal)?;
 	let user: UserAuth = sqlx::query_as!(
@@ -56,12 +61,23 @@ pub async fn register(
 	.fetch_one(pool)
 	.await
 	.map_err(|e| {
-        if e.as_database_error().map_or(false, |db_err| db_err.is_unique_violation()) {
-            AppError::Conflict
-        } else {
-            AppError::DatabaseError(e)
-        }
-    })?;
+		if e.as_database_error().map_or(false, |db| db.is_unique_violation()) {
+			AppError::Conflict
+		} else {
+			AppError::DatabaseError(e)
+		}
+	})?;
+
+	// Même secret pour signature et vérification, extrait de l'env
+	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+	let token = generate_jwt(user.id, user.is_admin, &jwt_secret).map_err(|_| AppError::Internal)?;
+
+	let mut cookie = Cookie::new("auth_token", token.clone());
+	cookie.set_path("/api");
+	cookie.set_http_only(false);
+	cookie.set_secure(false);
+	jar.add(cookie);
+
 	Ok((StatusCode::CREATED, Json(user)))
 }
 
@@ -83,7 +99,7 @@ pub async fn me(
 	.await.map_err(|e| AppError::DatabaseError(e))?
 ;
 
-	Ok((StatusCode::CREATED, Json(user)))
+	Ok((StatusCode::OK, Json(user)))
 }
 
 #[handler]

@@ -1,25 +1,39 @@
 /// Handlers Poem pour gestion utilisateurs
-use poem::{handler, web::{Data, Json, Path, CookieJar}, Result as PoemResult};
-use crate::auth::jwt::verify_jwt;
+use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
 use sqlx::PgPool;
 use uuid::Uuid;
 use crate::errors::AppError;
 use super::models::{User, UpdateUser, NewUser};
 use poem::http::StatusCode;
+use poem::web::cookie::CookieJar;
+use crate::auth::jwt::verify_jwt;
 
 #[handler]
 pub async fn list_users(
-	Data(pool): Data<&PgPool>,
-) -> PoemResult<Json<Vec<User>>> {
+    Data(pool): Data<&PgPool>,
+    jar: &CookieJar,                    // ← nouveau
+) -> PoemResult<Json<Vec<User>>, AppError> {
+    let token = jar
+        .get("auth_token")
+        .map(|c| c.value_str().to_string())
+        .ok_or(AppError::Unauthorized)?;
+    let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+    let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
+    if !claims.is_admin {               // ← contrôle rôle
+        return Err(AppError::Forbidden.into());
+    }
+
     let users = sqlx::query_as!(
         User,
         "SELECT id, email, username, is_admin, created_at FROM users"
     )
     .fetch_all(pool)
-    .await.map_err(|e| AppError::DatabaseError(e))?
-;
+    .await
+    .map_err(AppError::DatabaseError)?;
+
     Ok(Json(users))
 }
+
 
 #[handler]
 pub async fn create_user(

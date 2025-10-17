@@ -1,5 +1,6 @@
 /// Handlers Poem pour gestion des plantes
-use poem::{handler, web::{Data, Json, Path}, http::StatusCode, Result as PoemResult};
+use poem::{handler, web::{Data, Json, Path, cookie::CookieJar}, http::StatusCode, Result as PoemResult};
+use crate::auth::jwt::verify_jwt;
 use sqlx::PgPool;
 use uuid::Uuid;
 use crate::errors::AppError;
@@ -11,8 +12,16 @@ use super::models::{Plant, NewPlant, UpdatePlant};
 #[handler]
 pub async fn create_plant(
 	Data(pool): Data<&PgPool>,
+	jar: &CookieJar,
 	Json(payload): Json<NewPlant>,
 ) -> PoemResult<(StatusCode, Json<Plant>), AppError> {
+	// vérifie si l’utilisateur est admin
+	let token = jar.get("auth_token").map(|c| c.value_str().to_string()).ok_or(AppError::Unauthorized)?;
+	let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+	let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
+	if !claims.is_admin {
+		return Err(AppError::Forbidden.into()); // 403
+	}
 	let plant = sqlx::query_as!(
 		Plant,
 		"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING *",

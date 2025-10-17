@@ -8,6 +8,7 @@ pub struct User {
 	pub email: String,
 	#[serde(rename = "name")]
 	pub username: String,
+	#[serde(rename = "admin")]
 	pub is_admin: bool,
 	pub created_at: DateTime<Utc>,
 }

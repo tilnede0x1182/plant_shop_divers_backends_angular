@@ -14,8 +14,8 @@ where
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Plant {
 	pub id: i32,
-	#[serde(skip_serializing)]
 	pub name: String,
+	#[serde(serialize_with = "serialize_bigdecimal_as_i32")]
 	pub price: BigDecimal,
 	pub stock: i32,
 	pub description: Option<String>,

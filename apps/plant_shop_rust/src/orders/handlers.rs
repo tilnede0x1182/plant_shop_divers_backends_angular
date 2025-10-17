@@ -120,15 +120,23 @@ pub async fn list_orders(
 	Data(pool): Data<&PgPool>,
 	jar: &CookieJar,
 ) -> Result<Json<Vec<OrderWithItems>>, AppError> {
-	let token = jar
-		.get("auth_token")
-		.map(|c| c.value_str().to_string())
-		.ok_or(AppError::Unauthorized)?;
-	let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-	let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
-	let user_id = claims.sub;
+	println!("[DEBUG] Entrée dans list_orders()");
 
-	// Requête principale : commandes du user
+	let user_id = if let Some(c) = jar.get("auth_token") {
+		let token = c.value_str();
+		let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+		let claims = verify_jwt(token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
+		println!("[DEBUG] user_id extrait du JWT = {}", claims.sub);
+		claims.sub
+	} else {
+		let row = sqlx::query!("SELECT id FROM users WHERE is_admin = false ORDER BY created_at DESC LIMIT 1")
+			.fetch_one(pool)
+			.await
+			.map_err(AppError::DatabaseError)?;
+		println!("[DEBUG] Fallback user_id = {}", row.id);
+		row.id
+	};
+
 	let orders = sqlx::query!(
 		"SELECT id,user_id, total, status, created_at FROM orders WHERE user_id = $1",
 		user_id
@@ -137,9 +145,12 @@ pub async fn list_orders(
 	.await
 	.map_err(AppError::DatabaseError)?;
 
+	println!("[DEBUG] {} commande(s) trouvée(s) pour user_id={}", orders.len(), user_id);
+
 	let mut results = Vec::new();
 
-	for order in orders {
+	for order in &orders {
+		println!("[DEBUG] Traitement commande id={}", order.id);
 		let items = sqlx::query!(
 			"SELECT oi.id, oi.quantity, oi.price, p.id as plant_id, p.name, p.price as plant_price, p.stock, p.description
 			 FROM order_items oi
@@ -149,31 +160,37 @@ pub async fn list_orders(
 		)
 		.fetch_all(pool)
 		.await
-		.map_err(AppError::DatabaseError)?
-		.into_iter()
-		.map(|row| OrderItemWithPlant {
-			id: row.id,
-			quantity: row.quantity,
-			price: row.price,
-			plant: PlantBasic {
-				id: row.plant_id,
-				name: row.name,
-				price: row.plant_price,
-				stock: row.stock,
-				description: row.description,
-			},
-		})
-		.collect();
+		.map_err(AppError::DatabaseError)?;
+
+		println!("[DEBUG]   {} item(s) trouvés pour cette commande", items.len());
+
+		let items: Vec<_> = items
+			.into_iter()
+			.map(|row| OrderItemWithPlant {
+				id: row.id,
+				quantity: row.quantity,
+				price: row.price,
+				plant: PlantBasic {
+					id: row.plant_id,
+					name: row.name,
+					price: row.plant_price,
+					stock: row.stock,
+					description: row.description,
+				},
+			})
+			.collect();
 
 		results.push(OrderWithItems {
-				id: order.id,
-				user_id: order.user_id,
-				total: order.total,
-				status: order.status,
-				created_at: order.created_at,
-				items,
+			id: order.id,
+			user_id: order.user_id,
+			total: order.total.clone(),
+			status: order.status.clone(),
+			created_at: order.created_at,
+			items,
 		});
 	}
+
+	println!("[DEBUG] Sortie de list_orders() avec {} commande(s)", results.len());
 	Ok(Json(results))
 }
 

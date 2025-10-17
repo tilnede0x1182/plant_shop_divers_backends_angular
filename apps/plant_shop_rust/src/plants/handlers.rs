@@ -1,15 +1,18 @@
 /// Handlers Poem pour gestion des plantes
-use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
+use poem::{handler, web::{Data, Json, Path}, http::StatusCode, Result as PoemResult};
 use sqlx::PgPool;
 use uuid::Uuid;
 use crate::errors::AppError;
-use super::models::{Plant, NewPlant};
+use super::models::{Plant, NewPlant, UpdatePlant};
 
+/// Création d’une plante (201 Created)
+/// @payload données de la plante
+/// @return plante créée
 #[handler]
 pub async fn create_plant(
 	Data(pool): Data<&PgPool>,
 	Json(payload): Json<NewPlant>,
-) -> PoemResult<Json<Plant>, AppError> {
+) -> PoemResult<(StatusCode, Json<Plant>), AppError> {
 	let plant = sqlx::query_as!(
 		Plant,
 		"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING *",
@@ -21,7 +24,7 @@ pub async fn create_plant(
 	.fetch_one(pool)
 	.await
 	.map_err(|_| AppError::Conflict)?;
-	Ok(Json(plant))
+	Ok((StatusCode::CREATED, Json(plant)))
 }
 
 #[handler]
@@ -58,15 +61,15 @@ pub async fn get_plant(
 pub async fn update_plant(
 	Data(pool): Data<&PgPool>,
 	Path(plant_id): Path<Uuid>,
-	Json(payload): Json<NewPlant>,
+	Json(payload): Json<UpdatePlant>,
 ) -> PoemResult<Json<Plant>, AppError> {
 	let plant = sqlx::query_as!(
 		Plant,
 		"UPDATE plants SET
-			name = $1,
-			description = $2,
-			price = $3,
-			stock = $4
+			name = COALESCE($1, name),
+			description = COALESCE($2, description),
+			price = COALESCE($3, price),
+			stock = COALESCE($4, stock)
 		 WHERE id = $5
 		 RETURNING *",
 		payload.name,
@@ -80,6 +83,7 @@ pub async fn update_plant(
 	.map_err(|_| AppError::NotFound)?;
 	Ok(Json(plant))
 }
+
 
 #[handler]
 pub async fn delete_plant(

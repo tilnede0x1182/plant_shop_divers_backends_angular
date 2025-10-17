@@ -1,22 +1,40 @@
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, Serializer};
 use uuid::Uuid;
 use sqlx::types::BigDecimal;
 use chrono::{DateTime, Utc};
+use bigdecimal::ToPrimitive;
+
+fn serialize_bigdecimal_as_i32<S>(value: &BigDecimal, serializer: S) -> Result<S::Ok, S::Error>
+where
+	S: Serializer
+{
+	let nombre: i32 = value.to_i32().unwrap_or(0);
+	serializer.serialize_i32(nombre)
+}
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Plant {
-    pub id: Uuid,
-    pub name: String,
-    pub description: Option<String>,
-    pub price: BigDecimal,
-    pub stock: i32,
-    pub created_at: DateTime<Utc>,
+	pub id: Uuid,
+	pub name: String,
+	pub description: Option<String>,
+	#[serde(serialize_with = "serialize_bigdecimal_as_i32")]
+	pub price: BigDecimal,
+	pub stock: i32,
+	pub created_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize)]
 pub struct NewPlant {
-    pub name: String,
-    pub description: Option<String>,
-    pub price: BigDecimal,
-    pub stock: i32,
+	pub name: String,
+	pub description: Option<String>,
+	pub price: BigDecimal,
+	pub stock: i32,
+}
+
+#[derive(Deserialize)]
+pub struct UpdatePlant {
+	pub name: Option<String>,
+	pub description: Option<String>,
+	pub price: Option<BigDecimal>,
+	pub stock: Option<i32>,
 }

@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"os"
 	"strings"
 	"time"
@@ -17,7 +18,8 @@ import (
 var (
 	cookieJars = make(map[string]string)
 	maintenant = time.Now().Format("20060102150405")
-	client     = &http.Client{}
+	jar, _     = cookiejar.New(nil)
+	client     = &http.Client{Jar: jar}
 )
 
 /* ---------- Configuration ---------- */
@@ -333,6 +335,7 @@ func main() {
 	login(config.AdminEmail, config.AdminPassword, "admin")
 	userEmail := fmt.Sprintf("utilisateur_de_test_%s@example.com", maintenant)
 	registerUser("User", userEmail, "pass123", "user")
+	login(userEmail, "pass123", "user")
 
 	testPlants("admin")
 	testUsers("admin")

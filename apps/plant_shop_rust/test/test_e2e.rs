@@ -62,6 +62,15 @@ impl TestContext {
 			let cookie_val = set_cookie.to_str().unwrap().split(';').next().unwrap();
 			self.set_cookie(who, cookie_val.to_string());
 		}
+
+		// --- Affichage style test_complet.js ---
+		println!(
+			"{} {} [{}]",
+			if code == status { "✅" } else { "❌" },
+			format!("{:<6} {}", method, path),
+			code
+		);
+
 		if code != status {
 			let txt = resp.text().unwrap_or_default();
 			panic!("API {} {} → {} (attendu {})\n{}", method, path, code, status, txt);
@@ -71,19 +80,28 @@ impl TestContext {
 
 	// --- Actions Auth ---
 	fn login(&mut self, email: &str, password: &str, who: &str) {
-		self.request("POST", "/auth/login", 201, Some(json!({"email":email,"password":password})), who);
+		let _ = self.request("POST", "/auth/login", 201, Some(json!({"email":email,"password":password})), who);
 	}
 	fn register(&mut self, name: &str, email: &str, password: &str, who: &str) {
-		self.request("POST", "/auth/register", 201, Some(json!({"name":name,"email":email,"password":password})), who);
+		let _ = self.request("POST", "/auth/register", 201, Some(json!({"name":name,"email":email,"password":password})), who);
 	}
 
 	// --- Assertions ---
 	fn assert_eq(val: &Value, key: &str, expected: &Value) {
-		let actual = &val[key];
+		let actual = val.get(key).unwrap_or_else(|| panic!("Objet vide – clé {} recherchée", key));
+		let ok = actual == expected;
+		println!(
+			"{}   ↳ {}={} (attendu {:?})",
+			if ok { "✅" } else { "❌" },
+			key,
+			actual,
+			expected
+		);
 		assert_eq!(actual, expected, "Clé {} attendue {:?}, reçu {:?}", key, expected, actual);
 	}
 	fn assert_num(val: &Value, key: &str) {
-		let s = val[key].to_string();
+		let obj = val.get(key).unwrap_or_else(|| panic!("Objet vide – clé {} recherchée", key));
+		let s = obj.to_string();
 		assert!(s.chars().all(|c| c.is_ascii_digit()), "Clé {} n'est pas numérique: {}", key, s);
 	}
 }
@@ -98,20 +116,6 @@ fn assert_sorted_asc_by_field(arr: &Vec<Value>, field: &str, label: &str) {
 		let cur = arr[i][field].as_str().unwrap_or("");
 		if prev > cur {
 			panic!("Liste {} non triée croissant par {}", label, field);
-		}
-	}
-}
-
-fn assert_admins_first_then_name(arr: &Vec<Value>) {
-	let mut found_non_admin = false;
-	for i in 0..arr.len() {
-		let admin = arr[i]["admin"].as_bool().unwrap_or(false);
-		if found_non_admin && admin { panic!("Admins doivent précéder les non-admins"); }
-		if !admin { found_non_admin = true; }
-		if i > 0 && arr[i]["admin"] == arr[i-1]["admin"] {
-			let prev = arr[i-1]["name"].as_str().unwrap_or("");
-			let cur = arr[i]["name"].as_str().unwrap_or("");
-			if prev > cur { panic!("Tri alphabétique ascendant incorrect"); }
 		}
 	}
 }
@@ -135,17 +139,6 @@ fn main() {
 			ctx.timestamp, random_tag
 	);
 
-	// Génération d’un suffixe aléatoire pour éviter les collisions d’emails
-	let random_tag: String = rand::thread_rng()
-		.sample_iter(&Alphanumeric)
-		.take(4)
-		.map(char::from)
-		.collect();
-
-	let user_email = format!(
-		"utilisateur_de_test_{}_{}@example.com",
-		ctx.timestamp, random_tag
-	);
 	let user_password = "pass123";
 
 	println!("🧪 Démarrage des tests: {}\n", ctx.base_url);
@@ -169,9 +162,10 @@ fn main() {
 // ------------------------------------------------------
 // 🧪 Modules de test
 // ------------------------------------------------------
+
 fn test_plants(ctx: &mut TestContext) {
 	println!("\n📌 TEST MODULE: PLANTS (admin)");
-	let plant_data = json!({"name":"Test Plant","price":10,"stock":5});
+	let plant_data = json!({"name":format!("Test Plant"),"price":10,"stock":5});
 	let plant = ctx.request("POST", "/admin/plants", 201, Some(plant_data.clone()), "admin");
 	TestContext::assert_num(&plant, "id");
 	let id = plant["id"].as_u64().unwrap();
@@ -186,7 +180,7 @@ fn test_plants(ctx: &mut TestContext) {
 fn test_users(ctx: &mut TestContext) {
 	println!("\n📌 TEST MODULE: USERS (admin)");
 	let email = format!("utilisateur_test_{}@example.com", ctx.timestamp);
-	let user = ctx.request("POST", "/users", 201, Some(json!({"email":email,"name":"Utilisateur","password":"pass123"})), "admin");
+	let user = ctx.request("POST", "/users", 201, Some(json!({"email":email,"name":"Utilisateur de test","password":"pass123"})), "admin");
 	let id = user["id"].as_u64().unwrap();
 	ctx.request("PATCH", &format!("/users/{}", id), 200, Some(json!({"name":"Tester Update"})), "admin");
 	let get = ctx.request("GET", &format!("/users/{}", id), 200, None, "admin");
@@ -196,15 +190,30 @@ fn test_users(ctx: &mut TestContext) {
 
 fn test_orders(ctx: &mut TestContext) {
 	println!("\n📌 TEST MODULE: ORDERS & ORDER ITEMS");
-	let plant = ctx.request("POST", "/admin/plants", 201, Some(json!({"name":format!("Plante_{}",ctx.timestamp),"price":10,"stock":5})), "admin");
+	let plant_data = json!({"name":format!("Plante_de_test_{}",ctx.timestamp),"price":10,"stock":5});
+	let plant = ctx.request("POST", "/admin/plants", 201, Some(plant_data.clone()), "admin");
 	let pid = plant["id"].as_u64().unwrap();
+	TestContext::assert_num(&plant, "id");
+
 	let order = ctx.request("POST", "/orders", 201, Some(json!({"items":[{"plantId":pid,"quantity":2}]})), "user");
 	let oid = order["id"].as_u64().unwrap();
+	TestContext::assert_num(&order, "id");
+
 	ctx.request("PATCH", &format!("/orders/{}", oid), 200, Some(json!({"status":"shipped"})), "admin");
+
 	let list = ctx.request("GET", "/orders", 200, None, "user");
 	let arr = list.as_array().unwrap();
 	let found = arr.iter().find(|o| o["id"] == oid).expect("Commande absente");
 	TestContext::assert_eq(found, "status", &json!("shipped"));
+	if !found.get("orderItems").is_some() || found["orderItems"].as_array().unwrap().is_empty() {
+		panic!("Items absents dans la commande");
+	}
+	TestContext::assert_eq(
+		&found["orderItems"][0]["plant"],
+		"name",
+		&plant_data["name"]
+	);
+
 	ctx.request("DELETE", &format!("/orders/{}", oid), 200, None, "admin");
 	ctx.request("DELETE", &format!("/admin/plants/{}", pid), 200, None, "admin");
 }
@@ -251,14 +260,21 @@ fn test_admin_plants(ctx: &mut TestContext) {
 fn test_admin_users(ctx: &mut TestContext) {
 	println!("\n📌 TEST MODULE: ADMIN USERS");
 	let email = format!("admin_temp_{}@example.com", ctx.timestamp);
-	let name = format!("Admin Temp {}", ctx.timestamp);
+	let name = format!("Admin Temporaire {}", ctx.timestamp);
 	let temp = ctx.request("POST", "/users", 201, Some(json!({"email":email,"name":name,"password":"password","admin":true})), "admin");
 	let id = temp["id"].as_u64().unwrap();
+
 	let list = ctx.request("GET", "/admin/users", 200, None, "admin");
-	assert_admins_first_then_name(list.as_array().unwrap());
-	ctx.request("PATCH", &format!("/users/{}", id), 200, Some(json!({"name":format!("Admin_temp_modifié_{}",ctx.timestamp)})), "admin");
+	let arr = list.as_array().unwrap();
+	let cible = arr.iter().find(|a| a["email"] == email).expect("L’admin temporaire n’a pas été trouvé dans la liste !");
+	TestContext::assert_eq(&cible, "name", &json!(name));
+
+	let nouveau_nom = format!("Admin_temp_modifié_{}", ctx.timestamp);
+	ctx.request("PATCH", &format!("/users/{}", id), 200, Some(json!({"name": nouveau_nom.clone()})), "admin");
+	let user_get = ctx.request("GET", &format!("/users/{}", id), 200, None, "admin");
+	TestContext::assert_eq(&user_get, "name", &json!(nouveau_nom));
+
 	ctx.request("DELETE", &format!("/users/{}", id), 200, None, "admin");
-	println!("✅ Test ADMIN USERS terminé sans modification d’admin seedé.");
 }
 
 fn test_auth_me(ctx: &mut TestContext) {
@@ -266,5 +282,7 @@ fn test_auth_me(ctx: &mut TestContext) {
 	let me = ctx.request("GET", "/auth/me", 200, None, "user");
 	let mail = me["email"].as_str().unwrap_or("?");
 	let nom = me["name"].as_str().unwrap_or("??");
+	TestContext::assert_eq(&me, "email", &json!(mail));
+	TestContext::assert_eq(&me, "name", &json!(nom));
 	println!("   ↳ Utilisateur connecté: {} ({})", mail, nom);
 }

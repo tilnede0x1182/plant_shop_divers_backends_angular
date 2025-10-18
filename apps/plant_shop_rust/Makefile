@@ -44,9 +44,6 @@ reset-db:
 # 🌱 Seed base de données (données de test)
 # ======================================================
 
-seed-build:
-	cargo build --release --bin seed
-
 seed:
 	sqlx database setup
 	sqlx migrate run
@@ -59,12 +56,45 @@ seed:
 		./target/debug/seed; \
 	fi
 
+# Build et exécution forcée de la seed en mode debug
+seed-dev:
+	cargo build --bin seed --manifest-path ./Cargo.toml
+	./target/debug/seed
+
+seed-build:
+	cargo build --release --bin seed
+
 # ======================================================
 # 🧪 Tests End-to-End
 # ======================================================
 
-test:
-	cargo build --bin test_e2e
+# Lancer les tests : priorité à la version release, puis debug, sinon compilation auto
+tests:
+	@if [ -f ./target/release/test_e2e ]; then \
+		echo "🚀 Lancement des tests (mode RELEASE)…"; \
+		./target/release/test_e2e; \
+	elif [ -f ./target/debug/test_e2e ]; then \
+		echo "🚀 Lancement des tests (mode DEBUG)…"; \
+		./target/debug/test_e2e; \
+	elif [ -f ./test/test_e2e.rs ]; then \
+		echo "⚙️  Compilation du test (mode DEBUG)…"; \
+		cargo build --bin test_e2e --manifest-path ./Cargo.toml; \
+		echo "🚀 Lancement des tests (mode DEBUG)…"; \
+		./target/debug/test_e2e; \
+	else \
+		echo "❌ Fichier test/test_e2e.rs introuvable."; \
+		exit 1; \
+	fi
+
+# Compiler les tests en mode release sans les exécuter
+test-build:
+	@echo "🔧 Compilation du test (mode RELEASE)…"
+	cargo build --release --bin test_e2e --manifest-path ./Cargo.toml
+	@echo "✅ Binaire disponible : ./target/release/test_e2e"
+
+# Build et exécution forcée des tests end-to-end en mode debug
+test-dev:
+	cargo build --bin test_e2e --manifest-path ./Cargo.toml
 	./target/debug/test_e2e
 
 # ======================================================

@@ -21,5 +21,5 @@ db-reset:
 	psql -U tilnede0x1182 -d postgres -c "CREATE DATABASE plant_shop_go;"
 	go run cmd/seed.go
 
-test:
-	go run tests/test_e2e.go
+tests:
+	go run test/test_e2e.go

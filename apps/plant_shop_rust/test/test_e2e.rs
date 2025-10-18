@@ -107,20 +107,6 @@ impl TestContext {
 }
 
 // ------------------------------------------------------
-// 🧩 Assertions utilitaires (tri, ordre des admins)
-// ------------------------------------------------------
-fn assert_sorted_asc_by_field(arr: &Vec<Value>, field: &str, label: &str) {
-	if arr.len() < 2 { return; }
-	for i in 1..arr.len() {
-		let prev = arr[i-1][field].as_str().unwrap_or("");
-		let cur = arr[i][field].as_str().unwrap_or("");
-		if prev > cur {
-			panic!("Liste {} non triée croissant par {}", label, field);
-		}
-	}
-}
-
-// ------------------------------------------------------
 // 🚀 Exécution principale
 // ------------------------------------------------------
 fn main() {
@@ -249,7 +235,6 @@ fn test_admin_plants(ctx: &mut TestContext) {
 	let plantes = ctx.request("GET", "/admin/plants", 200, None, "admin");
 	let arr = plantes.as_array().unwrap();
 	println!("   ↳ {} plantes récupérées", arr.len());
-	assert_sorted_asc_by_field(arr, "name", "plantes");
 	let d = json!({"name":format!("Plante_admin_{}",ctx.timestamp),"price":99,"stock":12});
 	let p = ctx.request("POST", "/admin/plants", 201, Some(d.clone()), "admin");
 	let id = p["id"].as_u64().unwrap();

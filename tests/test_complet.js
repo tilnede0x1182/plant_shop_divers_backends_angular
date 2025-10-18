@@ -6,7 +6,7 @@ const cookieJars = {
 const maintenant = new Date()
   .toISOString()
   .replace(/[^0-9]/g, '')
-  .slice(0, 14);
+  .slice(0, 17);
 
 /* ---------- configuration ---------- */
 const config = {

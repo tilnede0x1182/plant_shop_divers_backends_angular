@@ -3,6 +3,7 @@ const cookieJars = {
   admin: '',
   user: '',
 };
+
 const maintenant = new Date()
   .toISOString()
   .replace(/[^0-9]/g, '')

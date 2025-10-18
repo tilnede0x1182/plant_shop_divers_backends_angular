@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::errors::AppError;
 use bigdecimal::BigDecimal;
 use dotenvy::dotenv;

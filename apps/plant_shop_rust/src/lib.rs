@@ -5,4 +5,3 @@ pub mod plants;
 pub mod orders;
 pub mod order_items;
 pub mod errors;
-pub mod config;

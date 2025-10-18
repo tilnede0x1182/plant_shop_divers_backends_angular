@@ -10,11 +10,10 @@ use poem::{
     post,
     patch,
     http::Method,
-    middleware::{AddData, Cors, CookieJarManager},
+		middleware::{AddData, Cors},
     EndpointExt,
 };
 
-mod config;
 mod errors;
 mod db;
 mod auth;

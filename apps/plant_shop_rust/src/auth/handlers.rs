@@ -51,9 +51,27 @@ pub async fn register(
 		.unwrap_or(12);
 
 	let hash_str = hash(&payload.password, bcrypt_cost).map_err(|_| AppError::Internal)?;
+
+	// ✅ Vérifie si l'utilisateur existe déjà
+	if let Some(existing) = sqlx::query_as!(
+		UserAuth,
+		"SELECT id, email, username, password_hash, is_admin, created_at
+		FROM users WHERE email = $1",
+		payload.email
+	)
+	.fetch_optional(pool)
+	.await
+	.map_err(AppError::DatabaseError)?
+	{
+		return Ok((StatusCode::CREATED, Json(existing)));
+	}
+
+	// 🧩 Création d’un nouvel utilisateur
 	let user: UserAuth = sqlx::query_as!(
 		UserAuth,
-		"INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id, email, username, password_hash, is_admin, created_at",
+		"INSERT INTO users (email, username, password_hash)
+		 VALUES ($1, $2, $3)
+		 RETURNING id, email, username, password_hash, is_admin, created_at",
 		payload.email,
 		payload.name,
 		hash_str
@@ -68,7 +86,7 @@ pub async fn register(
 		}
 	})?;
 
-	// Même secret pour signature et vérification, extrait de l'env
+	// 🔐 Génère le cookie JWT
 	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
 	let token = generate_jwt(user.id, user.is_admin, &jwt_secret).map_err(|_| AppError::Internal)?;
 
@@ -80,6 +98,7 @@ pub async fn register(
 
 	Ok((StatusCode::CREATED, Json(user)))
 }
+
 
 #[handler]
 pub async fn me(

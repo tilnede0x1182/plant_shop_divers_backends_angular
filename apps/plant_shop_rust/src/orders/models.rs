@@ -35,6 +35,7 @@ pub struct OrderItemWithPlant {
 #[derive(Debug, Serialize)]
 pub struct OrderWithItems {
     pub id: i32,
+		#[allow(dead_code)]
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
     pub total: BigDecimal,

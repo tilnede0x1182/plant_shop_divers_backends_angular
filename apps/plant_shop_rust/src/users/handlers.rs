@@ -1,7 +1,5 @@
 /// Handlers Poem pour gestion utilisateurs
 use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
-use poem::middleware::AddData;
-use poem::Request;
 use sqlx::PgPool;
 use crate::errors::AppError;
 use super::models::{User, UpdateUser, NewUser};

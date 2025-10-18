@@ -7,6 +7,7 @@ use sqlx::{Pool, Postgres};
 use std::env;
 use std::fs::File;
 use std::io::Write;
+use lipsum;
 
 // # Constantes
 const NB_ADMINS: u32 = 3;
@@ -99,18 +100,30 @@ async fn create_users(
 	let mut users_creds = Vec::new();
 	let mut temp_users = Vec::new();
 
+	let prenoms = ["Jean","Marie","Luc","Sophie","Pierre","Camille","Thomas","Julie","Louis","Élise",
+		"Nicolas","Chloé","Antoine","Sarah","Maxime","Laura","Hugo","Claire","Alexandre","Manon"];
+	let noms = ["Dupont","Durand","Martin","Bernard","Petit","Robert","Richard","Garcia","Leroy","Moreau",
+		"Simon","Laurent","Lefebvre","Michel","David","Bertrand","Roux","Vincent","Fournier","Girard"];
+	let mut rng = rand::thread_rng();
+
 	// Admins
 	for index in 1..=NB_ADMINS {
 		let email = format!("admin{}@planteshop.com", index);
 		let password = "password".to_string();
 		let password_hash = bcrypt::hash(&password, cost).map_err(|_| AppError::Internal)?;
+		let prenom = prenoms[rng.gen_range(0..prenoms.len())];
+		let nom = noms[rng.gen_range(0..noms.len())];
+		let full_name = format!("{} {}", prenom, nom);
+
 		let row = sqlx::query!(
-			"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1, $2, $3, true) RETURNING id",
+			"INSERT INTO users (email, username, password_hash, is_admin)
+			VALUES ($1, $2, $3, true) RETURNING id",
 			email,
-			format!("admin{}", index),
+			full_name,
 			password_hash
 		)
 		.fetch_one(pool).await?;
+
 		temp_users.push(TempUser { id: row.id });
 		admins_creds.push((email, password));
 	}
@@ -120,14 +133,19 @@ async fn create_users(
 		let email = generate_realistic_email(index);
 		let password = generate_random_password();
 		let password_hash = bcrypt::hash(&password, cost).map_err(|_| AppError::Internal)?;
-		let username = email.split('@').next().unwrap_or("user").replace('.', "_");
+		let prenom = prenoms[rng.gen_range(0..prenoms.len())];
+		let nom = noms[rng.gen_range(0..noms.len())];
+		let full_name = format!("{} {}", prenom, nom);
+
 		let row = sqlx::query!(
-			"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1, $2, $3, false) RETURNING id",
+			"INSERT INTO users (email, username, password_hash, is_admin)
+			VALUES ($1, $2, $3, false) RETURNING id",
 			email,
-			username,
+			full_name,
 			password_hash
 		)
 		.fetch_one(pool).await?;
+
 		temp_users.push(TempUser { id: row.id });
 		users_creds.push((email, password));
 	}
@@ -136,19 +154,21 @@ async fn create_users(
 	Ok((admins_creds, users_creds, temp_users))
 }
 
+
 /// Crée un lot de plantes et renvoie leurs infos (id, price, stock)
 async fn create_plants(pool: &Pool<Postgres>) -> Result<Vec<TempPlant>, AppError> {
 	println!("🌱 Création des plantes...");
 	let mut rng = rand::thread_rng();
 	let mut temp_plants = Vec::new();
 
-	for idx in 0..NB_PLANTS {
-		let name = format!("{} #{}",
-			PLANT_NAMES[idx as usize % PLANT_NAMES.len()],
-			idx); // Ajout d'un numéro pour éviter les doublons
-		let price = BigDecimal::from(rng.gen_range(5..51));
-		let stock = rng.gen_range(5..31);
-		let description = format!("Une description pour la plante {}.", name);
+		let max = PLANT_NAMES.len() as u32;
+		for idx in 0..NB_PLANTS {
+			let base = PLANT_NAMES[idx as usize % max as usize];
+			let name = base.to_string();
+			let price = BigDecimal::from(rng.gen_range(5..51));
+			let stock = rng.gen_range(5..31);
+			let desc_len = rng.gen_range(10..15);
+			let description = lipsum::lipsum_words_with_rng(&mut rng, desc_len);
 
 		// Ajout de gestion d'erreur explicite
 		match sqlx::query!(

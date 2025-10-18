@@ -19,6 +19,7 @@ jsonwebtoken = "9"
 thiserror = "1.0"
 rand = "0.8"
 bigdecimal = { version = "0.3.1", features = ["serde"] }
+lipsum = "0.9"
 
 [dev-dependencies]
 reqwest = { version = "0.12", features = ["json"] }

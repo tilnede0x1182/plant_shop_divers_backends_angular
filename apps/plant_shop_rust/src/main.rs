@@ -72,11 +72,11 @@ async fn main() -> Result<(), std::io::Error> {
 				.at("/", get(list_plants).post(create_plant))
 				.at("/:id", patch(update_plant).delete(delete_plant))
 		)
-		// /api/admin/users (GET liste admin, PATCH by id)
+		// /api/admin/users (GET liste admin, PATCH/DELETE by id)
 		.nest("/api/admin/users",
-			Route::new()
-				.at("/", get(list_users))
-				.at("/:id", patch(update_user))
+				Route::new()
+						.at("/", get(list_users))
+						.at("/:id", patch(update_user).delete(delete_user))
 		)
 		// /api/users (POST create via admin, GET liste pour admin) + /api/users/:id
 		.nest("/api/users",

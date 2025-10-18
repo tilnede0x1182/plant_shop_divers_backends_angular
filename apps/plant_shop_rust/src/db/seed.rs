@@ -280,7 +280,7 @@ fn write_users_file(
 	Ok(())
 }
 
-/// Point d'entrée du seed (appelé depuis src/bin/seed.rs)
+/// Point d'entrée de la seed (appelé depuis src/bin/seed.rs)
 pub async fn run_seed() -> Result<(), AppError> {
 	dotenv().ok();
 	let database_url = env::var("DATABASE_URL").map_err(|_| AppError::Internal)?;
@@ -300,6 +300,6 @@ pub async fn run_seed() -> Result<(), AppError> {
 	write_users_file(admins_creds, users_creds)?;
 	create_orders(&pool, temp_users, plants).await?;
 
-	println!("\n🎉 Seed terminé avec succès !");
+	println!("\n🎉 Seed terminée avec succès !");
 	Ok(())
 }

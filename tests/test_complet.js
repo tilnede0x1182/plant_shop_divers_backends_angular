@@ -267,19 +267,38 @@ async function testAdminPlants(who = 'admin') {
 
 async function testAdminUsers(who = 'admin') {
   console.log('\n📌 TEST MODULE: ADMIN USERS');
-  const utilisateurs = await hit('GET', '/admin/users', 200, null, who);
-  console.log(`   ↳ ${utilisateurs.length} utilisateurs récupérés`);
 
-  /* --- MAJ rapide du premier --- */
-  const u = utilisateurs[0];
-  const nomModifie = `Admin_de_test_modifie_${maintenant}`;
-  await hit('PATCH', `/admin/users/${u.id}`, 200, { name: nomModifie }, who);
+  // Étape 1 — Création d’un admin temporaire
+  const adminTemp = {
+    email: `admin_temp_${maintenant}@example.com`,
+    name: `Admin Temporaire ${maintenant}`,
+    password: 'password',
+    admin: true,
+  };
+  const { id: adminId } = await hit('POST', '/users', 201, adminTemp, who);
+  console.log(`   ↳ Admin temporaire créé: ${adminTemp.email}`);
+
+  // Étape 2 — Vérification qu’on cible bien le bon admin
+  const adminList = await hit('GET', '/admin/users', 200, null, who);
+  const cible = adminList.find((a) => a.email === adminTemp.email);
+  if (!cible)
+    throw new Error('L’admin temporaire n’a pas été trouvé dans la liste !');
+  console.log(`   ↳ Cible confirmée (${cible.email}, id=${cible.id})`);
+
+  // Étape 3 — Mise à jour du nom de ce seul admin
+  const nouveauNom = `Admin_temp_modifié_${maintenant}`;
+  await hit('PATCH', `/users/${cible.id}`, 200, { name: nouveauNom }, who);
   assertEq(
-    await hit('GET', `/users/${u.id}`, 200, null, who),
+    await hit('GET', `/users/${cible.id}`, 200, null, who),
     'name',
-    nomModifie
+    nouveauNom
   );
 
+  // Étape 4 — Suppression du compte temporaire
+  await hit('DELETE', `/users/${cible.id}`, 200, null, who);
+  console.log(`   ↳ Admin temporaire supprimé (${cible.email})`);
+
+  console.log('✅ Test ADMIN USERS terminé sans modification d’admin seedé.');
   return { success: true };
 }
 

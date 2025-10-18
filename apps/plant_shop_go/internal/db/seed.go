@@ -54,14 +54,17 @@ var PLANT_NAMES = []string{
 
 // ## Réinitialisation
 func reset(db *gorm.DB) {
+	log.Println("🧹 Nettoyage de la base de données…")
 	db.Exec("DELETE FROM order_items")
 	db.Exec("DELETE FROM orders")
 	db.Exec("DELETE FROM plants")
 	db.Exec("DELETE FROM users")
+	log.Println("✅ Base de données nettoyée.")
 }
 
 // ## Admins
 func createAdmins(db *gorm.DB) []map[string]string {
+	log.Println("👑 Création des administrateurs…")
 	var admins []map[string]string
 	for i := 0; i < NB_ADMINS; i++ {
 		email := fmt.Sprintf("admin%d@planteshop.com", i+1)
@@ -75,11 +78,13 @@ func createAdmins(db *gorm.DB) []map[string]string {
 		})
 		admins = append(admins, map[string]string{"email": email, "password": password})
 	}
+	log.Printf("✅ %d administrateurs créés.\n", NB_ADMINS)
 	return admins
 }
 
 // ## Users
 func createUsers(db *gorm.DB) []map[string]string {
+	log.Println("👥 Création des utilisateurs…")
 	var users []map[string]string
 	for i := 0; i < NB_USERS; i++ {
 		password := faker.Password()
@@ -93,20 +98,18 @@ func createUsers(db *gorm.DB) []map[string]string {
 		})
 		users = append(users, map[string]string{"email": email, "password": password})
 	}
+	log.Printf("✅ %d utilisateurs créés.\n", NB_USERS)
 	return users
 }
 
 // ## Plants
 func createPlants(db *gorm.DB) []models.Plant {
+	log.Println("🌱 Création des plantes…")
 	var plants []models.Plant
 	max := len(PLANT_NAMES)
 	for i := 0; i < NB_PLANTS; i++ {
 		base := PLANT_NAMES[i%max]
 		name := base
-		if NB_PLANTS > max {
-			name = fmt.Sprintf("%s %d", base, (i/max)+1)
-		}
-		// prix entre 5.00 et 50.00 arrondis à 2 décimales
 		price := math.Round((rand.Float64()*45.0+5.0)*100) / 100
 		desc := faker.Sentence()
 		stock := rand.Intn(26) + 5
@@ -119,14 +122,17 @@ func createPlants(db *gorm.DB) []models.Plant {
 		db.Create(&p)
 		plants = append(plants, p)
 	}
+	log.Printf("✅ %d plantes créées.\n", NB_PLANTS)
 	return plants
 }
 
 // ## Orders
 func createOrders(db *gorm.DB, plants []models.Plant) {
+	log.Println("🛒 Création des commandes…")
 	var users []models.User
 	db.Find(&users)
 	statuses := []string{"confirmed", "pending", "shipped", "delivered"}
+	totalOrders := 0
 	for _, u := range users {
 		n := rand.Intn(MAX_ORDERS_PER_USER + 1)
 		for i := 0; i < n; i++ {
@@ -142,8 +148,10 @@ func createOrders(db *gorm.DB, plants []models.Plant) {
 			}
 			total = math.Trunc(total*100) / 100
 			db.Model(&order).Update("total_price", total)
+			totalOrders++
 		}
 	}
+	log.Printf("✅ %d commandes créées.\n", totalOrders)
 }
 
 func addItem(db *gorm.DB, orderID uint, plants []models.Plant) float64 {
@@ -162,6 +170,7 @@ func addItem(db *gorm.DB, orderID uint, plants []models.Plant) float64 {
 
 // ## users.txt
 func writeUsersFile(admins, users []map[string]string) {
+	log.Println("✍️  Génération du fichier users.txt…")
 	path := filepath.Join(".", "users.txt")
 	var txt = "Administrateurs :\n\n"
 	for _, a := range admins {
@@ -172,13 +181,14 @@ func writeUsersFile(admins, users []map[string]string) {
 		txt += fmt.Sprintf("%s %s\n", u["email"], u["password"])
 	}
 	if err := os.WriteFile(path, []byte(txt), 0644); err != nil {
-		log.Fatalf("Écriture users.txt : %v", err)
+		log.Fatalf("[ERREUR] Écriture users.txt : %v", err)
 	}
+	log.Println("✅ Fichier users.txt généré.")
 }
 
 // # Seed principal
 func Seed(db *gorm.DB) {
-	log.Println("🚀 Lancement du seed…")
+	log.Println("🚀 Lancement de la seed…")
 	rand.Seed(time.Now().UnixNano())
 	reset(db)
 	admins := createAdmins(db)
@@ -186,5 +196,5 @@ func Seed(db *gorm.DB) {
 	plants := createPlants(db)
 	writeUsersFile(admins, users)
 	createOrders(db, plants)
-	log.Println("✅ Seed terminée.")
+	log.Println("🎉 Seed terminée avec succès !")
 }

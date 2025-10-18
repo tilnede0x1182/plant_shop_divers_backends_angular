@@ -2,9 +2,15 @@
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
-pub struct AuthPayload {
+pub struct RegisterPayload {
+	pub name: String,
 	pub email: String,
-	pub username: String,
+	pub password: String,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct LoginPayload {
+	pub email: String,
 	pub password: String,
 }
 

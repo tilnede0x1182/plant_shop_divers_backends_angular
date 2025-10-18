@@ -3,7 +3,7 @@ use poem::{handler, web::{Json, Data}, Result as PoemResult};
 use poem::web::cookie::{CookieJar, Cookie};
 use sqlx::PgPool;
 use crate::errors::AppError;
-use super::models::{AuthPayload, UserAuth};
+use super::models::{LoginPayload, RegisterPayload, UserAuth};
 use super::jwt::{generate_jwt, verify_jwt};
 use bcrypt::{verify, hash};
 use poem::http::StatusCode;
@@ -11,7 +11,7 @@ use poem::http::StatusCode;
 #[handler]
 pub async fn login(
 	Data(pool): Data<&PgPool>,
-	Json(payload): Json<AuthPayload>,
+	Json(payload): Json<LoginPayload>,
 	jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserAuth>)> {
 	let user: UserAuth = sqlx::query_as!(
@@ -43,7 +43,7 @@ pub async fn login(
 #[handler]
 pub async fn register(
 	Data(pool): Data<&PgPool>,
-	Json(payload): Json<AuthPayload>,
+	Json(payload): Json<RegisterPayload>,
 	jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserAuth>)> {
 	let bcrypt_cost = std::env::var("BCRYPT_COST")
@@ -55,7 +55,7 @@ pub async fn register(
 		UserAuth,
 		"INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id, email, username, password_hash, is_admin, created_at",
 		payload.email,
-		payload.username,
+		payload.name,
 		hash_str
 	)
 	.fetch_one(pool)

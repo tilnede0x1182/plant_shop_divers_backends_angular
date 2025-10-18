@@ -3,7 +3,6 @@ const cookieJars = {
   admin: '',
   user: '',
 };
-
 const maintenant = new Date()
   .toISOString()
   .replace(/[^0-9]/g, '')
@@ -64,6 +63,7 @@ async function hit(method, route, expectedStatus, body, who = 'default') {
 
 /* ---------- assertions ---------- */
 function assertEq(obj, key, expected) {
+  if (!obj) throw new Error(`Objet vide – clé ${key} recherchée`);
   const actual = obj[key];
   const ok = actual === expected;
   if (config.logLevel !== 'silent') {
@@ -75,6 +75,39 @@ function assertEq(obj, key, expected) {
     throw new Error(
       `Assertion failed: ${key} = ${actual}, expected ${expected}`
     );
+}
+
+/* --- nouvelles assertions génériques --- */
+function assertNumericId(id, label) {
+  if (!/^\d+$/.test(String(id)))
+    throw new Error(`${label} doit être un identifiant numérique, reçu ${id}`);
+}
+
+function assertSortedAscByField(arr, field, label) {
+  if (arr.length < 2) return;
+  for (let i = 1; i < arr.length; i++) {
+    if (String(arr[i - 1][field]).localeCompare(String(arr[i][field])) > 0)
+      throw new Error(`Liste ${label} non triée croissant par ${field}`);
+  }
+}
+
+function assertAdminsFirstThenName(arr) {
+  if (arr.length < 2) return;
+  let foundNonAdmin = false;
+  for (let i = 0; i < arr.length; i++) {
+    const cur = arr[i];
+    if (!cur.hasOwnProperty('admin'))
+      throw new Error('Objet user sans champ admin');
+    if (foundNonAdmin && cur.admin)
+      throw new Error('Admins doivent précéder les non-admins');
+    if (!cur.admin) foundNonAdmin = true;
+
+    /* tri alphabétique à l’intérieur de chaque groupe */
+    if (i > 0 && cur.admin === arr[i - 1].admin) {
+      if (String(arr[i - 1].name).localeCompare(String(cur.name)) > 0)
+        throw new Error('Tri alphabétique ascendant incorrect');
+    }
+  }
 }
 
 /* ------------ helpers  ------------ */
@@ -108,6 +141,7 @@ async function testPlants(who = 'admin') {
     plantData,
     who
   );
+  assertNumericId(plantId, 'plantId');
 
   /* --- Lecture publique --- */
   assertEq(
@@ -149,7 +183,11 @@ async function testOrders(adminWho = 'admin', userWho = 'user') {
   console.log('\n📌 TEST MODULE: ORDERS & ORDER ITEMS');
 
   /* --- Création plante --- */
-  const plantData = { name: `Plante_de_test_${maintenant}`, price: 10, stock: 5 };
+  const plantData = {
+    name: `Plante_de_test_${maintenant}`,
+    price: 10,
+    stock: 5,
+  };
   const { id: plantId } = await hit(
     'POST',
     '/admin/plants',
@@ -157,6 +195,7 @@ async function testOrders(adminWho = 'admin', userWho = 'user') {
     plantData,
     adminWho
   );
+  assertNumericId(plantId, 'plantId');
 
   /* --- Commande user --- */
   const orderPayload = { items: [{ plantId, quantity: 2 }] };
@@ -182,6 +221,9 @@ async function testOrders(adminWho = 'admin', userWho = 'user') {
   const commande = commandes.find((o) => o.id === orderId);
   if (!commande) throw new Error(`Commande ${orderId} introuvable`);
   assertEq(commande, 'status', 'shipped');
+  if (!commande.orderItems || !commande.orderItems.length)
+    throw new Error('Items absents dans la commande');
+  assertEq(commande.orderItems[0].plant, 'name', plantData.name);
 
   /* --- Nettoyage --- */
   await hit('DELETE', `/orders/${orderId}`, 200, null, adminWho);
@@ -252,6 +294,7 @@ async function testAdminPlants(who = 'admin') {
   console.log('\n📌 TEST MODULE: ADMIN PLANTS');
   const plantes = await hit('GET', '/admin/plants', 200, null, who);
   console.log(`   ↳ ${plantes.length} plantes récupérées`);
+  assertSortedAscByField(plantes, 'name', 'plantes');
 
   /* --- CRUD rapide --- */
   const d = {
@@ -319,6 +362,7 @@ async function main() {
     await login(config.adminEmail, config.adminPassword, 'admin');
     const userEmail = `utilisateur_de_test_${maintenant}@example.com`;
     await registerUser('User', userEmail, 'pass123', 'user');
+    await login(userEmail, 'pass123', 'user');
 
     /* --- Modules --- */
     await testPlants('admin');

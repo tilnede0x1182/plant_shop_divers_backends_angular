@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize)]
 pub struct AuthPayload {
 	pub email: String,
+	pub username: String,
 	pub password: String,
 }
 

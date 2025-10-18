@@ -55,7 +55,7 @@ pub async fn register(
 		UserAuth,
 		"INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3) RETURNING id, email, username, password_hash, is_admin, created_at",
 		payload.email,
-		payload.email,
+		payload.username,
 		hash_str
 	)
 	.fetch_one(pool)

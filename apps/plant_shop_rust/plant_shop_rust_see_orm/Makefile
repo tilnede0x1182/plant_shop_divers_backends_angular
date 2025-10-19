@@ -4,49 +4,39 @@
 
 run:
 	mkdir -p bin
-	sqlx database setup
-	sqlx migrate run
-	cargo build --bin plant_shop_rust
-	./target/debug/plant_shop_rust
+	cargo run --bin plant_shop_rust
 
 compile_run: run
 
 prod:
 	cargo build --release --bin plant_shop_rust
-	sqlx migrate run
 	./target/release/plant_shop_rust
 
 compile:
 	cargo build --bin plant_shop_rust
 
 # ======================================================
-# 🛠️  Outils SQLx et migration
+# 🛠️  Gestion des migrations locales (Rust)
 # ======================================================
-
-prepare:
-	unset SQLX_OFFLINE && cargo sqlx prepare --workspace
 
 create-db:
-	sqlx database setup
+	cargo run --bin plant_shop_rust -- migrate create
 
 migrate-db:
-	sqlx migrate run
+	cargo run --bin plant_shop_rust -- migrate up
 
 drop-db:
-	sqlx database drop
+	cargo run --bin plant_shop_rust -- migrate drop
 
 reset-db:
-	sqlx database drop
-	sqlx database setup
-	sqlx migrate run
+	cargo run --bin plant_shop_rust -- migrate reset
 
 # ======================================================
-# 🌱 Seed base de données (données de test)
+# 🌱 Seed base de données
 # ======================================================
 
 seed:
-	sqlx database setup
-	sqlx migrate run
+	@echo "🌱 Lancement de la seed..."
 	@if [ -f ./target/release/seed ]; then \
 		./target/release/seed; \
 	elif [ -f ./target/debug/seed ]; then \
@@ -56,7 +46,6 @@ seed:
 		./target/debug/seed; \
 	fi
 
-# Build et exécution forcée de la seed en mode debug
 seed-dev:
 	cargo build --bin seed --manifest-path ./Cargo.toml
 	./target/debug/seed
@@ -68,7 +57,6 @@ seed-build:
 # 🧪 Tests End-to-End
 # ======================================================
 
-# Lancer les tests : priorité à la version release, puis debug, sinon compilation auto
 tests:
 	@if [ -f ./target/release/test_e2e ]; then \
 		echo "🚀 Lancement des tests (mode RELEASE)…"; \
@@ -86,13 +74,11 @@ tests:
 		exit 1; \
 	fi
 
-# Compiler les tests en mode release sans les exécuter
 test-build:
 	@echo "🔧 Compilation du test (mode RELEASE)…"
 	cargo build --release --bin test_e2e --manifest-path ./Cargo.toml
 	@echo "✅ Binaire disponible : ./target/release/test_e2e"
 
-# Build et exécution forcée des tests end-to-end en mode debug
 test-dev:
 	cargo build --bin test_e2e --manifest-path ./Cargo.toml
 	./target/debug/test_e2e

@@ -1,13 +1,13 @@
 use serde::{Serialize, Deserialize};
-use sqlx::types::BigDecimal;
+use sea_orm::prelude::Decimal;
 use chrono::{DateTime, Utc};
 
-#[derive(Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Order {
     pub id: i32,
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
-    pub total: BigDecimal,
+    pub total: Decimal,
     pub status: String,
     pub created_at: DateTime<Utc>,
 }
@@ -16,8 +16,8 @@ pub struct Order {
 pub struct PlantBasic {
     pub id: i32,
     pub name: String,
-    #[serde(serialize_with = "crate::plants::models::serialize_bigdecimal_as_i32")]
-    pub price: BigDecimal,
+    #[serde(serialize_with = "crate::plants::models::serialize_Decimal_as_i32")]
+    pub price: Decimal,
     pub stock: i32,
     pub description: Option<String>,
 }
@@ -26,8 +26,8 @@ pub struct PlantBasic {
 pub struct OrderItemWithPlant {
 	pub id: i32,
 	pub quantity: i32,
-	#[serde(serialize_with = "crate::plants::models::serialize_bigdecimal_as_i32")]
-	pub price: BigDecimal,
+	#[serde(serialize_with = "crate::plants::models::serialize_Decimal_as_i32")]
+	pub price: Decimal,
 	pub plant_id: i32,
 	pub plant: PlantBasic,
 }
@@ -38,7 +38,7 @@ pub struct OrderWithItems {
 		#[allow(dead_code)]
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
-    pub total: BigDecimal,
+    pub total: Decimal,
     pub status: String,
     pub created_at: DateTime<Utc>,
     #[serde(rename = "orderItems")]

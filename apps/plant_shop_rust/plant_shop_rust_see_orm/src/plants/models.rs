@@ -1,9 +1,10 @@
 use serde::{Serialize, Deserialize, Serializer};
-use sqlx::types::BigDecimal;
+use sea_orm::prelude::Decimal;
 use chrono::{DateTime, Utc};
-use bigdecimal::ToPrimitive;
+use num_traits::ToPrimitive;
 
-pub fn serialize_bigdecimal_as_i32<S>(value: &BigDecimal, serializer: S) -> Result<S::Ok, S::Error>
+/// Sérialise un Decimal en i32 (pour l’API)
+pub fn serialize_Decimal_as_i32<S>(value: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
 where
 	S: Serializer
 {
@@ -11,12 +12,12 @@ where
 	serializer.serialize_i32(nombre)
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Plant {
 	pub id: i32,
 	pub name: String,
-	#[serde(serialize_with = "serialize_bigdecimal_as_i32")]
-	pub price: BigDecimal,
+	#[serde(serialize_with = "serialize_Decimal_as_i32")]
+	pub price: Decimal,
 	pub stock: i32,
 	pub description: Option<String>,
 	pub created_at: DateTime<Utc>,
@@ -26,7 +27,7 @@ pub struct Plant {
 pub struct NewPlant {
 	pub name: String,
 	pub description: Option<String>,
-	pub price: BigDecimal,
+	pub price: Decimal,
 	pub stock: i32,
 }
 
@@ -34,6 +35,6 @@ pub struct NewPlant {
 pub struct UpdatePlant {
 	pub name: Option<String>,
 	pub description: Option<String>,
-	pub price: Option<BigDecimal>,
+	pub price: Option<Decimal>,
 	pub stock: Option<i32>,
 }

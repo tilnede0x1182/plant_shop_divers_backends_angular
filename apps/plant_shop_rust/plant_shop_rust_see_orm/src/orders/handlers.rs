@@ -8,7 +8,7 @@ use poem::{
 };
 use serde::Deserialize;
 use sea_orm::{
-	DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter, ColumnTrait, TransactionTrait,
+	DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter, ColumnTrait, TransactionTrait, QueryOrder, IntoActiveModel,
 };
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
@@ -18,13 +18,26 @@ use crate::entity::{
 	plants::{self, Entity as Plant, Column as PlantColumn, Model as PlantModel},
 };
 use sea_orm::prelude::*;
-use bigdecimal::BigDecimal;
-use std::str::FromStr;
+use sea_orm::prelude::Decimal;
+use num_traits::FromPrimitive;
 
-// Structure pour le payload de création de commande
+/// DTO pour création de commande (contient id plante + quantité)
+#[derive(Deserialize, Clone)]
+pub struct NewOrderItemDto {
+	pub plant_id: i32,
+	pub quantity: i32,
+}
+
+/// Payload pour la création d'une commande
 #[derive(Deserialize)]
 pub struct NewOrderPayload {
-	pub items: Vec<OrderItemModel>,
+	pub items: Vec<NewOrderItemDto>,
+}
+
+/// Mise à jour du statut de commande
+#[derive(Deserialize)]
+pub struct UpdateOrderDto {
+	pub status: Option<String>,
 }
 
 /// Création d’une commande utilisateur courant (JWT obligatoire)
@@ -44,11 +57,11 @@ pub async fn create_order(
 	};
 
 	let txn = db.begin().await.map_err(|_| AppError::Internal)?;
-	let mut total = BigDecimal::from(0);
+	let mut total = Decimal::ZERO;
 
 	let new_order = ActiveOrder {
 		user_id: Set(Some(user_id)),
-		total: Set(total.clone()),
+		total: Set(total),
 		..Default::default()
 	};
 	let inserted_order = new_order.insert(&txn).await.map_err(|_| AppError::Internal)?;
@@ -65,12 +78,12 @@ pub async fn create_order(
 			return Err(AppError::Conflict.into());
 		}
 
-		let item_price = plant.price.clone();
-		let q = BigDecimal::from(item.quantity);
-		total += item_price.clone() * q;
+		let item_price = plant.price;
+		let q = Decimal::from_i32(item.quantity).unwrap_or(Decimal::ZERO);
+		total += item_price * q;
 
 		let new_item = ActiveOrderItem {
-			order_id: Set(inserted_order.id),
+			order_id: Set(Some(inserted_order.id)),
 			plant_id: Set(Some(plant.id)),
 			quantity: Set(item.quantity),
 			price: Set(item_price),
@@ -104,6 +117,7 @@ pub async fn list_orders(
 
 	let orders = Order::find()
 		.filter(OrderColumn::UserId.eq(Some(user_id)))
+		.order_by_desc(OrderColumn::CreatedAt)
 		.all(db)
 		.await
 		.map_err(|_| AppError::Internal)?;
@@ -131,7 +145,7 @@ pub async fn get_order(
 pub async fn update_order(
 	Data(db): Data<&DatabaseConnection>,
 	Path(order_id): Path<i32>,
-	Json(payload): Json<orders::Model>,
+	Json(payload): Json<UpdateOrderDto>,
 ) -> PoemResult<Json<OrderModel>> {
 	let existing = Order::find_by_id(order_id)
 		.one(db)

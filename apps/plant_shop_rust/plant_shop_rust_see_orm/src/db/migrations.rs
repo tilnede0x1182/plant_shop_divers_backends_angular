@@ -1,7 +1,8 @@
-use sea_orm_migration::prelude::*;
-use sea_orm::DatabaseConnection;
+use sea_orm::{DatabaseConnection, ConnectionTrait, DbErr};
 
-/// Applique la migration initiale depuis le fichier SQL brut.
+/// """ Applique la migration initiale depuis le fichier SQL brut.
+/// Lit le script migrations/init.sql et l’exécute via la connexion SeaORM.
+/// @db connexion SeaORM """
 pub async fn run_migrations(db: &DatabaseConnection) -> Result<(), DbErr> {
 	println!("📦 Application de la migration SQL initiale...");
 	let sql = include_str!("../../migrations/init.sql");

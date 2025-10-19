@@ -1,4 +1,5 @@
 /// Handlers Poem pour auth (login, register, me, logout) — version SeaORM
+
 use poem::{
 	handler,
 	web::{Json, Data},
@@ -9,13 +10,28 @@ use poem::{
 use crate::errors::AppError;
 use crate::auth::jwt::{generate_jwt, verify_jwt};
 use crate::entity::users::{self, Entity as User, Model as UserModel, ActiveModel as ActiveUser, Column};
-use sea_orm::{DatabaseConnection, EntityTrait, QueryFilter, Set, ActiveModelTrait};
+use sea_orm::{DatabaseConnection, EntityTrait, QueryFilter, Set, ActiveModelTrait, ColumnTrait, IntoActiveModel};
 use bcrypt::{verify, hash};
+
+/// Payload de login
+#[derive(serde::Deserialize)]
+pub struct LoginPayload {
+	pub email: String,
+	pub password: String,
+}
+
+/// Payload de register
+#[derive(serde::Deserialize)]
+pub struct RegisterPayload {
+	pub email: String,
+	pub username: String,
+	pub password: String,
+}
 
 #[handler]
 pub async fn login(
 	Data(db): Data<&DatabaseConnection>,
-	Json(payload): Json<users::Model>,
+	Json(payload): Json<LoginPayload>,
 	jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserModel>)> {
 	let user = User::find()
@@ -25,7 +41,7 @@ pub async fn login(
 		.map_err(|_| AppError::Internal)?
 		.ok_or(AppError::Unauthorized)?;
 
-	if !verify(&payload.password_hash, &user.password_hash).unwrap_or(false) {
+	if !verify(&payload.password, &user.password_hash).unwrap_or(false) {
 		return Err(AppError::Unauthorized.into());
 	}
 
@@ -44,7 +60,7 @@ pub async fn login(
 #[handler]
 pub async fn register(
 	Data(db): Data<&DatabaseConnection>,
-	Json(payload): Json<users::Model>,
+	Json(payload): Json<RegisterPayload>,
 	jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserModel>)> {
 	let bcrypt_cost = std::env::var("BCRYPT_COST")
@@ -52,7 +68,7 @@ pub async fn register(
 		.and_then(|v| v.parse::<u32>().ok())
 		.unwrap_or(12);
 
-	let hash_str = hash(&payload.password_hash, bcrypt_cost).map_err(|_| AppError::Internal)?;
+	let hash_str = hash(&payload.password, bcrypt_cost).map_err(|_| AppError::Internal)?;
 
 	// Vérifie si l'utilisateur existe déjà
 	if let Some(existing) = User::find()

@@ -14,7 +14,7 @@ pub struct LoginPayload {
 	pub password: String,
 }
 
-#[derive(Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UserAuth {
     pub id: i32,
 		#[allow(dead_code)]

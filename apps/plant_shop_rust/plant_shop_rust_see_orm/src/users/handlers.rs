@@ -9,8 +9,25 @@ use poem::{
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
 use crate::entity::users::{self, Entity as User, ActiveModel as ActiveUser, Model as UserModel, Column};
-use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter};
-use poem::error::InternalServerError;
+use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter, ColumnTrait, QueryOrder, IntoActiveModel};
+use bcrypt;
+use serde::Deserialize;
+
+/// DTO pour création d'utilisateur
+#[derive(Deserialize)]
+pub struct CreateUserDto {
+	pub email: String,
+	pub username: String,
+	pub password: String,
+}
+
+/// DTO pour update utilisateur (tous champs optionnels sauf id dans l’URL)
+#[derive(Deserialize)]
+pub struct UpdateUserDto {
+	pub username: Option<String>,
+	pub email: Option<String>,
+	pub is_admin: Option<bool>,
+}
 
 #[handler]
 pub async fn list_users(Data(db): Data<&DatabaseConnection>, jar: &CookieJar) -> Result<Json<Vec<UserModel>>, AppError> {
@@ -26,14 +43,14 @@ pub async fn list_users(Data(db): Data<&DatabaseConnection>, jar: &CookieJar) ->
 	let current = User::find_by_id(claims.sub)
 		.one(db)
 		.await
-		.map_err(|_| AppError::DatabaseError(anyhow::anyhow!("Erreur requête")))?
+		.map_err(|_| AppError::Internal)?
 		.ok_or(AppError::Unauthorized)?;
 
 	if !current.is_admin {
 		return Err(AppError::Forbidden);
 	}
 
-	// Récupère tous les utilisateurs
+	// Récupère tous les utilisateurs (tri alphabétique par username)
 	let users = User::find()
 		.order_by_asc(Column::Username)
 		.all(db)
@@ -44,18 +61,19 @@ pub async fn list_users(Data(db): Data<&DatabaseConnection>, jar: &CookieJar) ->
 }
 
 #[handler]
-pub async fn create_user(Data(db): Data<&DatabaseConnection>, Json(payload): Json<users::Model>) -> PoemResult<(StatusCode, Json<UserModel>)> {
+pub async fn create_user(Data(db): Data<&DatabaseConnection>, Json(payload): Json<CreateUserDto>) -> PoemResult<(StatusCode, Json<UserModel>)> {
 	let bcrypt_cost = std::env::var("BCRYPT_COST").unwrap_or("12".to_string()).parse::<u32>().unwrap_or(12);
-	let password_hash = bcrypt::hash(payload.password_hash.clone(), bcrypt_cost).map_err(|_| AppError::Internal)?;
+	let password_hash = bcrypt::hash(payload.password.clone(), bcrypt_cost).map_err(|_| AppError::Internal)?;
 
 	let new_user = ActiveUser {
 		username: Set(payload.username.clone()),
 		email: Set(payload.email.clone()),
 		password_hash: Set(password_hash),
+		is_admin: Set(false),
 		..Default::default()
 	};
 
-	let inserted = new_user.insert(db).await.map_err(|_| InternalServerError("Erreur d’insertion utilisateur"))?;
+	let inserted = new_user.insert(db).await.map_err(|_| AppError::Internal)?;
 	Ok((StatusCode::CREATED, Json(inserted)))
 }
 
@@ -74,7 +92,7 @@ pub async fn update_user(
 	jar: &CookieJar,
 	Data(db): Data<&DatabaseConnection>,
 	Path(user_id): Path<i32>,
-	Json(payload): Json<users::Model>,
+	Json(payload): Json<UpdateUserDto>,
 ) -> PoemResult<Json<UserModel>> {
 	let token = jar
 		.get("auth_token")
@@ -93,23 +111,26 @@ pub async fn update_user(
 		return Err(AppError::Forbidden.into());
 	}
 
-	let mut existing = User::find_by_id(user_id)
+	let existing = User::find_by_id(user_id)
 		.one(db)
 		.await
 		.map_err(|_| AppError::Internal)?
 		.ok_or(AppError::NotFound)?;
 
+	let mut active = existing.into_active_model();
 	if let Some(name) = payload.username.clone() {
-		existing.username = name;
+		active.username = Set(name);
 	}
 	if let Some(email) = payload.email.clone() {
-		existing.email = email;
+		active.email = Set(email);
 	}
-	if current.is_admin {
-		existing.is_admin = payload.is_admin;
+	if let Some(is_admin) = payload.is_admin {
+		if current.is_admin {
+			active.is_admin = Set(is_admin);
+		}
 	}
 
-	let updated = existing.into_active_model().update(db).await.map_err(|_| AppError::Internal)?;
+	let updated = active.update(db).await.map_err(|_| AppError::Internal)?;
 	Ok(Json(updated))
 }
 

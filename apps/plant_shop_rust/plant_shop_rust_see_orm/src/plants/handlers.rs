@@ -8,14 +8,33 @@ use poem::{
 use crate::auth::jwt::verify_jwt;
 use crate::errors::AppError;
 use crate::entity::plants::{self, Entity as Plant, ActiveModel as ActivePlant, Model as PlantModel, Column};
-use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, QueryFilter};
+use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, QueryFilter, ColumnTrait, IntoActiveModel};
+use serde::Deserialize;
+
+/// DTO création plante
+#[derive(Deserialize)]
+pub struct CreatePlantDto {
+	pub name: String,
+	pub description: Option<String>,
+	pub price: sea_orm::prelude::Decimal,
+	pub stock: i32,
+}
+
+/// DTO update plante (tous champs optionnels)
+#[derive(Deserialize)]
+pub struct UpdatePlantDto {
+	pub name: Option<String>,
+	pub description: Option<String>,
+	pub price: Option<sea_orm::prelude::Decimal>,
+	pub stock: Option<i32>,
+}
 
 /// Création d’une plante (201 Created)
 #[handler]
 pub async fn create_plant(
 	Data(db): Data<&DatabaseConnection>,
 	jar: &CookieJar,
-	Json(payload): Json<plants::Model>,
+	Json(payload): Json<CreatePlantDto>,
 ) -> PoemResult<(StatusCode, Json<PlantModel>), AppError> {
 	// Vérifie que l’utilisateur est admin
 	let token = jar
@@ -68,7 +87,7 @@ pub async fn get_plant(Data(db): Data<&DatabaseConnection>, Path(plant_id): Path
 pub async fn update_plant(
 	Data(db): Data<&DatabaseConnection>,
 	Path(plant_id): Path<i32>,
-	Json(payload): Json<plants::Model>,
+	Json(payload): Json<UpdatePlantDto>,
 ) -> PoemResult<Json<PlantModel>> {
 	let existing = Plant::find_by_id(plant_id)
 		.one(db)
@@ -81,7 +100,7 @@ pub async fn update_plant(
 		active.name = Set(name);
 	}
 	if let Some(desc) = payload.description.clone() {
-		active.description = Set(desc);
+		active.description = Set(Some(desc));
 	}
 	if let Some(price) = payload.price {
 		active.price = Set(price);

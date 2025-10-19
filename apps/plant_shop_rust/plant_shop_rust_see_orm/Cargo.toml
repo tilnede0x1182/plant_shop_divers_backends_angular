@@ -1,22 +1,38 @@
-[[bin]]
-name = "test_e2e"
-path = "test/test_e2e.rs"
-
+# ======================================================
+# 🧱 Configuration principale du package
+# ======================================================
 [package]
 name = "plant_shop_rust"
 version = "0.1.0"
 edition = "2021"
 
+# ======================================================
+# ⚙️  Binaires du projet
+# ======================================================
+[[bin]]
+name = "plant_shop_rust"
+path = "src/main.rs"
+
+[[bin]]
+name = "seed"
+path = "src/bin/seed.rs"
+
+[[bin]]
+name = "test_e2e"
+path = "test/test_e2e.rs"
+
+# ======================================================
+# 🚀 Dépendances communes (SeaORM complet)
+# ======================================================
 [dependencies]
 # --- Framework HTTP principal ---
 poem = { version = "3.1", features = ["websocket", "cookie"] }
 
-# --- ORM principal du backend ---
-sea-orm = { version = "1.1", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres"] }
+# --- ORM unique : SeaORM (PostgreSQL uniquement) ---
+sea-orm = { version = "1.1", default-features = false, features = [
+  "macros","runtime-tokio-rustls","sqlx-postgres","with-json","with-chrono","with-rust_decimal"
+] }
 sea-orm-macros = "1.1"
-
-# --- ORM secondaire (pour seed et tests) ---
-sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "chrono", "bigdecimal"] }
 
 # --- Base technique ---
 tokio = { version = "1.37", features = ["full"] }
@@ -29,7 +45,9 @@ anyhow = "1.0"
 jsonwebtoken = "9"
 thiserror = "1.0"
 rand = "0.8"
-bigdecimal = { version = "0.3.1", features = ["serde"] }
+rust_decimal = { version = "1", features = ["serde"] }
+num-traits = "0.2"
+bigdecimal = { version = "0.4", features = ["serde"] }
 
 # --- Client HTTP et outils ---
 reqwest = { version = "0.12", features = ["blocking", "cookies", "json", "rustls-tls"] }

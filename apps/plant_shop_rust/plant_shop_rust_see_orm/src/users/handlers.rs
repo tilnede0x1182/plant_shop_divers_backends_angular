@@ -30,6 +30,7 @@ pub struct UpdateUserDto {
 	#[serde(alias = "name")]
 	pub username: Option<String>,
 	pub email: Option<String>,
+	#[serde(alias = "admin")]
 	pub is_admin: Option<bool>,
 }
 

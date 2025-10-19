@@ -13,6 +13,7 @@ use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder
 use bcrypt;
 use serde::Deserialize;
 use crate::users::models::User as UserDto;
+use serde_json::json;
 
 /// DTO pour création d'utilisateur
 #[derive(Deserialize)]
@@ -33,7 +34,10 @@ pub struct UpdateUserDto {
 }
 
 #[handler]
-pub async fn list_users(Data(db): Data<&DatabaseConnection>, jar: &CookieJar) -> Result<Json<Vec<UserModel>>, AppError> {
+pub async fn list_users(
+    Data(db): Data<&DatabaseConnection>,
+    jar: &CookieJar,
+) -> Result<Json<Vec<serde_json::Value>>, AppError> {
 	// Authentification JWT
 	let token = jar
 		.get("auth_token")
@@ -60,7 +64,17 @@ pub async fn list_users(Data(db): Data<&DatabaseConnection>, jar: &CookieJar) ->
 		.await
 		.map_err(|_| AppError::Internal)?;
 
-	Ok(Json(users))
+	let mapped: Vec<_> = users.into_iter().map(|u| {
+			json!({
+					"id": u.id,
+					"email": u.email,
+					"name": u.username,   // <— renommage attendu par Angular
+					"admin": u.is_admin,  // <— cohérent avec front
+					"createdAt": u.created_at
+			})
+	}).collect();
+
+	Ok(Json(mapped))
 }
 
 #[handler]

@@ -147,14 +147,16 @@ pub async fn list_orders(
                 String::new()
             };
 
-            item_details.push(json!({
-                "id": item.id,
-                "plantId": item.plant_id,
-                "quantity": item.quantity,
-                "price": item.price,
-                // <-- clé attendue par le test
-                "plant": { "name": plant_name }
-            }));
+						item_details.push(json!({
+								"id": item.id,
+								"plantId": item.plant_id,
+								"quantity": item.quantity,
+								"price": item.price,
+								"plant": {
+										"id": item.plant_id,
+										"name": plant_name
+								}
+						}));
         }
 
         response.push(json!({

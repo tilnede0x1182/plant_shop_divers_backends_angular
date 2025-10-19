@@ -61,6 +61,42 @@ prod-backend-go:
 	go build -o apps/plant_shop_go/bin/server apps/plant_shop_go/main.go && apps/plant_shop_go/bin/server --serve
 
 # ======================================================
+# 🦀 Backends Rust avec SQLx
+# ======================================================
+
+run-backend-rust-sqlx:
+	make -C apps/plant_shop_rust/plant_shop_rust_sqlx run
+
+compile-backend-rust-sqlx:
+	make -C apps/plant_shop_rust/plant_shop_rust_sqlx compile
+
+seed-backend-rust-sqlx:
+	make -C apps/plant_shop_rust/plant_shop_rust_sqlx seed
+
+compile-run-backend-rust-sqlx: compile-backend-rust-sqlx run-backend-rust-sqlx
+
+prod-backend-rust-sqlx:
+	make -C apps/plant_shop_rust/plant_shop_rust_sqlx prod
+
+# ======================================================
+# 🦀 Backends Rust avec SeeORM
+# ======================================================
+
+run-backend-rust-see-orm:
+	make -C apps/plant_shop_rust/plant_shop_rust_see_orm run
+
+compile-backend-rust-see-orm:
+	make -C apps/plant_shop_rust/plant_shop_rust_see_orm compile
+
+seed-backend-rust-see-orm:
+	make -C apps/plant_shop_rust/plant_shop_rust_see_orm seed
+
+compile-run-backend-rust-see-orm: compile-backend-rust-see-orm run-backend-rust-see-orm
+
+prod-backend-rust-see-orm:
+	make -C apps/plant_shop_rust/plant_shop_rust_see_orm prod
+
+# ======================================================
 # 🎨 Frontend Angular
 # ======================================================
 

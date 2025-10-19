@@ -16,7 +16,7 @@ use serde::Deserialize;
 pub struct CreatePlantDto {
 	pub name: String,
 	pub description: Option<String>,
-	pub price: sea_orm::prelude::Decimal,
+	pub price: i32,
 	pub stock: i32,
 }
 
@@ -25,7 +25,7 @@ pub struct CreatePlantDto {
 pub struct UpdatePlantDto {
 	pub name: Option<String>,
 	pub description: Option<String>,
-	pub price: Option<sea_orm::prelude::Decimal>,
+	pub price: Option<i32>,
 	pub stock: Option<i32>,
 }
 
@@ -56,7 +56,10 @@ pub async fn create_plant(
 		..Default::default()
 	};
 
-	let inserted = new_plant.insert(db).await.map_err(|_| AppError::Conflict)?;
+	let inserted = new_plant.insert(db).await.map_err(|e| {
+		println!("❌ ERREUR d’insertion plante: {e}");
+		AppError::Internal
+	})?;
 	Ok((StatusCode::CREATED, Json(inserted)))
 }
 

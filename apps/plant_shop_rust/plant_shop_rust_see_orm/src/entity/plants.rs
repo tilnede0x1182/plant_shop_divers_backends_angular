@@ -10,8 +10,8 @@ pub struct Model {
     pub name: String,
     #[sea_orm(column_type = "Text", nullable)]
     pub description: Option<String>,
-    #[sea_orm(column_type = "Decimal(Some((10, 2)))")]
-    pub price: Decimal,
+    #[sea_orm(column_type = "Integer")]
+    pub price: i32,
     pub stock: i32,
     pub created_at: DateTimeWithTimeZone,
 }

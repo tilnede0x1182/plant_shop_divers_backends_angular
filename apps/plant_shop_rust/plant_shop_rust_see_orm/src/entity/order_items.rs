@@ -10,8 +10,7 @@ pub struct Model {
     pub order_id: Option<i32>,
     pub plant_id: Option<i32>,
     pub quantity: i32,
-    #[sea_orm(column_type = "Decimal(Some((10, 2)))")]
-    pub price: Decimal,
+    pub price: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 use crate::errors::AppError;
-use sea_orm::prelude::Decimal;
 use dotenvy::dotenv;
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -38,7 +37,7 @@ const PLANT_NAMES: &[&str] = &[
 #[derive(Clone)]
 struct TempPlant {
 	id: i32,
-	price: Decimal,
+	price: i32,
 	stock: i32,
 }
 
@@ -168,17 +167,18 @@ async fn create_plants(db: &DatabaseConnection) -> Result<Vec<TempPlant>, AppErr
 	for idx in 0..NB_PLANTS {
 		let base = PLANT_NAMES[idx as usize % max as usize];
 		let name = base.to_string();
-		let price = Decimal::new(rng.gen_range(5..51), 0);
+		let price = rng.gen_range(5..51);
 		let stock = rng.gen_range(5..31);
 		let desc_len = rng.gen_range(10..15);
 		let description = lipsum::lipsum_words_with_rng(&mut rng, desc_len);
 
 		let stmt = Statement::from_sql_and_values(
-			DbBackend::Postgres,
-			r#"INSERT INTO plants (name, description, price, stock)
-			   VALUES ($1, $2, $3, $4) RETURNING id"#,
-			vec![name.clone().into(), description.clone().into(), price.into(), stock.into()],
+				DbBackend::Postgres,
+				r#"INSERT INTO plants (name, description, price, stock)
+					VALUES ($1, $2, $3, $4) RETURNING id"#,
+				vec![name.clone().into(), description.clone().into(), price.into(), stock.into()],
 		);
+
 		match db.query_one(stmt).await {
 			Ok(Some(row)) => {
 				let id: i32 = row.try_get("", "id")?;
@@ -223,7 +223,7 @@ async fn create_orders(
 			let row = db.query_one(stmt).await?.unwrap();
 			let order_id: i32 = row.try_get("", "id")?;
 
-			let mut order_total = Decimal::ZERO;
+			let mut order_total = 0;
 			let num_items = rng.gen_range(1..=3);
 
 			for _ in 0..num_items {
@@ -245,7 +245,7 @@ async fn create_orders(
 						)).await?;
 
 						plant.stock -= quantity;
-						order_total += plant.price * Decimal::from(quantity);
+						order_total += plant.price * quantity;
 					}
 				}
 			}

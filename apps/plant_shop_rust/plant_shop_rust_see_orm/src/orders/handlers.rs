@@ -8,8 +8,10 @@ use poem::{
 };
 use serde::Deserialize;
 use sea_orm::{
-	DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter, ColumnTrait, TransactionTrait, QueryOrder, IntoActiveModel,
+	DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter, ColumnTrait,
+	TransactionTrait, QueryOrder, IntoActiveModel, QuerySelect,
 };
+
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
 use crate::entity::{
@@ -17,12 +19,13 @@ use crate::entity::{
 	order_items::{ActiveModel as ActiveOrderItem},
 	plants::{Entity as Plant},
 };
-use sea_orm::prelude::Decimal;
-use num_traits::FromPrimitive;
+use crate::entity::order_items;
+use serde_json::json;
 
 /// DTO pour création de commande (contient id plante + quantité)
 #[derive(Deserialize, Clone)]
 pub struct NewOrderItemDto {
+	#[serde(alias = "plantId")]
 	pub plant_id: i32,
 	pub quantity: i32,
 }
@@ -56,7 +59,7 @@ pub async fn create_order(
 	};
 
 	let txn = db.begin().await.map_err(|_| AppError::Internal)?;
-	let mut total = Decimal::ZERO;
+	let mut total: i32 = 0;
 
 	let new_order = ActiveOrder {
 		user_id: Set(Some(user_id)),
@@ -78,8 +81,7 @@ pub async fn create_order(
 		}
 
 		let item_price = plant.price;
-		let q = Decimal::from_i32(item.quantity).unwrap_or(Decimal::ZERO);
-		total += item_price * q;
+		total += item_price * item.quantity;
 
 		let new_item = ActiveOrderItem {
 			order_id: Set(Some(inserted_order.id)),
@@ -102,26 +104,68 @@ pub async fn create_order(
 /// Liste des commandes de l’utilisateur courant
 #[handler]
 pub async fn list_orders(
-	Data(db): Data<&DatabaseConnection>,
-	jar: &CookieJar,
-) -> Result<Json<Vec<OrderModel>>, AppError> {
-	let user_id = if let Some(c) = jar.get("auth_token") {
-		let token = c.value_str();
-		let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-		let claims = verify_jwt(token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
-		claims.sub
-	} else {
-		return Err(AppError::Unauthorized);
-	};
+    Data(db): Data<&DatabaseConnection>,
+    jar: &CookieJar,
+) -> Result<Json<Vec<serde_json::Value>>, AppError> {
+    // Auth
+    let user_id = if let Some(c) = jar.get("auth_token") {
+        let token = c.value_str();
+        let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+        let claims = verify_jwt(token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
+        claims.sub
+    } else {
+        return Err(AppError::Unauthorized);
+    };
 
-	let orders = Order::find()
-		.filter(OrderColumn::UserId.eq(Some(user_id)))
-		.order_by_desc(OrderColumn::CreatedAt)
-		.all(db)
-		.await
-		.map_err(|_| AppError::Internal)?;
+    use crate::entity::order_items;
+    use sea_orm::prelude::*;
+    use serde_json::json;
 
-	Ok(Json(orders))
+    // Récupération commandes + items
+    let orders_with_items: Vec<(OrderModel, Vec<order_items::Model>)> = Order::find()
+        .filter(OrderColumn::UserId.eq(Some(user_id)))
+        .order_by_desc(OrderColumn::CreatedAt)
+        .find_with_related(order_items::Entity)
+        .all(db)
+        .await
+        .map_err(|_| AppError::Internal)?;
+
+    // Mapping JSON attendu par les tests
+    let mut response = Vec::new();
+
+    for (order, items) in orders_with_items {
+        let mut item_details = Vec::new();
+
+        for item in items {
+            // Cherche le nom de la plante si possible
+            let plant_name = if let Some(pid) = item.plant_id {
+                match Plant::find_by_id(pid).one(db).await {
+                    Ok(Some(plant)) => plant.name,
+                    _ => String::new(),
+                }
+            } else {
+                String::new()
+            };
+
+            item_details.push(json!({
+                "id": item.id,
+                "plantId": item.plant_id,
+                "quantity": item.quantity,
+                "price": item.price,
+                // <-- clé attendue par le test
+                "plant": { "name": plant_name }
+            }));
+        }
+
+        response.push(json!({
+            "id": order.id,
+            "status": order.status,
+            "total": order.total,
+            "orderItems": item_details
+        }));
+    }
+
+    Ok(Json(response))
 }
 
 /// Lecture d’une commande complète (avec items)

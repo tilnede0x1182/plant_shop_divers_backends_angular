@@ -8,8 +8,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub user_id: Option<i32>,
-    #[sea_orm(column_type = "Decimal(Some((10, 2)))")]
-    pub total: Decimal,
+    pub total: i32,
     pub status: String,
     pub created_at: DateTimeWithTimeZone,
 }

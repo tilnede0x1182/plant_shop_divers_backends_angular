@@ -20,6 +20,7 @@ mod users;
 mod plants;
 mod orders;
 mod order_items;
+mod entity;
 
 use crate::{
 	auth::handlers::{login, register, me, logout},

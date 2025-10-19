@@ -12,11 +12,13 @@ use crate::entity::users::{Entity as User, ActiveModel as ActiveUser, Model as U
 use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, IntoActiveModel};
 use bcrypt;
 use serde::Deserialize;
+use crate::users::models::User as UserDto;
 
 /// DTO pour création d'utilisateur
 #[derive(Deserialize)]
 pub struct CreateUserDto {
 	pub email: String,
+	#[serde(alias = "name")]
 	pub username: String,
 	pub password: String,
 }
@@ -24,6 +26,7 @@ pub struct CreateUserDto {
 /// DTO pour update utilisateur (tous champs optionnels sauf id dans l’URL)
 #[derive(Deserialize)]
 pub struct UpdateUserDto {
+	#[serde(alias = "name")]
 	pub username: Option<String>,
 	pub email: Option<String>,
 	pub is_admin: Option<bool>,
@@ -78,13 +81,22 @@ pub async fn create_user(Data(db): Data<&DatabaseConnection>, Json(payload): Jso
 }
 
 #[handler]
-pub async fn get_user(Data(db): Data<&DatabaseConnection>, Path(user_id): Path<i32>) -> PoemResult<Json<UserModel>> {
+pub async fn get_user(Data(db): Data<&DatabaseConnection>, Path(user_id): Path<i32>) -> PoemResult<Json<UserDto>> {
 	let user = User::find_by_id(user_id)
 		.one(db)
 		.await
 		.map_err(|_| AppError::Internal)?
 		.ok_or(AppError::NotFound)?;
-	Ok(Json(user))
+
+	let dto = UserDto {
+		id: user.id,
+		email: user.email,
+		username: user.username,
+		is_admin: user.is_admin,
+		created_at: user.created_at.into(),
+	};
+
+	Ok(Json(dto))
 }
 
 #[handler]

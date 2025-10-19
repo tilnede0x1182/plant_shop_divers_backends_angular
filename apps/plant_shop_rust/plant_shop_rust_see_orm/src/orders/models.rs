@@ -1,5 +1,4 @@
 use serde::{Serialize, Deserialize};
-use sea_orm::prelude::Decimal;
 use chrono::{DateTime, Utc};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -7,7 +6,7 @@ pub struct Order {
     pub id: i32,
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
-    pub total: Decimal,
+    pub total: i32,
     pub status: String,
     pub created_at: DateTime<Utc>,
 }
@@ -16,8 +15,7 @@ pub struct Order {
 pub struct PlantBasic {
     pub id: i32,
     pub name: String,
-    #[serde(serialize_with = "crate::plants::models::serialize_decimal_as_i32")]
-    pub price: Decimal,
+    pub price: i32,
     pub stock: i32,
     pub description: Option<String>,
 }
@@ -26,8 +24,7 @@ pub struct PlantBasic {
 pub struct OrderItemWithPlant {
 	pub id: i32,
 	pub quantity: i32,
-	#[serde(serialize_with = "crate::plants::models::serialize_decimal_as_i32")]
-	pub price: Decimal,
+	pub price: i32,
 	pub plant_id: i32,
 	pub plant: PlantBasic,
 }
@@ -38,7 +35,7 @@ pub struct OrderWithItems {
 		#[allow(dead_code)]
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
-    pub total: Decimal,
+    pub total: i32,
     pub status: String,
     pub created_at: DateTime<Utc>,
     #[serde(rename = "orderItems")]

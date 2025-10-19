@@ -23,9 +23,10 @@ pub struct LoginPayload {
 /// Payload de register
 #[derive(serde::Deserialize)]
 pub struct RegisterPayload {
-	pub email: String,
-	pub username: String,
-	pub password: String,
+    pub email: String,
+    #[serde(alias = "name")]
+    pub username: String,
+    pub password: String,
 }
 
 #[handler]

@@ -13,9 +13,9 @@ use sea_orm::{
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
 use crate::entity::{
-    orders::{Entity as Order, Model as OrderModel, ActiveModel as ActiveOrder, Column as OrderColumn},
-    order_items::{Entity as OrderItem},
-    plants::{Entity as Plant},
+	orders::{Entity as Order, Model as OrderModel, ActiveModel as ActiveOrder, Column as OrderColumn},
+	order_items::{ActiveModel as ActiveOrderItem},
+	plants::{Entity as Plant},
 };
 use sea_orm::prelude::Decimal;
 use num_traits::FromPrimitive;

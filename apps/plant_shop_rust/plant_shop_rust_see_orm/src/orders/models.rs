@@ -16,7 +16,7 @@ pub struct Order {
 pub struct PlantBasic {
     pub id: i32,
     pub name: String,
-    #[serde(serialize_with = "crate::plants::models::serialize_Decimal_as_i32")]
+    #[serde(serialize_with = "crate::plants::models::serialize_decimal_as_i32")]
     pub price: Decimal,
     pub stock: i32,
     pub description: Option<String>,
@@ -26,7 +26,7 @@ pub struct PlantBasic {
 pub struct OrderItemWithPlant {
 	pub id: i32,
 	pub quantity: i32,
-	#[serde(serialize_with = "crate::plants::models::serialize_Decimal_as_i32")]
+	#[serde(serialize_with = "crate::plants::models::serialize_decimal_as_i32")]
 	pub price: Decimal,
 	pub plant_id: i32,
 	pub plant: PlantBasic,

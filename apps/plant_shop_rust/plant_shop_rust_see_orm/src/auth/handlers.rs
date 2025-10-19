@@ -9,7 +9,7 @@ use poem::{
 };
 use crate::errors::AppError;
 use crate::auth::jwt::{generate_jwt, verify_jwt};
-use crate::entity::users::{self, Entity as User, Model as UserModel, ActiveModel as ActiveUser, Column};
+use crate::entity::users::{Entity as User, Model as UserModel, ActiveModel as ActiveUser, Column};
 use sea_orm::{DatabaseConnection, EntityTrait, QueryFilter, Set, ActiveModelTrait, ColumnTrait};
 use bcrypt::{verify, hash};
 

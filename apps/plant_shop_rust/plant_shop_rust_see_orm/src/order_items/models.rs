@@ -9,7 +9,7 @@ pub struct OrderItem {
     pub order_id: Option<i32>,
     pub plant_id: Option<i32>,
     pub quantity: i32,
-		#[serde(serialize_with = "crate::plants::models::serialize_Decimal_as_i32")]
+		#[serde(serialize_with = "crate::plants::models::serialize_decimal_as_i32")]
 		pub price: Decimal,
 }
 

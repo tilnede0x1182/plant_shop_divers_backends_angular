@@ -4,7 +4,7 @@ use sea_orm::prelude::Decimal;
 use dotenvy::dotenv;
 use rand::seq::SliceRandom;
 use rand::Rng;
-use sea_orm::{Database, DatabaseConnection, Statement, ConnectionTrait, DbBackend, TryGetable};
+use sea_orm::{Database, DatabaseConnection, Statement, ConnectionTrait, DbBackend};
 use std::env;
 use std::fs::File;
 use std::io::Write;

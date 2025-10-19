@@ -8,8 +8,8 @@ use poem::{
 };
 use serde::Deserialize;
 use sea_orm::{
-	DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter, ColumnTrait,
-	TransactionTrait, QueryOrder, IntoActiveModel, QuerySelect,
+	DatabaseConnection, Set, ActiveModelTrait, EntityTrait,
+	TransactionTrait, QueryOrder, IntoActiveModel,
 };
 
 use crate::errors::AppError;
@@ -19,7 +19,6 @@ use crate::entity::{
 	order_items::{ActiveModel as ActiveOrderItem},
 	plants::{Entity as Plant},
 };
-use crate::entity::order_items;
 use serde_json::json;
 
 /// DTO pour création de commande (contient id plante + quantité)

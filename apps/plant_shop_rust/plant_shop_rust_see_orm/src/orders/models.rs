@@ -1,6 +1,7 @@
 use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
 
+#[allow(dead_code)]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Order {
     pub id: i32,
@@ -42,6 +43,7 @@ pub struct OrderWithItems {
     pub items: Vec<OrderItemWithPlant>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct OrderItemPayload {
     #[serde(rename = "plantId")]
@@ -49,7 +51,7 @@ pub struct OrderItemPayload {
     pub quantity: i32,
 }
 
-// Mise à jour partielle du statut
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct UpdateOrder {
     pub status: Option<String>,

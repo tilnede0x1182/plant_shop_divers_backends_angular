@@ -19,6 +19,7 @@ pub struct UpdateUser {
 	pub admin: Option<bool>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct NewUser {
     pub name: String,

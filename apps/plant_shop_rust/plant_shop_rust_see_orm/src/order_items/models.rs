@@ -11,6 +11,7 @@ pub struct OrderItem {
 		pub price: i32,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct NewOrderItem {
     pub order_id: i32,

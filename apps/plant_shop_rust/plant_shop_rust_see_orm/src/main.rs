@@ -1,4 +1,3 @@
-use std::env;
 use dotenvy::dotenv;
 use sea_orm::DatabaseConnection;
 use poem::{

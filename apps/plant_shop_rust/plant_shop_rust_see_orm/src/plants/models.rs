@@ -11,6 +11,7 @@ pub struct Plant {
 	pub created_at: DateTime<Utc>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct NewPlant {
 	pub name: String,
@@ -19,6 +20,7 @@ pub struct NewPlant {
 	pub stock: i32,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct UpdatePlant {
 	pub name: Option<String>,

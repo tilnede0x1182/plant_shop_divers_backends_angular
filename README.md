@@ -87,5 +87,4 @@ apps/
 prisma/    → Modèles + seed
 tests/     → Scripts de test des routes backend
 diagnose-ora.js
-
 ```

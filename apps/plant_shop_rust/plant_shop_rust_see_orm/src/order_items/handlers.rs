@@ -1,61 +1,49 @@
-/// Handlers Poem pour gestion des éléments de commande
+/// Handlers Poem pour gestion des éléments de commande (SeaORM)
 use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
-use sqlx::PgPool;
+use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set};
 use crate::errors::AppError;
-use super::models::{OrderItem, NewOrderItem};
+use crate::entity::order_items::{self, Entity as OrderItem, Model as OrderItemModel, ActiveModel as ActiveOrderItem};
 
 #[handler]
 pub async fn get_order_item(
-	Data(pool): Data<&PgPool>,
+	Data(db): Data<&DatabaseConnection>,
 	Path(order_item_id): Path<i32>,
-) -> PoemResult<Json<OrderItem>, AppError> {
-	let item = sqlx::query_as!(
-		OrderItem,
-		"SELECT id, order_id, plant_id, quantity, price
- 		FROM order_items WHERE id = $1",
-		order_item_id
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|_| AppError::NotFound)?;
+) -> PoemResult<Json<OrderItemModel>, AppError> {
+	let item = OrderItem::find_by_id(order_item_id)
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
+		.ok_or(AppError::NotFound)?;
 	Ok(Json(item))
 }
 
 #[handler]
 pub async fn update_order_item(
-	Data(pool): Data<&PgPool>,
+	Data(db): Data<&DatabaseConnection>,
 	Path(order_item_id): Path<i32>,
-	Json(payload): Json<NewOrderItem>,
-) -> PoemResult<Json<OrderItem>, AppError> {
-	let item = sqlx::query_as!(
-		OrderItem,
-		"UPDATE order_items SET
-			order_id = $1,
-			plant_id = $2,
-			quantity = $3,
-			price = $4
-		 WHERE id = $5
-		 RETURNING id, order_id, plant_id, quantity, price",
-		payload.order_id,
-		payload.plant_id,
-		payload.quantity,
-		payload.price,
-		order_item_id
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|_| AppError::NotFound)?;
-	Ok(Json(item))
+	Json(payload): Json<OrderItemModel>,
+) -> PoemResult<Json<OrderItemModel>, AppError> {
+	let existing = OrderItem::find_by_id(order_item_id)
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
+		.ok_or(AppError::NotFound)?;
+
+	let mut active = existing.into_active_model();
+	active.order_id = Set(payload.order_id);
+	active.plant_id = Set(payload.plant_id);
+	active.quantity = Set(payload.quantity);
+	active.price = Set(payload.price);
+
+	let updated = active.update(db).await.map_err(|_| AppError::Internal)?;
+	Ok(Json(updated))
 }
 
 #[handler]
-pub async fn delete_order_item(
-	Data(pool): Data<&PgPool>,
-	Path(order_item_id): Path<i32>,
-) -> PoemResult<(), AppError> {
-	sqlx::query!("DELETE FROM order_items WHERE id = $1", order_item_id)
-		.execute(pool)
+pub async fn delete_order_item(Data(db): Data<&DatabaseConnection>, Path(order_item_id): Path<i32>) -> PoemResult<(), AppError> {
+	OrderItem::delete_by_id(order_item_id)
+		.exec(db)
 		.await
-		.map_err(|_| AppError::NotFound)?;
+		.map_err(|_| AppError::Internal)?;
 	Ok(())
 }

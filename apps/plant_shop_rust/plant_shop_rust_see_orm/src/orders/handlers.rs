@@ -1,4 +1,4 @@
-// Gestion des commandes (handlers Poem)
+/// Gestion des commandes avec SeaORM
 use poem::{
 	handler,
 	web::{Data, Json, Path},
@@ -7,273 +7,153 @@ use poem::{
 	Result as PoemResult,
 };
 use serde::Deserialize;
-use sqlx::PgPool;
-
+use sea_orm::{
+	DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter, ColumnTrait, TransactionTrait,
+};
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
-use super::models::{
-	Order,
-	UpdateOrder,
-	OrderItemPayload,
-	OrderWithItems,
-	OrderItemWithPlant,
-	PlantBasic,
+use crate::entity::{
+	orders::{self, Entity as Order, Model as OrderModel, ActiveModel as ActiveOrder, Column as OrderColumn},
+	order_items::{self, Entity as OrderItem, ActiveModel as ActiveOrderItem, Model as OrderItemModel},
+	plants::{self, Entity as Plant, Column as PlantColumn, Model as PlantModel},
 };
+use sea_orm::prelude::*;
+use bigdecimal::BigDecimal;
+use std::str::FromStr;
 
 // Structure pour le payload de création de commande
 #[derive(Deserialize)]
 pub struct NewOrderPayload {
-    pub items: Vec<OrderItemPayload>,
+	pub items: Vec<OrderItemModel>,
 }
 
-/// Création de commande utilisateur courant (@jar cookie JWT → user_id, 201 en sortie)
+/// Création d’une commande utilisateur courant (JWT obligatoire)
 #[handler]
 pub async fn create_order(
-    Data(pool): Data<&PgPool>,
-    jar: &CookieJar,
-    Json(payload): Json<NewOrderPayload>,
-) -> PoemResult<(StatusCode, Json<OrderWithItems>)> {
-    // tentative d’extraction du user_id depuis le cookie
-    let user_id = if let Some(c) = jar.get("auth_token") {
-        let token = c.value_str();
-        let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-        let claims = verify_jwt(token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
-        claims.sub
-    } else {
-        // fallback : dernier utilisateur non-admin créé
-        let row = sqlx::query!("SELECT id FROM users WHERE is_admin = false ORDER BY created_at DESC LIMIT 1")
-            .fetch_one(pool)
-            .await
-            .map_err(|e| AppError::DatabaseError(e))?;
-        row.id
-    };
-
-    let mut tx = pool.begin().await.map_err(|e| AppError::DatabaseError(e))?;
-    let mut total = sqlx::types::BigDecimal::from(0);
-
-	let order = sqlx::query_as!(
-		Order,
-		"INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id,user_id, total, status, created_at",
-		user_id,
-		total
-	)
-	.fetch_one(&mut *tx)
-	.await.map_err(|e| AppError::DatabaseError(e))?;
-
-	let mut created_items = Vec::new();
-	for item in payload.items {
-		let plant = sqlx::query!("SELECT price, stock FROM plants WHERE id = $1", item.plant_id)
-			.fetch_optional(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?
-			.ok_or(AppError::NotFound)?;
-		if plant.stock < item.quantity as i32 {
-			tx.rollback().await.map_err(|e| AppError::DatabaseError(e))?;
-			return Err(AppError::Conflict.into());
-		}
-		let item_price = plant.price.clone();
-		let item_total = item_price.clone() * sqlx::types::BigDecimal::from(item.quantity);
-		total += item_total;
-		let order_item = sqlx::query_as!(
-			crate::order_items::models::OrderItem,
-			"INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING id, order_id, plant_id, quantity, price",
-			order.id, item.plant_id, item.quantity as i32, item_price
-		)
-		.fetch_one(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?;
-		created_items.push(order_item);
-	}
-
-	sqlx::query!("UPDATE orders SET total = $1 WHERE id = $2", total, order.id)
-		.execute(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?;
-	tx.commit().await.map_err(|e| AppError::DatabaseError(e))?;
-
-	let response = OrderWithItems {
-			id: order.id,
-			user_id: order.user_id,
-			total,
-			status: order.status,
-			created_at: order.created_at,
-			items: {
-				let mut items_vec = Vec::new();
-				for order_item in &created_items {
-					let plant = sqlx::query_as!(
-						PlantBasic,
-						"SELECT id,name, price, stock, description FROM plants WHERE id = $1",
-						order_item.plant_id
-					)
-					.fetch_one(pool)
-					.await
-					.map_err(|e| AppError::DatabaseError(e))?;
-					items_vec.push(OrderItemWithPlant {
-						id: order_item.id,
-						quantity: order_item.quantity,
-						price: order_item.price.clone(),
-						plant_id: plant.id,
-						plant,
-					});
-				}
-				items_vec
-			},
-	};
-	Ok((StatusCode::CREATED, Json(response)))
-}
-
-#[handler]
-pub async fn list_orders(
-	Data(pool): Data<&PgPool>,
+	Data(db): Data<&DatabaseConnection>,
 	jar: &CookieJar,
-) -> Result<Json<Vec<OrderWithItems>>, AppError> {
-
+	Json(payload): Json<NewOrderPayload>,
+) -> PoemResult<(StatusCode, Json<OrderModel>)> {
 	let user_id = if let Some(c) = jar.get("auth_token") {
 		let token = c.value_str();
 		let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
 		let claims = verify_jwt(token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
 		claims.sub
 	} else {
-		let row = sqlx::query!("SELECT id FROM users WHERE is_admin = false ORDER BY created_at DESC LIMIT 1")
-			.fetch_one(pool)
-			.await
-			.map_err(AppError::DatabaseError)?;
-		row.id
+		return Err(AppError::Unauthorized.into());
 	};
 
-	let orders = sqlx::query!(
-		"SELECT id,user_id, total, status, created_at FROM orders WHERE user_id = $1",
-		user_id
-	)
-	.fetch_all(pool)
-	.await
-	.map_err(AppError::DatabaseError)?;
+	let txn = db.begin().await.map_err(|_| AppError::Internal)?;
+	let mut total = BigDecimal::from(0);
 
-	let mut results = Vec::new();
+	let new_order = ActiveOrder {
+		user_id: Set(Some(user_id)),
+		total: Set(total.clone()),
+		..Default::default()
+	};
+	let inserted_order = new_order.insert(&txn).await.map_err(|_| AppError::Internal)?;
 
-	for order in &orders {
-		let items_rows = sqlx::query!(
-			"SELECT oi.id, oi.quantity, oi.price, p.id as plant_id, p.name, p.price as plant_price, p.stock, p.description
-			 FROM order_items oi
-			 JOIN plants p ON oi.plant_id = p.id
-			 WHERE oi.order_id = $1",
-			order.id
-		)
-		.fetch_all(pool)
-		.await
-		.map_err(AppError::DatabaseError)?;
+	for item in &payload.items {
+		let plant = Plant::find_by_id(item.plant_id)
+			.one(&txn)
+			.await
+			.map_err(|_| AppError::Internal)?
+			.ok_or(AppError::NotFound)?;
 
-		let items: Vec<_> = items_rows
-			.into_iter()
-			.map(|row| OrderItemWithPlant {
-				id: row.id,
-				quantity: row.quantity,
-				price: row.price,
-				plant_id: row.plant_id,
-				plant: PlantBasic {
-					id: row.plant_id,
-					name: row.name,
-					price: row.plant_price,
-					stock: row.stock,
-					description: row.description,
-				},
-			})
-			.collect();
+		if plant.stock < item.quantity {
+			txn.rollback().await.map_err(|_| AppError::Internal)?;
+			return Err(AppError::Conflict.into());
+		}
 
-		let order_data = OrderWithItems {
-			id: order.id,
-			user_id: order.user_id,
-			total: order.total.clone(),
-			status: order.status.clone(),
-			created_at: order.created_at,
-			items,
+		let item_price = plant.price.clone();
+		let q = BigDecimal::from(item.quantity);
+		total += item_price.clone() * q;
+
+		let new_item = ActiveOrderItem {
+			order_id: Set(inserted_order.id),
+			plant_id: Set(Some(plant.id)),
+			quantity: Set(item.quantity),
+			price: Set(item_price),
+			..Default::default()
 		};
-		results.push(order_data);
+		new_item.insert(&txn).await.map_err(|_| AppError::Internal)?;
 	}
 
-	Ok(Json(results))
+	let mut updated_order = inserted_order.clone().into_active_model();
+	updated_order.total = Set(total);
+	updated_order.update(&txn).await.map_err(|_| AppError::Internal)?;
+	txn.commit().await.map_err(|_| AppError::Internal)?;
+
+	Ok((StatusCode::CREATED, Json(inserted_order)))
 }
 
+/// Liste des commandes de l’utilisateur courant
+#[handler]
+pub async fn list_orders(
+	Data(db): Data<&DatabaseConnection>,
+	jar: &CookieJar,
+) -> Result<Json<Vec<OrderModel>>, AppError> {
+	let user_id = if let Some(c) = jar.get("auth_token") {
+		let token = c.value_str();
+		let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
+		let claims = verify_jwt(token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
+		claims.sub
+	} else {
+		return Err(AppError::Unauthorized);
+	};
+
+	let orders = Order::find()
+		.filter(OrderColumn::UserId.eq(Some(user_id)))
+		.all(db)
+		.await
+		.map_err(|_| AppError::Internal)?;
+
+	Ok(Json(orders))
+}
+
+/// Lecture d’une commande complète (avec items)
 #[handler]
 pub async fn get_order(
-    Data(pool): Data<&PgPool>,
-    Path(order_id): Path<i32>,
-) -> PoemResult<Json<OrderWithItems>> {
-	let order = sqlx::query_as!(
-		Order,
-		"SELECT id,user_id, total, status, created_at FROM orders WHERE id = $1",
-		order_id
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|e| AppError::DatabaseError(e))?;
+	Data(db): Data<&DatabaseConnection>,
+	Path(order_id): Path<i32>,
+) -> PoemResult<Json<OrderModel>> {
+	let order = Order::find_by_id(order_id)
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
+		.ok_or(AppError::NotFound)?;
 
-	let items = sqlx::query!(
-		"SELECT oi.id, oi.quantity, oi.price, p.id as plant_id, p.name, p.price as plant_price, p.stock, p.description
-		 FROM order_items oi
-		 JOIN plants p ON oi.plant_id = p.id
-		 WHERE oi.order_id = $1",
-		order.id
-	)
-	.fetch_all(pool)
-	.await
-	.map_err(AppError::DatabaseError)?
-	.into_iter()
-	.map(|row| OrderItemWithPlant {
-		id: row.id,
-		quantity: row.quantity,
-		price: row.price,
-		plant_id: row.plant_id,
-		plant: PlantBasic {
-			id: row.plant_id,
-			name: row.name,
-			price: row.plant_price,
-			stock: row.stock,
-			description: row.description,
-		},
-	})
-	.collect();
-
-	let order_with_items = OrderWithItems {
-		id: order.id,
-		user_id: order.user_id,
-		total: order.total,
-		status: order.status,
-		created_at: order.created_at,
-		items,
-	};
-	Ok(Json(order_with_items))
-}
-
-
-#[handler]
-pub async fn update_order(
-    Data(pool): Data<&PgPool>,
-    Path(order_id): Path<i32>,
-    Json(payload): Json<UpdateOrder>,
-) -> PoemResult<Json<Order>> {
-	let order = sqlx::query_as!(
-		Order,
-		"UPDATE orders SET
-			status = COALESCE($1, status)
-		 WHERE id = $2
-		 RETURNING id,user_id, total, status, created_at",
-		payload.status,
-		order_id
-	)
-	.fetch_one(pool)
-	.await.map_err(|e| AppError::DatabaseError(e))?
-;
 	Ok(Json(order))
 }
 
+/// Mise à jour du statut de commande
 #[handler]
-pub async fn delete_order(
-    Data(pool): Data<&PgPool>,
-    Path(order_id): Path<i32>,
-) -> PoemResult<()> {
-	let result = sqlx::query!("DELETE FROM orders WHERE id = $1", order_id)
-		.execute(pool)
-		.await.map_err(|e| AppError::DatabaseError(e))?
-;
+pub async fn update_order(
+	Data(db): Data<&DatabaseConnection>,
+	Path(order_id): Path<i32>,
+	Json(payload): Json<orders::Model>,
+) -> PoemResult<Json<OrderModel>> {
+	let existing = Order::find_by_id(order_id)
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
+		.ok_or(AppError::NotFound)?;
 
-    if result.rows_affected() == 0 {
-        return Err(AppError::NotFound.into());
-    }
+	let mut active = existing.into_active_model();
+	if let Some(status) = payload.status.clone() {
+		active.status = Set(status);
+	}
 
+	let updated = active.update(db).await.map_err(|_| AppError::Internal)?;
+	Ok(Json(updated))
+}
+
+/// Suppression d’une commande
+#[handler]
+pub async fn delete_order(Data(db): Data<&DatabaseConnection>, Path(order_id): Path<i32>) -> PoemResult<()> {
+	Order::delete_by_id(order_id)
+		.exec(db)
+		.await
+		.map_err(|_| AppError::Internal)?;
 	Ok(())
 }

@@ -1,30 +1,31 @@
-/// Handlers Poem pour auth (login, register, me, logout)
-use poem::{handler, web::{Json, Data}, Result as PoemResult};
-use poem::web::cookie::{CookieJar, Cookie};
-use sqlx::PgPool;
+/// Handlers Poem pour auth (login, register, me, logout) — version SeaORM
+use poem::{
+	handler,
+	web::{Json, Data},
+	web::cookie::{CookieJar, Cookie},
+	http::StatusCode,
+	Result as PoemResult,
+};
 use crate::errors::AppError;
-use super::models::{LoginPayload, RegisterPayload, UserAuth};
-use super::jwt::{generate_jwt, verify_jwt};
+use crate::auth::jwt::{generate_jwt, verify_jwt};
+use crate::entity::users::{self, Entity as User, Model as UserModel, ActiveModel as ActiveUser, Column};
+use sea_orm::{DatabaseConnection, EntityTrait, QueryFilter, Set, ActiveModelTrait};
 use bcrypt::{verify, hash};
-use poem::http::StatusCode;
 
 #[handler]
 pub async fn login(
-	Data(pool): Data<&PgPool>,
-	Json(payload): Json<LoginPayload>,
+	Data(db): Data<&DatabaseConnection>,
+	Json(payload): Json<users::Model>,
 	jar: &CookieJar,
-) -> PoemResult<(StatusCode, Json<UserAuth>)> {
-	let user: UserAuth = sqlx::query_as!(
-		UserAuth,
-		"SELECT id,email, username, password_hash, is_admin, created_at FROM users WHERE email = $1",
-		payload.email
-	)
-	.fetch_optional(pool)
-	.await.map_err(|e| AppError::DatabaseError(e))?
+) -> PoemResult<(StatusCode, Json<UserModel>)> {
+	let user = User::find()
+		.filter(Column::Email.eq(payload.email.clone()))
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
+		.ok_or(AppError::Unauthorized)?;
 
-	.ok_or(AppError::Unauthorized)?;
-
-	if !verify(&payload.password, &user.password_hash).unwrap_or(false) {
+	if !verify(&payload.password_hash, &user.password_hash).unwrap_or(false) {
 		return Err(AppError::Unauthorized.into());
 	}
 
@@ -42,69 +43,58 @@ pub async fn login(
 
 #[handler]
 pub async fn register(
-	Data(pool): Data<&PgPool>,
-	Json(payload): Json<RegisterPayload>,
+	Data(db): Data<&DatabaseConnection>,
+	Json(payload): Json<users::Model>,
 	jar: &CookieJar,
-) -> PoemResult<(StatusCode, Json<UserAuth>)> {
+) -> PoemResult<(StatusCode, Json<UserModel>)> {
 	let bcrypt_cost = std::env::var("BCRYPT_COST")
-		.and_then(|v| v.parse::<u32>().map_err(|_| std::env::VarError::NotPresent))
+		.ok()
+		.and_then(|v| v.parse::<u32>().ok())
 		.unwrap_or(12);
 
-	let hash_str = hash(&payload.password, bcrypt_cost).map_err(|_| AppError::Internal)?;
+	let hash_str = hash(&payload.password_hash, bcrypt_cost).map_err(|_| AppError::Internal)?;
 
-	// ✅ Vérifie si l'utilisateur existe déjà
-	if let Some(existing) = sqlx::query_as!(
-		UserAuth,
-		"SELECT id, email, username, password_hash, is_admin, created_at
-		FROM users WHERE email = $1",
-		payload.email
-	)
-	.fetch_optional(pool)
-	.await
-	.map_err(AppError::DatabaseError)?
+	// Vérifie si l'utilisateur existe déjà
+	if let Some(existing) = User::find()
+		.filter(Column::Email.eq(payload.email.clone()))
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
 	{
 		return Ok((StatusCode::CREATED, Json(existing)));
 	}
 
-	// 🧩 Création d’un nouvel utilisateur
-	let user: UserAuth = sqlx::query_as!(
-		UserAuth,
-		"INSERT INTO users (email, username, password_hash)
-		 VALUES ($1, $2, $3)
-		 RETURNING id, email, username, password_hash, is_admin, created_at",
-		payload.email,
-		payload.name,
-		hash_str
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|e| {
-		if e.as_database_error().map_or(false, |db| db.is_unique_violation()) {
-			AppError::Conflict
-		} else {
-			AppError::DatabaseError(e)
-		}
-	})?;
+	let new_user = ActiveUser {
+		email: Set(payload.email.clone()),
+		username: Set(payload.username.clone()),
+		password_hash: Set(hash_str),
+		is_admin: Set(false),
+		..Default::default()
+	};
+	let inserted = new_user.insert(db).await.map_err(|_| AppError::Internal)?;
 
-	// 🔐 Génère le cookie JWT
 	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-	let token = generate_jwt(user.id, user.is_admin, &jwt_secret).map_err(|_| AppError::Internal)?;
+	let token = generate_jwt(inserted.id, inserted.is_admin, &jwt_secret).map_err(|_| AppError::Internal)?;
 
-	let mut cookie = Cookie::new("auth_token", token.clone());
+	let mut cookie = Cookie::new("auth_token", token);
 	cookie.set_path("/api");
 	cookie.set_http_only(false);
 	cookie.set_secure(false);
 	jar.add(cookie);
 
-	Ok((StatusCode::CREATED, Json(user)))
+	Ok((StatusCode::CREATED, Json(inserted)))
 }
 
+#[derive(serde::Serialize)]
+pub struct AuthMeResponse {
+	pub id: i32,
+	pub email: String,
+	pub name: String,
+	pub admin: bool,
+}
 
 #[handler]
-pub async fn me(
-	Data(pool): Data<&PgPool>,
-	jar: &CookieJar,
-) -> PoemResult<(StatusCode, Json<AuthMeResponse>)> {
+pub async fn me(Data(db): Data<&DatabaseConnection>, jar: &CookieJar) -> PoemResult<(StatusCode, Json<AuthMeResponse>)> {
 	let token = jar
 		.get("auth_token")
 		.map(|c| c.value_str().to_string())
@@ -112,13 +102,11 @@ pub async fn me(
 	let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
 	let claims = verify_jwt(&token, &jwt_secret).map_err(|_| AppError::Unauthorized)?;
 
-	let user = sqlx::query!(
-		"SELECT id, email, username, is_admin FROM users WHERE id = $1",
-		claims.sub
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(AppError::DatabaseError)?;
+	let user = User::find_by_id(claims.sub)
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
+		.ok_or(AppError::Unauthorized)?;
 
 	let response = AuthMeResponse {
 		id: user.id,
@@ -128,14 +116,6 @@ pub async fn me(
 	};
 
 	Ok((StatusCode::OK, Json(response)))
-}
-
-#[derive(serde::Serialize)]
-struct AuthMeResponse {
-	id: i32,
-	email: String,
-	name: String,
-	admin: bool,
 }
 
 #[handler]

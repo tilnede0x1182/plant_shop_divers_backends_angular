@@ -1,106 +1,105 @@
-/// Handlers Poem pour gestion des plantes
-use poem::{handler, web::{Data, Json, Path, cookie::CookieJar}, http::StatusCode, Result as PoemResult};
+/// Handlers Poem pour gestion des plantes (version SeaORM)
+use poem::{
+	handler,
+	web::{Data, Json, Path, cookie::CookieJar},
+	http::StatusCode,
+	Result as PoemResult,
+};
 use crate::auth::jwt::verify_jwt;
-use sqlx::PgPool;
 use crate::errors::AppError;
-use super::models::{Plant, NewPlant, UpdatePlant};
+use crate::entity::plants::{self, Entity as Plant, ActiveModel as ActivePlant, Model as PlantModel, Column};
+use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, QueryFilter};
 
 /// Création d’une plante (201 Created)
-/// @payload données de la plante
-/// @return plante créée
 #[handler]
 pub async fn create_plant(
-	Data(pool): Data<&PgPool>,
+	Data(db): Data<&DatabaseConnection>,
 	jar: &CookieJar,
-	Json(payload): Json<NewPlant>,
-) -> PoemResult<(StatusCode, Json<Plant>), AppError> {
-	// vérifie si l’utilisateur est admin
-	let token = jar.get("auth_token").map(|c| c.value_str().to_string()).ok_or(AppError::Unauthorized)?;
+	Json(payload): Json<plants::Model>,
+) -> PoemResult<(StatusCode, Json<PlantModel>), AppError> {
+	// Vérifie que l’utilisateur est admin
+	let token = jar
+		.get("auth_token")
+		.map(|c| c.value_str().to_string())
+		.ok_or(AppError::Unauthorized)?;
 	let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
 	let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
 	if !claims.is_admin {
-		return Err(AppError::Forbidden.into()); // 403
+		return Err(AppError::Forbidden.into());
 	}
-	let plant = sqlx::query_as!(
-		Plant,
-		"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING id, name, description, price, stock, created_at",
-		payload.name,
-		payload.description,
-		payload.price,
-		payload.stock
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|_| AppError::Conflict)?;
-	Ok((StatusCode::CREATED, Json(plant)))
+
+	// Insertion via ActiveModel SeaORM
+	let new_plant = ActivePlant {
+		name: Set(payload.name.clone()),
+		description: Set(payload.description.clone()),
+		price: Set(payload.price),
+		stock: Set(payload.stock),
+		..Default::default()
+	};
+
+	let inserted = new_plant.insert(db).await.map_err(|_| AppError::Conflict)?;
+	Ok((StatusCode::CREATED, Json(inserted)))
 }
 
+/// Liste des plantes (GET /plants)
 #[handler]
-pub async fn list_plants(
-	Data(pool): Data<&PgPool>
-) -> PoemResult<Json<Vec<Plant>>, AppError> {
-	let plants = sqlx::query_as!(
-		Plant,
-		"SELECT id, name, description, price, stock, created_at FROM plants ORDER BY name ASC",
-	)
-	.fetch_all(pool)
-	.await
-	.map_err(|_| AppError::Internal)?;
+pub async fn list_plants(Data(db): Data<&DatabaseConnection>) -> PoemResult<Json<Vec<PlantModel>>, AppError> {
+	let plants = Plant::find()
+		.order_by_asc(Column::Name)
+		.all(db)
+		.await
+		.map_err(|_| AppError::Internal)?;
 	Ok(Json(plants))
 }
 
+/// Lecture d’une plante par son ID
 #[handler]
-pub async fn get_plant(
-    Data(pool): Data<&PgPool>,
-    Path(plant_id): Path<i32>,
-) -> PoemResult<Json<Plant>> {
-	let plant = sqlx::query_as!(
-		Plant,
-		"SELECT id, name, description, price, stock, created_at
- 		FROM plants WHERE id = $1",
-		plant_id
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|_| AppError::NotFound)?;
+pub async fn get_plant(Data(db): Data<&DatabaseConnection>, Path(plant_id): Path<i32>) -> PoemResult<Json<PlantModel>> {
+	let plant = Plant::find_by_id(plant_id)
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
+		.ok_or(AppError::NotFound)?;
 	Ok(Json(plant))
 }
 
+/// Mise à jour d’une plante
 #[handler]
 pub async fn update_plant(
-    Data(pool): Data<&PgPool>,
-    Path(plant_id): Path<i32>,
-    Json(payload): Json<UpdatePlant>,
-) -> PoemResult<Json<Plant>> {
-	let plant = sqlx::query_as!(
-		Plant,
-		"UPDATE plants SET
-			name = COALESCE($1, name),
-			description = COALESCE($2, description),
-			price = COALESCE($3, price),
-			stock = COALESCE($4, stock)
-		 WHERE id = $5
-		 RETURNING id, name, description, price, stock, created_at",
-		payload.name,
-		payload.description,
-		payload.price,
-		payload.stock,
-		plant_id
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|_| AppError::NotFound)?;
-	Ok(Json(plant))
+	Data(db): Data<&DatabaseConnection>,
+	Path(plant_id): Path<i32>,
+	Json(payload): Json<plants::Model>,
+) -> PoemResult<Json<PlantModel>> {
+	let existing = Plant::find_by_id(plant_id)
+		.one(db)
+		.await
+		.map_err(|_| AppError::Internal)?
+		.ok_or(AppError::NotFound)?;
+
+	let mut active = existing.into_active_model();
+	if let Some(name) = payload.name.clone() {
+		active.name = Set(name);
+	}
+	if let Some(desc) = payload.description.clone() {
+		active.description = Set(desc);
+	}
+	if let Some(price) = payload.price {
+		active.price = Set(price);
+	}
+	if let Some(stock) = payload.stock {
+		active.stock = Set(stock);
+	}
+
+	let updated = active.update(db).await.map_err(|_| AppError::Internal)?;
+	Ok(Json(updated))
 }
 
+/// Suppression d’une plante
 #[handler]
-pub async fn delete_plant(
-    Data(pool): Data<&PgPool>,
-    Path(plant_id): Path<i32>,
-) -> PoemResult<()> {
-	sqlx::query!("DELETE FROM plants WHERE id = $1", plant_id)
-		.execute(pool)
+pub async fn delete_plant(Data(db): Data<&DatabaseConnection>, Path(plant_id): Path<i32>) -> PoemResult<()> {
+	Plant::delete_by_id(plant_id)
+		.exec(db)
 		.await
-		.map_err(|_| AppError::NotFound)?;
+		.map_err(|_| AppError::Internal)?;
 	Ok(())
 }

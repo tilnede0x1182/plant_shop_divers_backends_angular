@@ -67,6 +67,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **Manifest 4.17.8** : backend déclaratif en YAML, API REST branchée sur PostgreSQL. ABANDON (non débuggué)
 * **Go (GORM)** : backend en Go structuré, sans framework web tiers, API REST implémentée manuellement avec `net/http`, GORM et JWT cookie sécurisé.
 * **Rust (Poem + SQLx)** : backend Rust moderne, basé sur le framework `poem` pour les routes HTTP et `sqlx` pour la base de données.
+* **Rust (Poem + SeaORM)** : backend Rust moderne, basé sur le framework `poem` pour les routes HTTP et `SeaORM` pour la gestion de la base de données.`
 
 ---
 
@@ -76,9 +77,15 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 apps/
  ├─ plant-shop-angular-universal   → Frontend Angular
  ├─ plant_shop_nest                → Backend NestJS
- ├─ plant_shop_manifest            → Backend Manifest
- |─ plant_shop_go                  → Backend Golang
- └─ plant_shop_rust                → Backend Rust
+ ├─ plant_shop_manifest_ABANDON    → Backend Manifest (abandonné)
+ ├─ plant_shop_go                  → Backend Golang avec GORM
+ ├─ plant_shop_c                   → Backend en C
+ ├─ plant_shop_cpp                 → Backend en C++
+ └─ plant_shop_rust
+     ├─ plant_shop_rust_sqlx       → Backend Rust avec SQLx
+     └─ plant_shop_rust_see_orm    → Backend Rust avec SeaORM
 prisma/    → Modèles + seed
 tests/     → Scripts de test des routes backend
+diagnose-ora.js
+
 ```

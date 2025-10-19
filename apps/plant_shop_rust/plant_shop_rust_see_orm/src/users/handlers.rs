@@ -8,8 +8,8 @@ use poem::{
 };
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
-use crate::entity::users::{self, Entity as User, ActiveModel as ActiveUser, Model as UserModel, Column};
-use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryFilter, ColumnTrait, QueryOrder, IntoActiveModel};
+use crate::entity::users::{Entity as User, ActiveModel as ActiveUser, Model as UserModel, Column};
+use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, IntoActiveModel};
 use bcrypt;
 use serde::Deserialize;
 

@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use num_traits::ToPrimitive;
 
 /// Sérialise un Decimal en i32 (pour l’API)
-pub fn serialize_Decimal_as_i32<S>(value: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize_decimal_as_i32<S>(value: &Decimal, serializer: S) -> Result<S::Ok, S::Error>
 where
 	S: Serializer
 {

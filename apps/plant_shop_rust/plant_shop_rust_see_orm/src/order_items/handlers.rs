@@ -2,7 +2,7 @@
 use poem::{handler, web::{Data, Json, Path}, Result as PoemResult};
 use sea_orm::{DatabaseConnection, EntityTrait, ActiveModelTrait, Set, IntoActiveModel};
 use crate::errors::AppError;
-use crate::entity::order_items::{Entity as OrderItem, Model as OrderItemModel, ActiveModel as ActiveOrderItem};
+use crate::entity::order_items::{Entity as OrderItem, Model as OrderItemModel};
 
 #[handler]
 pub async fn get_order_item(

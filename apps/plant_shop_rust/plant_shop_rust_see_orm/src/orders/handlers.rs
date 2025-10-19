@@ -13,11 +13,10 @@ use sea_orm::{
 use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
 use crate::entity::{
-	orders::{self, Entity as Order, Model as OrderModel, ActiveModel as ActiveOrder, Column as OrderColumn},
-	order_items::{self, Entity as OrderItem, ActiveModel as ActiveOrderItem, Model as OrderItemModel},
-	plants::{self, Entity as Plant, Column as PlantColumn, Model as PlantModel},
+    orders::{Entity as Order, Model as OrderModel, ActiveModel as ActiveOrder, Column as OrderColumn},
+    order_items::{Entity as OrderItem},
+    plants::{Entity as Plant},
 };
-use sea_orm::prelude::*;
 use sea_orm::prelude::Decimal;
 use num_traits::FromPrimitive;
 

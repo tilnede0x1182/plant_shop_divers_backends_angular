@@ -7,8 +7,8 @@ use poem::{
 };
 use crate::auth::jwt::verify_jwt;
 use crate::errors::AppError;
-use crate::entity::plants::{self, Entity as Plant, ActiveModel as ActivePlant, Model as PlantModel, Column};
-use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, QueryFilter, ColumnTrait, IntoActiveModel};
+use crate::entity::plants::{Entity as Plant, ActiveModel as ActivePlant, Model as PlantModel, Column};
+use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, IntoActiveModel};
 use serde::Deserialize;
 
 /// DTO création plante

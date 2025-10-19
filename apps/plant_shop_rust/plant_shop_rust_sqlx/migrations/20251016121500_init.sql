@@ -2,7 +2,7 @@
 --   Initialisation Plant Shop DB
 -- ───────────────────────────────
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
 	id SERIAL PRIMARY KEY,
 	email VARCHAR(255) UNIQUE NOT NULL,
 	username VARCHAR(64) NOT NULL,
@@ -11,7 +11,7 @@ CREATE TABLE users (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE plants (
+CREATE TABLE IF NOT EXISTS plants (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(100) NOT NULL,
 	description TEXT,
@@ -20,7 +20,7 @@ CREATE TABLE plants (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
 	id SERIAL PRIMARY KEY,
 	user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- ON DELETE SET NULL pour garder l'historique
 	total NUMERIC(10,2) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE orders (
 	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
 	id SERIAL PRIMARY KEY,
 	order_id INTEGER REFERENCES orders(id) ON DELETE CASCADE,
 	plant_id INTEGER REFERENCES plants(id) ON DELETE SET NULL, -- ON DELETE SET NULL pour ne pas perdre l'item si la plante est supprimée

@@ -20,15 +20,23 @@ compile:
 # ======================================================
 
 create-db:
+	@echo "📦 Création de la base PostgreSQL si nécessaire..."
+	sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='plant_shop_rust_see_orm';" | grep -q 1 || \
+	sudo -u postgres psql -c "CREATE DATABASE plant_shop_rust_see_orm;"
 	cargo run --bin plant_shop_rust -- migrate create
 
 migrate-db:
 	cargo run --bin plant_shop_rust -- migrate up
 
 drop-db:
-	cargo run --bin plant_shop_rust -- migrate drop
+	@echo "⚠️ Suppression de la base PostgreSQL..."
+	sudo -u postgres psql -c "DROP DATABASE IF EXISTS plant_shop_rust_see_orm;"
+	cargo run --bin plant_shop_rust -- migrate drop || true
 
 reset-db:
+	@echo "🔁 Réinitialisation complète de la base..."
+	sudo -u postgres psql -c "DROP DATABASE IF EXISTS plant_shop_rust_see_orm;"
+	sudo -u postgres psql -c "CREATE DATABASE plant_shop_rust_see_orm;"
 	cargo run --bin plant_shop_rust -- migrate reset
 
 # ======================================================

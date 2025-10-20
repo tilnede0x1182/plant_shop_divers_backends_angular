@@ -42,6 +42,7 @@ drogon_ctl
 /test/*.log
 /test/users.txt
 /db/*.log
+projet.txt
 
 # ───────────────────────────────
 #   Déploiement / système

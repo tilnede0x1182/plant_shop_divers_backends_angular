@@ -141,8 +141,8 @@ static int addPlant(DbClientPtr db, const string& name) {
 	int price = rndInt(5,50);
 	int stock = rndInt(5,30);
 	auto result = db->execSqlSync(
-		"INSERT INTO plants (name, price, description, stock) VALUES ($1,$2,$3,$4) RETURNING id",
-		name, price, loremSentence(), stock
+			"INSERT INTO plants (name, price, description, stock) VALUES ($1,$2,$3,$4) RETURNING id",
+			name, static_cast<double>(price), loremSentence(), stock
 	);
 	return result[0]["id"].as<int>();
 }
@@ -170,7 +170,10 @@ static int addItem(DbClientPtr db, int orderId, vector<PlantRow>& plants) {
 	int qty = std::min(rndInt(1,5), p.stock);
 	if (qty <= 0) return 0;
 
-	db->execSqlSync("INSERT INTO order_items (order_id, plant_id, quantity) VALUES ($1,$2,$3)", orderId, p.id, qty);
+	db->execSqlSync(
+			"INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1,$2,$3,$4)",
+			orderId, p.id, qty, static_cast<double>(p.price)
+	);
 	db->execSqlSync("UPDATE plants SET stock = stock - $1 WHERE id = $2", qty, p.id);
 	p.stock -= qty;
 	return p.price * qty;
@@ -180,14 +183,14 @@ static void createOrderForUser(DbClientPtr db, int userId, vector<PlantRow>& pla
 	static const char* statuses[] = {"confirmed","pending","shipped","delivered"};
 	const string st = statuses[rndInt(0,3)];
 	auto orderRow = db->execSqlSync(
-		"INSERT INTO orders (user_id, total, status) VALUES ($1,$2,$3) RETURNING id",
-		userId, 0, st
+			"INSERT INTO orders (user_id, total, status) VALUES ($1,$2,$3) RETURNING id",
+			userId, static_cast<double>(0), st
 	);
 	int orderId = orderRow[0]["id"].as<int>();
 
 	int total = 0;
 	for (int k=0;k<2;k++) total += addItem(db, orderId, plants);
-	db->execSqlSync("UPDATE orders SET total=$1 WHERE id=$2", total, orderId);
+	db->execSqlSync("UPDATE orders SET total=$1 WHERE id=$2", static_cast<double>(total), orderId);
 }
 
 static void createOrders(DbClientPtr db, vector<PlantRow> plants) {

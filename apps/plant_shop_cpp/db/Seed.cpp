@@ -11,6 +11,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <drogon/orm/DbClient.h>
+#include <filesystem>
+
 using namespace drogon;
 using namespace drogon::orm;
 using std::string;
@@ -98,7 +100,7 @@ static void addAdmin(DbClientPtr db, int index, string& outEmail, string& outPwd
 	outEmail = "admin" + std::to_string(index + 1) + "@planteshop.com";
 	outPwd = "password";
 	db->execSqlSync(
-		"INSERT INTO users (email, name, password, admin) VALUES ($1,$2,$3,$4)",
+		"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1,$2,$3,$4)",
 		outEmail,
 		"Admin " + std::to_string(index + 1),
 		hashPassword(outPwd),
@@ -121,7 +123,7 @@ static std::pair<string,string> addUser(DbClientPtr db) {
 	const string pwd = "pw" + std::to_string(rndInt(100000000, 999999999));
 	const string name = "User " + std::to_string(rndInt(1000,9999));
 	db->execSqlSync(
-		"INSERT INTO users (email, name, password, admin) VALUES ($1,$2,$3,$4)",
+		"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1,$2,$3,$4)",
 		email, name, hashPassword(pwd), false
 	);
 	return {email, pwd};
@@ -178,14 +180,14 @@ static void createOrderForUser(DbClientPtr db, int userId, vector<PlantRow>& pla
 	static const char* statuses[] = {"confirmed","pending","shipped","delivered"};
 	const string st = statuses[rndInt(0,3)];
 	auto orderRow = db->execSqlSync(
-		"INSERT INTO orders (user_id, total_price, status) VALUES ($1,$2,$3) RETURNING id",
+		"INSERT INTO orders (user_id, total, status) VALUES ($1,$2,$3) RETURNING id",
 		userId, 0, st
 	);
 	int orderId = orderRow[0]["id"].as<int>();
 
 	int total = 0;
 	for (int k=0;k<2;k++) total += addItem(db, orderId, plants);
-	db->execSqlSync("UPDATE orders SET total_price=$1 WHERE id=$2", total, orderId);
+	db->execSqlSync("UPDATE orders SET total=$1 WHERE id=$2", total, orderId);
 }
 
 static void createOrders(DbClientPtr db, vector<PlantRow> plants) {
@@ -217,20 +219,24 @@ static void run(DbClientPtr db) {
 }
 
 std::string readDatabaseUrl() {
-	std::ifstream f(".env");
+	// Point de départ = emplacement réel de Seed.cpp
+	std::filesystem::path base = std::filesystem::path(__FILE__).parent_path();
+	std::filesystem::path envPath = base / "../.env";
+
+	std::ifstream f(envPath);
 	if (!f.is_open())
-		throw std::runtime_error("Impossible d’ouvrir .env");
+		throw std::runtime_error("Impossible d’ouvrir " + envPath.string());
 
 	std::string line;
 	while (std::getline(f, line)) {
 		if (line.rfind("DATABASE_URL=", 0) == 0) {
 			std::string url = line.substr(13);
 			if (url.empty())
-				throw std::runtime_error("DATABASE_URL vide dans .env");
+				throw std::runtime_error("DATABASE_URL vide dans " + envPath.string());
 			return url;
 		}
 	}
-	throw std::runtime_error("DATABASE_URL non trouvé dans .env");
+	throw std::runtime_error("DATABASE_URL non trouvé dans " + envPath.string());
 }
 
 int main() {

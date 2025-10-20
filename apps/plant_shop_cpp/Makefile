@@ -24,12 +24,12 @@ seed:
 	cmake --build build --target seed_cpp -j$$(nproc); \
 	./build/seed_cpp
 
-seed_dev:
+seed-dev:
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
 	cmake --build build --target seed_cpp -j$$(nproc)
 	./build/seed_cpp
 
-seed_build:
+seed-build:
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
 	cmake --build build --target seed_cpp -j$$(nproc)
 
@@ -44,12 +44,12 @@ test:
 	cmake --build build --target test_e2e_cpp -j$$(nproc); \
 	./build/test_e2e_cpp
 
-test_dev:
+test-dev:
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
 	cmake --build build --target test_e2e_cpp -j$$(nproc)
 	./build/test_e2e_cpp
 
-test_build:
+test-build:
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
 	cmake --build build --target test_e2e_cpp -j$$(nproc)
 

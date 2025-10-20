@@ -1,0 +1,53 @@
+# ───────────────────────────────
+#   Build et binaires C++
+# ───────────────────────────────
+/build/
+/bin/
+/CMakeFiles/
+/CMakeCache.txt
+/Makefile
+cmake_install.cmake
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.lib
+*.exe
+*.out
+*.log
+*.tmp
+
+# ───────────────────────────────
+#   Drogon / ORM / Générés
+# ───────────────────────────────
+.drogon_config.json
+*.drogon
+drogon_ctl
+
+# ───────────────────────────────
+#   IDE / Éditeurs
+# ───────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+
+# ───────────────────────────────
+#   Tests et données locales
+# ───────────────────────────────
+/test/*.json
+/test/*.log
+/test/users.txt
+/db/*.log
+
+# ───────────────────────────────
+#   Déploiement / système
+# ───────────────────────────────
+.env
+.env.*
+/node_modules/
+.DS_Store
+Thumbs.db

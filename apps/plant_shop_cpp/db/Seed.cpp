@@ -6,6 +6,11 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <string>
+#include <cstdlib>
+#include <iostream>
+#include <stdexcept>
+#include <drogon/orm/DbClient.h>
 using namespace drogon;
 using namespace drogon::orm;
 using std::string;
@@ -72,8 +77,6 @@ static string loremSentence() {
 /** """ Hash mot de passe (stub). Remplacez par bcrypt(cost=10) si nécessaire.
 	@plain mot de passe clair """ */
 static string hashPassword(const string& plain) {
-	// TODO: implémenter bcrypt (coût 10) si votre backend le requiert.
-	// La seed.ts utilise bcrypt.hash(password, 10). :contentReference[oaicite:1]{index=1}
 	return plain;
 }
 
@@ -103,7 +106,6 @@ static void addAdmin(DbClientPtr db, int index, string& outEmail, string& outPwd
 	);
 }
 
-/** """ Crée NB_ADMINS admins, retourne (email, password) """ */
 static vector<std::pair<string,string>> createAdmins(DbClientPtr db) {
 	vector<std::pair<string,string>> creds;
 	for (int i=0;i<NB_ADMINS;i++) {
@@ -114,11 +116,7 @@ static vector<std::pair<string,string>> createAdmins(DbClientPtr db) {
 	return creds;
 }
 
-/** """ Ajoute un user aléatoire (faker.email + name + password)
-	@db client
-	@return (email,password) """ */
 static std::pair<string,string> addUser(DbClientPtr db) {
-	// email simple (lowercase) et mot de passe long (12)
 	const string email = "user_" + std::to_string(rndInt(100000,999999)) + "@example.com";
 	const string pwd = "pw" + std::to_string(rndInt(100000000, 999999999));
 	const string name = "User " + std::to_string(rndInt(1000,9999));
@@ -129,7 +127,6 @@ static std::pair<string,string> addUser(DbClientPtr db) {
 	return {email, pwd};
 }
 
-/** """ Crée NB_USERS utilisateurs et renvoie (email,password) """ */
 static vector<std::pair<string,string>> createUsers(DbClientPtr db) {
 	vector<std::pair<string,string>> creds;
 	for (int i=0;i<NB_USERS;i++) {
@@ -138,10 +135,6 @@ static vector<std::pair<string,string>> createUsers(DbClientPtr db) {
 	return creds;
 }
 
-/** """ Ajoute une plante (nom, prix 5..50, description, stock 5..30)
-	@db client
-	@name nom
-	@return id créé """ */
 static int addPlant(DbClientPtr db, const string& name) {
 	int price = rndInt(5,50);
 	int stock = rndInt(5,30);
@@ -149,12 +142,9 @@ static int addPlant(DbClientPtr db, const string& name) {
 		"INSERT INTO plants (name, price, description, stock) VALUES ($1,$2,$3,$4) RETURNING id",
 		name, price, loremSentence(), stock
 	);
-	return result->get(0)["id"].as<int>();
+	return result[0]["id"].as<int>();
 }
 
-/** """ Crée NB_PLANTS plantes en recyclant PLANT_NAMES (suffixe “X” si > base)
-	@db client
-	@return liste {id,name,price,stock} minimaliste pour la suite """ */
 struct PlantRow { int id; string name; int price; int stock; };
 static vector<PlantRow> createPlants(DbClientPtr db) {
 	const int max = (int)(sizeof(PLANT_NAMES)/sizeof(PLANT_NAMES[0]));
@@ -164,18 +154,12 @@ static vector<PlantRow> createPlants(DbClientPtr db) {
 		string base = PLANT_NAMES[i % max];
 		string name = (NB_PLANTS > max) ? (base + string(" ") + std::to_string((i / max) + 1)) : base;
 		int id = addPlant(db, name);
-		// relire price/stock pour suivre la décrémentation ultérieure
 		auto row = db->execSqlSync("SELECT price,stock FROM plants WHERE id=$1", id);
-		out.push_back({id,name,row->get(0)["price"].as<int>(), row->get(0)["stock"].as<int>()});
+		out.push_back({id,name,row[0]["price"].as<int>(), row[0]["stock"].as<int>()});
 	}
 	return out;
 }
 
-/** """ Ajoute un item à une commande: choisit une plante, borne qty 1..5 <= stock
-	@db client
-	@orderId id commande
-	@plants ref modifiable (stock décrémenté en mémoire)
-	@return total ajouté """ */
 static int addItem(DbClientPtr db, int orderId, vector<PlantRow>& plants) {
 	if (plants.empty()) return 0;
 	const int idx = rndInt(0, (int)plants.size()-1);
@@ -190,11 +174,6 @@ static int addItem(DbClientPtr db, int orderId, vector<PlantRow>& plants) {
 	return p.price * qty;
 }
 
-/** """ Crée une commande pour un user avec 2 items, met à jour total
-	@db client
-	@userId id user
-	@plants plantes (stock décrémenté)
-	@status aléatoire parmi {confirmed,pending,shipped,delivered} """ */
 static void createOrderForUser(DbClientPtr db, int userId, vector<PlantRow>& plants) {
 	static const char* statuses[] = {"confirmed","pending","shipped","delivered"};
 	const string st = statuses[rndInt(0,3)];
@@ -202,28 +181,22 @@ static void createOrderForUser(DbClientPtr db, int userId, vector<PlantRow>& pla
 		"INSERT INTO orders (user_id, total_price, status) VALUES ($1,$2,$3) RETURNING id",
 		userId, 0, st
 	);
-	int orderId = orderRow->get(0)["id"].as<int>();
+	int orderId = orderRow[0]["id"].as<int>();
 
 	int total = 0;
 	for (int k=0;k<2;k++) total += addItem(db, orderId, plants);
 	db->execSqlSync("UPDATE orders SET total_price=$1 WHERE id=$2", total, orderId);
 }
 
-/** """ Crée de 0..MAX_ORDERS_PER_USER commandes pour chaque user
-	@db client
-	@plants plantes """ */
 static void createOrders(DbClientPtr db, vector<PlantRow> plants) {
 	auto users = db->execSqlSync("SELECT id FROM users");
-	for (size_t i=0;i<users->rows();i++) {
-		int userId = users->get(i)["id"].as<int>();
+	for (size_t i=0;i<users.size();i++) {
+		int userId = users[i]["id"].as<int>();
 		int n = rndInt(0, MAX_ORDERS_PER_USER);
 		for (int k=0;k<n;k++) createOrderForUser(db, userId, plants);
 	}
 }
 
-/** """ Écrit users.txt (admins puis utilisateurs)
-	@admins paires email/password
-	@users paires email/password """ */
 static void writeUsersFile(const vector<std::pair<string,string>>& admins,
                            const vector<std::pair<string,string>>& users) {
 	std::ofstream f("users.txt", std::ios::out | std::ios::trunc);
@@ -234,8 +207,6 @@ static void writeUsersFile(const vector<std::pair<string,string>>& admins,
 	for (auto& u : users) f << u.first << ' ' << u.second << "\n";
 }
 
-/** """ run(): reset → admins → users → plants → users.txt → orders (fidèle seed.ts)
-	@db client Drogon """ */
 static void run(DbClientPtr db) {
 	reset(db);
 	auto admins = createAdmins(db);
@@ -245,25 +216,82 @@ static void run(DbClientPtr db) {
 	createOrders(db, plants);
 }
 
-/** """ main(): utilise la config DB de Drogon (config.json / env), exécute la seed """ */
+std::string readDatabaseUrl() {
+	std::ifstream f(".env");
+	if (!f.is_open())
+		throw std::runtime_error("Impossible d’ouvrir .env");
+
+	std::string line;
+	while (std::getline(f, line)) {
+		if (line.rfind("DATABASE_URL=", 0) == 0) {
+			std::string url = line.substr(13);
+			if (url.empty())
+				throw std::runtime_error("DATABASE_URL vide dans .env");
+			return url;
+		}
+	}
+	throw std::runtime_error("DATABASE_URL non trouvé dans .env");
+}
+
 int main() {
 	try {
-		// Si vous avez un config.json, vous pouvez charger: app().loadConfigFile("config.json");
 		auto db = app().getDbClient();
 		if (!db) {
-			// Fallback: créer un client à la volée via env DATABASE_URL si nécessaire
-			const char* url = std::getenv("DATABASE_URL");
-			if (url && *url) {
-				auto client = drogon::orm::DbClient::newClient(url, 1);
-				run(client);
-			} else {
-				throw std::runtime_error("DATABASE_URL manquant et aucun DbClient configuré");
-			}
+			std::string url = readDatabaseUrl();
+
+			if (url.rfind("postgresql://", 0) != 0)
+				throw std::runtime_error("DATABASE_URL invalide (préfixe postgresql:// attendu)");
+			url = url.substr(13);
+
+			std::string user, pass, host, dbname;
+			unsigned short port = 0;
+
+			auto atPos = url.find('@');
+			if (atPos == std::string::npos)
+				throw std::runtime_error("DATABASE_URL invalide (identifiants manquants)");
+			std::string creds = url.substr(0, atPos);
+			url = url.substr(atPos + 1);
+
+			auto colonCreds = creds.find(':');
+			if (colonCreds == std::string::npos)
+				throw std::runtime_error("DATABASE_URL invalide (format user:pass attendu)");
+			user = creds.substr(0, colonCreds);
+			pass = creds.substr(colonCreds + 1);
+
+			auto slash = url.find('/');
+			if (slash == std::string::npos)
+				throw std::runtime_error("DATABASE_URL invalide (nom de base manquant)");
+			dbname = url.substr(slash + 1);
+			std::string hostPort = url.substr(0, slash);
+
+			auto colonHost = hostPort.find(':');
+			if (colonHost == std::string::npos)
+				throw std::runtime_error("DATABASE_URL invalide (port manquant)");
+			host = hostPort.substr(0, colonHost);
+			port = static_cast<unsigned short>(std::stoi(hostPort.substr(colonHost + 1)));
+
+			std::cout << "📦 Connexion PostgreSQL:" << std::endl;
+			std::cout << "  Host: " << host << std::endl;
+			std::cout << "  Port: " << port << std::endl;
+			std::cout << "  User: " << user << std::endl;
+			std::cout << "  Base: " << dbname << std::endl;
+			std::ostringstream conn;
+			conn << "host=" << host
+					<< " port=" << port
+					<< " dbname=" << dbname
+					<< " user=" << user
+					<< " password=" << pass;
+
+			auto client = drogon::orm::DbClient::newPgClient(conn.str(), 1, false);
+
+			run(client);
 		} else {
 			run(db);
 		}
+
 		std::cout << "✅ Seed terminée. Données créées & users.txt généré.\n";
 		return 0;
+
 	} catch (const std::exception& e) {
 		std::cerr << "❌ Seed échouée: " << e.what() << "\n";
 		return 1;

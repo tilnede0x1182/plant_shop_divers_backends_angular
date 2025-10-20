@@ -4,23 +4,50 @@
 cmake_minimum_required(VERSION 3.16)
 project(plant_shop_cpp LANGUAGES CXX)
 
-# Utilisation du standard moderne
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# Génération dans un dossier "build" sans polluer la racine
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # ───────────────────────────────
-#   Dépendances (trouvées sur le système)
+#   Détection et configuration manuelle des dépendances
 # ───────────────────────────────
+# Désactivation complète de MySQL et SQLite pour Drogon
+set(BUILD_MYSQL OFF CACHE BOOL "Disable MySQL support")
+set(BUILD_SQLITE OFF CACHE BOOL "Disable SQLite3 support")
+
+# Activation explicite de PostgreSQL
+set(BUILD_POSTGRESQL ON CACHE BOOL "Enable PostgreSQL support")
+
+# Autoriser CMake à chercher MySQL/SQLite si jamais (mais ils sont désactivés)
+set(CMAKE_DISABLE_FIND_PACKAGE_MySQL FALSE)
+set(CMAKE_DISABLE_FIND_PACKAGE_SQLite3 FALSE)
+
+# Répertoire d’installation de Drogon
+set(CMAKE_PREFIX_PATH "/usr/lib/x86_64-linux-gnu/cmake/Drogon")
+
+# Accélération de détection des bibliothèques partagées (.so)
+set(OPENSSL_ROOT_DIR "/usr")
+set(OPENSSL_USE_STATIC_LIBS FALSE)
+set(PostgreSQL_LIBRARY "/usr/lib/x86_64-linux-gnu/libpq.so")
+set(SQLITE3_LIBRARY "/usr/lib/x86_64-linux-gnu/libsqlite3.so")
+set(ZLIB_LIBRARY "/usr/lib/x86_64-linux-gnu/libz.so")
+set(Threads_LIBRARY "/usr/lib/x86_64-linux-gnu/libpthread.so")
+set(UUID_LIBRARY "/usr/lib/x86_64-linux-gnu/libuuid.so")
+
+# Correction MySQL : indiquer explicitement les répertoires
+set(MySQL_INCLUDE_DIR "/usr/include/mysql")
+set(MySQL_LIBRARY_DIR "/usr/lib/x86_64-linux-gnu")
+
+# Éviter l’échec si MySQL non trouvé (DrogonConfig requiert MySQL_FOUND)
+set(MySQL_FOUND TRUE CACHE BOOL "Force MySQL found to bypass Drogon check")
+
+# Recherche des paquets
 find_package(Drogon REQUIRED)
-find_package(Jsoncpp REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(PostgreSQL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Threads REQUIRED)
-find_package(UUID REQUIRED)
+include_directories(/usr/include/jsoncpp)
 
 # ───────────────────────────────
 #   Fichiers sources communs
@@ -51,7 +78,6 @@ add_executable(plant_shop_cpp
 
 target_link_libraries(plant_shop_cpp
 	Drogon::Drogon
-	Jsoncpp_lib
 	OpenSSL::SSL
 	OpenSSL::Crypto
 	PostgreSQL::PostgreSQL
@@ -69,7 +95,6 @@ add_executable(seed_cpp
 
 target_link_libraries(seed_cpp
 	Drogon::Drogon
-	Jsoncpp_lib
 	OpenSSL::SSL
 	OpenSSL::Crypto
 	PostgreSQL::PostgreSQL
@@ -86,7 +111,6 @@ add_executable(test_e2e_cpp
 
 target_link_libraries(test_e2e_cpp
 	Drogon::Drogon
-	Jsoncpp_lib
 	OpenSSL::SSL
 	OpenSSL::Crypto
 	PostgreSQL::PostgreSQL

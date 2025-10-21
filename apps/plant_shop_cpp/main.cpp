@@ -3,9 +3,24 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <filesystem>
 
-/** """ Lecture et parsing du DATABASE_URL depuis .env """ */
-std::string readDatabaseUrlFromEnv() {
+using namespace drogon;
+
+/** """ Vérifie la présence du fichier config.json """ */
+void checkConfigFile(const std::string& path = "config.json") {
+	if (std::filesystem::exists(path)) {
+		std::cout << "✅ Fichier de configuration détecté : "
+		          << std::filesystem::absolute(path) << std::endl;
+	} else {
+		std::cerr << "⚠️  Fichier de configuration introuvable : "
+		          << std::filesystem::absolute(path) << std::endl;
+	}
+}
+
+
+/** """ Lit .env et retourne la valeur de DATABASE_URL """ */
+std::string db_stringenv_read() {
 	std::ifstream envFile(".env");
 	if (!envFile.is_open()) return "";
 	std::string line;
@@ -14,6 +29,22 @@ std::string readDatabaseUrlFromEnv() {
 			return line.substr(13);
 	}
 	return "";
+}
+
+/** """ Lecture sécurisée du .env """ */
+std::string db_stringenv_read_secured() {
+	try {
+		std::string dbUrl = db_stringenv_read();
+		if (dbUrl.empty()) {
+			std::cerr << "❌ Échec : DATABASE_URL introuvable dans .env" << std::endl;
+			return "";
+		}
+		std::cout << "✅ Lecture réussie : " << dbUrl << std::endl;
+		return dbUrl;
+	} catch (const std::exception& e) {
+		std::cerr << "❌ Erreur inattendue : " << e.what() << std::endl;
+		return "";
+	}
 }
 
 /** """ Extrait les paramètres du DATABASE_URL """ */
@@ -46,7 +77,7 @@ void parseDatabaseUrl(const std::string& url, std::string& host, unsigned short&
 
 /** """ Crée la connexion PostgreSQL à partir du .env """ */
 void connectToDatabaseFromEnv() {
-	std::string url = readDatabaseUrlFromEnv();
+	std::string url = db_stringenv_read_secured();
 	if (url.empty()) throw std::runtime_error("DATABASE_URL manquant dans .env");
 
 	std::string host, dbname, user, pass;
@@ -68,34 +99,6 @@ void connectToDatabaseFromEnv() {
 		false, "default",
 		0.0, false
 	);
-}
-
-/** """ Lit .env et retourne la valeur de DATABASE_URL """ */
-std::string db_stringenv_read() {
-	std::ifstream envFile(".env");
-	if (!envFile.is_open()) return "";
-	std::string line;
-	while (std::getline(envFile, line)) {
-		if (line.rfind("DATABASE_URL=", 0) == 0)
-			return line.substr(13);
-	}
-	return "";
-}
-
-/** """ Lecture sécurisée du .env """ */
-std::string db_stringenv_read_secured() {
-	try {
-		std::string dbUrl = db_stringenv_read();
-		if (dbUrl.empty()) {
-			std::cerr << "❌ Échec : DATABASE_URL introuvable dans .env" << std::endl;
-			return "";
-		}
-		std::cout << "✅ Lecture réussie : " << dbUrl << std::endl;
-		return dbUrl;
-	} catch (const std::exception& e) {
-		std::cerr << "❌ Erreur inattendue : " << e.what() << std::endl;
-		return "";
-	}
 }
 
 /** """ Active CORS pour Angular """ */
@@ -157,7 +160,9 @@ void testDbConnection() {
 /** """ Point d’entrée principal du backend Plant Shop (C++) """ */
 int main() {
 	try {
-		using namespace drogon;
+		checkConfigFile();
+		drogon::app().loadConfigFile("config.json");
+
 		app().setLogLevel(trantor::Logger::kInfo);
 		app().addListener("0.0.0.0", 4100);
 		enableCors();

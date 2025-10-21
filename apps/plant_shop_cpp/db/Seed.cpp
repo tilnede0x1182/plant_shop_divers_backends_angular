@@ -13,6 +13,7 @@
 #include <filesystem>
 
 using namespace drogon;
+using drogon::orm::DbClientPtr;
 using std::string;
 using std::vector;
 

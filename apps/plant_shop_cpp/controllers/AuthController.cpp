@@ -72,48 +72,86 @@ void AuthController::registerUser(const HttpRequestPtr& req,
 	}
 }
 
-/** Connexion */
+/** Connexion utilisateur */
 void AuthController::login(const HttpRequestPtr& req,
-	std::function<void(const HttpResponsePtr&)>&& cb) {
-	Json::Value d;
-	if (!parseJson(req, d) || !d.isMember("email") || !d.isMember("password")) {
-		Json::Value j; j["error"] = "Champs manquants";
-		auto r = HttpResponse::newHttpJsonResponse(j);
-		r->setStatusCode(k400BadRequest);
-		return cb(r);
-	}
+	std::function<void(const HttpResponsePtr&)>&& callback) {
+
 	try {
-		Mapper<Users> users(app().getDbClient());
+		// Lecture du corps JSON avec logs détaillés
+		LOG_INFO << "🔹 [login] Début /auth/login";
+		LOG_INFO << "🔹 [login] Headers=" << req->headers().size()
+						<< " | Body length=" << req->getBody().length();
+		LOG_INFO << "🔹 [login] Content-Type=" << req->getHeader("content-type");
+
+		Json::Value data;
+		bool ok = parseJson(req, data);
+		LOG_INFO << "🔹 [login] Résultat parseJson=" << (ok ? "true" : "false");
+
+		if (!ok) {
+			LOG_ERROR << "❌ [login] JSON invalide ou vide";
+			Json::Value j; j["error"] = "JSON invalide";
+			auto r = HttpResponse::newHttpJsonResponse(j);
+			r->setStatusCode(k400BadRequest);
+			return callback(r);
+		}
+
+		LOG_INFO << "🔹 [login] JSON brut reçu: " << data.toStyledString();
+
+		if (!data.isMember("email") || !data.isMember("password")) {
+			LOG_ERROR << "❌ [login] Champs email/password manquants";
+			Json::Value j; j["error"] = "Champs manquants";
+			auto r = HttpResponse::newHttpJsonResponse(j);
+			r->setStatusCode(k400BadRequest);
+			return callback(r);
+		}
+
+		std::string email = data["email"].asString();
+		std::string password = data["password"].asString();
+
+		LOG_INFO << "🔹 [login] email=" << email
+						<< " | password length=" << password.size();
+		LOG_INFO << "🔹 [login] Fin parsing JSON, préparation DB...";
+
+		auto db = app().getDbClient();
+		Mapper<Users> users(db);
+
 		Users user;
 		try {
-			user = users.findOne(Criteria(Users::Cols::_email, d["email"].asString()));
+			user = users.findOne(Criteria(Users::Cols::_email, email));
+			LOG_DEBUG << "Utilisateur trouvé, id=" << user.getValueOfId();
 		} catch (const DrogonDbException &e) {
-			Json::Value j;
-			j["error"] = "Utilisateur introuvable";
+			LOG_ERROR << "Utilisateur introuvable: " << e.base().what();
+			Json::Value j; j["error"] = "Utilisateur introuvable";
 			auto r = HttpResponse::newHttpJsonResponse(j);
 			r->setStatusCode(k401Unauthorized);
-			return cb(r);
+			return callback(r);
 		}
-		if (!verifyPassword(d["password"].asString(), user.getValueOfPasswordHash())) {
+
+		if (!verifyPassword(password, user.getValueOfPasswordHash())) {
+			LOG_WARN << "Mot de passe invalide pour " << email;
 			Json::Value j; j["error"] = "Mot de passe invalide";
 			auto r = HttpResponse::newHttpJsonResponse(j);
 			r->setStatusCode(k401Unauthorized);
-			return cb(r);
+			return callback(r);
 		}
+
 		Json::Value j;
 		j["id"] = user.getValueOfId();
 		j["username"] = user.getValueOfUsername();
 		j["email"] = user.getValueOfEmail();
 		j["is_admin"] = user.getValueOfIsAdmin();
+
 		auto r = HttpResponse::newHttpJsonResponse(j);
 		r->addCookie("auth_user", user.getValueOfEmail());
 		r->setStatusCode(k201Created);
-		cb(r);
-	} catch (...) {
+		callback(r);
+
+	} catch (const std::exception &e) {
+		LOG_FATAL << "💥 Exception dans /auth/login: " << e.what();
 		Json::Value j; j["error"] = "Erreur serveur";
 		auto r = HttpResponse::newHttpJsonResponse(j);
 		r->setStatusCode(k500InternalServerError);
-		cb(r);
+		callback(r);
 	}
 }
 

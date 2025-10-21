@@ -81,23 +81,31 @@ void assertAdminsFirstThenName(const Json::Value& arr) {
 
 // ------------------- HTTP -------------------
 Json::Value hit(const string& method, const string& route, int expected, const Json::Value* body=nullptr, const string& who="default") {
-	auto client=HttpClient::newHttpClient(API_BASE_URL);
-	auto req=HttpRequest::newHttpRequest();
+	auto client = HttpClient::newHttpClient(API_BASE_URL);
+	auto req = HttpRequest::newHttpRequest();
 	req->setPath(route);
 	req->setMethod(method=="POST"?Post:method=="PATCH"?Patch:method=="DELETE"?Delete:Get);
-	req->addHeader("Content-Type","application/json");
-	if (!getCookie(who).empty()) req->addHeader("Cookie",getCookie(who));
+	req->addHeader("Content-Type", "application/json");
+	if (!getCookie(who).empty()) req->addHeader("Cookie", getCookie(who));
 	if (body) req->setBody(body->toStyledString());
 
-	auto [resCode,res]=client->sendRequest(req);
-	if (resCode!=ReqResult::Ok) throw runtime_error("Erreur de connexion: "+route);
-	saveCookie(who,res);
-	if (res->getStatusCode()!=expected)
-		throw runtime_error("API "+route+" → "+to_string(res->getStatusCode())+" attendu "+to_string(expected));
+	std::promise<std::pair<ReqResult, HttpResponsePtr>> prom;
+	auto fut = prom.get_future();
+
+	client->sendRequest(req, [&prom](ReqResult resCode, const HttpResponsePtr& res) {
+		prom.set_value({resCode, res});
+	});
+
+	auto [resCode, res] = fut.get();
+	if (resCode != ReqResult::Ok) throw runtime_error("Erreur de connexion: " + route);
+	saveCookie(who, res);
+	if (res->getStatusCode() != expected)
+		throw runtime_error("API " + route + " → " + to_string(res->getStatusCode()) + " attendu " + to_string(expected));
 
 	Json::CharReaderBuilder builder;
-	Json::Value json; string errs;
-	std::string responseBody(res->getBody());
+	Json::Value json;
+	string errs;
+	string responseBody(res->getBody());
 	std::istringstream s(responseBody);
 	Json::parseFromStream(builder, s, &json, &errs);
 	return json;

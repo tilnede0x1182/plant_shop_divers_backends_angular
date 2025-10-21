@@ -20,17 +20,28 @@ static std::string hashPassword(const std::string& pwd) {
 	const uint32_t t_cost = 2, m_cost = 1 << 16, parallel = 1;
 	std::vector<uint8_t> salt(16);
 	for (auto &b : salt) b = rand() % 256;
-	std::vector<uint8_t> hash(32);
-	if (argon2id_hash_raw(t_cost, m_cost, parallel, pwd.data(), pwd.size(),
-		salt.data(), salt.size(), hash.data(), hash.size()) != ARGON2_OK)
-		throw std::runtime_error("Argon2 hash failed");
-	std::ostringstream oss;
-	for (auto b : hash) oss << std::hex << (int)b;
-	return oss.str();
+
+	// Taille max pour le hash encodé (≈108 caractères)
+	char encoded[128];
+	int result = argon2id_hash_encoded(
+		t_cost, m_cost, parallel,
+		pwd.data(), pwd.size(),
+		salt.data(), salt.size(),
+		32, encoded, sizeof(encoded)
+	);
+
+	if (result != ARGON2_OK)
+		throw std::runtime_error("Argon2id hash_encoded failed");
+
+	return std::string(encoded);
 }
-static bool verifyPassword(const std::string& pwd, const std::string& hash) {
-	return hashPassword(pwd) == hash;
+
+/** """ Vérifie un mot de passe contre un hash Argon2id """ */
+static bool verifyPassword(const std::string& pwd, const std::string& encodedHash) {
+	int result = argon2id_verify(encodedHash.c_str(), pwd.data(), pwd.size());
+	return result == ARGON2_OK;
 }
+
 
 /** Parsing JSON sûr */
 static bool parseJson(const HttpRequestPtr& req, Json::Value& data) {

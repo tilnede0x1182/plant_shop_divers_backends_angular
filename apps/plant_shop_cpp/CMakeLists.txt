@@ -114,6 +114,7 @@ target_link_libraries(seed_cpp
 	PostgreSQL::PostgreSQL
 	ZLIB::ZLIB
 	Threads::Threads
+	argon2
 )
 
 # ───────────────────────────────

@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <drogon/orm/DbClient.h>
 #include <filesystem>
+#include <argon2.h>
 
 using namespace drogon;
 using drogon::orm::DbClientPtr;
@@ -75,10 +76,30 @@ static string loremSentence() {
 	return oss.str();
 }
 
-/** """ Hash mot de passe (stub). Remplacez par bcrypt(cost=10) si nécessaire.
-	@plain mot de passe clair """ */
-static string hashPassword(const string& plain) {
-	return plain;
+/** """ Hash mot de passe sécurisé avec Argon2id
+    @plain mot de passe clair """ */
+static std::string hashPassword(const std::string& plain) {
+    const uint32_t t_cost = 2;
+    const uint32_t m_cost = 1 << 16;
+    const uint32_t parallel = 1;
+
+    // Sel aléatoire (sécurisé)
+    std::vector<uint8_t> salt(16);
+    for (auto &b : salt) b = rand() % 256;
+
+    // Buffer pour le hash encodé ($argon2id$...)
+    char encoded[128];
+    int result = argon2id_hash_encoded(
+        t_cost, m_cost, parallel,
+        plain.data(), plain.size(),
+        salt.data(), salt.size(),
+        32, encoded, sizeof(encoded)
+    );
+
+    if (result != ARGON2_OK)
+        throw std::runtime_error("Argon2id hash_encoded failed");
+
+    return std::string(encoded);
 }
 
 /** """ Reset DB: supprime order_items → orders → plants → users

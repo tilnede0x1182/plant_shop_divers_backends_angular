@@ -195,12 +195,18 @@ static void createOrderForUser(DbClientPtr db, int userId, vector<PlantRow>& pla
 
 static void createOrders(DbClientPtr db, vector<PlantRow> plants) {
 	auto users = db->execSqlSync("SELECT id FROM users");
-	for (size_t i=0;i<users.size();i++) {
+	int totalOrders = 0;
+	for (size_t i = 0; i < users.size(); i++) {
 		int userId = users[i]["id"].as<int>();
 		int n = rndInt(0, MAX_ORDERS_PER_USER);
-		for (int k=0;k<n;k++) createOrderForUser(db, userId, plants);
+		for (int k = 0; k < n; k++) {
+			createOrderForUser(db, userId, plants);
+			totalOrders++;
+		}
 	}
+	std::cout << "✅ " << totalOrders << " commandes créées." << std::endl;
 }
+
 
 static void writeUsersFile(const vector<std::pair<string,string>>& admins,
                            const vector<std::pair<string,string>>& users) {
@@ -233,7 +239,6 @@ static void run(DbClientPtr db) {
 	std::cout << "✅ Fichier users.txt généré.\n";
 	std::cout << "🛒 Création des commandes…\n";
 	createOrders(db, plants);
-	std::cout << "✅ Commandes créées.\n";
 	std::cout << "🎉 Seed terminée avec succès !\n";
 }
 

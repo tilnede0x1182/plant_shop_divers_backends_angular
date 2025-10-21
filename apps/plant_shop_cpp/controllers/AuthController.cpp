@@ -1,168 +1,130 @@
 #include "AuthController.h"
 #include <drogon/orm/Mapper.h>
-#include <drogon/utils/Utilities.h>
 #include <argon2.h>
-#include <vector>
 #include <string>
 #include <sstream>
-#include <stdexcept>
-#include <cstdlib>
+#include <vector>
 using namespace drogon;
 using namespace drogon::orm;
+using drogon_model::plant_shop_cpp::Users;
 
-/** """ Fonctions de hachage et vérification Argon2id
-	@password mot de passe clair """ */
-static std::string hashPassword(const std::string& password) {
-	const uint32_t t_cost = 2;        // nombre d’itérations
-	const uint32_t m_cost = 1 << 16;  // mémoire utilisée (~64 MiB)
-	const uint32_t parallelism = 1;
-	const size_t hashLen = 32;
-	const size_t saltLen = 16;
-
-	std::vector<uint8_t> salt(saltLen, 0);
-	for (size_t i = 0; i < saltLen; ++i)
-		salt[i] = static_cast<uint8_t>(rand() % 256);
-
-	std::vector<uint8_t> hash(hashLen);
-	int res = argon2id_hash_raw(
-		t_cost, m_cost, parallelism,
-		password.data(), password.size(),
-		salt.data(), salt.size(),
-		hash.data(), hash.size()
-	);
-
-	if (res != ARGON2_OK)
-		throw std::runtime_error("Argon2 hashing failed");
-
+/** """ Hachage Argon2id """ */
+static std::string hashPassword(const std::string& pwd) {
+	const uint32_t t_cost = 2, m_cost = 1 << 16, parallel = 1;
+	std::vector<uint8_t> salt(16);
+	for (auto &b : salt) b = rand() % 256;
+	std::vector<uint8_t> hash(32);
+	if (argon2id_hash_raw(t_cost, m_cost, parallel, pwd.data(), pwd.size(),
+		salt.data(), salt.size(), hash.data(), hash.size()) != ARGON2_OK)
+		throw std::runtime_error("Argon2 hash failed");
 	std::ostringstream oss;
 	for (auto b : hash) oss << std::hex << (int)b;
 	return oss.str();
 }
-
-static bool verifyPassword(const std::string& password, const std::string& hashHex) {
-	return hashPassword(password) == hashHex;
+static bool verifyPassword(const std::string& pwd, const std::string& hash) {
+	return hashPassword(pwd) == hash;
 }
 
-/**
- * """ Inscription d’un nouvel utilisateur """
- */
-void AuthController::registerUser(const HttpRequestPtr& req,
-                                  std::function<void(const HttpResponsePtr&)>&& callback) {
-	auto json = req->getJsonObject();
-	if (!json || !json->isMember("email") || !json->isMember("password") || !json->isMember("name")) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Champs manquants"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
-	}
-
-	std::string email = (*json)["email"].asString();
-	std::string username = (*json)["name"].asString();
-	std::string password = hashPassword((*json)["password"].asString());
-
+/** Parsing JSON sûr */
+static bool parseJson(const HttpRequestPtr& req, Json::Value& data) {
 	try {
-		auto client = app().getDbClient();
-		client->execSqlSync(
-			"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1,$2,$3,false)",
-			email, username, password
-		);
-		auto resp = HttpResponse::newHttpResponse();
-		resp->setStatusCode(k201Created);
-		callback(resp);
-	} catch (const DrogonDbException& e) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Email déjà utilisé"}});
-		resp->setStatusCode(k409Conflict);
-		callback(resp);
+		std::string body(req->body());
+		if (body.empty()) return false;
+		Json::CharReaderBuilder b; std::string errs;
+		std::unique_ptr<Json::CharReader> r(b.newCharReader());
+		return r->parse(body.data(), body.data() + body.size(), &data, &errs);
+	} catch (...) { return false; }
+}
+
+/** Inscription */
+void AuthController::registerUser(const HttpRequestPtr& req,
+	std::function<void(const HttpResponsePtr&)>&& cb) {
+	Json::Value d; if (!parseJson(req, d) || !d.isMember("email") || !d.isMember("password")) {
+		auto r = HttpResponse::newHttpJsonResponse({{"error","Champs manquants"}});
+		r->setStatusCode(k400BadRequest); return cb(r);
+	}
+	try {
+		Mapper<Users> users(app().getDbClient());
+		Users u;
+		u.setEmail(d["email"].asString());
+		u.setUsername(d["username"].asString());
+		u.setPasswordHash(hashPassword(d["password"].asString()));
+		u.setIsAdmin(false);
+		users.insert(u);
+		auto r = HttpResponse::newHttpResponse();
+		r->setStatusCode(k201Created); cb(r);
+	} catch (const DrogonDbException&) {
+		auto r = HttpResponse::newHttpJsonResponse({{"error","Email déjà utilisé"}});
+		r->setStatusCode(k409Conflict); cb(r);
 	}
 }
 
-/**
- * """ Connexion utilisateur (stocke cookie auth) """
- */
+/** Connexion */
 void AuthController::login(const HttpRequestPtr& req,
-                           std::function<void(const HttpResponsePtr&)>&& callback) {
-	auto json = req->getJsonObject();
-	if (!json || !json->isMember("email") || !json->isMember("password")) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Champs manquants"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb) {
+	Json::Value d; if (!parseJson(req, d) || !d.isMember("email") || !d.isMember("password")) {
+		auto r = HttpResponse::newHttpJsonResponse({{"error","Champs manquants"}});
+		r->setStatusCode(k400BadRequest); return cb(r);
 	}
-
-	std::string email = (*json)["email"].asString();
-	std::string plain = (*json)["password"].asString();
-
-	auto client = app().getDbClient();
-	auto r = client->execSqlSync("SELECT id, username, password_hash, is_admin FROM users WHERE email=$1", email);
-
-	if (r.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Utilisateur introuvable"}});
-		resp->setStatusCode(k401Unauthorized);
-		return callback(resp);
+	try {
+		Mapper<Users> users(app().getDbClient());
+		auto userOpt = users.findOne(Criteria(Users::Cols::_email, d["email"].asString()));
+		if (!userOpt) {
+			auto r = HttpResponse::newHttpJsonResponse({{"error","Utilisateur introuvable"}});
+			r->setStatusCode(k401Unauthorized); return cb(r);
+		}
+		auto user = *userOpt;
+		if (!verifyPassword(d["password"].asString(), user.getValueOfPasswordHash())) {
+			auto r = HttpResponse::newHttpJsonResponse({{"error","Mot de passe invalide"}});
+			r->setStatusCode(k401Unauthorized); return cb(r);
+		}
+		Json::Value j;
+		j["id"] = user.getValueOfId();
+		j["username"] = user.getValueOfUsername();
+		j["email"] = user.getValueOfEmail();
+		j["is_admin"] = user.getValueOfIsAdmin();
+		auto r = HttpResponse::newHttpJsonResponse(j);
+		r->addCookie("auth_user", user.getValueOfEmail());
+		r->setStatusCode(k201Created);
+		cb(r);
+	} catch (...) {
+		auto r = HttpResponse::newHttpJsonResponse({{"error","Erreur serveur"}});
+		r->setStatusCode(k500InternalServerError); cb(r);
 	}
-
-	std::string hash = r[0]["password_hash"].as<std::string>();
-	if (!verifyPassword(plain, hash)) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Mot de passe invalide"}});
-		resp->setStatusCode(k401Unauthorized);
-		return callback(resp);
-	}
-
-	Json::Value u;
-	u["id"] = r[0]["id"].as<int>();
-	u["username"] = r[0]["username"].as<std::string>();
-	u["email"] = email;
-	u["is_admin"] = r[0]["is_admin"].as<bool>();
-
-	auto resp = HttpResponse::newHttpJsonResponse(u);
-	resp->addCookie("auth_user", email);
-	resp->setStatusCode(k201Created);
-	callback(resp);
 }
 
-/**
- * """ Récupération du profil /auth/me """
- */
+/** Profil /auth/me */
 void AuthController::me(const HttpRequestPtr& req,
-                        std::function<void(const HttpResponsePtr&)>&& callback) {
-	auto cookies = req->cookies();
-	if (cookies.find("auth_user") == cookies.end()) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Non connecté"}});
-		resp->setStatusCode(k401Unauthorized);
-		return callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb) {
+	auto ck = req->cookies();
+	if (!ck.count("auth_user")) {
+		auto r = HttpResponse::newHttpJsonResponse({{"error","Non connecté"}});
+		r->setStatusCode(k401Unauthorized); return cb(r);
 	}
-
-	std::string email = cookies.at("auth_user");
-	auto client = app().getDbClient();
-	auto r = client->execSqlSync("SELECT id, email, username, is_admin FROM users WHERE email=$1", email);
-
-	if (r.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Utilisateur inconnu"}});
-		resp->setStatusCode(k404NotFound);
-		return callback(resp);
+	try {
+		Mapper<Users> users(app().getDbClient());
+		auto u = users.findOne(Criteria(Users::Cols::_email, ck.at("auth_user")));
+		if (!u) {
+			auto r = HttpResponse::newHttpJsonResponse({{"error","Utilisateur inconnu"}});
+			r->setStatusCode(k404NotFound); return cb(r);
+		}
+		Json::Value j;
+		j["id"] = u->getValueOfId();
+		j["email"] = u->getValueOfEmail();
+		j["username"] = u->getValueOfUsername();
+		j["is_admin"] = u->getValueOfIsAdmin();
+		auto r = HttpResponse::newHttpJsonResponse(j);
+		r->setStatusCode(k200OK);
+		cb(r);
+	} catch (...) {
+		auto r = HttpResponse::newHttpJsonResponse({{"error","Erreur serveur"}});
+		r->setStatusCode(k500InternalServerError); cb(r);
 	}
-
-	Json::Value j;
-	j["id"] = r[0]["id"].as<int>();
-	j["email"] = r[0]["email"].as<std::string>();
-	j["username"] = r[0]["username"].as<std::string>();
-	j["is_admin"] = r[0]["is_admin"].as<bool>();
-
-	auto resp = HttpResponse::newHttpJsonResponse(j);
-	resp->setStatusCode(k200OK);
-	callback(resp);
 }
 
-/**
- * """ Déconnexion : suppression du cookie """
- */
-void AuthController::logout(const HttpRequestPtr&,
-                            std::function<void(const HttpResponsePtr&)>&& callback) {
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"success", true}});
-	{
-		drogon::Cookie authCookie("auth_user", "");
-		authCookie.setPath("/");
-		authCookie.setExpiresDate(trantor::Date(0)); // expiration au 1/1/1970
-		resp->addCookie(std::move(authCookie));
-	}
-	resp->setStatusCode(k200OK);
-	callback(resp);
+/** Déconnexion */
+void AuthController::logout(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb) {
+	auto r = HttpResponse::newHttpJsonResponse({{"success",true}});
+	Cookie c("auth_user",""); c.setPath("/"); c.setExpiresDate(trantor::Date(0));
+	r->addCookie(std::move(c)); r->setStatusCode(k200OK); cb(r);
 }

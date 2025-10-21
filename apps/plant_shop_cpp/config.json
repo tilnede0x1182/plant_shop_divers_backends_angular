@@ -1,0 +1,23 @@
+{
+  "db_clients": [
+    {
+      "name": "default",
+      "rdbms": "postgresql",
+      "host": "localhost",
+      "port": 5432,
+      "dbname": "plant_shop_cpp",
+      "user": "tilnede0x1182",
+      "passwd": "tilnede0x1182",
+      "is_fast": false,
+      "characterSet": "utf8",
+      "connection_number": 5
+    }
+  ],
+  "generate_config": {
+    "namespace": "models",
+    "output_path": "models",
+    "use_timestamp": true,
+    "force_overwrite": true,
+    "snake_case_columns": true
+  }
+}

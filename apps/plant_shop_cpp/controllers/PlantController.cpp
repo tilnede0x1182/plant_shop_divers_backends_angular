@@ -3,172 +3,106 @@
 #include <drogon/utils/Utilities.h>
 using namespace drogon;
 using namespace drogon::orm;
+using drogon_model::plant_shop_cpp::Plants;
+using drogon_model::plant_shop_cpp::Users;
 
-/**
- * """ Vérifie si l’utilisateur connecté est admin """
- */
-static bool isAdmin(const HttpRequestPtr& req) {
-	auto cookies = req->cookies();
-	if (cookies.find("auth_user") == cookies.end()) return false;
-	auto email = cookies.at("auth_user");
-	auto db = app().getDbClient();
-	auto r = db->execSqlSync("SELECT is_admin FROM users WHERE email=$1", email);
-	return (r.size() > 0 && r[0]["is_admin"].as<bool>());
+/* ---- Helpers ---- */
+static HttpResponsePtr err(int code, const std::string &msg) {
+	auto r = HttpResponse::newHttpJsonResponse({{"error", msg}});
+	r->setStatusCode((HttpStatusCode)code);
+	return r;
 }
 
-/**
- * """ Liste publique des plantes """
- */
-void PlantController::listPlants(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& callback) {
-	auto db = app().getDbClient();
-	auto rows = db->execSqlSync("SELECT id, name, description, price, stock, created_at FROM plants ORDER BY id ASC");
-	Json::Value arr(Json::arrayValue);
-	for (auto r : rows) {
-		Json::Value j;
-		j["id"] = r["id"].as<int>();
-		j["name"] = r["name"].as<std::string>();
-		j["description"] = r["description"].as<std::string>();
-		j["price"] = r["price"].as<double>();
-		j["stock"] = r["stock"].as<int>();
-		j["created_at"] = r["created_at"].as<std::string>();
-		arr.append(j);
-	}
-	auto resp = HttpResponse::newHttpJsonResponse(arr);
-	resp->setStatusCode(k200OK);
-	callback(resp);
+static bool isAdmin(const HttpRequestPtr &req) {
+	try {
+		if (!req->cookies().count("auth_user")) return false;
+		Mapper<Users> mu(app().getDbClient());
+		auto u = mu.findOne(Criteria(Users::Cols::_email, req->cookies().at("auth_user")));
+		return u && u->getValueOfIsAdmin();
+	} catch (...) { return false; }
 }
 
-/**
- * """ Détails d'une plante """
- */
-void PlantController::getPlant(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& callback, int plantId) {
-	auto db = app().getDbClient();
-	auto r = db->execSqlSync("SELECT * FROM plants WHERE id=$1", plantId);
-	if (r.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Plante introuvable"}});
-		resp->setStatusCode(k404NotFound);
-		return callback(resp);
-	}
-	Json::Value j;
-	j["id"] = r[0]["id"].as<int>();
-	j["name"] = r[0]["name"].as<std::string>();
-	j["description"] = r[0]["description"].as<std::string>();
-	j["price"] = r[0]["price"].as<double>();
-	j["stock"] = r[0]["stock"].as<int>();
-	j["created_at"] = r[0]["created_at"].as<std::string>();
-	auto resp = HttpResponse::newHttpJsonResponse(j);
-	resp->setStatusCode(k200OK);
-	callback(resp);
+/* ---- Liste publique ---- */
+void PlantController::listPlants(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb) {
+	try {
+		Mapper<Plants> mp(app().getDbClient());
+		auto all = mp.findAll();
+		Json::Value arr(Json::arrayValue);
+		for (auto &p : all) arr.append(p.toJson());
+		auto r = HttpResponse::newHttpJsonResponse(arr);
+		r->setStatusCode(k200OK); cb(r);
+	} catch (...) { cb(err(500, "Erreur serveur")); }
 }
 
-/**
- * """ Liste complète (admin uniquement) """
- */
+/* ---- Détails ---- */
+void PlantController::getPlant(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	try {
+		Mapper<Plants> mp(app().getDbClient());
+		auto p = mp.findByPrimaryKey(id);
+		cb(HttpResponse::newHttpJsonResponse(p.toJson()));
+	} catch (...) { cb(err(404, "Plante introuvable")); }
+}
+
+/* ---- Liste admin ---- */
 void PlantController::listAdminPlants(const HttpRequestPtr& req,
-                                      std::function<void(const HttpResponsePtr&)>&& callback) {
-	if (!isAdmin(req)) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Accès refusé"}});
-		resp->setStatusCode(k403Forbidden);
-		return callback(resp);
-	}
-	auto db = app().getDbClient();
-	auto rows = db->execSqlSync("SELECT id, name, description, price, stock, created_at FROM plants ORDER BY name ASC");
-	Json::Value arr(Json::arrayValue);
-	for (auto r : rows) {
-		Json::Value j;
-		j["id"] = r["id"].as<int>();
-		j["name"] = r["name"].as<std::string>();
-		j["description"] = r["description"].as<std::string>();
-		j["price"] = r["price"].as<double>();
-		j["stock"] = r["stock"].as<int>();
-		j["created_at"] = r["created_at"].as<std::string>();
-		arr.append(j);
-	}
-	auto resp = HttpResponse::newHttpJsonResponse(arr);
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb) {
+	if (!isAdmin(req)) return cb(err(403, "Accès refusé"));
+	try {
+		Mapper<Plants> mp(app().getDbClient());
+		auto all = mp.findAll();
+		std::sort(all.begin(), all.end(), [](const Plants&a,const Plants&b){
+			return a.getValueOfName() < b.getValueOfName();
+		});
+		Json::Value arr(Json::arrayValue);
+		for (auto &p : all) arr.append(p.toJson());
+		cb(HttpResponse::newHttpJsonResponse(arr));
+	} catch (...) { cb(err(500, "Erreur serveur")); }
 }
 
-/**
- * """ Création d'une plante (admin) """
- */
-void PlantController::createPlant(const HttpRequestPtr& req, std::function<void(const HttpResponsePtr&)>&& callback) {
-	if (!isAdmin(req)) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Non autorisé"}});
-		resp->setStatusCode(k403Forbidden);
-		return callback(resp);
-	}
-	auto json = req->getJsonObject();
-	if (!json || !json->isMember("name") || !json->isMember("price") || !json->isMember("stock")) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Champs manquants"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
-	}
-	std::string name = (*json)["name"].asString();
-	std::string desc = json->isMember("description") ? (*json)["description"].asString() : "";
-	double price = (*json)["price"].asDouble();
-	int stock = (*json)["stock"].asInt();
-	auto db = app().getDbClient();
-	auto r = db->execSqlSync(
-	    "INSERT INTO plants (name, description, price, stock) VALUES ($1,$2,$3,$4) RETURNING id",
-	    name, desc, price, stock);
-	Json::Value j;
-	j["id"] = r[0]["id"].as<int>();
-	auto resp = HttpResponse::newHttpJsonResponse(j);
-	resp->setStatusCode(k201Created);
-	callback(resp);
+/* ---- Création ---- */
+void PlantController::createPlant(const HttpRequestPtr& req,
+	std::function<void(const HttpResponsePtr&)>&& cb) {
+	if (!isAdmin(req)) return cb(err(403, "Non autorisé"));
+	auto j = req->getJsonObject();
+	if (!j || !j->isMember("name") || !j->isMember("price") || !j->isMember("stock"))
+		return cb(err(400, "Champs manquants"));
+	try {
+		Mapper<Plants> mp(app().getDbClient());
+		Plants p;
+		p.setName((*j)["name"].asString());
+		if (j->isMember("description")) p.setDescription((*j)["description"].asString());
+		p.setPrice((*j)["price"].asInt());
+		p.setStock((*j)["stock"].asInt());
+		mp.insert(p);
+		cb(HttpResponse::newHttpJsonResponse({{"id", p.getValueOfId()}}));
+	} catch (...) { cb(err(500, "Erreur création plante")); }
 }
 
-/**
- * """ Mise à jour d'une plante (admin) """
- */
+/* ---- Mise à jour ---- */
 void PlantController::updatePlant(const HttpRequestPtr& req,
-                                  std::function<void(const HttpResponsePtr&)>&& callback,
-                                  int plantId) {
-	if (!isAdmin(req)) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Non autorisé"}});
-		resp->setStatusCode(k403Forbidden);
-		return callback(resp);
-	}
-	auto json = req->getJsonObject();
-	if (!json || (!json->isMember("name") && !json->isMember("price") && !json->isMember("stock") && !json->isMember("description"))) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Aucun champ modifiable"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
-	}
-	std::string query = "UPDATE plants SET ";
-	std::vector<std::string> sets;
-	Json::Value vals;
-	if (json->isMember("name")) sets.push_back("name='" + (*json)["name"].asString() + "'");
-	if (json->isMember("description")) sets.push_back("description='" + (*json)["description"].asString() + "'");
-	if (json->isMember("price")) sets.push_back("price=" + std::to_string((*json)["price"].asDouble()));
-	if (json->isMember("stock")) sets.push_back("stock=" + std::to_string((*json)["stock"].asInt()));
-	for (size_t i = 0; i < sets.size(); i++) {
-		query += sets[i];
-		if (i < sets.size() - 1) query += ", ";
-	}
-	query += " WHERE id=" + std::to_string(plantId);
-	auto db = app().getDbClient();
-	db->execSqlSync(query);
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"updated", true}});
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	if (!isAdmin(req)) return cb(err(403, "Non autorisé"));
+	auto j = req->getJsonObject();
+	if (!j || j->empty()) return cb(err(400, "Aucun champ modifiable"));
+	try {
+		Mapper<Plants> mp(app().getDbClient());
+		auto p = mp.findByPrimaryKey(id);
+		if (j->isMember("name")) p.setName((*j)["name"].asString());
+		if (j->isMember("description")) p.setDescription((*j)["description"].asString());
+		if (j->isMember("price")) p.setPrice((*j)["price"].asInt());
+		if (j->isMember("stock")) p.setStock((*j)["stock"].asInt());
+		mp.update(p);
+		cb(HttpResponse::newHttpJsonResponse({{"updated", true}}));
+	} catch (...) { cb(err(404, "Plante introuvable")); }
 }
 
-/**
- * """ Suppression d'une plante (admin) """
- */
+/* ---- Suppression ---- */
 void PlantController::deletePlant(const HttpRequestPtr& req,
-                                  std::function<void(const HttpResponsePtr&)>&& callback,
-                                  int plantId) {
-	if (!isAdmin(req)) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Non autorisé"}});
-		resp->setStatusCode(k403Forbidden);
-		return callback(resp);
-	}
-	auto db = app().getDbClient();
-	db->execSqlSync("DELETE FROM plants WHERE id=$1", plantId);
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"deleted", true}});
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	if (!isAdmin(req)) return cb(err(403, "Non autorisé"));
+	try {
+		Mapper<Plants> mp(app().getDbClient());
+		mp.deleteByPrimaryKey(id);
+		cb(HttpResponse::newHttpJsonResponse({{"deleted", true}}));
+	} catch (...) { cb(err(404, "Plante introuvable")); }
 }

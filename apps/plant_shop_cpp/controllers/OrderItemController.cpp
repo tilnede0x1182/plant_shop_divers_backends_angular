@@ -2,69 +2,48 @@
 #include <drogon/orm/Mapper.h>
 using namespace drogon;
 using namespace drogon::orm;
+using drogon_model::plant_shop_cpp::OrderItems;
 
-/**
- * """ Lecture d'un order_item par id """
- */
+/* ---- Réponse d’erreur simplifiée ---- */
+static HttpResponsePtr err(int code, const std::string& msg) {
+	auto r = HttpResponse::newHttpJsonResponse({{"error", msg}});
+	r->setStatusCode((HttpStatusCode)code);
+	return r;
+}
+
+/* ---- Lecture ---- */
 void OrderItemController::getOrderItem(const HttpRequestPtr&,
-                                       std::function<void(const HttpResponsePtr&)>&& callback,
-                                       int itemId) {
-	auto db = app().getDbClient();
-	auto r = db->execSqlSync("SELECT id, order_id, plant_id, quantity, price FROM order_items WHERE id=$1", itemId);
-	if (r.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Item introuvable"}});
-		resp->setStatusCode(k404NotFound);
-		return callback(resp);
-	}
-	Json::Value j;
-	j["id"] = (*r)[0]["id"].as<int>();
-	j["orderId"] = (*r)[0]["order_id"].as<int>();
-	j["plantId"] = (*r)[0]["plant_id"].as<int>();
-	j["quantity"] = (*r)[0]["quantity"].as<int>();
-	j["price"] = (*r)[0]["price"].as<double>();
-	auto resp = HttpResponse::newHttpJsonResponse(j);
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	try {
+		Mapper<OrderItems> m(app().getDbClient());
+		auto item = m.findByPrimaryKey(id);
+		auto r = HttpResponse::newHttpJsonResponse(item.toJson());
+		r->setStatusCode(k200OK);
+		cb(r);
+	} catch (...) { cb(err(404, "Item introuvable")); }
 }
 
-/**
- * """ Mise à jour d'un order_item (quantity) """
- */
+/* ---- Mise à jour ---- */
 void OrderItemController::updateOrderItem(const HttpRequestPtr& req,
-                                          std::function<void(const HttpResponsePtr&)>&& callback,
-                                          int itemId) {
-	auto json = req->getJsonObject();
-	if (!json || !json->isMember("quantity")) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Champs manquants"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
-	}
-	int quantity = std::max(0, (*json)["quantity"].asInt());
-	auto db = app().getDbClient();
-
-	// Existence
-	auto r = db->execSqlSync("SELECT id FROM order_items WHERE id=$1", itemId);
-	if (r.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Item introuvable"}});
-		resp->setStatusCode(k404NotFound);
-		return callback(resp);
-	}
-
-	db->execSqlSync("UPDATE order_items SET quantity=$1 WHERE id=$2", quantity, itemId);
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"updated", true}});
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	auto j = req->getJsonObject();
+	if (!j || !j->isMember("quantity"))
+		return cb(err(400, "Champs manquants"));
+	try {
+		Mapper<OrderItems> m(app().getDbClient());
+		auto item = m.findByPrimaryKey(id);
+		item.setQuantity(std::max(0, (*j)["quantity"].asInt()));
+		m.update(item);
+		cb(HttpResponse::newHttpJsonResponse({{"updated", true}}));
+	} catch (...) { cb(err(404, "Item introuvable")); }
 }
 
-/**
- * """ Suppression d'un order_item """
- */
+/* ---- Suppression ---- */
 void OrderItemController::deleteOrderItem(const HttpRequestPtr&,
-                                          std::function<void(const HttpResponsePtr&)>&& callback,
-                                          int itemId) {
-	auto db = app().getDbClient();
-	db->execSqlSync("DELETE FROM order_items WHERE id=$1", itemId);
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"deleted", true}});
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	try {
+		Mapper<OrderItems> m(app().getDbClient());
+		m.deleteByPrimaryKey(id);
+		cb(HttpResponse::newHttpJsonResponse({{"deleted", true}}));
+	} catch (...) { cb(err(404, "Item introuvable")); }
 }

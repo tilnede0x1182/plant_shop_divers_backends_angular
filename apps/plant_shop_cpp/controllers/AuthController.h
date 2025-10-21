@@ -1,7 +1,6 @@
 #pragma once
 #include <drogon/drogon.h>
 #include <json/json.h>
-#include "../models/User.h"
 
 /**
  * """ Contrôleur d'authentification

@@ -60,10 +60,10 @@ set(SRC_CONTROLLERS
 )
 
 set(SRC_MODELS
-	models/User.h
-	models/Plant.h
-	models/Order.h
-	models/OrderItem.h
+	models_struct/User.h
+	models_struct/Plant.h
+	models_struct/Order.h
+	models_struct/OrderItem.h
 )
 
 # ───────────────────────────────

@@ -3,244 +3,139 @@
 #include <drogon/utils/Utilities.h>
 using namespace drogon;
 using namespace drogon::orm;
+using drogon_model::plant_shop_cpp::Orders;
+using drogon_model::plant_shop_cpp::OrderItems;
+using drogon_model::plant_shop_cpp::Users;
+using drogon_model::plant_shop_cpp::Plants;
 
-/**
- * """ Crée une commande avec des items pour l'utilisateur courant """
- */
+/* ---- Utilitaires internes ---- */
+static std::optional<Users> getUserByCookie(const HttpRequestPtr& req) {
+	if (!req->cookies().count("auth_user")) return std::nullopt;
+	Mapper<Users> mu(app().getDbClient());
+	return mu.findOne(Criteria(Users::Cols::_email, req->cookies().at("auth_user")));
+}
+
+static HttpResponsePtr err(int code, const std::string& msg) {
+	auto r = HttpResponse::newHttpJsonResponse({{"error", msg}});
+	r->setStatusCode((HttpStatusCode)code);
+	return r;
+}
+
+/* ---- Créer une commande ---- */
 void OrderController::createOrder(const HttpRequestPtr& req,
-                                  std::function<void(const HttpResponsePtr&)>&& callback) {
-	auto json = req->getJsonObject();
-	if (!json || !json->isMember("items")) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Items manquants"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
-	}
+	std::function<void(const HttpResponsePtr&)>&& cb) {
+	try {
+		Json::Value j; auto json = req->getJsonObject();
+		if (!json || !json->isMember("items")) return cb(err(400,"Items manquants"));
+		auto user = getUserByCookie(req); if (!user) return cb(err(401,"Non connecté"));
 
-	auto cookies = req->cookies();
-	if (cookies.find("auth_user") == cookies.end()) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Non connecté"}});
-		resp->setStatusCode(k401Unauthorized);
-		return callback(resp);
-	}
-	std::string email = cookies.at("auth_user");
+		Mapper<Plants> mp(app().getDbClient());
+		Mapper<Orders> mo(app().getDbClient());
+		Mapper<OrderItems> mi(app().getDbClient());
 
-	auto db = app().getDbClient();
-	auto u = db->execSqlSync("SELECT id FROM users WHERE email=$1", email);
-	if (u.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Utilisateur inconnu"}});
-		resp->setStatusCode(k401Unauthorized);
-		return callback(resp);
-	}
-	int userId = u[0]["id"].as<int>();
-
-	Json::Value items = (*json)["items"];
-	if (!items.isArray() || items.empty()) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Liste vide"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
-	}
-
-	// Calcul du total
-	double total = 0;
-	for (const auto& it : items) {
-		int plantId = it["plantId"].asInt();
-		int qty = it["quantity"].asInt();
-		auto p = db->execSqlSync("SELECT price, stock FROM plants WHERE id=$1", plantId);
-		if (p.size() == 0 || p[0]["stock"].as<int>() < qty) {
-			auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Stock insuffisant"}});
-			resp->setStatusCode(k400BadRequest);
-			return callback(resp);
+		double total = 0;
+		for (auto &it : (*json)["items"]) {
+			auto plant = mp.findByPrimaryKey(it["plantId"].asInt());
+			int qty = it["quantity"].asInt();
+			if (plant.getValueOfStock() < qty) return cb(err(400,"Stock insuffisant"));
+			total += plant.getValueOfPrice() * qty;
 		}
-		total += p[0]["price"].as<double>() * qty;
-	}
 
-	auto order = db->execSqlSync(
-	    "INSERT INTO orders (user_id, total, status) VALUES ($1,$2,'pending') RETURNING id",
-	    userId, total);
-	int orderId = order[0]["id"].as<int>();
+		Orders o; o.setUserId(user->getValueOfId());
+		o.setTotal(total); o.setStatus("pending");
+		mo.insert(o);
 
-	// Insertion des items et mise à jour du stock
-	for (const auto& it : items) {
-		int plantId = it["plantId"].asInt();
-		int qty = it["quantity"].asInt();
-		auto priceRow = db->execSqlSync("SELECT price FROM plants WHERE id=$1", plantId);
-		double unitPrice = priceRow[0]["price"].as<double>();
-		db->execSqlSync("INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1,$2,$3,$4)",
-		                orderId, plantId, qty, unitPrice);
-		db->execSqlSync("UPDATE plants SET stock = stock - $1 WHERE id=$2", qty, plantId);
-	}
+		for (auto &it : (*json)["items"]) {
+			auto plant = mp.findByPrimaryKey(it["plantId"].asInt());
+			int qty = it["quantity"].asInt();
+			OrderItems oi;
+			oi.setOrderId(o.getValueOfId());
+			oi.setPlantId(plant.getValueOfId());
+			oi.setQuantity(qty);
+			oi.setPrice(plant.getValueOfPrice());
+			mi.insert(oi);
+			plant.setStock(plant.getValueOfStock() - qty);
+			mp.update(plant);
+		}
 
-	Json::Value respBody;
-	respBody["id"] = orderId;
-	auto resp = HttpResponse::newHttpJsonResponse(respBody);
-	resp->setStatusCode(k201Created);
-	callback(resp);
+		auto r = HttpResponse::newHttpJsonResponse({{"id", o.getValueOfId()}});
+		r->setStatusCode(k201Created); cb(r);
+	} catch (...) { cb(err(500,"Erreur serveur")); }
 }
 
-/**
- * """ Liste les commandes de l'utilisateur connecté """
- */
+/* ---- Liste commandes utilisateur ---- */
 void OrderController::listOrders(const HttpRequestPtr& req,
-                                 std::function<void(const HttpResponsePtr&)>&& callback) {
-	auto cookies = req->cookies();
-	if (cookies.find("auth_user") == cookies.end()) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Non connecté"}});
-		resp->setStatusCode(k401Unauthorized);
-		return callback(resp);
-	}
-	std::string email = cookies.at("auth_user");
-
-	auto db = app().getDbClient();
-	auto u = db->execSqlSync("SELECT id FROM users WHERE email=$1", email);
-	if (u.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Utilisateur inconnu"}});
-		resp->setStatusCode(k401Unauthorized);
-		return callback(resp);
-	}
-	int userId = u[0]["id"].as<int>();
-
-	auto r = db->execSqlSync("SELECT * FROM orders WHERE user_id=$1 ORDER BY id DESC", userId);
-	Json::Value arr(Json::arrayValue);
-	for (auto row : r) {
-		Order o;
-		o.id = row["id"].as<int>();
-		o.user_id = row["user_id"].as<int>();
-		o.total = row["total"].as<double>();
-		o.status = row["status"].as<std::string>();
-		o.created_at = row["created_at"].as<std::string>();
-		auto items = db->execSqlSync("SELECT * FROM order_items WHERE order_id=$1", o.id);
-		for (auto it : items) {
-			OrderItem oi;
-			oi.id = it["id"].as<int>();
-			oi.order_id = it["order_id"].as<int>();
-			oi.plant_id = it["plant_id"].as<int>();
-			oi.quantity = it["quantity"].as<int>();
-			oi.price = it["price"].as<double>();
-			o.items.push_back(oi);
-		}
-		arr.append(o.toJson());
-	}
-
-	auto resp = HttpResponse::newHttpJsonResponse(arr);
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb) {
+	try {
+		auto user = getUserByCookie(req); if (!user) return cb(err(401,"Non connecté"));
+		Mapper<Orders> mo(app().getDbClient());
+		auto list = mo.findBy(Criteria(Orders::Cols::_user_id, user->getValueOfId()));
+		Json::Value arr(Json::arrayValue);
+		for (auto &o : list) arr.append(o.toJson());
+		auto r = HttpResponse::newHttpJsonResponse(arr);
+		r->setStatusCode(k200OK); cb(r);
+	} catch (...) { cb(err(500,"Erreur serveur")); }
 }
 
-/**
- * """ Récupère une commande spécifique """
- */
-void OrderController::getOrder(const HttpRequestPtr&,
-                               std::function<void(const HttpResponsePtr&)>&& callback,
-                               int orderId) {
-	auto db = app().getDbClient();
-	auto r = db->execSqlSync("SELECT * FROM orders WHERE id=$1", orderId);
-	if (r.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Commande introuvable"}});
-		resp->setStatusCode(k404NotFound);
-		return callback(resp);
-	}
-	Order o;
-	o.id = r[0]["id"].as<int>();
-	o.user_id = r[0]["user_id"].as<int>();
-	o.total = r[0]["total"].as<double>();
-	o.status = r[0]["status"].as<std::string>();
-	o.created_at = r[0]["created_at"].as<std::string>();
-
-	auto items = db->execSqlSync("SELECT * FROM order_items WHERE order_id=$1", orderId);
-	for (auto it : items) {
-		OrderItem oi;
-		oi.id = it["id"].as<int>();
-		oi.order_id = it["order_id"].as<int>();
-		oi.plant_id = it["plant_id"].as<int>();
-		oi.quantity = it["quantity"].as<int>();
-		oi.price = it["price"].as<double>();
-		o.items.push_back(oi);
-	}
-	auto resp = HttpResponse::newHttpJsonResponse(o.toJson());
-	resp->setStatusCode(k200OK);
-	callback(resp);
+/* ---- Lecture commande ---- */
+void OrderController::getOrder(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	try {
+		Mapper<Orders> mo(app().getDbClient());
+		auto o = mo.findByPrimaryKey(id);
+		auto r = HttpResponse::newHttpJsonResponse(o.toJson());
+		r->setStatusCode(k200OK); cb(r);
+	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
-/**
- * """ Met à jour le statut d’une commande (admin) """
- */
+/* ---- MAJ commande ---- */
 void OrderController::updateOrder(const HttpRequestPtr& req,
-                                  std::function<void(const HttpResponsePtr&)>&& callback,
-                                  int orderId) {
-	auto json = req->getJsonObject();
-	if (!json || !json->isMember("status")) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Statut manquant"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
-	}
-	auto db = app().getDbClient();
-	db->execSqlSync("UPDATE orders SET status=$1 WHERE id=$2",
-	                (*json)["status"].asString(), orderId);
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"updated", true}});
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	auto j = req->getJsonObject();
+	if (!j || !j->isMember("status")) return cb(err(400,"Statut manquant"));
+	try {
+		Mapper<Orders> mo(app().getDbClient());
+		auto o = mo.findByPrimaryKey(id);
+		o.setStatus((*j)["status"].asString());
+		mo.update(o);
+		cb(HttpResponse::newHttpJsonResponse({{"updated",true}}));
+	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
-/**
- * """ Supprime une commande (admin) """
- */
-void OrderController::deleteOrder(const HttpRequestPtr&,
-                                  std::function<void(const HttpResponsePtr&)>&& callback,
-                                  int orderId) {
-	auto db = app().getDbClient();
-	db->execSqlSync("DELETE FROM orders WHERE id=$1", orderId);
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"deleted", true}});
-	resp->setStatusCode(k200OK);
-	callback(resp);
+/* ---- Suppression commande ---- */
+void OrderController::deleteOrder(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	try {
+		Mapper<Orders> mo(app().getDbClient());
+		mo.deleteByPrimaryKey(id);
+		cb(HttpResponse::newHttpJsonResponse({{"deleted",true}}));
+	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
-/**
- * """ CRUD basique sur order_items """
- */
-void OrderController::getOrderItem(const HttpRequestPtr&,
-                                   std::function<void(const HttpResponsePtr&)>&& callback,
-                                   int itemId) {
-	auto db = app().getDbClient();
-	auto r = db->execSqlSync("SELECT * FROM order_items WHERE id=$1", itemId);
-	if (r.size() == 0) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Item introuvable"}});
-		resp->setStatusCode(k404NotFound);
-		return callback(resp);
-	}
-	OrderItem oi;
-	oi.id = r[0]["id"].as<int>();
-	oi.order_id = r[0]["order_id"].as<int>();
-	oi.plant_id = r[0]["plant_id"].as<int>();
-	oi.quantity = r[0]["quantity"].as<int>();
-	oi.price = r[0]["price"].as<double>();
-	auto resp = HttpResponse::newHttpJsonResponse(oi.toJson());
-	resp->setStatusCode(k200OK);
-	callback(resp);
+/* ---- CRUD items ---- */
+void OrderController::getOrderItem(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	try {
+		Mapper<OrderItems> mi(app().getDbClient());
+		auto it = mi.findByPrimaryKey(id);
+		cb(HttpResponse::newHttpJsonResponse(it.toJson()));
+	} catch (...) { cb(err(404,"Item introuvable")); }
 }
 
 void OrderController::updateOrderItem(const HttpRequestPtr& req,
-                                      std::function<void(const HttpResponsePtr&)>&& callback,
-                                      int itemId) {
-	auto json = req->getJsonObject();
-	if (!json || !json->isMember("quantity")) {
-		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error", "Champs manquants"}});
-		resp->setStatusCode(k400BadRequest);
-		return callback(resp);
-	}
-	auto db = app().getDbClient();
-	db->execSqlSync("UPDATE order_items SET quantity=$1 WHERE id=$2",
-	                (*json)["quantity"].asInt(), itemId);
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"updated", true}});
-	resp->setStatusCode(k200OK);
-	callback(resp);
+	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	auto j = req->getJsonObject();
+	if (!j || !j->isMember("quantity")) return cb(err(400,"Champs manquants"));
+	try {
+		Mapper<OrderItems> mi(app().getDbClient());
+		auto it = mi.findByPrimaryKey(id);
+		it.setQuantity((*j)["quantity"].asInt());
+		mi.update(it);
+		cb(HttpResponse::newHttpJsonResponse({{"updated",true}}));
+	} catch (...) { cb(err(404,"Item introuvable")); }
 }
 
-void OrderController::deleteOrderItem(const HttpRequestPtr&,
-                                      std::function<void(const HttpResponsePtr&)>&& callback,
-                                      int itemId) {
-	auto db = app().getDbClient();
-	db->execSqlSync("DELETE FROM order_items WHERE id=$1", itemId);
-	auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"deleted", true}});
-	resp->setStatusCode(k200OK);
-	callback(resp);
+void OrderController::deleteOrderItem(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
+	try {
+		Mapper<OrderItems> mi(app().getDbClient());
+		mi.deleteByPrimaryKey(id);
+		cb(HttpResponse::newHttpJsonResponse({{"deleted",true}}));
+	} catch (...) { cb(err(404,"Item introuvable")); }
 }

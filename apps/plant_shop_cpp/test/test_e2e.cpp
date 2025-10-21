@@ -6,6 +6,7 @@
 #include <chrono>
 #include <regex>
 #include <sstream>
+#include <trantor/net/EventLoopThread.h>
 
 /**
  * Test End-to-End complet (équivalent à test_complet.js)
@@ -16,7 +17,7 @@ using namespace drogon;
 using namespace std;
 
 // ------------------- CONFIG -------------------
-const string API_BASE_URL = "http://localhost:4100/api";
+const string API_BASE_URL = "http://localhost:4100";
 const string ADMIN_EMAIL  = "admin1@planteshop.com";
 const string ADMIN_PASS   = "password";
 map<string, string> cookieJar;
@@ -80,10 +81,25 @@ void assertAdminsFirstThenName(const Json::Value& arr) {
 }
 
 // ------------------- HTTP -------------------
-Json::Value hit(const string& method, const string& route, int expected, const Json::Value* body=nullptr, const string& who="default") {
-	auto client = HttpClient::newHttpClient(API_BASE_URL);
+Json::Value hit(const string& method, const string& route, int expected,
+                const Json::Value* body=nullptr, const string& who="default") {
+	static bool started = false;
+	static trantor::EventLoopThread loopThread;
+
+	// Démarre le thread d’événements au premier appel
+	if (!started) {
+		loopThread.run();
+		std::this_thread::sleep_for(std::chrono::milliseconds(50)); // laisse le temps de lancer la boucle
+		started = true;
+	}
+
+	auto loop = loopThread.getLoop();
+	auto client = HttpClient::newHttpClient(API_BASE_URL, loop);
+
+
 	auto req = HttpRequest::newHttpRequest();
-	req->setPath(route);
+	std::string fullPath = "/api" + (route[0] == '/' ? route : "/" + route);
+	req->setPath(fullPath);
 	req->setMethod(method=="POST"?Post:method=="PATCH"?Patch:method=="DELETE"?Delete:Get);
 	req->addHeader("Content-Type", "application/json");
 	if (!getCookie(who).empty()) req->addHeader("Cookie", getCookie(who));
@@ -261,6 +277,7 @@ int main() {
 	try {
 		cout<<"🧪 Démarrage des tests: "<<API_BASE_URL<<"\n";
 		login(ADMIN_EMAIL,ADMIN_PASS,"admin");
+		cout << "🔍 Cookie admin après login: " << getCookie("admin") << endl;
 		string userEmail="utilisateur_de_test_"+timestamp()+"@example.com";
 		registerUser("User",userEmail,"pass123","user");
 		login(userEmail,"pass123","user");

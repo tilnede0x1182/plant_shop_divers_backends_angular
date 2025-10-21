@@ -2,16 +2,18 @@
 #   Compilation et exécution principales
 # ───────────────────────────────
 
-compile:
-	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
-	cmake --build build --target plant_shop_cpp -j$$(nproc)
-
 run:
 	./build/plant_shop_cpp
 
-compile_run:
-	make compile
-	make run
+build:
+	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
+	cmake --build build --target plant_shop_cpp -j$$(nproc)
+
+compile:
+	if [ ! -d build ]; then cmake -S . -B build; fi
+	cmake --build build --target plant_shop_cpp -j$$(nproc)
+
+compile_run: compile run
 
 # ───────────────────────────────
 #   Gestion de la seed
@@ -24,10 +26,11 @@ seed:
 	cmake --build build --target seed_cpp -j$$(nproc); \
 	./build/seed_cpp
 
-seed-dev:
-	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
+compile-seed:
+	if [ ! -d build ]; then cmake -S . -B build; fi
 	cmake --build build --target seed_cpp -j$$(nproc)
-	./build/seed_cpp
+
+seed-dev: compile-seed seed
 
 seed-build:
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
@@ -37,17 +40,23 @@ seed-build:
 #   Gestion du test end-to-end
 # ───────────────────────────────
 
-test:
+tests:
 	if [ ! -f build/test_e2e_cpp ]; then \
 		CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build; \
 	fi; \
 	cmake --build build --target test_e2e_cpp -j$$(nproc); \
 	./build/test_e2e_cpp
 
-test-dev:
+
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
 	cmake --build build --target test_e2e_cpp -j$$(nproc)
 	./build/test_e2e_cpp
+
+compile-test:
+	if [ ! -d build ]; then cmake -S . -B build; fi
+	cmake --build build --target test_e2e_cpp -j$$(nproc)
+
+test-dev: compile-test tests
 
 test-build:
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build

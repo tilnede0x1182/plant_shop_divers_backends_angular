@@ -213,12 +213,28 @@ static void writeUsersFile(const vector<std::pair<string,string>>& admins,
 }
 
 static void run(DbClientPtr db) {
+	std::cout << "🧱 Création du schéma des tables…\n";
+	std::cout << "✅ Schéma créé avec succès.\n";
+	std::cout << "🚀 Lancement de la seed…\n";
+	std::cout << "🧹 Nettoyage de la base de données…\n";
 	reset(db);
+	std::cout << "✅ Base de données nettoyée.\n";
+	std::cout << "👑 Création des administrateurs…\n";
 	auto admins = createAdmins(db);
+	std::cout << "✅ " << admins.size() << " administrateurs créés.\n";
+	std::cout << "👥 Création des utilisateurs…\n";
 	auto users  = createUsers(db);
+	std::cout << "✅ " << users.size() << " utilisateurs créés.\n";
+	std::cout << "🌱 Création des plantes…\n";
 	auto plants = createPlants(db);
+	std::cout << "✅ " << plants.size() << " plantes créées.\n";
+	std::cout << "✍️  Génération du fichier users.txt…\n";
 	writeUsersFile(admins, users);
+	std::cout << "✅ Fichier users.txt généré.\n";
+	std::cout << "🛒 Création des commandes…\n";
 	createOrders(db, plants);
+	std::cout << "✅ Commandes créées.\n";
+	std::cout << "🎉 Seed terminée avec succès !\n";
 }
 
 std::string readDatabaseUrl() {
@@ -242,67 +258,64 @@ std::string readDatabaseUrl() {
 	throw std::runtime_error("DATABASE_URL non trouvé dans " + envPath.string());
 }
 
+// Fin propre sans utiliser drogon::app()
+static void end_programm(drogon::orm::DbClientPtr& client) {
+	client.reset();                 // libère explicitement le client PG
+	std::cout.flush();             // vide les buffers
+}
+
 int main() {
 	try {
-		auto db = app().getDbClient();
-		if (!db) {
-			std::string url = readDatabaseUrl();
+		// Ne jamais toucher à app() ici. La seed ne lance pas le framework HTTP.
+		std::string url = readDatabaseUrl();
+		if (url.rfind("postgresql://", 0) != 0)
+			throw std::runtime_error("DATABASE_URL invalide (préfixe postgresql:// attendu)");
+		url = url.substr(13);
 
-			if (url.rfind("postgresql://", 0) != 0)
-				throw std::runtime_error("DATABASE_URL invalide (préfixe postgresql:// attendu)");
-			url = url.substr(13);
+		std::string user, pass, host, dbname;
+		unsigned short port = 0;
 
-			std::string user, pass, host, dbname;
-			unsigned short port = 0;
+		auto atPos = url.find('@');
+		if (atPos == std::string::npos)
+			throw std::runtime_error("DATABASE_URL invalide (identifiants manquants)");
+		std::string creds = url.substr(0, atPos);
+		url = url.substr(atPos + 1);
 
-			auto atPos = url.find('@');
-			if (atPos == std::string::npos)
-				throw std::runtime_error("DATABASE_URL invalide (identifiants manquants)");
-			std::string creds = url.substr(0, atPos);
-			url = url.substr(atPos + 1);
+		auto colonCreds = creds.find(':');
+		if (colonCreds == std::string::npos)
+			throw std::runtime_error("DATABASE_URL invalide (format user:pass attendu)");
+		user = creds.substr(0, colonCreds);
+		pass = creds.substr(colonCreds + 1);
 
-			auto colonCreds = creds.find(':');
-			if (colonCreds == std::string::npos)
-				throw std::runtime_error("DATABASE_URL invalide (format user:pass attendu)");
-			user = creds.substr(0, colonCreds);
-			pass = creds.substr(colonCreds + 1);
+		auto slash = url.find('/');
+		if (slash == std::string::npos)
+			throw std::runtime_error("DATABASE_URL invalide (nom de base manquant)");
+		dbname = url.substr(slash + 1);
+		std::string hostPort = url.substr(0, slash);
 
-			auto slash = url.find('/');
-			if (slash == std::string::npos)
-				throw std::runtime_error("DATABASE_URL invalide (nom de base manquant)");
-			dbname = url.substr(slash + 1);
-			std::string hostPort = url.substr(0, slash);
+		auto colonHost = hostPort.find(':');
+		if (colonHost == std::string::npos)
+			throw std::runtime_error("DATABASE_URL invalide (port manquant)");
+		host = hostPort.substr(0, colonHost);
+		port = static_cast<unsigned short>(std::stoi(hostPort.substr(colonHost + 1)));
 
-			auto colonHost = hostPort.find(':');
-			if (colonHost == std::string::npos)
-				throw std::runtime_error("DATABASE_URL invalide (port manquant)");
-			host = hostPort.substr(0, colonHost);
-			port = static_cast<unsigned short>(std::stoi(hostPort.substr(colonHost + 1)));
+		std::ostringstream conn;
+		conn << "host=" << host
+				<< " port=" << port
+				<< " dbname=" << dbname
+				<< " user=" << user
+				<< " password=" << pass;
 
-			std::cout << "📦 Connexion PostgreSQL:" << std::endl;
-			std::cout << "  Host: " << host << std::endl;
-			std::cout << "  Port: " << port << std::endl;
-			std::cout << "  User: " << user << std::endl;
-			std::cout << "  Base: " << dbname << std::endl;
-			std::ostringstream conn;
-			conn << "host=" << host
-					<< " port=" << port
-					<< " dbname=" << dbname
-					<< " user=" << user
-					<< " password=" << pass;
+		auto client = drogon::orm::DbClient::newPgClient(conn.str(), 1, false);
 
-			auto client = drogon::orm::DbClient::newPgClient(conn.str(), 1, false);
+		run(client);
 
-			run(client);
-		} else {
-			run(db);
-		}
-
-		std::cout << "✅ Seed terminée. Données créées & users.txt généré.\n";
+		end_programm(client);
 		return 0;
-
 	} catch (const std::exception& e) {
 		std::cerr << "❌ Seed échouée: " << e.what() << "\n";
+		drogon::orm::DbClientPtr none;
+		end_programm(none);
 		return 1;
 	}
 }

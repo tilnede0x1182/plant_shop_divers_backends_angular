@@ -1,5 +1,4 @@
 #include <drogon/drogon.h>
-#include <drogon/orm/Mapper.h>
 #include <json/json.h>
 #include <fstream>
 #include <random>
@@ -14,7 +13,6 @@
 #include <filesystem>
 
 using namespace drogon;
-using namespace drogon::orm;
 using std::string;
 using std::vector;
 

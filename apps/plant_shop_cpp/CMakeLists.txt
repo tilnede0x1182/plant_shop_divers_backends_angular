@@ -50,7 +50,7 @@ find_package(Threads REQUIRED)
 include_directories(/usr/include/jsoncpp)
 
 # ───────────────────────────────
-#   Fichiers sources communs
+#   Fichiers controllers
 # ───────────────────────────────
 set(SRC_CONTROLLERS
 	controllers/AuthController.cpp
@@ -59,14 +59,23 @@ set(SRC_CONTROLLERS
 	controllers/OrderController.cpp
 )
 
+# ───────────────────────────────
+#   Fichiers modèles
+# ───────────────────────────────
 set(SRC_MODELS
-	models_struct/User.h
-	models_struct/Plant.h
-	models_struct/Order.h
-	models_struct/OrderItem.h
+	# Modèles ORM générés par drogon_ctl
+	models/Users.cc
+	models/Plants.cc
+	models/Orders.cc
+	models/OrderItems.cc
 )
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/models)
+# ───────────────────────────────
+#   Répertoires d’inclusion
+# ───────────────────────────────
+include_directories(
+	${CMAKE_CURRENT_SOURCE_DIR}/models
+)
 
 # ───────────────────────────────
 #   Exécutable principal (serveur)

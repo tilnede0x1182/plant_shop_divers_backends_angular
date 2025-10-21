@@ -4,6 +4,72 @@
 #include <fstream>
 #include <string>
 
+/** """ Lecture et parsing du DATABASE_URL depuis .env """ */
+std::string readDatabaseUrlFromEnv() {
+	std::ifstream envFile(".env");
+	if (!envFile.is_open()) return "";
+	std::string line;
+	while (std::getline(envFile, line)) {
+		if (line.rfind("DATABASE_URL=", 0) == 0)
+			return line.substr(13);
+	}
+	return "";
+}
+
+/** """ Extrait les paramètres du DATABASE_URL """ */
+void parseDatabaseUrl(const std::string& url, std::string& host, unsigned short& port,
+                      std::string& dbname, std::string& user, std::string& pass) {
+	if (url.rfind("postgresql://", 0) != 0)
+		throw std::runtime_error("DATABASE_URL invalide (préfixe postgresql:// attendu)");
+
+	std::string data = url.substr(13);
+	auto atPos = data.find('@');
+	if (atPos == std::string::npos) throw std::runtime_error("DATABASE_URL invalide (identifiants manquants)");
+	auto creds = data.substr(0, atPos);
+	auto rest = data.substr(atPos + 1);
+
+	auto colonCreds = creds.find(':');
+	if (colonCreds == std::string::npos) throw std::runtime_error("DATABASE_URL invalide (format user:pass attendu)");
+	user = creds.substr(0, colonCreds);
+	pass = creds.substr(colonCreds + 1);
+
+	auto slash = rest.find('/');
+	if (slash == std::string::npos) throw std::runtime_error("DATABASE_URL invalide (nom de base manquant)");
+	dbname = rest.substr(slash + 1);
+	auto hostPort = rest.substr(0, slash);
+
+	auto colonHost = hostPort.find(':');
+	if (colonHost == std::string::npos) throw std::runtime_error("DATABASE_URL invalide (port manquant)");
+	host = hostPort.substr(0, colonHost);
+	port = static_cast<unsigned short>(std::stoi(hostPort.substr(colonHost + 1)));
+}
+
+/** """ Crée la connexion PostgreSQL à partir du .env """ */
+void connectToDatabaseFromEnv() {
+	std::string url = readDatabaseUrlFromEnv();
+	if (url.empty()) throw std::runtime_error("DATABASE_URL manquant dans .env");
+
+	std::string host, dbname, user, pass;
+	unsigned short port = 0;
+	parseDatabaseUrl(url, host, port, dbname, user, pass);
+
+	std::ostringstream conn;
+	conn << "host=" << host
+	     << " port=" << port
+	     << " dbname=" << dbname
+	     << " user=" << user
+	     << " password=" << pass;
+
+	drogon::app().createDbClient(
+		"postgresql",
+		conn.str(),
+		1, "", "", "",
+		0, "", "",
+		false, "",
+		0.0, false
+	);
+}
+
 /** """ Lit .env et retourne la valeur de DATABASE_URL """ */
 std::string db_stringenv_read() {
 	std::ifstream envFile(".env");
@@ -96,23 +162,13 @@ int main() {
 		app().addListener("0.0.0.0", 4100);
 		enableCors();
 
-		std::string dbUrl = db_stringenv_read_secured();
-		if (dbUrl.empty()) return 1;
-		LOG_INFO << "🔹 DATABASE_URL chargé depuis le fichier .env";
-
 		try {
-			createDbClient(dbUrl);
-			try {
-				testDbConnection();
-			} catch (const std::exception& e) {
-				LOG_FATAL << "❌ Test de connexion PostgreSQL échoué : " << e.what();
-				throw;
-			}
+			connectToDatabaseFromEnv();
+			testDbConnection();
 		} catch (const std::exception &e) {
-			LOG_FATAL << "❌ Impossible de créer le client DB : " << e.what();
+			LOG_FATAL << "❌ Échec lors de la connexion PostgreSQL : " << e.what();
 			throw;
 		}
-
 		registerRoutes();
 		LOG_INFO << "✅ Backend Plant Shop (C++) initialisé sur http://localhost:4100";
 		app().run();

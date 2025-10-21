@@ -149,8 +149,9 @@ Json::Value hit(const string& method, const string& route, int expected,
 
 
 	auto req = HttpRequest::newHttpRequest();
-	std::string fullPath = "/api" + (route[0] == '/' ? route : "/" + route);
+	std::string fullPath = (route[0] == '/' ? route : "/" + route);
 	req->setPath(fullPath);
+
 	req->setMethod(method=="POST"?Post:method=="PATCH"?Patch:method=="DELETE"?Delete:Get);
 	req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 	req->addHeader("Content-Type", "application/json");
@@ -178,12 +179,8 @@ Json::Value hit(const string& method, const string& route, int expected,
 	req->addHeader("Host", "localhost:4100");
 	req->addHeader("User-Agent", "drogon-client");
 	req->addHeader("Connection", "keep-alive");
-
-	// Forcer un Content-Type sans charset
-	req->removeHeader("Content-Type");
 	req->addHeader("Content-Type", "application/json");
-
-	// Ne pas appeler setContentTypeCode ici
+	req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 	client->sendRequest(req, [&prom](ReqResult resCode, const HttpResponsePtr& res) {
 		prom.set_value({resCode, res});
 	});
@@ -371,42 +368,40 @@ void testAuthMe(const string& who="user") {
 }
 
 // ------------------- MAIN -------------------
-// int main() {
-// 	try {
-// 		cout<<"🧪 Démarrage des tests: "<<API_BASE_URL<<"\n";
-// 		login(ADMIN_EMAIL,ADMIN_PASS,"admin");
-// 		cout << "🔍 Cookie admin après login: " << getCookie("admin") << endl;
-// 		string userEmail="utilisateur_de_test_"+timestamp()+"@example.com";
-// 		registerUser("User",userEmail,"pass123","user");
-// 		login(userEmail,"pass123","user");
-
-// 		testPlants("admin");
-// 		testUsers("admin");
-// 		testOrders("admin","user");
-// 		testUserProfile("admin","user",userEmail);
-// 		testAuthRoles("admin","user");
-// 		testAdminPlants("admin");
-// 		testAdminUsers("admin");
-// 		testAuthMe("user");
-
-// 		cout<<"\n🎉 Tous les tests ont réussi !\n";
-// 		return 0;
-// 	} catch(const exception& e) {
-// 		cerr<<"\n❌ Tests interrompus: "<<e.what()<<endl;
-// 		return 1;
-// 	}
-// }
-
-
-
 int main() {
 	try {
-		cout << "🧪 Test LOGIN seul\n";
-		login(ADMIN_EMAIL, ADMIN_PASS, "admin");
-		cout << "✅ Login réussi\n";
+		cout<<"🧪 Démarrage des tests: "<<API_BASE_URL<<"\n";
+		login(ADMIN_EMAIL,ADMIN_PASS,"admin");
+		cout << "🔍 Cookie admin après login: " << getCookie("admin") << endl;
+		string userEmail="utilisateur_de_test_"+timestamp()+"@example.com";
+		registerUser("User",userEmail,"pass123","user");
+		login(userEmail,"pass123","user");
+
+		testPlants("admin");
+		testUsers("admin");
+		testOrders("admin","user");
+		testUserProfile("admin","user",userEmail);
+		testAuthRoles("admin","user");
+		testAdminPlants("admin");
+		testAdminUsers("admin");
+		testAuthMe("user");
+
+		cout<<"\n🎉 Tous les tests ont réussi !\n";
 		return 0;
-	} catch (const exception& e) {
-		cerr << "❌ Erreur LOGIN: " << e.what() << endl;
+	} catch(const exception& e) {
+		cerr<<"\n❌ Tests interrompus: "<<e.what()<<endl;
 		return 1;
 	}
 }
+
+// int main() {
+// 	try {
+// 		cout << "🧪 Test LOGIN seul\n";
+// 		login(ADMIN_EMAIL, ADMIN_PASS, "admin");
+// 		cout << "✅ Login réussi\n";
+// 		return 0;
+// 	} catch (const exception& e) {
+// 		cerr << "❌ Erreur LOGIN: " << e.what() << endl;
+// 		return 1;
+// 	}
+// }

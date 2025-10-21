@@ -37,7 +37,16 @@ int main() {
 			std::getenv("DATABASE_URL") :
 			"postgresql://postgres:postgres@localhost:5432/plant_shop";
 
-		app().createDbClient("postgresql", dbUrl, 1);
+		// Correction : signature complète pour compatibilité avec Drogon >= 1.9
+		app().createDbClient(
+			"postgresql",  // type de base
+			dbUrl,         // URL complète
+			1,             // nombre de connexions
+			"", "", "",    // user, password, dbname
+			0, "", "",     // port, charset, filename
+			false, "",     // isFast, appName
+			0.0, false     // timeout, autoReconnect
+		);
 
 		// ───────────────────────────────
 		//   Enregistrement des routes

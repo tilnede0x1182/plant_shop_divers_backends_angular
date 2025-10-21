@@ -13,7 +13,7 @@ static bool isAdmin(const HttpRequestPtr& req) {
 	auto email = cookies.at("auth_user");
 	auto db = app().getDbClient();
 	auto r = db->execSqlSync("SELECT is_admin FROM users WHERE email=$1", email);
-	return (r->size() > 0 && (*r)[0]["is_admin"].as<bool>());
+	return (r.size() > 0 && r[0]["is_admin"].as<bool>());
 }
 
 /**
@@ -23,7 +23,7 @@ void PlantController::listPlants(const HttpRequestPtr&, std::function<void(const
 	auto db = app().getDbClient();
 	auto rows = db->execSqlSync("SELECT id, name, description, price, stock, created_at FROM plants ORDER BY id ASC");
 	Json::Value arr(Json::arrayValue);
-	for (auto r : *rows) {
+	for (auto r : rows) {
 		Json::Value j;
 		j["id"] = r["id"].as<int>();
 		j["name"] = r["name"].as<std::string>();
@@ -44,18 +44,18 @@ void PlantController::listPlants(const HttpRequestPtr&, std::function<void(const
 void PlantController::getPlant(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& callback, int plantId) {
 	auto db = app().getDbClient();
 	auto r = db->execSqlSync("SELECT * FROM plants WHERE id=$1", plantId);
-	if (r->size() == 0) {
+	if (r.size() == 0) {
 		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Plante introuvable"}});
 		resp->setStatusCode(k404NotFound);
 		return callback(resp);
 	}
 	Json::Value j;
-	j["id"] = (*r)[0]["id"].as<int>();
-	j["name"] = (*r)[0]["name"].as<std::string>();
-	j["description"] = (*r)[0]["description"].as<std::string>();
-	j["price"] = (*r)[0]["price"].as<double>();
-	j["stock"] = (*r)[0]["stock"].as<int>();
-	j["created_at"] = (*r)[0]["created_at"].as<std::string>();
+	j["id"] = r[0]["id"].as<int>();
+	j["name"] = r[0]["name"].as<std::string>();
+	j["description"] = r[0]["description"].as<std::string>();
+	j["price"] = r[0]["price"].as<double>();
+	j["stock"] = r[0]["stock"].as<int>();
+	j["created_at"] = r[0]["created_at"].as<std::string>();
 	auto resp = HttpResponse::newHttpJsonResponse(j);
 	resp->setStatusCode(k200OK);
 	callback(resp);
@@ -74,7 +74,7 @@ void PlantController::listAdminPlants(const HttpRequestPtr& req,
 	auto db = app().getDbClient();
 	auto rows = db->execSqlSync("SELECT id, name, description, price, stock, created_at FROM plants ORDER BY name ASC");
 	Json::Value arr(Json::arrayValue);
-	for (auto r : *rows) {
+	for (auto r : rows) {
 		Json::Value j;
 		j["id"] = r["id"].as<int>();
 		j["name"] = r["name"].as<std::string>();
@@ -113,7 +113,7 @@ void PlantController::createPlant(const HttpRequestPtr& req, std::function<void(
 	    "INSERT INTO plants (name, description, price, stock) VALUES ($1,$2,$3,$4) RETURNING id",
 	    name, desc, price, stock);
 	Json::Value j;
-	j["id"] = (*r)[0]["id"].as<int>();
+	j["id"] = r[0]["id"].as<int>();
 	auto resp = HttpResponse::newHttpJsonResponse(j);
 	resp->setStatusCode(k201Created);
 	callback(resp);

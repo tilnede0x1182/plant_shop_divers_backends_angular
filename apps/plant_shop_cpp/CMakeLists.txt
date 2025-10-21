@@ -76,6 +76,8 @@ add_executable(plant_shop_cpp
 	${SRC_MODELS}
 )
 
+find_library(ARGON2_LIB argon2 REQUIRED)
+
 target_link_libraries(plant_shop_cpp
 	Drogon::Drogon
 	OpenSSL::SSL
@@ -83,6 +85,7 @@ target_link_libraries(plant_shop_cpp
 	PostgreSQL::PostgreSQL
 	ZLIB::ZLIB
 	Threads::Threads
+	${ARGON2_LIB}
 )
 
 # ───────────────────────────────

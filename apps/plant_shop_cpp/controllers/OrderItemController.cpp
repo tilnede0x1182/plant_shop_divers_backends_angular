@@ -11,7 +11,7 @@ void OrderItemController::getOrderItem(const HttpRequestPtr&,
                                        int itemId) {
 	auto db = app().getDbClient();
 	auto r = db->execSqlSync("SELECT id, order_id, plant_id, quantity, price FROM order_items WHERE id=$1", itemId);
-	if (r->size() == 0) {
+	if (r.size() == 0) {
 		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Item introuvable"}});
 		resp->setStatusCode(k404NotFound);
 		return callback(resp);
@@ -44,7 +44,7 @@ void OrderItemController::updateOrderItem(const HttpRequestPtr& req,
 
 	// Existence
 	auto r = db->execSqlSync("SELECT id FROM order_items WHERE id=$1", itemId);
-	if (r->size() == 0) {
+	if (r.size() == 0) {
 		auto resp = HttpResponse::newHttpJsonResponse(Json::Value{{"error","Item introuvable"}});
 		resp->setStatusCode(k404NotFound);
 		return callback(resp);

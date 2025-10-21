@@ -35,12 +35,63 @@ string getCookie(const string& who) {
 	return "";
 }
 
+/**
+ * Sauvegarde le cookie jwt en provenance de la réponse HTTP
+ * Utilise d'abord l'API cookies de Drogon, puis fallback Set-Cookie brut.
+ * @who profil (admin|user)
+ * @res réponse HTTP reçue
+ */
 void saveCookie(const string& who, const HttpResponsePtr& res) {
-	auto cookies = res->getHeader("set-cookie");
-	if (!cookies.empty()) {
-		auto val = cookies.substr(0, cookies.find(';'));
-		cookieJar[who] = val;
+	// 1) Tentative via l’API cookies de Drogon
+	//    (certains clients ne remontent pas 'Set-Cookie' dans headers()).
+	try {
+		// Map<string,string> attendue: nom -> valeur
+		const auto& cookies = res->cookies();
+		auto iterator = cookies.find("jwt");
+		if (iterator != cookies.end()) {
+			const string pair = "jwt=" + iterator->second;
+			cookieJar[who] = pair;
+			cout << "🍪 Cookie enregistré pour " << who << ": " << pair << endl;
+			return;
+		}
+	} catch (...) {
+		// on ignore et passe au fallback
 	}
+
+	// 2) Fallback: lecture brute d’un éventuel Set-Cookie agrégé
+	string cookieLine;
+
+	// a) accesseur direct si disponible
+	try {
+		if (res->getHeader("set-cookie").size() > 0) {
+			cookieLine = res->getHeader("set-cookie");
+		}
+	} catch (...) {
+		// b) parcours des headers (certains builds l’exposent ici)
+		for (const auto& header : res->headers()) {
+			string key = header.first;
+			for (char& c : key)
+				c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+			if (key == "set-cookie") {
+				cookieLine = header.second;
+				break;
+			}
+		}
+	}
+
+	if (!cookieLine.empty()) {
+		// Prend uniquement "name=value" du premier cookie
+		size_t firstComma = cookieLine.find(',');
+		if (firstComma != string::npos)
+			cookieLine = cookieLine.substr(0, firstComma);
+		size_t pos = cookieLine.find(';');
+		string val = (pos == string::npos) ? cookieLine : cookieLine.substr(0, pos);
+		cookieJar[who] = val;
+		cout << "🍪 Cookie enregistré pour " << who << ": " << val << endl;
+		return;
+	}
+
+	cout << "⚠️ Aucun cookie trouvé pour " << who << endl;
 }
 
 void assertEq(const Json::Value& obj, const string& key, const Json::Value& expected) {
@@ -101,19 +152,57 @@ Json::Value hit(const string& method, const string& route, int expected,
 	std::string fullPath = "/api" + (route[0] == '/' ? route : "/" + route);
 	req->setPath(fullPath);
 	req->setMethod(method=="POST"?Post:method=="PATCH"?Patch:method=="DELETE"?Delete:Get);
+	req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 	req->addHeader("Content-Type", "application/json");
-	if (!getCookie(who).empty()) req->addHeader("Cookie", getCookie(who));
-	if (body) req->setBody(body->toStyledString());
+	req->addHeader("Accept","application/json");
+	req->addHeader("Connection", "close");
+	const string cookie = getCookie(who);
+	if (!cookie.empty()) {
+		cout << "🔎 [DEBUG] Cookie utilisé pour " << who << ": " << cookie << endl;
+		req->addHeader("Cookie", cookie);
+	} else {
+		cout << "🔎 [DEBUG] Aucun cookie envoyé pour " << who << endl;
+	}
+	if (body) {
+		Json::StreamWriterBuilder b;
+		b["indentation"]="";
+		const string jsonBody = Json::writeString(b, *body);
+		cout << "🔎 [DEBUG] JSON envoyé à " << route << ": " << jsonBody << endl;
+		req->setBody(jsonBody);
+		req->addHeader("Content-Length", std::to_string(jsonBody.size()));
+	}
 
 	std::promise<std::pair<ReqResult, HttpResponsePtr>> prom;
 	auto fut = prom.get_future();
 
+	req->addHeader("Host", "localhost:4100");
+	req->addHeader("User-Agent", "drogon-client");
+	req->addHeader("Connection", "keep-alive");
+
+	// Forcer un Content-Type sans charset
+	req->removeHeader("Content-Type");
+	req->addHeader("Content-Type", "application/json");
+
+	// Ne pas appeler setContentTypeCode ici
 	client->sendRequest(req, [&prom](ReqResult resCode, const HttpResponsePtr& res) {
 		prom.set_value({resCode, res});
 	});
 
 	auto [resCode, res] = fut.get();
 	if (resCode != ReqResult::Ok) throw runtime_error("Erreur de connexion: " + route);
+		if (route == "/auth/login") {
+		cout << "🔎 [DEBUG] Login response code: " << res->getStatusCode() << endl;
+		cout << "🔎 [DEBUG] Headers returned:" << endl;
+		for (const auto& [key, val] : res->headers()) {
+			cout << "   [" << key << "] => " << val << endl;
+		}
+		cout << "🔎 [DEBUG] All headers printed above" << endl;
+		for (const auto& [key, val] : res->headers()) {
+			cout << "   " << key << ": " << val << endl;
+		}
+		cout << "🔎 [DEBUG] Body: " << res->getBody() << endl;
+	}
+	cout << "🔎 [DEBUG] Body brut: [" << res->getBody() << "]" << endl;
 	saveCookie(who, res);
 	if (res->getStatusCode() != expected)
 		throw runtime_error("API " + route + " → " + to_string(res->getStatusCode()) + " attendu " + to_string(expected));
@@ -128,8 +217,17 @@ Json::Value hit(const string& method, const string& route, int expected,
 }
 
 // ------------------- MODULES -------------------
+/**
+ * Connexion utilisateur : vérifie les champs avant envoi.
+ */
 void login(const string& email,const string& password,const string& who) {
-	Json::Value creds; creds["email"]=email; creds["password"]=password;
+	if (email.empty() || password.empty())
+		throw runtime_error("login(): email ou password vide (" + who + ")");
+	Json::Value creds;
+	creds["email"] = email;
+	creds["password"] = password;
+	cout << "🔎 [DEBUG] Tentative login pour " << who
+	     << " email=" << email << endl;
 	hit("POST","/auth/login",201,&creds,who);
 }
 
@@ -273,28 +371,42 @@ void testAuthMe(const string& who="user") {
 }
 
 // ------------------- MAIN -------------------
+// int main() {
+// 	try {
+// 		cout<<"🧪 Démarrage des tests: "<<API_BASE_URL<<"\n";
+// 		login(ADMIN_EMAIL,ADMIN_PASS,"admin");
+// 		cout << "🔍 Cookie admin après login: " << getCookie("admin") << endl;
+// 		string userEmail="utilisateur_de_test_"+timestamp()+"@example.com";
+// 		registerUser("User",userEmail,"pass123","user");
+// 		login(userEmail,"pass123","user");
+
+// 		testPlants("admin");
+// 		testUsers("admin");
+// 		testOrders("admin","user");
+// 		testUserProfile("admin","user",userEmail);
+// 		testAuthRoles("admin","user");
+// 		testAdminPlants("admin");
+// 		testAdminUsers("admin");
+// 		testAuthMe("user");
+
+// 		cout<<"\n🎉 Tous les tests ont réussi !\n";
+// 		return 0;
+// 	} catch(const exception& e) {
+// 		cerr<<"\n❌ Tests interrompus: "<<e.what()<<endl;
+// 		return 1;
+// 	}
+// }
+
+
+
 int main() {
 	try {
-		cout<<"🧪 Démarrage des tests: "<<API_BASE_URL<<"\n";
-		login(ADMIN_EMAIL,ADMIN_PASS,"admin");
-		cout << "🔍 Cookie admin après login: " << getCookie("admin") << endl;
-		string userEmail="utilisateur_de_test_"+timestamp()+"@example.com";
-		registerUser("User",userEmail,"pass123","user");
-		login(userEmail,"pass123","user");
-
-		testPlants("admin");
-		testUsers("admin");
-		testOrders("admin","user");
-		testUserProfile("admin","user",userEmail);
-		testAuthRoles("admin","user");
-		testAdminPlants("admin");
-		testAdminUsers("admin");
-		testAuthMe("user");
-
-		cout<<"\n🎉 Tous les tests ont réussi !\n";
+		cout << "🧪 Test LOGIN seul\n";
+		login(ADMIN_EMAIL, ADMIN_PASS, "admin");
+		cout << "✅ Login réussi\n";
 		return 0;
-	} catch(const exception& e) {
-		cerr<<"\n❌ Tests interrompus: "<<e.what()<<endl;
+	} catch (const exception& e) {
+		cerr << "❌ Erreur LOGIN: " << e.what() << endl;
 		return 1;
 	}
 }

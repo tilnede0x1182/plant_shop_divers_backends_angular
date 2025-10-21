@@ -66,6 +66,8 @@ set(SRC_MODELS
 	models_struct/OrderItem.h
 )
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/models)
+
 # ───────────────────────────────
 #   Exécutable principal (serveur)
 # ───────────────────────────────

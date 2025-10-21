@@ -1,6 +1,13 @@
 #include "OrderController.h"
 #include <drogon/orm/Mapper.h>
 #include <drogon/utils/Utilities.h>
+
+#include "../models/Users.h"
+#include "../models/Plants.h"
+#include "../models/Orders.h"
+#include "../models/OrderItems.h"
+using namespace drogon_model::plant_shop_cpp;
+
 using namespace drogon;
 using namespace drogon::orm;
 using drogon_model::plant_shop_cpp::Orders;
@@ -16,7 +23,9 @@ static std::optional<Users> getUserByCookie(const HttpRequestPtr& req) {
 }
 
 static HttpResponsePtr err(int code, const std::string& msg) {
-	auto r = HttpResponse::newHttpJsonResponse({{"error", msg}});
+	Json::Value j;
+	j["error"] = msg;
+	auto r = HttpResponse::newHttpJsonResponse(j);
 	r->setStatusCode((HttpStatusCode)code);
 	return r;
 }
@@ -38,11 +47,13 @@ void OrderController::createOrder(const HttpRequestPtr& req,
 			auto plant = mp.findByPrimaryKey(it["plantId"].asInt());
 			int qty = it["quantity"].asInt();
 			if (plant.getValueOfStock() < qty) return cb(err(400,"Stock insuffisant"));
-			total += plant.getValueOfPrice() * qty;
+			total += std::stod(plant.getValueOfPrice()) * qty;
 		}
 
-		Orders o; o.setUserId(user->getValueOfId());
-		o.setTotal(total); o.setStatus("pending");
+		Orders o;
+		o.setUserId(user->getValueOfId());
+		o.setTotal(std::to_string(total));
+		o.setStatus("pending");
 		mo.insert(o);
 
 		for (auto &it : (*json)["items"]) {
@@ -58,8 +69,11 @@ void OrderController::createOrder(const HttpRequestPtr& req,
 			mp.update(plant);
 		}
 
-		auto r = HttpResponse::newHttpJsonResponse({{"id", o.getValueOfId()}});
-		r->setStatusCode(k201Created); cb(r);
+		Json::Value resp;
+		resp["id"] = o.getValueOfId();
+		auto r = HttpResponse::newHttpJsonResponse(resp);
+		r->setStatusCode(k201Created);
+		cb(r);
 	} catch (...) { cb(err(500,"Erreur serveur")); }
 }
 
@@ -73,7 +87,8 @@ void OrderController::listOrders(const HttpRequestPtr& req,
 		Json::Value arr(Json::arrayValue);
 		for (auto &o : list) arr.append(o.toJson());
 		auto r = HttpResponse::newHttpJsonResponse(arr);
-		r->setStatusCode(k200OK); cb(r);
+		r->setStatusCode(k200OK);
+		cb(r);
 	} catch (...) { cb(err(500,"Erreur serveur")); }
 }
 
@@ -83,7 +98,8 @@ void OrderController::getOrder(const HttpRequestPtr&, std::function<void(const H
 		Mapper<Orders> mo(app().getDbClient());
 		auto o = mo.findByPrimaryKey(id);
 		auto r = HttpResponse::newHttpJsonResponse(o.toJson());
-		r->setStatusCode(k200OK); cb(r);
+		r->setStatusCode(k200OK);
+		cb(r);
 	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
@@ -97,7 +113,9 @@ void OrderController::updateOrder(const HttpRequestPtr& req,
 		auto o = mo.findByPrimaryKey(id);
 		o.setStatus((*j)["status"].asString());
 		mo.update(o);
-		cb(HttpResponse::newHttpJsonResponse({{"updated",true}}));
+		Json::Value resp;
+		resp["updated"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
@@ -106,7 +124,9 @@ void OrderController::deleteOrder(const HttpRequestPtr&, std::function<void(cons
 	try {
 		Mapper<Orders> mo(app().getDbClient());
 		mo.deleteByPrimaryKey(id);
-		cb(HttpResponse::newHttpJsonResponse({{"deleted",true}}));
+		Json::Value resp;
+		resp["deleted"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
@@ -128,7 +148,9 @@ void OrderController::updateOrderItem(const HttpRequestPtr& req,
 		auto it = mi.findByPrimaryKey(id);
 		it.setQuantity((*j)["quantity"].asInt());
 		mi.update(it);
-		cb(HttpResponse::newHttpJsonResponse({{"updated",true}}));
+		Json::Value resp;
+		resp["updated"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404,"Item introuvable")); }
 }
 
@@ -136,6 +158,8 @@ void OrderController::deleteOrderItem(const HttpRequestPtr&, std::function<void(
 	try {
 		Mapper<OrderItems> mi(app().getDbClient());
 		mi.deleteByPrimaryKey(id);
-		cb(HttpResponse::newHttpJsonResponse({{"deleted",true}}));
+		Json::Value resp;
+		resp["deleted"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404,"Item introuvable")); }
 }

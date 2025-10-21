@@ -1,13 +1,22 @@
 #include "UserController.h"
 #include <drogon/orm/Mapper.h>
 #include <drogon/utils/Utilities.h>
+
+#include "../models/Users.h"
+#include "../models/Plants.h"
+#include "../models/Orders.h"
+#include "../models/OrderItems.h"
+using namespace drogon_model::plant_shop_cpp;
+
 using namespace drogon;
 using namespace drogon::orm;
 using drogon_model::plant_shop_cpp::Users;
 
 /* ---- Helpers génériques ---- */
 static HttpResponsePtr err(int code, const std::string &msg) {
-	auto r = HttpResponse::newHttpJsonResponse({{"error", msg}});
+	Json::Value j;
+	j["error"] = msg;
+	auto r = HttpResponse::newHttpJsonResponse(j);
 	r->setStatusCode((HttpStatusCode)code);
 	return r;
 }
@@ -23,12 +32,12 @@ static std::optional<Users> currentUser(const HttpRequestPtr &req) {
 
 static bool isAdmin(const HttpRequestPtr &req) {
 	auto u = currentUser(req);
-	return u && u->getValueOfIsAdmin();
+	return u.has_value() && u->getValueOfIsAdmin();
 }
 
 static bool canAct(const HttpRequestPtr &req, int uid) {
 	auto u = currentUser(req);
-	return u && (u->getValueOfId() == uid || u->getValueOfIsAdmin());
+	return u.has_value() && (u->getValueOfId() == uid || u->getValueOfIsAdmin());
 }
 
 /* ---- Création (admin) ---- */
@@ -45,7 +54,9 @@ void UserController::createUser(const HttpRequestPtr &req, std::function<void(co
 		u.setPasswordHash(utils::getMd5((*j)["password"].asString()));
 		u.setIsAdmin(j->isMember("admin") ? (*j)["admin"].asBool() : false);
 		m.insert(u);
-		cb(HttpResponse::newHttpJsonResponse({{"id", u.getValueOfId()}}));
+		Json::Value resp;
+		resp["id"] = u.getValueOfId();
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(409, "Email déjà utilisé")); }
 }
 
@@ -94,7 +105,9 @@ void UserController::updateUser(const HttpRequestPtr &req, std::function<void(co
 		if (j->isMember("name")) u.setUsername((*j)["name"].asString());
 		if (j->isMember("email")) u.setEmail((*j)["email"].asString());
 		m.update(u);
-		cb(HttpResponse::newHttpJsonResponse({{"updated", true}}));
+		Json::Value resp;
+		resp["updated"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404, "User introuvable")); }
 }
 
@@ -104,7 +117,9 @@ void UserController::deleteUser(const HttpRequestPtr &req, std::function<void(co
 	try {
 		Mapper<Users> m(app().getDbClient());
 		m.deleteByPrimaryKey(id);
-		cb(HttpResponse::newHttpJsonResponse({{"deleted", true}}));
+		Json::Value resp;
+		resp["deleted"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404, "User introuvable")); }
 }
 
@@ -144,7 +159,9 @@ void UserController::updateAdminUser(const HttpRequestPtr &req, std::function<vo
 		if (j->isMember("email")) u.setEmail((*j)["email"].asString());
 		if (j->isMember("admin")) u.setIsAdmin((*j)["admin"].asBool());
 		m.update(u);
-		cb(HttpResponse::newHttpJsonResponse({{"updated", true}}));
+		Json::Value resp;
+		resp["updated"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404, "User introuvable")); }
 }
 
@@ -154,6 +171,8 @@ void UserController::deleteAdminUser(const HttpRequestPtr &req, std::function<vo
 	try {
 		Mapper<Users> m(app().getDbClient());
 		m.deleteByPrimaryKey(id);
-		cb(HttpResponse::newHttpJsonResponse({{"deleted", true}}));
+		Json::Value resp;
+		resp["deleted"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404, "User introuvable")); }
 }

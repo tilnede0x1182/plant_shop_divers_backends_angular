@@ -1,5 +1,12 @@
 #include "OrderItemController.h"
 #include <drogon/orm/Mapper.h>
+
+#include <../models/Users.h>
+#include <../models/Plants.h>
+#include <../models/Orders.h>
+#include <../models/OrderItems.h>
+using namespace drogon_model::plant_shop_cpp;
+
 using namespace drogon;
 using namespace drogon::orm;
 using drogon_model::plant_shop_cpp::OrderItems;

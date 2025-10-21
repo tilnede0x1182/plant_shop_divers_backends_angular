@@ -1,6 +1,13 @@
 #include "PlantController.h"
 #include <drogon/orm/Mapper.h>
 #include <drogon/utils/Utilities.h>
+
+#include "../models/Users.h"
+#include "../models/Plants.h"
+#include "../models/Orders.h"
+#include "../models/OrderItems.h"
+using namespace drogon_model::plant_shop_cpp;
+
 using namespace drogon;
 using namespace drogon::orm;
 using drogon_model::plant_shop_cpp::Plants;
@@ -8,7 +15,9 @@ using drogon_model::plant_shop_cpp::Users;
 
 /* ---- Helpers ---- */
 static HttpResponsePtr err(int code, const std::string &msg) {
-	auto r = HttpResponse::newHttpJsonResponse({{"error", msg}});
+	Json::Value j;
+	j["error"] = msg;
+	auto r = HttpResponse::newHttpJsonResponse(j);
 	r->setStatusCode((HttpStatusCode)code);
 	return r;
 }
@@ -18,7 +27,7 @@ static bool isAdmin(const HttpRequestPtr &req) {
 		if (!req->cookies().count("auth_user")) return false;
 		Mapper<Users> mu(app().getDbClient());
 		auto u = mu.findOne(Criteria(Users::Cols::_email, req->cookies().at("auth_user")));
-		return u && u->getValueOfIsAdmin();
+		return u.has_value() && u->getValueOfIsAdmin();
 	} catch (...) { return false; }
 }
 
@@ -30,7 +39,8 @@ void PlantController::listPlants(const HttpRequestPtr&, std::function<void(const
 		Json::Value arr(Json::arrayValue);
 		for (auto &p : all) arr.append(p.toJson());
 		auto r = HttpResponse::newHttpJsonResponse(arr);
-		r->setStatusCode(k200OK); cb(r);
+		r->setStatusCode(k200OK);
+		cb(r);
 	} catch (...) { cb(err(500, "Erreur serveur")); }
 }
 
@@ -50,7 +60,7 @@ void PlantController::listAdminPlants(const HttpRequestPtr& req,
 	try {
 		Mapper<Plants> mp(app().getDbClient());
 		auto all = mp.findAll();
-		std::sort(all.begin(), all.end(), [](const Plants&a,const Plants&b){
+		std::sort(all.begin(), all.end(), [](const Plants &a, const Plants &b) {
 			return a.getValueOfName() < b.getValueOfName();
 		});
 		Json::Value arr(Json::arrayValue);
@@ -71,10 +81,12 @@ void PlantController::createPlant(const HttpRequestPtr& req,
 		Plants p;
 		p.setName((*j)["name"].asString());
 		if (j->isMember("description")) p.setDescription((*j)["description"].asString());
-		p.setPrice((*j)["price"].asInt());
+		p.setPrice(std::to_string((*j)["price"].asInt()));
 		p.setStock((*j)["stock"].asInt());
 		mp.insert(p);
-		cb(HttpResponse::newHttpJsonResponse({{"id", p.getValueOfId()}}));
+		Json::Value resp;
+		resp["id"] = p.getValueOfId();
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(500, "Erreur création plante")); }
 }
 
@@ -89,10 +101,12 @@ void PlantController::updatePlant(const HttpRequestPtr& req,
 		auto p = mp.findByPrimaryKey(id);
 		if (j->isMember("name")) p.setName((*j)["name"].asString());
 		if (j->isMember("description")) p.setDescription((*j)["description"].asString());
-		if (j->isMember("price")) p.setPrice((*j)["price"].asInt());
+		if (j->isMember("price")) p.setPrice(std::to_string((*j)["price"].asInt()));
 		if (j->isMember("stock")) p.setStock((*j)["stock"].asInt());
 		mp.update(p);
-		cb(HttpResponse::newHttpJsonResponse({{"updated", true}}));
+		Json::Value resp;
+		resp["updated"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404, "Plante introuvable")); }
 }
 
@@ -103,6 +117,8 @@ void PlantController::deletePlant(const HttpRequestPtr& req,
 	try {
 		Mapper<Plants> mp(app().getDbClient());
 		mp.deleteByPrimaryKey(id);
-		cb(HttpResponse::newHttpJsonResponse({{"deleted", true}}));
+		Json::Value resp;
+		resp["deleted"] = true;
+		cb(HttpResponse::newHttpJsonResponse(resp));
 	} catch (...) { cb(err(404, "Plante introuvable")); }
 }

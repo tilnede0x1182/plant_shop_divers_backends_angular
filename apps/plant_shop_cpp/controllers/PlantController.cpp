@@ -27,7 +27,7 @@ static bool isAdmin(const HttpRequestPtr &req) {
 		if (!req->cookies().count("auth_user")) return false;
 		Mapper<Users> mu(app().getDbClient());
 		auto u = mu.findOne(Criteria(Users::Cols::_email, req->cookies().at("auth_user")));
-		return u.has_value() && u->getValueOfIsAdmin();
+		return u.getValueOfIsAdmin();
 	} catch (...) { return false; }
 }
 

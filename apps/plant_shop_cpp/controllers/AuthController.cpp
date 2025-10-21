@@ -84,14 +84,16 @@ void AuthController::login(const HttpRequestPtr& req,
 	}
 	try {
 		Mapper<Users> users(app().getDbClient());
-		auto userOpt = users.findOne(Criteria(Users::Cols::_email, d["email"].asString()));
-		if (!userOpt.has_value()) {
-			Json::Value j; j["error"] = "Utilisateur introuvable";
+		Users user;
+		try {
+			user = users.findOne(Criteria(Users::Cols::_email, d["email"].asString()));
+		} catch (const DrogonDbException &e) {
+			Json::Value j;
+			j["error"] = "Utilisateur introuvable";
 			auto r = HttpResponse::newHttpJsonResponse(j);
 			r->setStatusCode(k401Unauthorized);
 			return cb(r);
 		}
-		auto user = *userOpt;
 		if (!verifyPassword(d["password"].asString(), user.getValueOfPasswordHash())) {
 			Json::Value j; j["error"] = "Mot de passe invalide";
 			auto r = HttpResponse::newHttpJsonResponse(j);
@@ -128,13 +130,16 @@ void AuthController::me(const HttpRequestPtr& req,
 	try {
 		Mapper<Users> users(app().getDbClient());
 		auto u = users.findOne(Criteria(Users::Cols::_email, ck.at("auth_user")));
-		if (!u.has_value()) {
-			Json::Value j; j["error"] = "Utilisateur inconnu";
+		Users usr;
+		try {
+			usr = users.findOne(Criteria(Users::Cols::_email, ck.at("auth_user")));
+		} catch (const DrogonDbException &e) {
+			Json::Value j;
+			j["error"] = "Utilisateur inconnu";
 			auto r = HttpResponse::newHttpJsonResponse(j);
 			r->setStatusCode(k404NotFound);
 			return cb(r);
 		}
-		auto usr = *u;
 		Json::Value j;
 		j["id"] = usr.getValueOfId();
 		j["email"] = usr.getValueOfEmail();

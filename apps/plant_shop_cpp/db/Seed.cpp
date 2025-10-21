@@ -263,10 +263,10 @@ std::string readDatabaseUrl() {
 	throw std::runtime_error("DATABASE_URL non trouvé dans " + envPath.string());
 }
 
-// Fin propre sans utiliser drogon::app()
+// Fin propre
 static void end_programm(drogon::orm::DbClientPtr& client) {
-	client.reset();                 // libère explicitement le client PG
-	std::cout.flush();             // vide les buffers
+	client.reset();
+	std::cout.flush();
 }
 
 int main() {

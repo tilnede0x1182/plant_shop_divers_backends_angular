@@ -97,8 +97,9 @@ Json::Value hit(const string& method, const string& route, int expected, const J
 
 	Json::CharReaderBuilder builder;
 	Json::Value json; string errs;
-	istringstream s(res->getBody());
-	Json::parseFromStream(builder,s,&json,&errs);
+	std::string responseBody(res->getBody());
+	std::istringstream s(responseBody);
+	Json::parseFromStream(builder, s, &json, &errs);
 	return json;
 }
 
@@ -147,25 +148,47 @@ void testUsers(const string& who="admin") {
 }
 
 void testOrders(const string& adminWho,const string& userWho) {
-	cout<<"\n📌 TEST MODULE: ORDERS & ORDER ITEMS\n";
-	Json::Value plant; plant["name"]="Plante_de_test_"+timestamp(); plant["price"]=10; plant["stock"]=5;
-	auto p=hit("POST","/admin/plants",201,&plant,adminWho);
-	int plantId=p["id"].asInt();
+	cout << "\n📌 TEST MODULE: ORDERS & ORDER ITEMS\n";
 
-	Json::Value order; Json::Value item; item["plantId"]=plantId; item["quantity"]=2; order["items"].append(item);
-	auto o=hit("POST","/orders",201,&order,userWho);
-	int orderId=o["id"].asInt();
+	Json::Value plant;
+	plant["name"] = "Plante_de_test_" + timestamp();
+	plant["price"] = 10;
+	plant["stock"] = 5;
+	auto p = hit("POST", "/admin/plants", 201, &plant, adminWho);
+	int plantId = p["id"].asInt();
 
-	Json::Value status; status["status"]="shipped";
-	hit("PATCH","/orders/"+to_string(orderId),200,&status,adminWho);
-	auto orders=hit("GET","/orders",200,nullptr,userWho);
-	for (auto& cmd:orders) if (cmd["id"]==orderId) {
-		assertEq(cmd,"status","shipped");
-		if (!cmd["orderItems"].size()) throw runtime_error("Items absents");
-		assertEq(cmd["orderItems"][0]["plant"],"name",plant["name"]);
+	Json::Value order;
+	Json::Value item;
+	item["plantId"] = plantId;
+	item["quantity"] = 2;
+	order["items"].append(item);
+	auto o = hit("POST", "/orders", 201, &order, userWho);
+	int orderId = o["id"].asInt();
+
+	Json::Value status;
+	status["status"] = "shipped";
+	hit("PATCH", "/orders/" + to_string(orderId), 200, &status, adminWho);
+
+	auto orders = hit("GET", "/orders", 200, nullptr, userWho);
+	for (auto& cmd : orders) if (cmd["id"] == orderId) {
+		assertEq(cmd, "status", "shipped");
+
+		// --- Vérifications renforcées ---
+		if (!cmd.isMember("orderItems") || !cmd["orderItems"].isArray() || cmd["orderItems"].empty())
+			throw runtime_error("orderItems manquant ou vide");
+
+		for (const auto& it : cmd["orderItems"]) {
+			if (!it.isMember("plant") || !it["plant"].isObject())
+				throw runtime_error("orderItems[].plant manquant ou invalide");
+			if (!it.isMember("quantity") || !it["quantity"].isInt())
+				throw runtime_error("orderItems[].quantity manquant ou invalide");
+		}
+
+		assertEq(cmd["orderItems"][0]["plant"], "name", plant["name"]);
 	}
-	hit("DELETE","/orders/"+to_string(orderId),200,nullptr,adminWho);
-	hit("DELETE","/admin/plants/"+to_string(plantId),200,nullptr,adminWho);
+
+	hit("DELETE", "/orders/" + to_string(orderId), 200, nullptr, adminWho);
+	hit("DELETE", "/admin/plants/" + to_string(plantId), 200, nullptr, adminWho);
 }
 
 void testUserProfile(const string& adminWho,const string& userWho,const string& userEmail) {

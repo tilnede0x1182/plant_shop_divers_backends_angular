@@ -5,7 +5,9 @@ use sqlx::PgPool;
 use crate::errors::AppError;
 use super::models::{LoginPayload, RegisterPayload, UserAuth};
 use super::jwt::{generate_jwt, verify_jwt};
-use bcrypt::{verify, hash};
+// use bcrypt::{verify, hash};
+use argon2::{Argon2, PasswordHasher, PasswordVerifier};
+use argon2::password_hash::{SaltString, PasswordHash, rand_core::OsRng};
 use poem::http::StatusCode;
 
 #[handler]
@@ -24,7 +26,12 @@ pub async fn login(
 
 	.ok_or(AppError::Unauthorized)?;
 
-	if !verify(&payload.password, &user.password_hash).unwrap_or(false) {
+	let parsed_hash = PasswordHash::new(&user.password_hash).map_err(|_| AppError::Internal)?;
+	let valide = Argon2::default()
+		.verify_password(payload.password.as_bytes(), &parsed_hash)
+		.is_ok();
+
+	if !valide {
 		return Err(AppError::Unauthorized.into());
 	}
 
@@ -46,11 +53,11 @@ pub async fn register(
 	Json(payload): Json<RegisterPayload>,
 	jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserAuth>)> {
-	let bcrypt_cost = std::env::var("BCRYPT_COST")
-		.and_then(|v| v.parse::<u32>().map_err(|_| std::env::VarError::NotPresent))
-		.unwrap_or(12);
-
-	let hash_str = hash(&payload.password, bcrypt_cost).map_err(|_| AppError::Internal)?;
+	let salt = SaltString::generate(&mut OsRng);
+	let hash_str = Argon2::default()
+		.hash_password(payload.password.as_bytes(), &salt)
+		.map_err(|_| AppError::Internal)?
+		.to_string();
 
 	// ✅ Vérifie si l'utilisateur existe déjà
 	if let Some(existing) = sqlx::query_as!(

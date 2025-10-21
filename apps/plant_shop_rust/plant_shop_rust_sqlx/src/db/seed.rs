@@ -9,6 +9,8 @@ use std::env;
 use std::fs::File;
 use std::io::Write;
 use lipsum;
+use argon2::{Argon2, PasswordHasher};
+use argon2::password_hash::{SaltString, rand_core::OsRng};
 
 // # Constantes
 const NB_ADMINS: u32 = 3;
@@ -93,7 +95,6 @@ fn generate_random_password() -> String {
 /// Crée admins + users et renvoie (creds_admins, creds_users, users_temp)
 async fn create_users(
 	pool: &Pool<Postgres>,
-	cost: u32,
 ) -> Result<(Vec<(String, String)>, Vec<(String, String)>, Vec<TempUser>), AppError> {
 	println!("👤 Création des utilisateurs et admins...");
 
@@ -111,7 +112,11 @@ async fn create_users(
 	for index in 1..=NB_ADMINS {
 		let email = format!("admin{}@planteshop.com", index);
 		let password = "password".to_string();
-		let password_hash = bcrypt::hash(&password, cost).map_err(|_| AppError::Internal)?;
+		let salt = SaltString::generate(&mut OsRng);
+		let password_hash = Argon2::default()
+			.hash_password(password.as_bytes(), &salt)
+			.map_err(|_| AppError::Internal)?
+			.to_string();
 		let prenom = prenoms[rng.gen_range(0..prenoms.len())];
 		let nom = noms[rng.gen_range(0..noms.len())];
 		let full_name = format!("{} {}", prenom, nom);
@@ -133,7 +138,11 @@ async fn create_users(
 	for index in 0..NB_USERS {
 		let email = generate_realistic_email(index);
 		let password = generate_random_password();
-		let password_hash = bcrypt::hash(&password, cost).map_err(|_| AppError::Internal)?;
+		let salt = SaltString::generate(&mut OsRng);
+		let password_hash = Argon2::default()
+			.hash_password(password.as_bytes(), &salt)
+			.map_err(|_| AppError::Internal)?
+			.to_string();
 		let prenom = prenoms[rng.gen_range(0..prenoms.len())];
 		let nom = noms[rng.gen_range(0..noms.len())];
 		let full_name = format!("{} {}", prenom, nom);
@@ -285,7 +294,7 @@ fn write_users_file(
 pub async fn run_seed() -> Result<(), AppError> {
 	dotenv().ok();
 	let database_url = env::var("DATABASE_URL").map_err(|_| AppError::Internal)?;
-	let bcrypt_cost = env::var("BCRYPT_COST_SEED")
+	let _bcrypt_cost = env::var("BCRYPT_COST_SEED")
 		.ok()
 		.and_then(|s| s.parse::<u32>().ok())
 		.or_else(|| env::var("BCRYPT_COST").ok().and_then(|s| s.parse::<u32>().ok()))
@@ -297,7 +306,7 @@ pub async fn run_seed() -> Result<(), AppError> {
 
 	reset_db(&pool).await?;
 	let plants = create_plants(&pool).await?;
-	let (admins_creds, users_creds, temp_users) = create_users(&pool, bcrypt_cost).await?;
+	let (admins_creds, users_creds, temp_users) = create_users(&pool).await?;
 	write_users_file(admins_creds, users_creds)?;
 	create_orders(&pool, temp_users, plants).await?;
 

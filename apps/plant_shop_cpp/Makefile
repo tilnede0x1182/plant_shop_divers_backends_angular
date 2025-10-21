@@ -3,7 +3,7 @@
 # ───────────────────────────────
 
 run:
-	./build/plant_shop_cpp --config-file ../config.json
+	./build/plant_shop_cpp
 
 build:
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build

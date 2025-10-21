@@ -112,7 +112,11 @@ void AuthController::login(const HttpRequestPtr& req,
 						<< " | password length=" << password.size();
 		LOG_INFO << "🔹 [login] Fin parsing JSON, préparation DB...";
 
-		auto db = app().getDbClient();
+		auto db = app().getDbClient("default");
+		if (!db) {
+			LOG_FATAL << "💥 Aucun client DB 'default' disponible";
+			throw std::runtime_error("DB client 'default' manquant");
+		}
 		Mapper<Users> users(db);
 
 		Users user;

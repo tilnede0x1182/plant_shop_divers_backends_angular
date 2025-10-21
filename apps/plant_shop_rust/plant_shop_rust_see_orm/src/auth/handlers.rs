@@ -11,7 +11,8 @@ use crate::errors::AppError;
 use crate::auth::jwt::{generate_jwt, verify_jwt};
 use crate::entity::users::{Entity as User, Model as UserModel, ActiveModel as ActiveUser, Column};
 use sea_orm::{DatabaseConnection, EntityTrait, QueryFilter, Set, ActiveModelTrait, ColumnTrait};
-use bcrypt::{verify, hash};
+use argon2::{Argon2, PasswordHasher, PasswordVerifier};
+use argon2::password_hash::{SaltString, PasswordHash, rand_core::OsRng};
 
 /// Payload de login
 #[derive(serde::Deserialize)]
@@ -42,7 +43,9 @@ pub async fn login(
 		.map_err(|_| AppError::Internal)?
 		.ok_or(AppError::Unauthorized)?;
 
-	if !verify(&payload.password, &user.password_hash).unwrap_or(false) {
+	let parsed = PasswordHash::new(&user.password_hash).map_err(|_| AppError::Internal)?;
+	let ok = Argon2::default().verify_password(payload.password.as_bytes(), &parsed).is_ok();
+	if !ok {
 		return Err(AppError::Unauthorized.into());
 	}
 
@@ -64,12 +67,11 @@ pub async fn register(
 	Json(payload): Json<RegisterPayload>,
 	jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserModel>)> {
-	let bcrypt_cost = std::env::var("BCRYPT_COST")
-		.ok()
-		.and_then(|v| v.parse::<u32>().ok())
-		.unwrap_or(12);
-
-	let hash_str = hash(&payload.password, bcrypt_cost).map_err(|_| AppError::Internal)?;
+	let salt = SaltString::generate(&mut OsRng);
+	let hash_str = Argon2::default()
+		.hash_password(payload.password.as_bytes(), &salt)
+		.map_err(|_| AppError::Internal)?
+		.to_string();
 
 	// Vérifie si l'utilisateur existe déjà
 	if let Some(existing) = User::find()

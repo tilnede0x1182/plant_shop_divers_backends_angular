@@ -10,7 +10,8 @@ use crate::errors::AppError;
 use crate::auth::jwt::verify_jwt;
 use crate::entity::users::{Entity as User, ActiveModel as ActiveUser, Model as UserModel, Column};
 use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, IntoActiveModel};
-use bcrypt;
+use argon2::{Argon2, PasswordHasher};
+use argon2::password_hash::{SaltString, rand_core::OsRng};
 use serde::Deserialize;
 use crate::users::models::User as UserDto;
 use serde_json::json;
@@ -80,8 +81,11 @@ pub async fn list_users(
 
 #[handler]
 pub async fn create_user(Data(db): Data<&DatabaseConnection>, Json(payload): Json<CreateUserDto>) -> PoemResult<(StatusCode, Json<UserModel>)> {
-	let bcrypt_cost = std::env::var("BCRYPT_COST").unwrap_or("12".to_string()).parse::<u32>().unwrap_or(12);
-	let password_hash = bcrypt::hash(payload.password.clone(), bcrypt_cost).map_err(|_| AppError::Internal)?;
+	let salt = SaltString::generate(&mut OsRng);
+	let password_hash = Argon2::default()
+		.hash_password(payload.password.as_bytes(), &salt)
+		.map_err(|_| AppError::Internal)?
+		.to_string();
 
 	let new_user = ActiveUser {
 		username: Set(payload.username.clone()),

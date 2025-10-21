@@ -11,7 +11,8 @@
 
 using namespace drogon;
 using namespace drogon::orm;
-using namespace drogon_model::models
+using namespace drogon_model::plant_shop_cpp;
+
 ;
 
 const std::string Plants::Cols::_id = "\"id\"";

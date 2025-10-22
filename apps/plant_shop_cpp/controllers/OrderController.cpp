@@ -1,7 +1,9 @@
 #include "OrderController.h"
 #include <drogon/orm/Mapper.h>
 #include <drogon/utils/Utilities.h>
+#include "AuthController.h"
 
+#include "../utils/TokenUtils.h"
 #include "../models/Users.h"
 #include "../models/Plants.h"
 #include "../models/Orders.h"
@@ -16,11 +18,6 @@ using drogon_model::plant_shop_cpp::Users;
 using drogon_model::plant_shop_cpp::Plants;
 
 /* ---- Utilitaires internes ---- */
-static std::optional<Users> getUserByCookie(const HttpRequestPtr& req) {
-	if (!req->cookies().count("auth_user")) return std::nullopt;
-	Mapper<Users> mu(app().getDbClient());
-	return mu.findOne(Criteria(Users::Cols::_email, req->cookies().at("auth_user")));
-}
 
 static HttpResponsePtr err(int code, const std::string& msg) {
 	Json::Value j;
@@ -36,7 +33,7 @@ void OrderController::createOrder(const HttpRequestPtr& req,
 	try {
 		Json::Value j; auto json = req->getJsonObject();
 		if (!json || !json->isMember("items")) return cb(err(400,"Items manquants"));
-		auto user = getUserByCookie(req); if (!user) return cb(err(401,"Non connecté"));
+		auto user = AuthController::canActDecodeJWT(req); if (!user) return cb(err(401,"Non connecté"));
 
 		Mapper<Plants> mp(app().getDbClient());
 		Mapper<Orders> mo(app().getDbClient());
@@ -81,7 +78,7 @@ void OrderController::createOrder(const HttpRequestPtr& req,
 void OrderController::listOrders(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb) {
 	try {
-		auto user = getUserByCookie(req); if (!user) return cb(err(401,"Non connecté"));
+		auto user = AuthController::canActDecodeJWT(req); if (!user) return cb(err(401,"Non connecté"));
 		Mapper<Orders> mo(app().getDbClient());
 		auto list = mo.findBy(Criteria(Orders::Cols::_user_id, user->getValueOfId()));
 		Json::Value arr(Json::arrayValue);

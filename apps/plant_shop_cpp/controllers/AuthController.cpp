@@ -95,6 +95,15 @@ void AuthController::registerUser(const HttpRequestPtr& req,
 	}
 }
 
+/* ---- Helpers génériques ---- */
+static HttpResponsePtr err(int code, const std::string &msg) {
+	Json::Value j;
+	j["error"] = msg;
+	auto r = HttpResponse::newHttpJsonResponse(j);
+	r->setStatusCode((HttpStatusCode)code);
+	return r;
+}
+
 /** """ Vérifie si le cookie jwt indique un admin @req requête HTTP """ */
 bool AuthController::isAdmin(const drogon::HttpRequestPtr& req) {
     const auto& cookies = req->cookies();
@@ -121,6 +130,46 @@ bool AuthController::isAdmin(const drogon::HttpRequestPtr& req) {
 
     LOG_DEBUG << "[isAdmin] no valid session found";
     return false;
+}
+
+/** """ Vérifie si la requête peut agir : admin OU propriétaire """ */
+bool AuthController::canAct(const HttpRequestPtr &req, int uid) {
+	// 1. Si admin (plus fiable via AuthController)
+	if (AuthController::isAdmin(req)) return true;
+
+	// 2. Sinon, vérifier que l'utilisateur connecté agit sur son propre compte
+	auto cookies = req->cookies();
+	auto it = cookies.find("auth_user");
+	if (it == cookies.end()) return false;
+
+	const std::string email = it->second;
+	Mapper<drogon_model::plant_shop_cpp::Users> users(app().getDbClient());
+
+	try {
+		auto user = users.findOne(Criteria(drogon_model::plant_shop_cpp::Users::Cols::_email, CompareOperator::EQ, email));
+		return user.getValueOfId() == uid;
+	} catch (...) {
+		return false;
+	}
+}
+
+/** """ Décode le JWT pour récupérer l'utilisateur correspondant """ */
+std::optional<drogon_model::plant_shop_cpp::Users> AuthController::canActDecodeJWT(const HttpRequestPtr &req) {
+	std::string email; std::string name; int64_t userId = 0; bool admin = false;
+
+	// 1. Lire et décoder le cookie JWT
+	auto it = req->cookies().find("jwt");
+	if (it == req->cookies().end()) return std::nullopt;
+	if (!parseToken(it->second, email, userId, name, admin)) return std::nullopt;
+
+	// 2. Charger l'utilisateur correspondant depuis la base
+	Mapper<drogon_model::plant_shop_cpp::Users> users(app().getDbClient());
+	try {
+		auto user = users.findByPrimaryKey(static_cast<int>(userId));
+		return user;
+	} catch (...) {
+		return std::nullopt;
+	}
 }
 
 /** Connexion utilisateur */

@@ -22,27 +22,6 @@ static HttpResponsePtr err(int code, const std::string &msg) {
 	return r;
 }
 
-/** """ Vérifie si la requête peut agir : admin OU propriétaire """ */
-static bool canAct(const HttpRequestPtr &req, int uid) {
-	// 1. Si admin (plus fiable via AuthController)
-	if (AuthController::isAdmin(req)) return true;
-
-	// 2. Sinon, vérifier que l'utilisateur connecté agit sur son propre compte
-	auto cookies = req->cookies();
-	auto it = cookies.find("auth_user");
-	if (it == cookies.end()) return false;
-
-	const std::string email = it->second;
-	Mapper<drogon_model::plant_shop_cpp::Users> users(app().getDbClient());
-
-	try {
-		auto user = users.findOne(Criteria(drogon_model::plant_shop_cpp::Users::Cols::_email, CompareOperator::EQ, email));
-		return user.getValueOfId() == uid;
-	} catch (...) {
-		return false;
-	}
-}
-
 static std::optional<Users> currentUser(const HttpRequestPtr &req) {
 	try {
 		if (!req->cookies().count("auth_user")) return std::nullopt;
@@ -110,7 +89,7 @@ void UserController::getUser(const HttpRequestPtr &req, std::function<void(const
 
 /* ---- Mise à jour ---- */
 void UserController::updateUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!canAct(req, id)) return cb(err(403, "Forbidden"));
+	if (!AuthController::canAct(req, id)) return cb(err(403, "Forbidden"));
 	auto j = req->getJsonObject();
 	if (!j) return cb(err(400, "Body vide"));
 	try {

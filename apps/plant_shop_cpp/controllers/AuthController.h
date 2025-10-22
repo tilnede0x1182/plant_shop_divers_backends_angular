@@ -1,6 +1,8 @@
 #pragma once
 #include <drogon/drogon.h>
 #include <json/json.h>
+#include "../models/Users.h"
+#include <optional>
 
 /**
  * """ Contrôleur d'authentification
@@ -22,8 +24,14 @@ public:
 		ADD_METHOD_TO(AuthController::logout, "/api/auth/logout", drogon::Post);
 	METHOD_LIST_END
 
-		/** """ Vérifie si l'utilisateur est administrateur """ */
+	/** """ Vérifie si l'utilisateur est administrateur """ */
 	static bool isAdmin(const drogon::HttpRequestPtr& req);
+
+	/** """ Vérifie si la requête provient d’un admin ou du propriétaire """ */
+	static bool canAct(const drogon::HttpRequestPtr &req, int uid);
+
+	/** """ Décode le JWT pour récupérer l'id, puis appelle canAct(req, id) """ */
+	static std::optional<drogon_model::plant_shop_cpp::Users> canActDecodeJWT(const drogon::HttpRequestPtr &req);
 
 	/** """ Inscription d'un utilisateur """ */
 	void registerUser(const drogon::HttpRequestPtr& req,

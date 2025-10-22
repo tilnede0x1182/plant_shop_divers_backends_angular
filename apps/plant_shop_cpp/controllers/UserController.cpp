@@ -1,6 +1,7 @@
 #include "UserController.h"
 #include <drogon/orm/Mapper.h>
 #include <drogon/utils/Utilities.h>
+#include "AuthController.h"
 
 #include "../models/Users.h"
 #include "../models/Plants.h"
@@ -30,11 +31,6 @@ static std::optional<Users> currentUser(const HttpRequestPtr &req) {
 	} catch (...) { return std::nullopt; }
 }
 
-static bool isAdmin(const HttpRequestPtr &req) {
-	auto u = currentUser(req);
-	return u.has_value() && u->getValueOfIsAdmin();
-}
-
 static bool canAct(const HttpRequestPtr &req, int uid) {
 	auto u = currentUser(req);
 	return u.has_value() && (u->getValueOfId() == uid || u->getValueOfIsAdmin());
@@ -42,7 +38,7 @@ static bool canAct(const HttpRequestPtr &req, int uid) {
 
 /* ---- Création (admin) ---- */
 void UserController::createUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb) {
-	if (!isAdmin(req)) return cb(err(403, "Forbidden"));
+	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	auto j = req->getJsonObject();
 	if (!j || !j->isMember("email") || !j->isMember("password"))
 		return cb(err(400, "Champs manquants"));
@@ -62,7 +58,7 @@ void UserController::createUser(const HttpRequestPtr &req, std::function<void(co
 
 /* ---- Liste utilisateurs (admin) ---- */
 void UserController::listUsers(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb) {
-	if (!isAdmin(req)) return cb(err(403, "Forbidden"));
+	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
 		auto all = m.findAll();
@@ -125,7 +121,7 @@ void UserController::deleteUser(const HttpRequestPtr &req, std::function<void(co
 
 /* ---- Liste admins ---- */
 void UserController::listAdminUsers(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb) {
-	if (!isAdmin(req)) return cb(err(403, "Forbidden"));
+	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
 		auto all = m.findAll();
@@ -149,7 +145,7 @@ void UserController::listAdminUsers(const HttpRequestPtr &req, std::function<voi
 
 /* ---- Mise à jour admin ---- */
 void UserController::updateAdminUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!isAdmin(req)) return cb(err(403, "Forbidden"));
+	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	auto j = req->getJsonObject();
 	if (!j) return cb(err(400, "Body vide"));
 	try {
@@ -167,7 +163,7 @@ void UserController::updateAdminUser(const HttpRequestPtr &req, std::function<vo
 
 /* ---- Suppression admin ---- */
 void UserController::deleteAdminUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!isAdmin(req)) return cb(err(403, "Forbidden"));
+	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
 		m.deleteByPrimaryKey(id);

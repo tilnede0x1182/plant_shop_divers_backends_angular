@@ -85,6 +85,7 @@ add_executable(plant_shop_cpp
 	routes.h
 	${SRC_CONTROLLERS}
 	${SRC_MODELS}
+	utils/TokenUtils.cpp
 )
 
 find_library(ARGON2_LIB argon2 REQUIRED)

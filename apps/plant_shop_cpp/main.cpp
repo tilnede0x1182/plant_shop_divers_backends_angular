@@ -176,6 +176,8 @@ int main() {
 		}
 		registerRoutes();
 		LOG_INFO << "✅ Backend Plant Shop (C++) initialisé sur http://localhost:4100";
+		drogon::app().setLogPath("");
+		drogon::app().setLogLevel(trantor::Logger::kTrace);
 		app().run();
 		return 0;
 	} catch (const std::exception& e) {

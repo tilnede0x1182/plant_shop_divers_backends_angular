@@ -9,6 +9,8 @@
  *   - POST /api/auth/login
  *   - GET  /api/auth/me
  *   - POST /api/auth/logout
+  *  Fournit aussi :
+ *   - Méthode statique isAdmin(req) pour vérifier les droits administrateur
  * """
  */
 class AuthController : public drogon::HttpController<AuthController> {
@@ -19,6 +21,9 @@ public:
 		ADD_METHOD_TO(AuthController::me, "/api/auth/me", drogon::Get);
 		ADD_METHOD_TO(AuthController::logout, "/api/auth/logout", drogon::Post);
 	METHOD_LIST_END
+
+		/** """ Vérifie si l'utilisateur est administrateur """ */
+	static bool isAdmin(const drogon::HttpRequestPtr& req);
 
 	/** """ Inscription d'un utilisateur """ */
 	void registerUser(const drogon::HttpRequestPtr& req,

@@ -41,7 +41,12 @@ void PlantController::getPlant(const HttpRequestPtr&, std::function<void(const H
 	try {
 		Mapper<Plants> mp(app().getDbClient());
 		auto p = mp.findByPrimaryKey(id);
-		cb(HttpResponse::newHttpJsonResponse(p.toJson()));
+		Json::Value j = p.toJson();
+		if (j.isMember("price") && j["price"].isString()) {
+			const std::string s = j["price"].asString();
+			j["price"] = static_cast<int>(std::stod(s));
+		}
+		cb(HttpResponse::newHttpJsonResponse(j));
 	} catch (...) { cb(err(404, "Plante introuvable")); }
 }
 

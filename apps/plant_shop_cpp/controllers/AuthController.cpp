@@ -153,23 +153,39 @@ bool AuthController::canAct(const HttpRequestPtr &req, int uid) {
 	}
 }
 
-/** """ Décode le JWT pour récupérer l'utilisateur correspondant """ */
+/** """ Décode le JWT ou résout via JSESSIONID pour récupérer l'utilisateur correspondant """ */
 std::optional<drogon_model::plant_shop_cpp::Users> AuthController::canActDecodeJWT(const HttpRequestPtr &req) {
 	std::string email; std::string name; int64_t userId = 0; bool admin = false;
 
-	// 1. Lire et décoder le cookie JWT
+	// 1. Essayer le cookie JWT
 	auto it = req->cookies().find("jwt");
-	if (it == req->cookies().end()) return std::nullopt;
-	if (!parseToken(it->second, email, userId, name, admin)) return std::nullopt;
-
-	// 2. Charger l'utilisateur correspondant depuis la base
-	Mapper<drogon_model::plant_shop_cpp::Users> users(app().getDbClient());
-	try {
-		auto user = users.findByPrimaryKey(static_cast<int>(userId));
-		return user;
-	} catch (...) {
-		return std::nullopt;
+	if (it != req->cookies().end() && parseToken(it->second, email, userId, name, admin)) {
+		try {
+			Mapper<drogon_model::plant_shop_cpp::Users> users(app().getDbClient());
+			auto user = users.findByPrimaryKey(static_cast<int>(userId));
+			return user;
+		} catch (...) {}
 	}
+
+	// 2. Sinon tenter via JSESSIONID → sessionStore
+	auto s = req->cookies().find("JSESSIONID");
+	if (s != req->cookies().end()) {
+		std::lock_guard<std::mutex> lock(sessionMutex);
+		auto found = sessionStore.find(s->second);
+		if (found != sessionStore.end()) {
+			try {
+				Mapper<drogon_model::plant_shop_cpp::Users> users(app().getDbClient());
+				auto user = users.findOne(Criteria(
+					drogon_model::plant_shop_cpp::Users::Cols::_email,
+					CompareOperator::EQ,
+					found->second.email
+				));
+				return user;
+			} catch (...) {}
+		}
+	}
+
+	return std::nullopt;
 }
 
 /** Connexion utilisateur */

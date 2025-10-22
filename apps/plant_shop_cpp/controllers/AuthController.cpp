@@ -188,6 +188,14 @@ std::optional<drogon_model::plant_shop_cpp::Users> AuthController::canActDecodeJ
 	return std::nullopt;
 }
 
+/** """ Version booléenne de canActDecodeJWT : admin ou propriétaire """ */
+bool AuthController::canActDecodeJWTBool(const HttpRequestPtr &req, int uid) {
+	auto userOpt = AuthController::canActDecodeJWT(req);
+	if (!userOpt.has_value()) return false;
+	auto user = userOpt.value();
+	return user.getValueOfIsAdmin() || user.getValueOfId() == uid;
+}
+
 /** Connexion utilisateur */
 void AuthController::login(const drogon::HttpRequestPtr& req,
 	std::function<void (const drogon::HttpResponsePtr&)>&& cb) {

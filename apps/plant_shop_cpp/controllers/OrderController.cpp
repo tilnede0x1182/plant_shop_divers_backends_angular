@@ -78,15 +78,38 @@ void OrderController::createOrder(const HttpRequestPtr& req,
 void OrderController::listOrders(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb) {
 	try {
-		auto user = AuthController::canActDecodeJWT(req); if (!user) return cb(err(401,"Non connecté"));
-		Mapper<Orders> mo(app().getDbClient());
-		auto list = mo.findBy(Criteria(Orders::Cols::_user_id, user->getValueOfId()));
+		auto user = AuthController::canActDecodeJWT(req);
+		if (!user) return cb(err(401, "Non connecté"));
+
+		auto db = app().getDbClient();
+		Mapper<Orders> mo(db);
+		Mapper<OrderItems> mi(db);
+		Mapper<Plants> mp(db);
+
+		auto orders = mo.findBy(Criteria(Orders::Cols::_user_id, user->getValueOfId()));
 		Json::Value arr(Json::arrayValue);
-		for (auto &o : list) arr.append(o.toJson());
+
+		for (auto &o : orders) {
+			auto jsonOrder = o.toJson();
+			auto items = mi.findBy(Criteria(OrderItems::Cols::_order_id, o.getValueOfId()));
+			Json::Value jItems(Json::arrayValue);
+
+			for (auto &it : items) {
+				auto jItem = it.toJson();
+				auto plant = mp.findByPrimaryKey(it.getValueOfPlantId());
+				jItem["plant"] = plant.toJson();
+				jItems.append(jItem);
+			}
+			jsonOrder["orderItems"] = jItems;
+			arr.append(jsonOrder);
+		}
+
 		auto r = HttpResponse::newHttpJsonResponse(arr);
 		r->setStatusCode(k200OK);
 		cb(r);
-	} catch (...) { cb(err(500,"Erreur serveur")); }
+	} catch (...) {
+		cb(err(500, "Erreur serveur"));
+	}
 }
 
 /* ---- Lecture commande ---- */

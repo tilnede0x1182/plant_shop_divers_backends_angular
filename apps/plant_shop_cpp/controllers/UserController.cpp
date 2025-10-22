@@ -74,7 +74,7 @@ void UserController::listUsers(const HttpRequestPtr &req, std::function<void(con
 
 /* ---- Lecture ---- */
 void UserController::getUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
+	if (!AuthController::canActDecodeJWTBool(req, id)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
 		auto u = m.findByPrimaryKey(id);
@@ -89,7 +89,7 @@ void UserController::getUser(const HttpRequestPtr &req, std::function<void(const
 
 /* ---- Mise à jour ---- */
 void UserController::updateUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!AuthController::canAct(req, id)) return cb(err(403, "Forbidden"));
+	if (!AuthController::canActDecodeJWTBool(req, id)) return cb(err(403, "Forbidden"));
 	auto j = req->getJsonObject();
 	if (!j) return cb(err(400, "Body vide"));
 	try {

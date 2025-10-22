@@ -33,6 +33,9 @@ public:
 	/** """ Décode le JWT pour récupérer l'id, puis appelle canAct(req, id) """ */
 	static std::optional<drogon_model::plant_shop_cpp::Users> canActDecodeJWT(const drogon::HttpRequestPtr &req);
 
+	/** """ Version booléenne de canActDecodeJWT : vrai si admin ou propriétaire """ */
+	static bool canActDecodeJWTBool(const drogon::HttpRequestPtr &req, int uid);
+
 	/** """ Inscription d'un utilisateur """ */
 	void registerUser(const drogon::HttpRequestPtr& req,
 	                  std::function<void(const drogon::HttpResponsePtr&)>&& callback);

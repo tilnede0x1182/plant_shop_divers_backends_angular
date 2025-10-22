@@ -201,7 +201,6 @@ void AuthController::me(const drogon::HttpRequestPtr& req,
 	cb(drogon::HttpResponse::newHttpJsonResponse(j));
 }
 
-
 /** Déconnexion */
 void AuthController::logout(const drogon::HttpRequestPtr& req,
 	std::function<void (const drogon::HttpResponsePtr&)>&& cb) {

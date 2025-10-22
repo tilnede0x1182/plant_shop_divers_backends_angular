@@ -22,6 +22,27 @@ static HttpResponsePtr err(int code, const std::string &msg) {
 	return r;
 }
 
+/** """ Vérifie si la requête peut agir : admin OU propriétaire """ */
+static bool canAct(const HttpRequestPtr &req, int uid) {
+	// 1. Si admin (plus fiable via AuthController)
+	if (AuthController::isAdmin(req)) return true;
+
+	// 2. Sinon, vérifier que l'utilisateur connecté agit sur son propre compte
+	auto cookies = req->cookies();
+	auto it = cookies.find("auth_user");
+	if (it == cookies.end()) return false;
+
+	const std::string email = it->second;
+	Mapper<drogon_model::plant_shop_cpp::Users> users(app().getDbClient());
+
+	try {
+		auto user = users.findOne(Criteria(drogon_model::plant_shop_cpp::Users::Cols::_email, CompareOperator::EQ, email));
+		return user.getValueOfId() == uid;
+	} catch (...) {
+		return false;
+	}
+}
+
 static std::optional<Users> currentUser(const HttpRequestPtr &req) {
 	try {
 		if (!req->cookies().count("auth_user")) return std::nullopt;
@@ -29,11 +50,6 @@ static std::optional<Users> currentUser(const HttpRequestPtr &req) {
 		auto u = mu.findOne(Criteria(Users::Cols::_email, req->cookies().at("auth_user")));
 		return u;
 	} catch (...) { return std::nullopt; }
-}
-
-static bool canAct(const HttpRequestPtr &req, int uid) {
-	auto u = currentUser(req);
-	return u.has_value() && (u->getValueOfId() == uid || u->getValueOfIsAdmin());
 }
 
 /* ---- Création (admin) ---- */
@@ -52,7 +68,9 @@ void UserController::createUser(const HttpRequestPtr &req, std::function<void(co
 		m.insert(u);
 		Json::Value resp;
 		resp["id"] = u.getValueOfId();
-		cb(HttpResponse::newHttpJsonResponse(resp));
+		auto r = HttpResponse::newHttpJsonResponse(resp);
+		r->setStatusCode(k201Created);
+		cb(r);
 	} catch (...) { cb(err(409, "Email déjà utilisé")); }
 }
 
@@ -77,7 +95,7 @@ void UserController::listUsers(const HttpRequestPtr &req, std::function<void(con
 
 /* ---- Lecture ---- */
 void UserController::getUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!canAct(req, id)) return cb(err(403, "Forbidden"));
+	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
 		auto u = m.findByPrimaryKey(id);
@@ -109,7 +127,7 @@ void UserController::updateUser(const HttpRequestPtr &req, std::function<void(co
 
 /* ---- Suppression ---- */
 void UserController::deleteUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!canAct(req, id)) return cb(err(403, "Forbidden"));
+	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
 		m.deleteByPrimaryKey(id);

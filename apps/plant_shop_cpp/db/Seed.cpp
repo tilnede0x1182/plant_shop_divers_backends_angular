@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
+#include <cctype>
 #include <drogon/orm/DbClient.h>
 #include <filesystem>
 #include <argon2.h>
@@ -48,6 +50,18 @@ static const char* PLANT_NAMES[] = {
 	"Pothos (Epipremnum aureum)","Agave (Agave americana)","Cactus raquette (Opuntia ficus-indica)",
 	"Palmier-dattier (Phoenix dactylifera)","Amaryllis (Hippeastrum hybridum)"
 };
+
+static const char* FIRST_NAMES[] = {
+	"Jean","Marie","Luc","Sophie","Pierre","Camille","Thomas","Julie","Louis","Élise",
+	"Nicolas","Chloé","Antoine","Sarah","Maxime","Laura","Hugo","Claire","Alexandre","Manon"
+};
+
+static const char* LAST_NAMES[] = {
+	"Dupont","Durand","Martin","Bernard","Petit","Robert","Richard","Garcia","Leroy","Moreau",
+	"Simon","Laurent","Lefebvre","Michel","David","Bertrand","Roux","Vincent","Fournier","Girard"
+};
+
+static const char* EMAIL_DOMAINS[] = {"gmail.com","yahoo.com","hotmail.com"};
 
 /** """ Générateur global @rng moteur aléatoire """ */
 static std::mt19937& rng() {
@@ -139,9 +153,17 @@ static vector<std::pair<string,string>> createAdmins(DbClientPtr db) {
 }
 
 static std::pair<string,string> addUser(DbClientPtr db) {
-	const string email = "user_" + std::to_string(rndInt(100000,999999)) + "@example.com";
-	const string pwd = "pw" + std::to_string(rndInt(100000000, 999999999));
-	const string name = "User " + std::to_string(rndInt(1000,9999));
+	string first = FIRST_NAMES[rndInt(0, (int)(sizeof(FIRST_NAMES)/sizeof(FIRST_NAMES[0]))-1)];
+	string last  = LAST_NAMES [rndInt(0, (int)(sizeof(LAST_NAMES )/sizeof(LAST_NAMES [0]))-1)];
+	string domain = EMAIL_DOMAINS[rndInt(0, (int)(sizeof(EMAIL_DOMAINS)/sizeof(EMAIL_DOMAINS[0]))-1)];
+
+	string firstLower = first; std::transform(firstLower.begin(), firstLower.end(), firstLower.begin(), ::tolower);
+	string lastLower  = last;  std::transform(lastLower.begin(),  lastLower.end(),  lastLower.begin(),  ::tolower);
+
+	const string email = firstLower + "_" + lastLower + std::to_string(rndInt(20,99)) + "@" + domain;
+	const string pwd   = "pw" + std::to_string(rndInt(100000000, 999999999));
+	const string name  = first + " " + last;
+
 	db->execSqlSync(
 		"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1,$2,$3,$4)",
 		email, name, hashPassword(pwd), false

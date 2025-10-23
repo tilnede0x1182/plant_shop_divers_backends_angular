@@ -31,6 +31,7 @@ std::string generateToken(const std::string& email, int64_t userId, const std::s
 bool parseToken(const std::string& token, std::string& email, int64_t& userId, std::string& name, bool& admin){
 	std::string raw = drogon::utils::base64Decode(token);
 	std::vector<std::string> parts;
+
 	splitPipe(raw, parts);
 	if(parts.size() != 6) return false;
 

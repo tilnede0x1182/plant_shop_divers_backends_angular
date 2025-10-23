@@ -2,8 +2,9 @@
 # 🧩 Backend NestJS
 # ======================================================
 
-# Run Nest + Angular SSR
-run: prod
+# Run backend NestJS
+run:
+	SERVE_SSR=true PORT=4100 node dist/apps/plant_shop_nest/main.js
 
 # Run Nest backend seul (API, sans SSR Angular)
 run-dev-back:
@@ -134,6 +135,8 @@ lint:
 # Seed de la base
 seed:
 	npx prisma db seed
+
+tests: test-routes
 
 # ======================================================
 # 🛠️ Utilitaire

@@ -136,7 +136,11 @@ static void addAdmin(DbClientPtr db, int index, string& outEmail, string& outPwd
 	db->execSqlSync(
 		"INSERT INTO users (email, username, password_hash, is_admin) VALUES ($1,$2,$3,$4)",
 		outEmail,
-		"Admin " + std::to_string(index + 1),
+		([]{
+			string first = FIRST_NAMES[rndInt(0,(int)(sizeof(FIRST_NAMES)/sizeof(FIRST_NAMES[0]))-1)];
+			string last  = LAST_NAMES [rndInt(0,(int)(sizeof(LAST_NAMES )/sizeof(LAST_NAMES [0]))-1)];
+			return first + " " + last;
+		})(),
 		hashPassword(outPwd),
 		true
 	);

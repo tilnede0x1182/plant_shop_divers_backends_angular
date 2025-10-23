@@ -77,7 +77,6 @@ function assertEq(obj, key, expected) {
     );
 }
 
-/* --- nouvelles assertions génériques --- */
 function assertNumericId(id, label) {
   if (!/^\d+$/.test(String(id)))
     throw new Error(`${label} doit être un identifiant numérique, reçu ${id}`);

@@ -47,11 +47,6 @@ tests:
 	cmake --build build --target test_e2e_cpp -j$$(nproc); \
 	./build/test_e2e_cpp
 
-
-	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
-	cmake --build build --target test_e2e_cpp -j$$(nproc)
-	./build/test_e2e_cpp
-
 compile-test:
 	if [ ! -d build ]; then cmake -S . -B build; fi
 	cmake --build build --target test_e2e_cpp -j$$(nproc)

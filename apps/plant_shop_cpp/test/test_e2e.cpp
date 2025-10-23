@@ -127,6 +127,10 @@ public:
         }
 
         int code = res->statusCode();
+				bool isError = code >= 400;
+
+				std::string ct = res->getHeader("content-type");
+				bool isJson = (ct.rfind("application/json", 0) == 0) || (ct.find("+json") != std::string::npos);
 
         // Gestion du cookie de réponse
 				for (const auto &kv : res->cookies()) {
@@ -144,7 +148,7 @@ public:
         }
 
         Json::Value json_resp;
-        if (!res->getBody().empty()) {
+        if (!isError && !res->getBody().empty()) {
             Json::CharReaderBuilder reader;
             string errs;
             stringstream s(string(res->getBody()));

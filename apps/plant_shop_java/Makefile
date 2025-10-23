@@ -1,5 +1,6 @@
-
+## ────────────────
 # Server
+## ────────────────
 
 compile:
 	mkdir -p bin
@@ -10,7 +11,9 @@ run:
 
 compile-run: compile run
 
+## ────────────────
 # DB
+## ────────────────
 
 db-create:
 	sudo psql -U postgres -c "CREATE DATABASE plant_shop_java;"
@@ -27,7 +30,9 @@ db-seed:
 
 db-reset: db-drop db-create db-migrate db-seed
 
+## ────────────────
 # Seed
+## ────────────────
 
 compile-seed:
 	mkdir -p bin
@@ -38,13 +43,15 @@ seed: compile-seed
 
 seed-dev: compile-seed seed
 
+## ────────────────
 # Test
+## ────────────────
 
 compile-test:
 	mkdir -p bin
-	javac -d bin Tests/test.java
+	javac -d bin Tests/Test.java
 
 tests: compile-test
-	java -cp bin Tests.test
+	java -cp bin Tests.Test
 
 test-dev: compile-test tests

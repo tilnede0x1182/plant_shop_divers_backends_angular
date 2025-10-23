@@ -4,9 +4,24 @@
 #include <fstream>
 #include <string>
 #include <filesystem>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
 
 using namespace drogon;
 
+/** """ Vérifie si le port d’écoute HTTP est disponible avant le lancement du serveur """ */
+bool isPortAvailable(unsigned short port) {
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0) return false;
+	sockaddr_in addr{};
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_port = htons(port);
+	bool ok = (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == 0);
+	close(sockfd);
+	return ok;
+}
 /** """ Vérifie la présence du fichier config.json """ */
 void checkConfigFile(const std::string& path = "config.json") {
 	if (std::filesystem::exists(path)) {
@@ -17,7 +32,6 @@ void checkConfigFile(const std::string& path = "config.json") {
 		          << std::filesystem::absolute(path) << std::endl;
 	}
 }
-
 
 /** """ Lit .env et retourne la valeur de DATABASE_URL """ */
 std::string db_stringenv_read() {
@@ -165,6 +179,10 @@ int main() {
 		drogon::app().loadConfigFile("config.json");
 
 		app().setLogLevel(trantor::Logger::kInfo);
+		if (!isPortAvailable(4100)) {
+			std::cerr << "❌ Impossible de démarrer : port 4100 déjà utilisé" << std::endl;
+			return 1;
+		}
 		app().addListener("0.0.0.0", 4100);
 		enableCors();
 

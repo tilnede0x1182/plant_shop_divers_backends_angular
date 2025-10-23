@@ -18,10 +18,8 @@ import (
 
 /* ------- Variables globales -------- */
 var (
-	cookieJars = make(map[string]string)
 	maintenant = time.Now().Format("20060102150405")
-	jar, _     = cookiejar.New(nil)
-	client     = &http.Client{Jar: jar}
+	clients    = make(map[string]*http.Client)
 )
 
 /* ---------- Configuration ---------- */

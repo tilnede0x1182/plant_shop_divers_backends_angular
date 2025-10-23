@@ -5,6 +5,8 @@
 run:
 	./build/plant_shop_cpp
 
+prod: run
+
 build-dev:
 	CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake -S . -B build
 	cmake --build build --target plant_shop_cpp -j$$(nproc)

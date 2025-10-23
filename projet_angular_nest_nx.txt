@@ -139,7 +139,6 @@
 │   │   │   │   ├── plant_shop_cpp.dir
 │   │   │   │   │   ├── build.make
 │   │   │   │   │   ├── cmake_clean.cmake
-│   │   │   │   │   ├── compiler_depend.internal
 │   │   │   │   │   ├── compiler_depend.make
 │   │   │   │   │   ├── compiler_depend.ts
 │   │   │   │   │   ├── controllers
@@ -547,6 +546,7 @@
 │   │   │       └── jwt.go
 │   │   ├── main.go
 │   │   ├── Makefile
+│   │   ├── projet.txt
 │   │   ├── test
 │   │   │   └── test_e2e.go
 │   │   └── users.txt
@@ -629,6 +629,7 @@
 │       │   ├── migrations
 │       │   │   ├── init.sql
 │       │   │   └── README.md
+│       │   ├── projet.txt
 │       │   ├── src
 │       │   │   ├── auth
 │       │   │   │   ├── handlers.rs
@@ -11836,7 +11837,7 @@
 ├── users.txt
 └── vitest.workspace.ts
 
-901 directories, 10933 files
+901 directories, 10934 files
 
 # CONFIGURATION
 #
@@ -17424,6 +17425,30 @@ prod-backend-rust-see-orm:
 	make -C apps/plant_shop_rust/plant_shop_rust_see_orm prod
 
 # ======================================================
+# 🚀 Backend C++ (Drogon + PostgreSQL)
+# ======================================================
+
+run-backend-cpp:
+	make -C apps/plant_shop_cpp run
+
+compile-backend-cpp:
+	make -C apps/plant_shop_cpp compile
+
+seed-backend-cpp:
+	make -C apps/plant_shop_cpp seed
+
+compile-run-backend-cpp: compile-backend-cpp run-backend-cpp
+
+prod-backend-cpp:
+	make -C apps/plant_shop_cpp prod
+
+test-backend-cpp:
+	make -C apps/plant_shop_cpp tests
+
+compile-test-backend-cpp:
+	make -C apps/plant_shop_cpp compile-test
+
+# ======================================================
 # 🎨 Frontend Angular
 # ======================================================
 
@@ -17446,8 +17471,7 @@ prod-front:
 build:
 	npm run build
 
-prod:
-	npm run start
+prod: prod-front
 
 build-run-prod: build prod
 
@@ -17468,6 +17492,6 @@ tests: test-routes
 # 🛠️ Utilitaire
 # ======================================================
 tree:
-	tree -L 6 -I "node_modules" -I "target"
+	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser"
 
 

@@ -144,8 +144,9 @@ prod-front:
 build:
 	npm run build
 
-prod:
-	npm run start
+# prod: prod-front
+# Tempporaire
+prod: run-dev-front
 
 build-run-prod: build prod
 

@@ -1,8 +1,3 @@
 export const environment = {
-  production: true,
-  // Remplacez toute URL absolue par '/api' (ou même juste '')
-  apiUrl: '/api',
+  production: true
 };
-// export const environment = {
-//   production: true,
-// };

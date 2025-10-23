@@ -1,0 +1,67 @@
+# .env
+JWT_SECRET=zjnxkajzhdiezjbDNKJXIUHEDXJHNZLKDHALZKKJffjezkfljlekfjklajZJFHQEZNKFHQK
+DATABASE_URL="postgresql://tilnede0x1182:tilnede0x1182@localhost:5432/plant_shop_go"
+# .env.example
+# JWT
+JWT_SECRET=change_me
+
+# DB
+DATABASE_URL=postgres://user:password@localhost:5432/plantshop?sslmode=disable
+# Makefile
+
+run:
+	go run main.go
+
+prod:
+	go build -o bin/server main.go && ./bin/server
+
+compile:
+	go build -o bin/server main.go
+
+compile_run: compile run
+
+tidy:
+	go mod tidy
+
+seed:
+	go run cmd/seed.go
+
+db-reset:
+	psql -U tilnede0x1182 -d postgres -c "DROP DATABASE IF EXISTS plant_shop_go;"
+	psql -U tilnede0x1182 -d postgres -c "CREATE DATABASE plant_shop_go;"
+	go run cmd/seed.go
+
+test:
+	go run tests/test_e2e.go
+
+# --- Arborescence du projet (3 niveaux) ---
+/home/tilnede0x1182/code/tilnede0x1182/Personnel/2025/Entrainement/plant_shop/DiversBackends/apps/plant_shop_go
+├── bin
+│   └── server
+├── cmd
+│   └── seed.go
+├── go.mod
+├── go.sum
+├── internal
+│   ├── db
+│   │   ├── connect.go
+│   │   └── seed.go
+│   ├── http
+│   │   ├── handlers
+│   │   ├── middleware
+│   │   └── router.go
+│   ├── models
+│   │   ├── order.go
+│   │   ├── order_item.go
+│   │   ├── plant.go
+│   │   └── user.go
+│   └── security
+│       └── jwt.go
+├── main.go
+├── Makefile
+├── projet.txt
+├── tests
+│   └── test_e2e.go
+└── users.txt
+
+11 directories, 17 files

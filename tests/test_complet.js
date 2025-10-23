@@ -338,6 +338,22 @@ async function testAdminUsers(who = 'admin') {
     nouveauNom
   );
 
+  // Étape 3b — l'admin modifie le rôle d'un autre utilisateur
+  await hit('PATCH', `/users/${cible.id}`, 200, { admin: false }, who);
+  assertEq(
+    await hit('GET', `/users/${cible.id}`, 200, null, who),
+    'admin',
+    false
+  );
+
+  // Étape 3c — l'admin restaure le rôle admin
+  await hit('PATCH', `/users/${cible.id}`, 200, { admin: true }, who);
+  assertEq(
+    await hit('GET', `/users/${cible.id}`, 200, null, who),
+    'admin',
+    true
+  );
+
   // Étape 4 — Suppression du compte temporaire
   await hit('DELETE', `/users/${cible.id}`, 200, null, who);
   console.log(`   ↳ Admin temporaire supprimé (${cible.email})`);

@@ -98,6 +98,30 @@ prod-backend-rust-see-orm:
 	make -C apps/plant_shop_rust/plant_shop_rust_see_orm prod
 
 # ======================================================
+# 🚀 Backend C++ (Drogon + PostgreSQL)
+# ======================================================
+
+run-backend-cpp:
+	make -C apps/plant_shop_cpp run
+
+compile-backend-cpp:
+	make -C apps/plant_shop_cpp compile
+
+seed-backend-cpp:
+	make -C apps/plant_shop_cpp seed
+
+compile-run-backend-cpp: compile-backend-cpp run-backend-cpp
+
+prod-backend-cpp:
+	make -C apps/plant_shop_cpp prod
+
+test-backend-cpp:
+	make -C apps/plant_shop_cpp tests
+
+compile-test-backend-cpp:
+	make -C apps/plant_shop_cpp compile-test
+
+# ======================================================
 # 🎨 Frontend Angular
 # ======================================================
 
@@ -142,4 +166,4 @@ tests: test-routes
 # 🛠️ Utilitaire
 # ======================================================
 tree:
-	tree -L 6 -I "node_modules" -I "target"
+	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser"

@@ -10,6 +10,7 @@ import (
 	"plant_shop_go/internal/models"
 
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 /*
@@ -49,7 +50,12 @@ func AdminCreateUser(w http.ResponseWriter, r *http.Request) {
 	u := models.User{Email: in.Email, Name: in.Name, Password: string(hash), Admin: in.Admin}
 
 	if err := db.Connect().Create(&u).Error; err != nil {
-		http.Error(w, "failed to create user", http.StatusInternalServerError)
+		// Conflit d’unicité sur email → 409
+		if strings.Contains(err.Error(), "duplicate key") {
+			http.Error(w, "email exists", http.StatusConflict)
+		} else {
+			http.Error(w, "failed to create user", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -89,6 +95,6 @@ DELETE /api/admin/users/{id}
 func AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
-	db.Connect().Delete(&models.User{}, id)
+	db.Connect().Unscoped().Delete(&models.User{}, id)
 	w.WriteHeader(http.StatusOK)
 }

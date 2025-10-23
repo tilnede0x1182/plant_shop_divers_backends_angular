@@ -394,8 +394,8 @@ void test_auth_me(TestContext& ctx) {
 int main() {
     try {
 				// Attendre que le serveur soit prêt avant les requêtes
-				if (!waitForServer("127.0.0.1", 4100, 8000)) {
-					std::cerr << "❌ Serveur http://localhost:4100 injoignable après 8s" << std::endl;
+				if (!waitForServer("127.0.0.1", 4100, 500)) {
+					std::cerr << "❌ Serveur http://localhost:4100 injoignable " << std::endl;
 					return 2;
 				}
         TestContext ctx;

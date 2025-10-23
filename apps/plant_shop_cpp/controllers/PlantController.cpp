@@ -27,7 +27,7 @@ static HttpResponsePtr err(int code, const std::string &msg) {
 void PlantController::listPlants(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb) {
 	try {
 		Mapper<Plants> mp(app().getDbClient());
-		auto all = mp.findAll();
+		auto all = mp.orderBy(Plants::Cols::_name, SortOrder::ASC).findAll();
 		Json::Value arr(Json::arrayValue);
 		for (auto &p : all) arr.append(p.toJson());
 		auto r = HttpResponse::newHttpJsonResponse(arr);
@@ -56,10 +56,7 @@ void PlantController::listAdminPlants(const HttpRequestPtr& req,
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Accès refusé"));
 	try {
 		Mapper<Plants> mp(app().getDbClient());
-		auto all = mp.findAll();
-		std::sort(all.begin(), all.end(), [](const Plants &a, const Plants &b) {
-			return a.getValueOfName() < b.getValueOfName();
-		});
+		auto all = mp.orderBy(Plants::Cols::_name, SortOrder::ASC).findAll();
 		Json::Value arr(Json::arrayValue);
 		for (auto &p : all) arr.append(p.toJson());
 		cb(HttpResponse::newHttpJsonResponse(arr));

@@ -80,7 +80,7 @@ void AuthController::registerUser(const HttpRequestPtr& req,
 		Mapper<Users> users(app().getDbClient());
 		Users u;
 		u.setEmail(d["email"].asString());
-		u.setUsername(d["username"].asString());
+		u.setUsername(d.isMember("name") ? d["name"].asString() : d["username"].asString());
 		u.setPasswordHash(hashPassword(d["password"].asString()));
 		u.setIsAdmin(false);
 		users.insert(u);
@@ -133,24 +133,11 @@ bool AuthController::isAdmin(const drogon::HttpRequestPtr& req) {
 }
 
 /** """ Vérifie si la requête peut agir : admin OU propriétaire """ */
-bool AuthController::canAct(const HttpRequestPtr &req, int uid) {
-	// 1. Si admin (plus fiable via AuthController)
-	if (AuthController::isAdmin(req)) return true;
-
-	// 2. Sinon, vérifier que l'utilisateur connecté agit sur son propre compte
-	auto cookies = req->cookies();
-	auto it = cookies.find("auth_user");
-	if (it == cookies.end()) return false;
-
-	const std::string email = it->second;
-	Mapper<drogon_model::plant_shop_cpp::Users> users(app().getDbClient());
-
-	try {
-		auto user = users.findOne(Criteria(drogon_model::plant_shop_cpp::Users::Cols::_email, CompareOperator::EQ, email));
-		return user.getValueOfId() == uid;
-	} catch (...) {
-		return false;
-	}
+bool AuthController::canAct(const HttpRequestPtr& req, int uid) {
+	auto userOpt = AuthController::canActDecodeJWT(req);	// JWT ou JSESSIONID
+	if (!userOpt.has_value()) return false;
+	const auto& user = userOpt.value();
+	return user.getValueOfIsAdmin() || user.getValueOfId() == uid;
 }
 
 /** """ Décode le JWT ou résout via JSESSIONID pour récupérer l'utilisateur correspondant """ */
@@ -267,10 +254,36 @@ void AuthController::me(const drogon::HttpRequestPtr& req,
 	std::function<void (const drogon::HttpResponsePtr&)>&& cb) {
 	std::string email; std::string name; int64_t userId = 0; bool admin = false;
 	auto it = req->cookies().find("jwt");
-	if (it == req->cookies().end() || !parseToken(it->second, email, userId, name, admin)) {
-		auto r = drogon::HttpResponse::newHttpResponse(); r->setStatusCode(drogon::k401Unauthorized); cb(r); return;
+	bool ok = it != req->cookies().end() && parseToken(it->second, email, userId, name, admin);
+
+	// Si JWT invalide, essayer JSESSIONID
+	if (!ok) {
+		auto s = req->cookies().find("JSESSIONID");
+		if (s != req->cookies().end()) {
+			std::lock_guard<std::mutex> lock(sessionMutex);
+			auto found = sessionStore.find(s->second);
+			if (found != sessionStore.end()) {
+				email  = found->second.email;
+				admin  = found->second.isAdmin;
+				userId = found->second.userId;
+				name   = found->second.name;
+				ok = true;
+			}
+		}
 	}
-	Json::Value j(Json::objectValue); j["id"]=Json::Int64(userId); j["email"]=email; j["name"]=name; j["admin"]=admin;
+
+	if (!ok) {
+		auto r = drogon::HttpResponse::newHttpResponse();
+		r->setStatusCode(drogon::k401Unauthorized);
+		cb(r);
+		return;
+	}
+
+	Json::Value j(Json::objectValue);
+	j["id"]    = Json::Int64(userId);
+	j["email"] = email;
+	j["name"]  = name;
+	j["admin"] = admin;
 	cb(drogon::HttpResponse::newHttpJsonResponse(j));
 }
 

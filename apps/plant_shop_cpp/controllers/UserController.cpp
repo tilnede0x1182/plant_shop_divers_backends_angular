@@ -58,7 +58,9 @@ void UserController::listUsers(const HttpRequestPtr &req, std::function<void(con
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
-		auto all = m.findAll();
+		auto all = m.orderBy(Users::Cols::_is_admin, SortOrder::DESC)
+		.orderBy(Users::Cols::_username, SortOrder::ASC)
+		.findAll();
 		Json::Value arr(Json::arrayValue);
 		for (auto &u : all) {
 			Json::Value j;
@@ -74,7 +76,7 @@ void UserController::listUsers(const HttpRequestPtr &req, std::function<void(con
 
 /* ---- Lecture ---- */
 void UserController::getUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!AuthController::canActDecodeJWTBool(req, id)) return cb(err(403, "Forbidden"));
+	if (!AuthController::canAct(req, id)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
 		auto u = m.findByPrimaryKey(id);
@@ -89,18 +91,25 @@ void UserController::getUser(const HttpRequestPtr &req, std::function<void(const
 
 /* ---- Mise à jour ---- */
 void UserController::updateUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
-	if (!AuthController::canActDecodeJWTBool(req, id)) return cb(err(403, "Forbidden"));
+	if (!AuthController::canAct(req, id)) return cb(err(403, "Forbidden"));
 	auto j = req->getJsonObject();
 	if (!j) return cb(err(400, "Body vide"));
 	try {
 		Mapper<Users> m(app().getDbClient());
 		auto u = m.findByPrimaryKey(id);
-		if (j->isMember("name")) u.setUsername((*j)["name"].asString());
-		if (j->isMember("email")) u.setEmail((*j)["email"].asString());
-		m.update(u);
+		bool mod = false;
+		if (j->isMember("name"))  { u.setUsername((*j)["name"].asString());  mod = true; }
+		if (j->isMember("email")) { u.setEmail((*j)["email"].asString());    mod = true; }
+		if (j->isMember("admin") && AuthController::isAdmin(req)) {
+			u.setIsAdmin((*j)["admin"].asBool());
+			mod = true;
+		}
+
+		if (mod) m.update(u);
 		Json::Value resp;
-		resp["updated"] = true;
+		resp["updated"] = mod;
 		cb(HttpResponse::newHttpJsonResponse(resp));
+
 	} catch (...) { cb(err(404, "User introuvable")); }
 }
 
@@ -121,12 +130,9 @@ void UserController::listAdminUsers(const HttpRequestPtr &req, std::function<voi
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
 		Mapper<Users> m(app().getDbClient());
-		auto all = m.findAll();
-		std::sort(all.begin(), all.end(), [](const Users &a, const Users &b) {
-			if (a.getValueOfIsAdmin() != b.getValueOfIsAdmin())
-				return a.getValueOfIsAdmin() > b.getValueOfIsAdmin();
-			return a.getValueOfUsername() < b.getValueOfUsername();
-		});
+		auto all = m.orderBy(Users::Cols::_is_admin, SortOrder::DESC)
+            .orderBy(Users::Cols::_username, SortOrder::ASC)
+            .findAll();
 		Json::Value arr(Json::arrayValue);
 		for (auto &u : all) {
 			Json::Value j;

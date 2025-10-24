@@ -48,29 +48,39 @@ public final class Main {
             throw new IllegalStateException("Les variables DATABASE_USER et DATABASE_PASS sont manquantes dans le fichier .env");
         }
 
-        /* ---------- Connexion JDBC ---------- */
-        Connection db = DriverManager.getConnection(dbUrl, dbUser, dbPass);
-        // Assure que la connexion est fermée à l'arrêt de la JVM
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                if (db != null && !db.isClosed()) {
-                    db.close();
-                    System.out.println("Connexion à la base de données fermée.");
-                }
-            } catch (Exception ignore) {}
-        }));
+				/* ---------- Connexion JDBC ---------- */
+				Connection db = DriverManager.getConnection(dbUrl, dbUser, dbPass);
 
-        /* ---------- Serveur HTTP ---------- */
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+				HttpServer server = null;
+				try {
+					server = HttpServer.create(new InetSocketAddress(port), 0);
+					server.createContext("/api", new Routes(db));
+					server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(8));
+					server.start();
 
-        // On monte notre routeur central sur le contexte "/api"
-        // Toutes les requêtes comme http://localhost:4100/api/users seront gérées
-        server.createContext("/api", new Routes(db));
+					System.out.println("🚀 Serveur démarré sur http://localhost:" + port);
+					System.out.println("   Routes API disponibles sur http://localhost:" + port + "/api");
+				} catch (java.net.BindException e) {
+					System.err.println("❌ Erreur : Le port " + port + " est déjà utilisé. Un autre serveur est peut-être en cours d'exécution.");
+					if (db != null && !db.isClosed()) db.close();
+					System.exit(1);
+				} catch (Exception e) {
+					System.err.println("❌ Erreur lors du démarrage du serveur : " + e.getMessage());
+					if (db != null && !db.isClosed()) db.close();
+					System.exit(2);
+				}
 
-        server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(8));
-        server.start();
-
-        System.out.println("🚀 Serveur démarré sur http://localhost:" + port);
-        System.out.println("   Routes API disponibles sur http://localhost:" + port + "/api");
-    }
+				Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+					try {
+						if (db != null && !db.isClosed()) {
+							db.close();
+							System.out.println("Connexion à la base de données fermée.");
+						}
+					} catch (Exception ignore) {}
+					if (server != null) {
+						server.stop(0);
+						System.out.println("Serveur HTTP arrêté.");
+					}
+				}));
+		}
 }

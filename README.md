@@ -69,6 +69,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **Rust (Poem + SQLx)** : backend Rust moderne, basé sur le framework `poem` pour les routes HTTP et `sqlx` pour la base de données.
 * **Rust (Poem + SeaORM)** : backend Rust moderne, basé sur le framework `poem` pour les routes HTTP et `SeaORM` pour la gestion de la base de données.`
 * **C++ (Drogon)** : serveur HTTP moderne en C++17, basé sur le framework `Drogon` avec ORM intégré, compilation via `CMake`.
+* **Java (Natif)** : serveur HTTP minimaliste en Java 21, utilisant `HttpServer` natif, MVC manuel.
 
 ---
 
@@ -81,6 +82,7 @@ apps/
  ├─ plant_shop_manifest_ABANDON    → Backend Manifest (abandonné)
  ├─ plant_shop_go                  → Backend Golang avec GORM
  ├─ plant_shop_cpp                 → Backend en C++
+ ├─ plant_shop_java                → Backend en Java
  └─ plant_shop_rust
      ├─ plant_shop_rust_sqlx       → Backend Rust avec SQLx
      └─ plant_shop_rust_see_orm    → Backend Rust avec SeaORM
@@ -88,3 +90,8 @@ prisma/    → Modèles + seed
 tests/     → Scripts de test des routes backend
 diagnose-ora.js
 ```
+
+
+
+
+* **Java (Vanilla)** : serveur HTTP minimaliste en Java 21, basé sur `HttpServer` standard, architecture MVC explicite

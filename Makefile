@@ -122,6 +122,30 @@ compile-test-backend-cpp:
 	make -C apps/plant_shop_cpp compile-test
 
 # ======================================================
+# ☕ Backend Java (HTTPServer + PostgreSQL)
+# ======================================================
+
+run-backend-java:
+	make -C apps/plant_shop_java run
+
+compile-backend-java:
+	make -C apps/plant_shop_java compile
+
+seed-backend-java:
+	make -C apps/plant_shop_java seed
+
+compile-run-backend-java: compile-backend-java run-backend-java
+
+prod-backend-java:
+	make -C apps/plant_shop_java prod
+
+test-backend-java:
+	make -C apps/plant_shop_java tests
+
+compile-test-backend-java:
+	make -C apps/plant_shop_java compile-test
+
+# ======================================================
 # 🎨 Frontend Angular
 # ======================================================
 
@@ -167,4 +191,4 @@ tests: test-routes
 # 🛠️ Utilitaire
 # ======================================================
 tree:
-	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser"
+	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser" -I "bin" -I "build"

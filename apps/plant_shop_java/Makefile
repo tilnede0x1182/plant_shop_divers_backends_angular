@@ -1,34 +1,17 @@
+CLASSPATH=bin:lib/postgresql-42.7.8.jar
+
 ## ────────────────
 # Server
 ## ────────────────
 
 compile:
 	mkdir -p bin
-	find src -type f -name "*.java" ! -name "Seed.java" ! -name "Test.java" | xargs javac -d bin
+	find src -type f -name "*.java" ! -name "Seed.java" ! -name "Test.java" | xargs javac -cp lib/postgresql-42.7.8.jar -d bin
 
 run:
-	java -cp bin Main
+	java -cp $(CLASSPATH) Main
 
 compile-run: compile run
-
-## ────────────────
-# DB
-## ────────────────
-
-db-create:
-	sudo psql -U postgres -c "CREATE DATABASE plant_shop_java;"
-
-db-migrate:
-	sudo psql -U postgres -d plant_shop_java -f src/db/schema.sql
-
-db-drop:
-	sudo psql -U postgres -c "DROP DATABASE plant_shop_java;"
-
-db-seed:
-	# Exemple SQL direct (remplace ou adapte selon ton projet)
-	sudo psql -U postgres -d plant_shop_java -f src/db/seed.sql
-
-db-reset: db-drop db-create db-migrate db-seed
 
 ## ────────────────
 # Seed
@@ -36,12 +19,29 @@ db-reset: db-drop db-create db-migrate db-seed
 
 compile-seed:
 	mkdir -p bin
-	javac -d bin src/db/Seed.java
+	javac -cp lib/postgresql-42.7.8.jar -d bin src/db/Seed.java
 
 seed: compile-seed
-	java -cp bin db.Seed
+	java -cp $(CLASSPATH) db.Seed
 
 seed-dev: compile-seed seed
+
+## ────────────────
+# DB
+## ────────────────
+
+db-create:
+	sudo -u postgres psql -c "CREATE DATABASE plant_shop_java;"
+
+db-migrate:
+	sudo -u postgres psql -d plant_shop_java -f src/db/schema.sql
+
+db-drop:
+	sudo -u postgres psql -c "DROP DATABASE plant_shop_java;"
+
+db-seed: seed
+
+db-reset: db-drop db-create db-migrate db-seed
 
 ## ────────────────
 # Test
@@ -49,9 +49,9 @@ seed-dev: compile-seed seed
 
 compile-test:
 	mkdir -p bin
-	javac -d bin Tests/Test.java
+	javac -cp lib/postgresql-42.7.8.jar -d bin Tests/Test.java
 
 tests: compile-test
-	java -cp bin Tests.Test
+	java -cp $(CLASSPATH) Tests.Test
 
 test-dev: compile-test tests

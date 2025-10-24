@@ -1,68 +1,52 @@
 package repository;
 
 import java.sql.*;
-import java.util.*;
 import model.Plant;
 
-public final class PlantRepository {
+public final class PlantRepository extends BaseRepository<Plant> {
 
-    private final Connection db;
+    public PlantRepository(Connection db) {
+        super(db, "plants");
+    }
 
-    public PlantRepository(Connection db) { this.db = db; }
+    @Override
+    protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
+        return new Plant(
+            rs.getInt("id"),
+            rs.getString("name"),
+            rs.getString("description"),
+            rs.getBigDecimal("price"),
+            rs.getInt("stock"),
+            rs.getTimestamp("created_at")
+        );
+    }
+
+    // Les méthodes `find(id)`, `list()` et `delete(id)` sont maintenant héritées de BaseRepository.
 
     public int create(Plant p) throws SQLException {
-        PreparedStatement ps = db.prepareStatement(
-            "INSERT INTO plants(name,description,price,stock) VALUES (?,?,?,?)",
-            Statement.RETURN_GENERATED_KEYS);
-        ps.setString(1, p.name);
-        ps.setString(2, p.description);
-        ps.setBigDecimal(3, p.price);
-        ps.setInt(4, p.stock);
-        ps.executeUpdate();
-        ResultSet rs = ps.getGeneratedKeys(); rs.next();
-        return rs.getInt(1);
-    }
-
-    public Plant find(int id) throws SQLException {
-        PreparedStatement ps = db.prepareStatement(
-            "SELECT * FROM plants WHERE id=?");
-        ps.setInt(1, id);
-        ResultSet rs = ps.executeQuery();
-        if (!rs.next()) return null;
-        return new Plant(rs.getInt("id"),
-                         rs.getString("name"),
-                         rs.getString("description"),
-                         rs.getBigDecimal("price"),
-                         rs.getInt("stock"));
-    }
-
-    public List<Plant> list() throws SQLException {
-        Statement st = db.createStatement();
-        ResultSet rs = st.executeQuery("SELECT * FROM plants");
-        List<Plant> out = new ArrayList<Plant>();
-        while (rs.next())
-            out.add(new Plant(rs.getInt("id"),
-                              rs.getString("name"),
-                              rs.getString("description"),
-                              rs.getBigDecimal("price"),
-                              rs.getInt("stock")));
-        return out;
+        String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, p.name);
+            ps.setString(2, p.description);
+            ps.setBigDecimal(3, p.price);
+            ps.setInt(4, p.stock);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
     }
 
     public void update(Plant p) throws SQLException {
-        PreparedStatement ps = db.prepareStatement(
-            "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?");
-        ps.setString(1, p.name);
-        ps.setString(2, p.description);
-        ps.setBigDecimal(3, p.price);
-        ps.setInt(4, p.stock);
-        ps.setInt(5, p.id);
-        ps.executeUpdate();
-    }
-
-    public void delete(int id) throws SQLException {
-        PreparedStatement ps = db.prepareStatement("DELETE FROM plants WHERE id=?");
-        ps.setInt(1, id);
-        ps.executeUpdate();
+        String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setString(1, p.name);
+            ps.setString(2, p.description);
+            ps.setBigDecimal(3, p.price);
+            ps.setInt(4, p.stock);
+            ps.setInt(5, p.id);
+            ps.executeUpdate();
+        }
     }
 }

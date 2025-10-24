@@ -1,55 +1,59 @@
-import com.sun.net.httpserver.HttpServer;
-import java.net.InetSocketAddress;
+package controller;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.util.*;
-import java.io.*;
+import util.Response;
 
 /**
- * Point d'entrée de l'application.
- *  - charge .env
- *  - ouvre la connexion JDBC
- *  - installe les routes
- *  - lance le serveur HTTP
+ * Dispatcher central de l'application.
+ * Inspiré par les systèmes de routage de frameworks comme Rails/Laravel.
+ * Toutes les requêtes commençant par /api/ sont dirigées ici.
+ * La classe analyse le chemin et délègue au contrôleur approprié.
  */
-public final class Main {
+public final class Routes implements HttpHandler {
 
-    private static Map<String,String> env() throws IOException {
-        Map<String,String> m = new HashMap<String,String>();
-        BufferedReader br = new BufferedReader(new FileReader(".env"));
-        String l;
-        while ((l = br.readLine()) != null) {
-            int i = l.indexOf('=');
-            if (i > 0) m.put(l.substring(0,i).trim(), l.substring(i+1).trim());
-        }
-        br.close(); return m;
+    private final AuthController authController;
+    private final UserController userController;
+    private final PlantController plantController;
+    private final OrderController orderController;
+    // OrderItemController n'est plus nécessaire ici car ses routes sont des sous-routes de /orders
+    // et sont gérées directement par OrderController pour plus de simplicité.
+
+    public Routes(Connection db) {
+        this.authController = new AuthController(db);
+        this.userController = new UserController(db);
+        this.plantController = new PlantController(db);
+        this.orderController = new OrderController(db);
     }
 
-    public static void main(String[] args) throws Exception {
+    @Override
+    public void handle(HttpExchange ex) throws IOException {
+        // Le chemin de la requête, ex: /users/5, /auth/login
+        String path = ex.getRequestURI().getPath().substring("/api".length());
 
-        /* ---------- config ---------- */
-        Map<String,String> cfg = env();
-        String url  = cfg.get("DATABASE_URL");
-        String user = cfg.get("DATABASE_USER");
-        String pass = cfg.get("DATABASE_PASS");
-        String portStr = cfg.get("SERVER_ADDRESS");       // ex: 4100
-        int port = portStr != null ? Integer.parseInt(portStr) : 4100;
-
-        if (url==null||user==null||pass==null)
-            throw new IllegalStateException("DATABASE_* manquants dans .env");
-
-        /* ---------- JDBC ---------- */
-        Connection db = DriverManager.getConnection(url, user, pass);
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() { try { db.close(); } catch (Exception ignore) {} }
-        });
-
-        /* ---------- HTTP ---------- */
-        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
-        Routes.mount(server, db);
-        server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(8));
-        server.start();
-
-        System.out.println("🚀  Server up on http://localhost:"+port);
+        try {
+            // Délégation au contrôleur approprié en fonction du début du chemin.
+            if (path.startsWith("/auth")) {
+                authController.handle(ex);
+            } else if (path.startsWith("/users")) {
+                userController.handle(ex);
+            } else if (path.startsWith("/plants") || path.startsWith("/admin/plants")) {
+                // Le PlantController gère les deux types de routes
+                plantController.handle(ex);
+            } else if (path.startsWith("/orders")) {
+                orderController.handle(ex);
+            } else if (path.startsWith("/admin/users")) {
+                 // Pourrait être géré par un AdminUserController dédié ou par UserController avec des vérifications de rôle
+                userController.handle(ex);
+            } else {
+                Response.send(ex, 404, "{\"error\":\"Route API non trouvée\"}");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Réponse d'erreur générique en cas d'exception non interceptée dans un contrôleur.
+            Response.send(ex, 500, "{\"error\":\"Erreur interne du serveur\"}");
+        }
     }
 }

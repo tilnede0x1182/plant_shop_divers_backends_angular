@@ -1,66 +1,76 @@
-import com.sun.net.httpserver.*;
+import com.sun.net.httpserver.HttpServer;
+import controller.Routes; // Importation de notre nouveau routeur
+import java.net.InetSocketAddress;
 import java.sql.Connection;
-import controller.UserController;
-import controller.PlantController;
-import controller.OrderController;
-import controller.OrderItemController;
+import java.sql.DriverManager;
+import java.util.Map;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
 
 /**
- * Un seul **dispatcher** : toutes les requêtes arrivent ici
- * puis sont déléguées au bon contrôleur en fonction du chemin.
- *
- * Avantage : compatibilité Java 1.6 (pas de lambdas, pas de regex dans HttpServer).
+ * Point d'entrée de l'application.
+ *  - Charge la configuration depuis .env
+ *  - Ouvre la connexion à la base de données (JDBC)
+ *  - Crée le serveur HTTP
+ *  - Monte le routeur principal sur le chemin /api
+ *  - Démarre le serveur
  */
-public final class Routes implements HttpHandler {
+public final class Main {
 
-    private final UserController       users;
-    private final PlantController      plants;
-    private final OrderController      orders;
-    private final OrderItemController  orderItems;
-
-    public Routes(Connection db) {
-        users      = new UserController(db);
-        plants     = new PlantController(db);
-        orders     = new OrderController(db);
-        orderItems = new OrderItemController(db);
-    }
-
-    /** Enregistrement sur le serveur */
-    public static void mount(HttpServer server, Connection db) {
-        server.createContext("/", new Routes(db));              // racine catch-all
-    }
-
-    /** Dispatcher rudimentaire */
-    public void handle(HttpExchange ex) {
-        String path = ex.getRequestURI().getPath();             // ex: /users/5
-        try {
-            if (path.startsWith("/users")) {
-                users.handle(ex);         return;
+    private static Map<String, String> env() throws IOException {
+        Map<String, String> m = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader(".env"))) {
+            String l;
+            while ((l = br.readLine()) != null) {
+                int i = l.indexOf('=');
+                if (i > 0) {
+                    m.put(l.substring(0, i).trim(), l.substring(i + 1).trim());
+                }
             }
-            if (path.startsWith("/plants")) {
-                plants.handle(ex);        return;
-            }
-            if (path.startsWith("/orders/") && path.endsWith("/items")) {
-                orderItems.handle(ex);    return;
-            }
-            if (path.startsWith("/orders")) {
-                orders.handle(ex);        return;
-            }
-            // inconnue
-            byte[] b = "{\"error\":\"Not Found\"}".getBytes("UTF-8");
-            ex.getResponseHeaders().add("Content-Type","application/json");
-            ex.sendResponseHeaders(404, b.length);
-            ex.getResponseBody().write(b);
-            ex.close();
-        } catch (Exception e) {
-            try {
-                e.printStackTrace();
-                byte[] b = ("{\"error\":\""+e.getMessage()+"\"}").getBytes("UTF-8");
-                ex.getResponseHeaders().add("Content-Type","application/json");
-                ex.sendResponseHeaders(500, b.length);
-                ex.getResponseBody().write(b);
-                ex.close();
-            } catch (Exception ignore) {}
+        } catch (IOException e) {
+            System.err.println("Attention: Fichier .env non trouvé. Utilisation des valeurs par défaut.");
         }
+        return m;
+    }
+
+    public static void main(String[] args) throws Exception {
+
+        /* ---------- Configuration ---------- */
+        Map<String, String> cfg = env();
+        String dbUrl = cfg.getOrDefault("DATABASE_URL", "jdbc:postgresql://localhost/plant_shop_java");
+        String dbUser = cfg.get("DATABASE_USER");
+        String dbPass = cfg.get("DATABASE_PASS");
+        int port = Integer.parseInt(cfg.getOrDefault("SERVER_ADDRESS", "4100"));
+
+        if (dbUser == null || dbPass == null) {
+            throw new IllegalStateException("Les variables DATABASE_USER et DATABASE_PASS sont manquantes dans le fichier .env");
+        }
+
+        /* ---------- Connexion JDBC ---------- */
+        Connection db = DriverManager.getConnection(dbUrl, dbUser, dbPass);
+        // Assure que la connexion est fermée à l'arrêt de la JVM
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                if (db != null && !db.isClosed()) {
+                    db.close();
+                    System.out.println("Connexion à la base de données fermée.");
+                }
+            } catch (Exception ignore) {}
+        }));
+
+        /* ---------- Serveur HTTP ---------- */
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+
+        // On monte notre routeur central sur le contexte "/api"
+        // Toutes les requêtes comme http://localhost:4100/api/users seront gérées
+        server.createContext("/api", new Routes(db));
+
+        server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(8));
+        server.start();
+
+        System.out.println("🚀 Serveur démarré sur http://localhost:" + port);
+        System.out.println("   Routes API disponibles sur http://localhost:" + port + "/api");
     }
 }

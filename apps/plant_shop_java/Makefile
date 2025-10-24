@@ -22,7 +22,7 @@ compile-run: compile run
 
 compile-seed:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin src/db/Seed.java
+	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
 
 seed: compile-seed
 	java -cp $(CLASSPATH) db.Seed

@@ -4,6 +4,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
+import util.PasswordUtil;
 
 public final class Seed {
 
@@ -43,7 +44,7 @@ public final class Seed {
     private static int rnd(int min, int max) { return min + new Random().nextInt(max - min + 1); }
     private static String pick(String[] arr) { return arr[rnd(0, arr.length - 1)]; }
     private static String randPwd()          { return "pw" + rnd(10000000, 99999999); }
-    private static String hash(String p)     { return "h$" + p; } // stub bcrypt hash
+    private static String hash(String p)     { return PasswordUtil.hashPassword(p); }
 
     /* ---------- Main ---------- */
     public static void main(String[] args) throws Exception {
@@ -55,11 +56,11 @@ public final class Seed {
         if (url == null || user == null || pass == null)
             throw new IllegalStateException("DATABASE_URL / USER / PASS manquants");
 
-        System.out.println("🧹  Reset DB…");
+        System.out.println("🧹 Nettoyage de la base de données…");
         Connection db = DriverManager.getConnection(url, user, pass);
         Statement  st = db.createStatement();
         st.execute("TRUNCATE order_items,orders,plants,users RESTART IDENTITY CASCADE");
-        System.out.println("✅  Vidée.");
+      	System.out.println("✅ Base de données nettoyée.");
 
 				/* ---------- Users ---------- */
 				PreparedStatement insUser = db.prepareStatement(
@@ -70,7 +71,7 @@ public final class Seed {
 				List<Integer> adminIds = new ArrayList<Integer>();
 				List<Integer> userIds  = new ArrayList<Integer>();
 
-				System.out.println("👑  Création admins…");
+				System.out.println("👑 Création des administrateurs…");
 				for (int i = 1; i <= NB_ADMINS; i++) {
 						insUser.setString(1, "Admin " + i);
 						insUser.setString(2, "admin" + i + "@planteshop.com");
@@ -81,9 +82,9 @@ public final class Seed {
 						adminIds.add(rs.getInt(1));
 						usedEmails.add("admin" + i + "@planteshop.com");
 				}
-				System.out.println("✅  " + adminIds.size() + " admins.");
+				System.out.println("✅ " + adminIds.size() + " administrateurs créés.");
 
-				System.out.println("👥  Création users…");
+				System.out.println("👥 Création des utilisateurs…");
 				Random rng = new Random();
 				for (int i = 1; i <= NB_USERS; i++) {
 						String email;
@@ -101,7 +102,7 @@ public final class Seed {
 						ResultSet rs = insUser.getGeneratedKeys(); rs.next();
 						userIds.add(rs.getInt(1));
 				}
-				System.out.println("✅  " + userIds.size() + " users.");
+				System.out.println("✅ " + userIds.size() + " utilisateurs créés.");
 
         /* ---------- Plants ---------- */
         PreparedStatement insPlant = db.prepareStatement(
@@ -110,7 +111,7 @@ public final class Seed {
 
         List<Integer> plantIds = new ArrayList<Integer>();
 
-        System.out.println("🌱  Création plantes…");
+        System.out.println("🌱 Création des plantes…");
         for (int i = 0; i < NB_PLANTS; i++) {
             String base = PLANT_NAMES[i % PLANT_NAMES.length];
             String name = NB_PLANTS > PLANT_NAMES.length ? base + " " + (i / PLANT_NAMES.length + 1) : base;
@@ -122,7 +123,7 @@ public final class Seed {
             ResultSet rs = insPlant.getGeneratedKeys(); rs.next();
             plantIds.add(rs.getInt(1));
         }
-        System.out.println("✅  " + plantIds.size() + " plantes.");
+        System.out.println("✅ " + plantIds.size() + " plantes créées.");
 
         /* ---------- Orders & items ---------- */
         PreparedStatement insOrder = db.prepareStatement(
@@ -134,7 +135,7 @@ public final class Seed {
         String[] statusArr = {"confirmed", "pending", "shipped", "delivered"};
         int totalOrders = 0;
 
-        System.out.println("🛒  Création commandes…");
+        System.out.println("🛒 Création des commandes…");
         for (Integer uid : userIds) {
             int nb = rnd(0, MAX_ORDERS_PER_USER);
             for (int k = 0; k < nb; k++) {
@@ -170,9 +171,9 @@ public final class Seed {
                 totalOrders++;
             }
         }
-        System.out.println("✅  " + totalOrders + " commandes.");
+        System.out.println("✅ " + totalOrders + " commandes créées.");
 
         db.close();
-        System.out.println("\n🎉  Seed terminée avec succès !");
+        System.out.println("🎉 Seed terminée avec succès !");
     }
 }

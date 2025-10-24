@@ -1,64 +1,63 @@
 package repository;
 
 import java.sql.*;
-import java.util.*;
+import java.math.BigDecimal;
 import model.Order;
 
-public final class OrderRepository {
+public final class OrderRepository extends BaseRepository<Order> {
 
-    private final Connection db;
+    public OrderRepository(Connection db) {
+        super(db, "orders");
+    }
 
-    public OrderRepository(Connection db) { this.db = db; }
+    @Override
+    protected Order mapFromResultSet(ResultSet rs) throws SQLException {
+        return new Order(
+            rs.getInt("id"),
+            rs.getInt("user_id"),
+            rs.getBigDecimal("total"),
+            rs.getString("status"),
+            rs.getTimestamp("created_at")
+        );
+    }
+
+    // Les méthodes `find(id)`, `list()` et `delete(id)` sont maintenant héritées de BaseRepository.
 
     public int create(Order o) throws SQLException {
-        PreparedStatement ps = db.prepareStatement(
-            "INSERT INTO orders(user_id,total,status) VALUES (?,?,?)",
-            Statement.RETURN_GENERATED_KEYS);
-        ps.setInt(1, o.userId);
-        ps.setBigDecimal(2, o.total);
-        ps.setString(3, o.status);
-        ps.executeUpdate();
-        ResultSet rs = ps.getGeneratedKeys(); rs.next();
-        return rs.getInt(1);
+        String sql = "INSERT INTO orders(user_id, total, status) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, o.userId);
+            ps.setBigDecimal(2, o.total);
+            ps.setString(3, o.status);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
     }
 
-    public Order find(int id) throws SQLException {
-        PreparedStatement ps = db.prepareStatement(
-            "SELECT * FROM orders WHERE id=?");
-        ps.setInt(1, id);
-        ResultSet rs = ps.executeQuery();
-        if (!rs.next()) return null;
-        return new Order(rs.getInt("id"),
-                         rs.getInt("user_id"),
-                         rs.getBigDecimal("total"),
-                         rs.getString("status"),
-                         rs.getTimestamp("created_at"));
+    public void updateTotal(int id, BigDecimal total) throws SQLException {
+        String sql = "UPDATE orders SET total=? WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setBigDecimal(1, total);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }
     }
 
-    public List<Order> list() throws SQLException {
-        Statement st = db.createStatement();
-        ResultSet rs = st.executeQuery("SELECT * FROM orders");
-        List<Order> out = new ArrayList<Order>();
-        while (rs.next())
-            out.add(new Order(rs.getInt("id"),
-                              rs.getInt("user_id"),
-                              rs.getBigDecimal("total"),
-                              rs.getString("status"),
-                              rs.getTimestamp("created_at")));
-        return out;
-    }
-
-    public void updateTotal(int id, java.math.BigDecimal total) throws SQLException {
-        PreparedStatement ps = db.prepareStatement(
-            "UPDATE orders SET total=? WHERE id=?");
-        ps.setBigDecimal(1, total);
-        ps.setInt(2, id);
-        ps.executeUpdate();
-    }
-
-    public void delete(int id) throws SQLException {
-        PreparedStatement ps = db.prepareStatement("DELETE FROM orders WHERE id=?");
-        ps.setInt(1, id);
-        ps.executeUpdate();
+    /**
+     * Met à jour uniquement le statut d'une commande.
+     * @param id L'identifiant de la commande.
+     * @param status Le nouveau statut.
+     * @throws SQLException
+     */
+    public void updateStatus(int id, String status) throws SQLException {
+        String sql = "UPDATE orders SET status=? WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }
     }
 }

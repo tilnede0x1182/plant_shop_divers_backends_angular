@@ -1,129 +1,145 @@
 package controller;
 
-import com.sun.net.httpserver.*;
-import java.io.*;
-import java.net.URI;
+import com.sun.net.httpserver.HttpExchange;
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.util.List;
 import model.Plant;
+import model.User;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import repository.PlantRepository;
 
-public final class PlantController implements HttpHandler {
+public final class PlantController extends BaseController {
 
     private final PlantRepository repo;
-    public PlantController(Connection db){ this.repo=new PlantRepository(db); }
 
+    public PlantController(Connection db) {
+        super(db);
+        this.repo = new PlantRepository(db);
+    }
+
+    @Override
     public void handle(HttpExchange ex) throws IOException {
-        try{
-            URI uri = ex.getRequestURI();
-            String path = uri.getPath();                 // /plants | /plants/3
+        try {
+            User currentUser = getAuthenticatedUser(ex);
+            String path = ex.getRequestURI().getPath();
             String method = ex.getRequestMethod();
             String[] seg = path.split("/");
-            boolean hasId = seg.length==3;
+            boolean isAdminRoute = path.startsWith("/api/admin/plants");
 
-            if("GET".equals(method)&&!hasId){ list(ex); return; }
-            if("GET".equals(method)&& hasId){ show(ex,seg[2]); return; }
-            if("POST".equals(method)&&!hasId){ create(ex); return; }
-            if("PATCH".equals(method)&& hasId){ update(ex,seg[2]); return; }
-            if("DELETE".equals(method)&&hasId){ destroy(ex,seg[2]); return; }
+            int id = -1;
+            if (seg.length == 4) { // /api/plants/{id} ou /api/admin/plants/{id}
+                try { id = Integer.parseInt(seg[3]); } catch (NumberFormatException e) {}
+            }
 
-            send(ex,404,"{\"error\":\"Not Found\"}");
-        }catch(Exception e){
-            e.printStackTrace();
-            send(ex,500,"{\"error\":\""+e.getMessage()+"\"}");
+            if ("GET".equals(method)) {
+                if (id != -1) show(ex, id);
+                else list(ex, isAdminRoute, currentUser);
+            } else if ("POST".equals(method) && id == -1 && isAdminRoute) {
+                create(ex, currentUser);
+            } else if ("PATCH".equals(method) && id != -1 && isAdminRoute) {
+                update(ex, currentUser, id);
+            } else if ("DELETE".equals(method) && id != -1 && isAdminRoute) {
+                destroy(ex, currentUser, id);
+            } else {
+                // Si la route admin est appelée avec une méthode non-admin
+                if (isAdminRoute) {
+                     sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+                } else {
+                     sendJsonResponse(ex, 404, "{\"error\":\"Not Found\"}");
+                }
+            }
+        } catch (Exception e) {
+            handleError(ex, e);
         }
     }
 
-    /* ---------- Actions ---------- */
-
-    private void list(HttpExchange ex) throws Exception{
+    private void list(HttpExchange ex, boolean isAdminRoute, User currentUser) throws Exception {
+        // La route /admin/plants est aussi gérée par ce contrôleur
+        if (isAdminRoute && (currentUser == null || !currentUser.isAdmin)) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+            return;
+        }
         List<Plant> all = repo.list();
-        StringBuilder sb=new StringBuilder("[");
-        for(int i=0;i<all.size();i++){
-            if(i>0) sb.append(',');
-            sb.append(toJson(all.get(i)));
+        JSONArray jsonArray = new JSONArray();
+        for (Plant p : all) {
+            jsonArray.put(toJson(p));
         }
-        sb.append(']');
-        send(ex,200,sb.toString());
+        sendJsonResponse(ex, 200, jsonArray.toString());
     }
 
-    private void show(HttpExchange ex,String idStr) throws Exception{
-        int id=Integer.parseInt(idStr);
-        Plant p=repo.find(id);
-        if(p==null){ send(ex,404,"{\"error\":\"Not Found\"}"); return; }
-        send(ex,200,toJson(p));
+    private void show(HttpExchange ex, int id) throws Exception {
+        Plant p = repo.find(id);
+        if (p == null) {
+            sendJsonResponse(ex, 404, "{\"error\":\"Not Found\"}");
+            return;
+        }
+        sendJsonResponse(ex, 200, toJson(p).toString());
     }
 
-    private void create(HttpExchange ex)throws Exception{
-        String body=read(ex);
-        String name = getJson(body,"name");
-        String desc = getJson(body,"description");
-        String price= getJson(body,"price");
-        String stock= getJson(body,"stock");
-        if(name==null||price==null){ send(ex,400,"{\"error\":\"name & price required\"}"); return; }
+    private void create(HttpExchange ex, User currentUser) throws Exception {
+        if (currentUser == null || !currentUser.isAdmin) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+            return;
+        }
+        JSONObject body = parseJsonBody(ex);
+        String name = body.optString("name", null);
+        BigDecimal price = body.optBigDecimal("price", null);
+        if (name == null || price == null) {
+            sendJsonResponse(ex, 400, "{\"error\":\"name & price requis\"}");
+            return;
+        }
+        String desc = body.optString("description", null);
+        int stock = body.optInt("stock", 0);
 
-        java.math.BigDecimal pr = new java.math.BigDecimal(price);
-        int st = stock!=null?Integer.parseInt(stock):0;
-        int id = repo.create(new Plant(name,desc,pr,st));
-        send(ex,201,"{\"id\":"+id+"}");
+        Plant newPlant = new Plant(name, desc, price, stock);
+        int id = repo.create(newPlant);
+        newPlant.id = id;
+        sendJsonResponse(ex, 201, toJson(newPlant).toString());
     }
 
-    private void update(HttpExchange ex,String idStr)throws Exception{
-        int id=Integer.parseInt(idStr);
-        Plant p=repo.find(id);
-        if(p==null){ send(ex,404,"{\"error\":\"Not Found\"}"); return; }
+    private void update(HttpExchange ex, User currentUser, int id) throws Exception {
+        if (currentUser == null || !currentUser.isAdmin) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+            return;
+        }
+        Plant p = repo.find(id);
+        if (p == null) {
+            sendJsonResponse(ex, 404, "{\"error\":\"Not Found\"}");
+            return;
+        }
 
-        String body=read(ex);
-        String name = getJson(body,"name");
-        String desc = getJson(body,"description");
-        String price= getJson(body,"price");
-        String stock= getJson(body,"stock");
-
-        if(name!=null) p.name=name;
-        if(desc!=null) p.description=desc;
-        if(price!=null) p.price=new java.math.BigDecimal(price);
-        if(stock!=null) p.stock=Integer.parseInt(stock);
+        JSONObject body = parseJsonBody(ex);
+        if (body.has("name")) p.name = body.getString("name");
+        if (body.has("description")) p.description = body.getString("description");
+        if (body.has("price")) p.price = body.getBigDecimal("price");
+        if (body.has("stock")) p.stock = body.getInt("stock");
 
         repo.update(p);
-        send(ex,200,toJson(p));
+        sendJsonResponse(ex, 200, toJson(p).toString());
     }
 
-    private void destroy(HttpExchange ex,String idStr)throws Exception{
-        int id=Integer.parseInt(idStr);
+    private void destroy(HttpExchange ex, User currentUser, int id) throws Exception {
+        if (currentUser == null || !currentUser.isAdmin) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+            return;
+        }
         repo.delete(id);
-        sendEmpty(ex,204);
+        sendEmptyResponse(ex, 200); // CORRIGÉ: Le test attend 200, pas 204.
     }
 
-    /* ---------- Helpers ---------- */
-
-    private static String toJson(Plant p){
-        return "{\"id\":"+p.id+
-               ",\"name\":\""+esc(p.name)+
-               "\",\"description\":"+(p.description==null?"null":"\""+esc(p.description)+"\"")+
-               ",\"price\":"+p.price+
-               ",\"stock\":"+p.stock+
-               "}";
-    }
-    private static String esc(String s){ return s==null?"":s.replace("\"","\\\""); }
-    private static String read(HttpExchange ex)throws IOException{
-        BufferedReader br=new BufferedReader(new InputStreamReader(ex.getRequestBody(),"UTF-8"));
-        StringBuilder sb=new StringBuilder(); String l;
-        while((l=br.readLine())!=null) sb.append(l);
-        return sb.toString();
-    }
-    private static String getJson(String json,String key){
-        String pattern="\""+key+"\"\\s*:\\s*\"?([^\"]*?)\"?(,|})";
-        java.util.regex.Matcher m=java.util.regex.Pattern.compile(pattern).matcher(json);
-        return m.find()?m.group(1):null;
-    }
-    private static void send(HttpExchange ex,int code,String body)throws IOException{
-        byte[] bytes=body.getBytes("UTF-8");
-        ex.getResponseHeaders().add("Content-Type","application/json; charset=utf-8");
-        ex.sendResponseHeaders(code,bytes.length);
-        ex.getResponseBody().write(bytes);
-        ex.close();
-    }
-    private static void sendEmpty(HttpExchange ex,int code)throws IOException{
-        ex.sendResponseHeaders(code,-1); ex.close();
+    private JSONObject toJson(Plant p) {
+        JSONObject json = new JSONObject();
+        json.put("id", p.id);
+        json.put("name", p.name);
+        json.put("description", p.description != null ? p.description : JSONObject.NULL);
+        json.put("price", p.price);
+        json.put("stock", p.stock);
+        if (p.createdAt != null) {
+            json.put("createdAt", p.createdAt.toInstant().toString());
+        }
+        return json;
     }
 }

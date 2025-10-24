@@ -14,7 +14,7 @@ compile:
 run:
 	java -cp $(CLASSPATH) Main
 
-compile-run: compile run
+compile_run: compile run
 
 ## ────────────────
 # Seed

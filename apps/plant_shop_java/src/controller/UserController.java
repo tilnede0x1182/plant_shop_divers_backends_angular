@@ -1,142 +1,152 @@
 package controller;
 
-import com.sun.net.httpserver.*;
-import java.io.*;
-import java.net.URI;
+import com.sun.net.httpserver.HttpExchange;
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.List;
 import model.User;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import repository.UserRepository;
+import util.PasswordUtil;
 
-/**
- * Routes gérés :
- *   GET    /users            → liste
- *   GET    /users/{id}       → show
- *   POST   /users            → create   (JSON: name, email, password, isAdmin)
- *   PATCH  /users/{id}       → update   (JSON: name?, email?, isAdmin?)
- *   DELETE /users/{id}       → delete
- *
- * Réponses JSON basiques, HTTP 200/201/204/400/404
- */
-public final class UserController implements HttpHandler {
+public final class UserController extends BaseController {
 
     private final UserRepository repo;
 
     public UserController(Connection db) {
+        super(db);
         this.repo = new UserRepository(db);
     }
 
+    @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
-            URI     uri    = ex.getRequestURI();
-            String  path   = uri.getPath();            // /users | /users/42
-            String  method = ex.getRequestMethod();    // GET / POST / PATCH / DELETE
-            String[] seg   = path.split("/");
-            boolean hasId  = seg.length == 3;          // /users/{id}
+            User currentUser = getAuthenticatedUser(ex);
 
-            if ("GET".equals(method) && !hasId) { list(ex);       return; }
-            if ("GET".equals(method) &&  hasId) { show(ex, seg[2]);   return; }
-            if ("POST".equals(method) && !hasId){ create(ex);     return; }
-            if ("PATCH".equals(method) && hasId){ update(ex, seg[2]); return; }
-            if ("DELETE".equals(method)&& hasId){ destroy(ex, seg[2]);return; }
+            String path = ex.getRequestURI().getPath();
+            String method = ex.getRequestMethod();
+            String[] seg = path.split("/");
+            boolean isAdminRoute = path.startsWith("/api/admin/users");
 
-            send(ex, 404, "{\"error\":\"Not Found\"}");
+            int id = -1;
+            // Correction de la logique de parsing d'ID pour gérer /api/users/{id} et /api/admin/users/{id}
+            if (!isAdminRoute && seg.length == 4) { // /api/users/{id}
+                try { id = Integer.parseInt(seg[3]); } catch (NumberFormatException e) {}
+            } else if (isAdminRoute && seg.length == 4) { // /api/admin/users/{id}
+                try { id = Integer.parseInt(seg[3]); } catch (NumberFormatException e) {}
+            }
+
+            if ("GET".equals(method)) {
+                if (id != -1) show(ex, currentUser, id);
+                else list(ex, currentUser);
+            } else if ("POST".equals(method) && id == -1) {
+                create(ex, currentUser);
+            } else if ("PATCH".equals(method) && id != -1) {
+                update(ex, currentUser, id);
+            } else if ("DELETE".equals(method) && id != -1) {
+                destroy(ex, currentUser, id);
+            } else {
+                sendJsonResponse(ex, 404, "{\"error\":\"Not Found\"}");
+            }
         } catch (Exception e) {
-            e.printStackTrace();
-            send(ex, 500, "{\"error\":\""+e.getMessage()+"\"}");
+            handleError(ex, e);
         }
     }
 
-    /* ---------- Actions ---------- */
-
-    private void list(HttpExchange ex) throws Exception {
-        List<User> all = repo.list();
-        StringBuilder sb = new StringBuilder("[");
-        for (int i=0;i<all.size();i++) {
-            if (i>0) sb.append(',');
-            sb.append(toJson(all.get(i), false));
-        }
-        sb.append(']');
-        send(ex, 200, sb.toString());
-    }
-
-    private void show(HttpExchange ex, String idStr) throws Exception {
-        int id = Integer.parseInt(idStr);
-        User u = repo.find(id);
-        if (u==null) { send(ex,404,"{\"error\":\"Not Found\"}"); return; }
-        send(ex,200,toJson(u,false));
-    }
-
-    private void create(HttpExchange ex) throws Exception {
-        String body = read(ex);
-        // parse minimal : name,email,password,isAdmin
-        String name  = getJson(body,"name");
-        String email = getJson(body,"email");
-        String pass  = getJson(body,"password");
-        boolean adm  = "true".equalsIgnoreCase(getJson(body,"isAdmin"));
-        if (name==null||email==null||pass==null) {
-            send(ex,400,"{\"error\":\"Missing fields\"}");
+    private void list(HttpExchange ex, User currentUser) throws Exception {
+        // La route GET /users est protégée et réservée aux admins
+        if (currentUser == null || !currentUser.isAdmin) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
             return;
         }
-        int id = repo.create(new User(name,email,hash(pass),adm));
-        send(ex,201,"{\"id\":"+id+"}");
+        List<User> all = repo.list();
+        JSONArray jsonArray = new JSONArray();
+        for (User u : all) {
+            jsonArray.put(toJson(u));
+        }
+        sendJsonResponse(ex, 200, jsonArray.toString());
     }
 
-    private void update(HttpExchange ex, String idStr) throws Exception {
-        int id = Integer.parseInt(idStr);
+    private void show(HttpExchange ex, User currentUser, int id) throws Exception {
+        if (currentUser == null || (currentUser.id != id && !currentUser.isAdmin)) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+            return;
+        }
         User u = repo.find(id);
-        if (u==null){ send(ex,404,"{\"error\":\"Not Found\"}"); return; }
+        if (u == null) {
+            sendJsonResponse(ex, 404, "{\"error\":\"Not Found\"}");
+            return;
+        }
+        sendJsonResponse(ex, 200, toJson(u).toString());
+    }
 
-        String body = read(ex);
-        String name  = getJson(body,"name");
-        String email = getJson(body,"email");
-        String isAd  = getJson(body,"isAdmin");
+    private void create(HttpExchange ex, User currentUser) throws Exception {
+        // La création d'utilisateur est réservée aux admins dans ce contexte de test
+        if (currentUser == null || !currentUser.isAdmin) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+            return;
+        }
+        JSONObject body = parseJsonBody(ex);
+        String name = body.optString("name", null);
+        String email = body.optString("email", null);
+        String pass = body.optString("password", null);
+        if (name == null || email == null || pass == null) {
+            sendJsonResponse(ex, 400, "{\"error\":\"Champs manquants\"}");
+            return;
+        }
+        boolean isAdmin = body.optBoolean("admin", false);
 
-        if (name!=null)  u.name   = name;
-        if (email!=null) u.email  = email;
-        if (isAd!=null)  u.isAdmin= "true".equalsIgnoreCase(isAd);
+        String hash = PasswordUtil.hashPassword(pass);
+        User newUser = new User(name, email, hash, isAdmin);
+        int newId = repo.create(newUser);
+        newUser.id = newId; // Assigner l'ID retourné
+
+        // CORRIGÉ: Renvoyer l'objet complet pour la cohérence
+        sendJsonResponse(ex, 201, toJson(newUser).toString());
+    }
+
+    private void update(HttpExchange ex, User currentUser, int id) throws Exception {
+        if (currentUser == null || (currentUser.id != id && !currentUser.isAdmin)) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+            return;
+        }
+        User u = repo.find(id);
+        if (u == null) {
+            sendJsonResponse(ex, 404, "{\"error\":\"Not Found\"}");
+            return;
+        }
+
+        JSONObject body = parseJsonBody(ex);
+        if (body.has("name")) u.name = body.getString("name");
+        if (body.has("email")) u.email = body.getString("email");
+
+        if (body.has("admin") && currentUser.isAdmin) {
+            u.isAdmin = body.getBoolean("admin");
+        }
 
         repo.update(u);
-        send(ex,200,toJson(u,false));
+        sendJsonResponse(ex, 200, toJson(u).toString());
     }
 
-    private void destroy(HttpExchange ex, String idStr) throws Exception {
-        int id = Integer.parseInt(idStr);
+    private void destroy(HttpExchange ex, User currentUser, int id) throws Exception {
+        if (currentUser == null || !currentUser.isAdmin) {
+            sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
+            return;
+        }
         repo.delete(id);
-        sendEmpty(ex,204);
+        sendEmptyResponse(ex, 200);
     }
 
-    /* ---------- Helpers JSON/minis ---------- */
-
-    private static String toJson(User u, boolean withPwd){
-        return "{\"id\":"+u.id+
-               ",\"name\":\""+esc(u.name)+
-               "\",\"email\":\""+esc(u.email)+
-               "\",\"isAdmin\":"+(u.isAdmin?"true":"false")+
-               (withPwd ? ",\"passwordHash\":\""+esc(u.passwordHash)+"\"" : "")+
-               "}";
-    }
-    private static String esc(String s){ return s==null?"":s.replace("\"","\\\""); }
-    private static String read(HttpExchange ex) throws IOException{
-        BufferedReader br = new BufferedReader(new InputStreamReader(ex.getRequestBody(),"UTF-8"));
-        StringBuilder sb = new StringBuilder(); String l;
-        while((l=br.readLine())!=null) sb.append(l);
-        return sb.toString();
-    }
-    private static String getJson(String json,String key){
-        String pattern="\""+key+"\"\\s*:\\s*\"([^\"]*)\"";
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile(pattern).matcher(json);
-        return m.find()?m.group(1):null;
-    }
-    private static String hash(String pw){ return "h$"+pw; }     // stub
-    private static void send(HttpExchange ex,int code,String body)throws IOException{
-        byte[] bytes=body.getBytes("UTF-8");
-        ex.getResponseHeaders().add("Content-Type","application/json; charset=utf-8");
-        ex.sendResponseHeaders(code,bytes.length);
-        ex.getResponseBody().write(bytes);
-        ex.close();
-    }
-    private static void sendEmpty(HttpExchange ex,int code)throws IOException{
-        ex.sendResponseHeaders(code,-1); ex.close();
+    private JSONObject toJson(User u) {
+        JSONObject json = new JSONObject();
+        json.put("id", u.id);
+        json.put("name", u.name);
+        json.put("email", u.email);
+        json.put("admin", u.isAdmin);
+        if (u.createdAt != null) {
+            json.put("createdAt", u.createdAt.toInstant().toString());
+        }
+        return json;
     }
 }

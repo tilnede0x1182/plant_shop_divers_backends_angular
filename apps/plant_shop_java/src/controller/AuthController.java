@@ -11,21 +11,26 @@ import repository.UserRepository;
 import util.PasswordUtil;
 import util.Request;
 import util.Response;
+import org.json.JSONObject;
 
 public final class AuthController extends BaseController {
 
     private final UserRepository userRepo;
-    // Un simple cache en mémoire pour les sessions. Dans une vraie application,
-    // on utiliserait une base de données comme Redis.
+    // AJOUTÉ: Rendre la map de sessions statique et publique pour être accessible par BaseController
     private static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
     public AuthController(Connection db) {
+        super(db); // AJOUTÉ: Appel au constructeur parent
         this.userRepo = new UserRepository(db);
+    }
+
+    // AJOUTÉ: Getter pour que BaseController puisse accéder aux sessions
+    public static Map<String, Integer> getSessions() {
+        return sessions;
     }
 
     @Override
     public void handle(HttpExchange ex) throws IOException {
-        // Le préfixe /api/auth est géré par le routeur, on ne reçoit que la fin du chemin
         String path = ex.getRequestURI().getPath().substring("/api/auth".length());
 
         try {
@@ -45,80 +50,76 @@ public final class AuthController extends BaseController {
                     return;
                 }
             }
-            Response.send(ex, 404, "{\"error\":\"Route non trouvée dans AuthController\"}");
+            sendJsonResponse(ex, 404, "{\"error\":\"Route non trouvée dans AuthController\"}");
         } catch (Exception e) {
-            e.printStackTrace();
-            Response.send(ex, 500, "{\"error\":\"Erreur interne du serveur: " + e.getMessage() + "\"}");
+            handleError(ex, e);
         }
     }
 
     private void register(HttpExchange ex) throws Exception {
-        String body = Request.read(ex);
-        String name = Request.getJsonField(body, "name");
-        String email = Request.getJsonField(body, "email");
-        String password = Request.getJsonField(body, "password");
+        JSONObject body = parseJsonBody(ex);
+        String name = body.optString("name", null);
+        String email = body.optString("email", null);
+        String password = body.optString("password", null);
 
         if (name == null || email == null || password == null) {
-            Response.send(ex, 400, "{\"error\":\"Les champs 'name', 'email' et 'password' sont requis.\"}");
+            sendJsonResponse(ex, 400, "{\"error\":\"Les champs 'name', 'email' et 'password' sont requis.\"}");
             return;
         }
 
         if (userRepo.findByEmailWithPassword(email) != null) {
-            Response.send(ex, 409, "{\"error\":\"Cet email est déjà utilisé.\"}");
+            sendJsonResponse(ex, 409, "{\"error\":\"Cet email est déjà utilisé.\"}");
             return;
         }
 
         String passwordHash = PasswordUtil.hashPassword(password);
-        User newUser = new User(name, email, passwordHash, false); // Par défaut, non-admin
+        User newUser = new User(name, email, passwordHash, false);
 
         int userId = userRepo.create(newUser);
-        newUser.id = userId;
 
-        // On ne connecte pas l'utilisateur automatiquement après l'inscription pour garder les choses simples
-        Response.send(ex, 201, "{\"message\":\"Utilisateur créé avec succès.\", \"userId\":" + userId + "}");
+        // CORRIGÉ: Le test attend un corps JSON vide pour un code 201, mais renvoyer un message est plus informatif.
+        // Le test `Test.java` gère un corps vide ou un objet JSON, donc c'est compatible.
+        sendJsonResponse(ex, 201, "{\"message\":\"Utilisateur créé avec succès.\", \"userId\":" + userId + "}");
     }
 
     private void login(HttpExchange ex) throws Exception {
-        String body = Request.read(ex);
-        String email = Request.getJsonField(body, "email");
-        String password = Request.getJsonField(body, "password");
+        JSONObject body = parseJsonBody(ex);
+        String email = body.optString("email", null);
+        String password = body.optString("password", null);
 
         if (email == null || password == null) {
-            Response.send(ex, 400, "{\"error\":\"Les champs 'email' et 'password' sont requis.\"}");
+            sendJsonResponse(ex, 400, "{\"error\":\"Les champs 'email' et 'password' sont requis.\"}");
             return;
         }
 
         User user = userRepo.findByEmailWithPassword(email);
         if (user == null || !PasswordUtil.checkPassword(password, user.passwordHash)) {
-            Response.send(ex, 401, "{\"error\":\"Email ou mot de passe incorrect.\"}");
+            sendJsonResponse(ex, 401, "{\"error\":\"Email ou mot de passe incorrect.\"}");
             return;
         }
 
-        // Créer une session
         String sessionId = UUID.randomUUID().toString();
         sessions.put(sessionId, user.id);
 
-        // Envoyer le cookie de session au client
         ex.getResponseHeaders().add("Set-Cookie", "session_id=" + sessionId + "; HttpOnly; Path=/; Max-Age=3600");
-        Response.send(ex, 201, "{\"message\":\"Connexion réussie.\"}");
+        // Le test attend un corps vide ou JSON, donc c'est ok.
+        sendJsonResponse(ex, 201, "{\"message\":\"Connexion réussie.\"}");
     }
 
     private void me(HttpExchange ex) throws Exception {
-        User currentUser = Request.getUserFromSession(ex, userRepo, sessions);
+        User currentUser = getAuthenticatedUser(ex);
 
         if (currentUser == null) {
-            Response.send(ex, 401, "{\"error\":\"Non authentifié.\"}");
+            sendJsonResponse(ex, 401, "{\"error\":\"Non authentifié.\"}");
             return;
         }
 
-        // Renvoyer les informations de l'utilisateur (sans le mot de passe)
-        String jsonResponse = String.format(
-            "{\"id\":%d, \"name\":\"%s\", \"email\":\"%s\", \"isAdmin\":%b}",
-            currentUser.id,
-            Request.escapeJson(currentUser.name),
-            Request.escapeJson(currentUser.email),
-            currentUser.isAdmin
-        );
-        Response.send(ex, 200, jsonResponse);
+        JSONObject userJson = new JSONObject();
+        userJson.put("id", currentUser.id);
+        userJson.put("name", currentUser.name);
+        userJson.put("email", currentUser.email);
+        userJson.put("isAdmin", currentUser.isAdmin);
+
+        sendJsonResponse(ex, 200, userJson.toString());
     }
 }

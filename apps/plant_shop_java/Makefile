@@ -34,10 +34,7 @@ seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
 	java -cp $(CLASSPATH) db.Seed
 
-seed-dev:
-	make clean
-	compile-seed
-	seed
+seed-dev: clean compile-seed seed
 
 ## ────────────────
 # DB
@@ -68,9 +65,6 @@ tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
 	java -cp $(CLASSPATH) Tests.Test
 
-seed-dev:
-	make clean
-	compile-seed
-	seed
+seed-dev: clean compile-seed seed
 
 build-dev: clean compile_run

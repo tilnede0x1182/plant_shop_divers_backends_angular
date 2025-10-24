@@ -100,7 +100,8 @@ public final class Seed {
 
 		List<Integer> adminIds = new ArrayList<>();
 		List<Integer> userIds  = new ArrayList<>();
-		List<String>  credsOut = new ArrayList<>();   // pour users.txt
+		List<String>  credsOut = new ArrayList<>();
+		credsOut.add("Administrateurs :\n");
 
 		// Admins
 		System.out.println("👑 Création des administrateurs…");
@@ -114,9 +115,12 @@ public final class Seed {
 			insUser.setBoolean(4,true);
 			insUser.executeUpdate();
 			try(ResultSet rs=insUser.getGeneratedKeys()){ rs.next(); adminIds.add(rs.getInt(1)); }
-			credsOut.add(email+";"+pwd);
+			credsOut.add(email+" "+pwd);
 		}
 		System.out.println("✅ "+adminIds.size()+" admins.");
+
+		credsOut.add("");
+		credsOut.add("Utilisateurs :\n");
 
 		// Users
 		System.out.println("👥 Création des utilisateurs…");
@@ -131,7 +135,7 @@ public final class Seed {
 			insUser.setBoolean(4,false);
 			insUser.executeUpdate();
 			try(ResultSet rs=insUser.getGeneratedKeys()){ rs.next(); userIds.add(rs.getInt(1)); }
-			credsOut.add(email+";"+pwd);
+			credsOut.add(email+" "+pwd);
 		}
 		System.out.println("✅ "+userIds.size()+" utilisateurs.");
 

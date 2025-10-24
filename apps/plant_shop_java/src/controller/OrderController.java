@@ -150,36 +150,40 @@ public final class OrderController extends BaseController {
         sendEmptyResponse(ex, 200); // CORRIGÉ: Le test attend 200
     }
 
-    private JSONObject toJson(Order o, List<OrderItem> items) throws Exception {
-        JSONObject json = new JSONObject();
-        json.put("id", o.id);
-        json.put("userId", o.userId);
-        json.put("total", o.total);
-        json.put("status", o.status);
-        json.put("createdAt", o.createdAt.toInstant().toString());
+		private JSONObject toJson(Order o, List<OrderItem> items) throws Exception {
+				/* Charge toujours les items si absents */
+				if (items == null) {
+						items = itemRepo.listByOrder(o.id);
+				}
 
-        if (items != null) {
-            JSONArray itemsArray = new JSONArray();
-            for (OrderItem it : items) {
-                JSONObject itemJson = new JSONObject();
-                itemJson.put("id", it.id);
-                itemJson.put("plantId", it.plantId);
-                itemJson.put("quantity", it.quantity);
-                itemJson.put("price", it.price);
+				JSONObject json = new JSONObject();
+				json.put("id", o.id);
+				json.put("userId", o.userId);
+				json.put("total", o.total);
+				json.put("status", o.status);
+				json.put("createdAt", o.createdAt.toInstant().toString());
 
-                // AJOUTÉ: Le test `test_orders` vérifie la présence de l'objet `plant` imbriqué
-                Plant p = plantRepo.find(it.plantId);
-                if (p != null) {
-                    JSONObject plantJson = new JSONObject();
-                    plantJson.put("id", p.id);
-                    plantJson.put("name", p.name);
-                    plantJson.put("price", p.price);
-                    itemJson.put("plant", plantJson);
-                }
-                itemsArray.put(itemJson);
-            }
-            json.put("orderItems", itemsArray);
-        }
-        return json;
-    }
+				/* Tableau orderItems toujours présent, même lors du listing */
+				JSONArray itemsArray = new JSONArray();
+				for (OrderItem it : items) {
+						JSONObject itemJson = new JSONObject();
+						itemJson.put("id", it.id);
+						itemJson.put("plantId", it.plantId);
+						itemJson.put("quantity", it.quantity);
+						itemJson.put("price", it.price);
+
+						Plant p = plantRepo.find(it.plantId);
+						if (p != null) {
+								JSONObject plantJson = new JSONObject();
+								plantJson.put("id", p.id);
+								plantJson.put("name", p.name);
+								plantJson.put("price", p.price);
+								itemJson.put("plant", plantJson);
+						}
+						itemsArray.put(itemJson);
+				}
+				json.put("orderItems", itemsArray);
+
+				return json;
+		}
 }

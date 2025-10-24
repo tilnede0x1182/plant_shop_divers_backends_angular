@@ -10,14 +10,16 @@ import java.sql.Connection;
  */
 public final class Routes implements HttpHandler {
 
-	private final AuthController  auth;
-	private final PlantController plants;
-	private final UserController  users;
+	private final AuthController   auth;
+	private final PlantController  plants;
+	private final UserController   users;
+	private final OrderController  orders;   // ← ajouté
 
 	public Routes(Connection db) {
 		this.auth   = new AuthController(db);
 		this.plants = new PlantController(db);
 		this.users  = new UserController(db);
+		this.orders = new OrderController(db); // ← ajouté
 	}
 
 	@Override
@@ -41,6 +43,12 @@ public final class Routes implements HttpHandler {
 			/* ---------- USERS ---------- */
 			if (path.startsWith("/users") || path.startsWith("/admin/users")) {
 				users.handle(ex);
+				return;
+			}
+
+			/* ---------- ORDERS ---------- */        // ← ajouté
+			if (path.startsWith("/orders") || path.startsWith("/admin/orders")) {
+				orders.handle(ex);
 				return;
 			}
 

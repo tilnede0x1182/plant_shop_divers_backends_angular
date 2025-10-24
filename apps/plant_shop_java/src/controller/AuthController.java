@@ -29,32 +29,37 @@ public final class AuthController extends BaseController {
         return sessions;
     }
 
-    @Override
-    public void handle(HttpExchange ex) throws IOException {
-        String path = ex.getRequestURI().getPath().substring("/api/auth".length());
+		@Override
+		public void handle(HttpExchange ex) throws IOException {
+			String path = ex.getRequestURI().getPath().substring("/api/auth".length());
 
-        try {
-            if ("POST".equals(ex.getRequestMethod())) {
-                if ("/register".equals(path)) {
-                    register(ex);
-                    return;
-                }
-                if ("/login".equals(path)) {
-                    login(ex);
-                    return;
-                }
-            }
-            if ("GET".equals(ex.getRequestMethod())) {
-                if ("/me".equals(path)) {
-                    me(ex);
-                    return;
-                }
-            }
-            sendJsonResponse(ex, 404, "{\"error\":\"Route non trouvée dans AuthController\"}");
-        } catch (Exception e) {
-            handleError(ex, e);
-        }
-    }
+			try {
+				if ("POST".equals(ex.getRequestMethod())) {
+					if ("/register".equals(path)) {
+						register(ex);
+						return;
+					}
+					if ("/login".equals(path)) {
+						login(ex);
+						return;
+					}
+				}
+				if ("GET".equals(ex.getRequestMethod())) {
+					if ("/me".equals(path)) {
+						me(ex);
+						return;
+					}
+				}
+				// Accepte POST, GET, DELETE pour /logout (plus de 404)
+				if ("/logout".equals(path)) {
+					logout(ex);
+					return;
+				}
+				sendJsonResponse(ex, 404, "{\"error\":\"Route non trouvée dans AuthController\"}");
+			} catch (Exception e) {
+				handleError(ex, e);
+			}
+		}
 
     private void register(HttpExchange ex) throws Exception {
         JSONObject body = parseJsonBody(ex);
@@ -105,6 +110,24 @@ public final class AuthController extends BaseController {
         // Le test attend un corps vide ou JSON, donc c'est ok.
         sendJsonResponse(ex, 201, "{\"message\":\"Connexion réussie.\"}");
     }
+
+		private void logout(HttpExchange ex) throws Exception {
+			String cookieHeader = ex.getRequestHeaders().getFirst("Cookie");
+			if (cookieHeader != null) {
+				java.util.Arrays.stream(cookieHeader.split(";"))
+						.map(String::trim)
+						.filter(c -> c.startsWith("session_id="))
+						.map(c -> c.substring("session_id=".length()))
+						.findFirst()
+						.ifPresent(sessions::remove);
+			}
+			// Cookie expiré -> effacement côté navigateur
+			ex.getResponseHeaders().add(
+					"Set-Cookie",
+					"session_id=deleted; Path=/; Max-Age=0; HttpOnly"
+			);
+			sendEmptyResponse(ex, 204);   // helper déjà présent dans BaseController :contentReference[oaicite:0]{index=0}
+		}
 
     private void me(HttpExchange ex) throws Exception {
         User currentUser = getAuthenticatedUser(ex);

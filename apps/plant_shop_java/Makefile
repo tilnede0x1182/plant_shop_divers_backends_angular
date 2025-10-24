@@ -12,6 +12,7 @@ compile:
 	xargs javac -cp $(CLASSPATH) -d bin
 
 run:
+	@if [ ! -f bin/Main.class ]; then make compile; fi
 	java -cp $(CLASSPATH) Main
 
 compile_run: compile run
@@ -30,9 +31,13 @@ compile-seed:
 	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
 
 seed:
+	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
 	java -cp $(CLASSPATH) db.Seed
 
-seed-dev: compile-seed seed
+seed-dev:
+	make clean
+	compile-seed
+	seed
 
 ## ────────────────
 # DB
@@ -60,6 +65,12 @@ compile-test:
 	javac -cp $(CLASSPATH) -d bin Tests/Test.java
 
 tests:
+	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
 	java -cp $(CLASSPATH) Tests.Test
 
-test-dev: compile-test tests
+seed-dev:
+	make clean
+	compile-seed
+	seed
+
+build-dev: clean compile_run

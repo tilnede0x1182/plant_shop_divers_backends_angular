@@ -4,27 +4,25 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.sql.Connection;
-import org.json.JSONObject;
 
 /**
- * Routeur central – délègue aux contrôleurs spécialisés.
- * Protège automatiquement les routes /api/admin/* par vérification de l'admin
- * via le cookie session_id déjà implémenté dans getAuthenticatedUser().
+ * Routeur central : délègue chaque requête au contrôleur approprié.
  */
 public final class Routes implements HttpHandler {
 
-	private final AuthController   auth;
-	private final PlantController  plants;
-	// Ajoutez d’autres contrôleurs si nécessaire
+	private final AuthController  auth;
+	private final PlantController plants;
+	private final UserController  users;
 
 	public Routes(Connection db) {
 		this.auth   = new AuthController(db);
 		this.plants = new PlantController(db);
+		this.users  = new UserController(db);
 	}
 
 	@Override
 	public void handle(HttpExchange ex) throws IOException {
-		String path   = ex.getRequestURI().getPath().substring("/api".length()); // sans /api
+		String path   = ex.getRequestURI().getPath().substring("/api".length());
 		String method = ex.getRequestMethod();
 
 		try {
@@ -40,29 +38,27 @@ public final class Routes implements HttpHandler {
 				return;
 			}
 
+			/* ---------- USERS ---------- */
+			if (path.startsWith("/users") || path.startsWith("/admin/users")) {
+				users.handle(ex);
+				return;
+			}
+
 			/* ---------- 404 ---------- */
-			sendJson404(ex, "Route non trouvée");
+			sendJson(ex, 404, "{\"error\":\"Route non trouvée\"}");
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			sendJson500(ex, e.getMessage());
+			sendJson(ex, 500, "{\"error\":\"Erreur interne du serveur: " + e.getMessage() + "\"}");
 		}
 	}
 
-	/* ---------- Helpers réponses JSON ---------- */
-	private static void sendJson404(HttpExchange ex, String msg) throws IOException {
-		byte[] b = ("{\"error\":\"" + msg + "\"}").getBytes("UTF-8");
+	/* ---------- Helper JSON ---------- */
+	private static void sendJson(HttpExchange ex, int code, String body) throws IOException {
+		byte[] bytes = body.getBytes("UTF-8");
 		ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
-		ex.sendResponseHeaders(404, b.length);
-		ex.getResponseBody().write(b);
-		ex.close();
-	}
-
-	private static void sendJson500(HttpExchange ex, String msg) throws IOException {
-		byte[] b = ("{\"error\":\"Erreur interne du serveur: " + msg + "\"}").getBytes("UTF-8");
-		ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
-		ex.sendResponseHeaders(500, b.length);
-		ex.getResponseBody().write(b);
+		ex.sendResponseHeaders(code, bytes.length);
+		ex.getResponseBody().write(bytes);
 		ex.close();
 	}
 }

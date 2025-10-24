@@ -1,5 +1,3 @@
-package src;   // ← ajustez le package racine
-
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.sql.Connection;

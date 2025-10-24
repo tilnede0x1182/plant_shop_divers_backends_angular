@@ -1,4 +1,5 @@
 CLASSPATH=bin:lib/postgresql-42.7.8.jar
+CLASSPATH:=\$(CLASSPATH):lib/json-20210307.jar
 
 ## ────────────────
 # Server
@@ -6,7 +7,8 @@ CLASSPATH=bin:lib/postgresql-42.7.8.jar
 
 compile:
 	mkdir -p bin
-	find src -type f -name "*.java" ! -name "Seed.java" ! -name "Test.java" | xargs javac -cp lib/postgresql-42.7.8.jar -d bin
+	find src -type f -name "*.java" ! -name "Seed.java" ! -name "Test.java" | \
+	xargs javac -cp $(CLASSPATH) -d bin
 
 run:
 	java -cp $(CLASSPATH) Main
@@ -19,7 +21,7 @@ compile-run: compile run
 
 compile-seed:
 	mkdir -p bin
-	javac -cp lib/postgresql-42.7.8.jar -d bin src/db/Seed.java
+	javac -cp $(CLASSPATH) -d bin src/db/Seed.java
 
 seed: compile-seed
 	java -cp $(CLASSPATH) db.Seed
@@ -49,9 +51,10 @@ db-reset: db-drop db-create db-migrate db-seed
 
 compile-test:
 	mkdir -p bin
-	javac -cp lib/postgresql-42.7.8.jar -d bin Tests/Test.java
+	javac -cp \$(CLASSPATH) -d bin Tests/Test.java
 
 tests: compile-test
-	java -cp $(CLASSPATH) Tests.Test
+	java -cp \$(CLASSPATH) Tests.Test
+
 
 test-dev: compile-test tests

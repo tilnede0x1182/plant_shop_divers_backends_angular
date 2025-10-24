@@ -66,7 +66,7 @@ public final class Seed {
 						"INSERT INTO users(name,email,password_hash,is_admin) VALUES (?,?,?,?)",
 						Statement.RETURN_GENERATED_KEYS);
 
-				Set<String> usedEmails = new HashSet<String>();          // ← nouveau
+				Set<String> usedEmails = new HashSet<String>();
 				List<Integer> adminIds = new ArrayList<Integer>();
 				List<Integer> userIds  = new ArrayList<Integer>();
 
@@ -79,7 +79,7 @@ public final class Seed {
 						insUser.executeUpdate();
 						ResultSet rs = insUser.getGeneratedKeys(); rs.next();
 						adminIds.add(rs.getInt(1));
-						usedEmails.add("admin" + i + "@planteshop.com");    // ← consigne
+						usedEmails.add("admin" + i + "@planteshop.com");
 				}
 				System.out.println("✅  " + adminIds.size() + " admins.");
 
@@ -87,11 +87,11 @@ public final class Seed {
 				Random rng = new Random();
 				for (int i = 1; i <= NB_USERS; i++) {
 						String email;
-						do {                                                // ← boucle jusqu’à unicité
+						do {
 								String fn = pick(FIRST), ln = pick(LAST);
 								email = fn.toLowerCase() + "." + ln.toLowerCase()
 											+ (10 + rng.nextInt(90)) + "@" + pick(DOMAINS);
-						} while (!usedEmails.add(email));                   // false si déjà présent
+						} while (!usedEmails.add(email));
 
 						insUser.setString(1, "User " + i);
 						insUser.setString(2, email);

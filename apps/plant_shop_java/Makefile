@@ -51,10 +51,9 @@ db-reset: db-drop db-create db-migrate db-seed
 
 compile-test:
 	mkdir -p bin
-	javac -cp \$(CLASSPATH) -d bin Tests/Test.java
+	javac -cp $(CLASSPATH) -d bin Tests/Test.java
 
 tests: compile-test
-	java -cp \$(CLASSPATH) Tests.Test
-
+	java -cp $(CLASSPATH) Tests.Test
 
 test-dev: compile-test tests

@@ -1,5 +1,6 @@
 CLASSPATH=bin:lib/postgresql-42.7.8.jar
 CLASSPATH:=\$(CLASSPATH):lib/json-20210307.jar
+CLASSPATH:=$(CLASSPATH):lib/jbcrypt-0.4.jar
 
 ## ────────────────
 # Server

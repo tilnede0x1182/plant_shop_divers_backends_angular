@@ -16,6 +16,11 @@ run:
 
 compile_run: compile run
 
+clean:
+	rm -rf bin
+
+build-dev: clean compile_run
+
 ## ────────────────
 # Seed
 ## ────────────────

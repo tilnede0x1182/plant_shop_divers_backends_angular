@@ -29,13 +29,12 @@ public final class UserController extends BaseController {
             String[] seg = path.split("/");
             boolean isAdminRoute = path.startsWith("/api/admin/users");
 
-            int id = -1;
-            // Correction de la logique de parsing d'ID pour gérer /api/users/{id} et /api/admin/users/{id}
-            if (!isAdminRoute && seg.length == 4) { // /api/users/{id}
-                try { id = Integer.parseInt(seg[3]); } catch (NumberFormatException e) {}
-            } else if (isAdminRoute && seg.length == 4) { // /api/admin/users/{id}
-                try { id = Integer.parseInt(seg[3]); } catch (NumberFormatException e) {}
-            }
+						/* ---------- extraction de l'ID, quelle que soit la profondeur ---------- */
+						int id = -1;
+						if (seg.length >= 4) {                       // /api/(admin/)?users/{id}
+								String last = seg[seg.length - 1];       // dernier segment
+								try { id = Integer.parseInt(last); } catch (NumberFormatException ignore) {}
+						}
 
             if ("GET".equals(method)) {
                 if (id != -1) show(ex, currentUser, id);

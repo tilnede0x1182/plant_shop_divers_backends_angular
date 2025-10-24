@@ -129,20 +129,20 @@ public final class AuthController extends BaseController {
 			sendEmptyResponse(ex, 204);   // helper déjà présent dans BaseController :contentReference[oaicite:0]{index=0}
 		}
 
-    private void me(HttpExchange ex) throws Exception {
-        User currentUser = getAuthenticatedUser(ex);
+		private void me(HttpExchange ex) throws Exception {
+			User currentUser = getAuthenticatedUser(ex);
 
-        if (currentUser == null) {
-            sendJsonResponse(ex, 401, "{\"error\":\"Non authentifié.\"}");
-            return;
-        }
+			if (currentUser == null) {
+				sendJsonResponse(ex, 401, "{\"error\":\"Non authentifié.\"}");
+				return;
+			}
 
-        JSONObject userJson = new JSONObject();
-        userJson.put("id", currentUser.id);
-        userJson.put("name", currentUser.name);
-        userJson.put("email", currentUser.email);
-        userJson.put("isAdmin", currentUser.isAdmin);
+			JSONObject userJson = new JSONObject();
+			userJson.put("id", currentUser.id);
+			userJson.put("name", currentUser.name);
+			userJson.put("email", currentUser.email);
+			userJson.put("admin", currentUser.isAdmin);
 
-        sendJsonResponse(ex, 200, userJson.toString());
-    }
+			sendJsonResponse(ex, 200, userJson.toString());
+		}
 }

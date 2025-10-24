@@ -67,14 +67,16 @@ public final class OrderController extends BaseController {
         // Un admin peut voir toutes les commandes, un user ne voit que les siennes.
         // Cette logique n'est pas dans le test, mais c'est une bonne pratique.
         // Pour l'instant, on liste tout, comme le test le suggère.
-        List<Order> all = repo.list();
-        JSONArray array = new JSONArray();
-        for (Order o : all) {
-            // Le test `test_orders` vérifie une commande spécifique, donc on peut se contenter de ça.
-            if (currentUser.isAdmin || o.userId == currentUser.id) {
-                 array.put(toJson(o, null));
-            }
-        }
+				List<Order> all = repo.list();
+				/* ordre décroissant : dernière commande en premier */
+				all.sort((o1, o2) -> o2.createdAt.compareTo(o1.createdAt));
+
+				JSONArray array = new JSONArray();
+				for (Order o : all) {
+						if (currentUser.isAdmin || o.userId == currentUser.id) {
+								array.put(toJson(o, null));
+						}
+				}
         sendJsonResponse(ex, 200, array.toString());
     }
 

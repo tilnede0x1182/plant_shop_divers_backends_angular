@@ -80,7 +80,6 @@ apps/
  ├─ plant_shop_nest                → Backend NestJS
  ├─ plant_shop_manifest_ABANDON    → Backend Manifest (abandonné)
  ├─ plant_shop_go                  → Backend Golang avec GORM
- ├─ plant_shop_c                   → Backend en C
  ├─ plant_shop_cpp                 → Backend en C++
  └─ plant_shop_rust
      ├─ plant_shop_rust_sqlx       → Backend Rust avec SQLx

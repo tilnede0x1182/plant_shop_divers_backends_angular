@@ -4,19 +4,20 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
 
 public final class Seed {
 
     /* ---------- Lecture .env ---------- */
     private static Map<String,String> env() throws IOException {
-        Map<String,String> m = new HashMap<String,String>();
+        Map<String,String> out = new HashMap<String,String>();
         BufferedReader br = new BufferedReader(new FileReader(".env"));
-        String l; while ((l = br.readLine()) != null) {
+        String l;
+        while ((l = br.readLine()) != null) {
             int i = l.indexOf('=');
-            if (i > 0) m.put(l.substring(0,i).trim(), l.substring(i+1).trim());
+            if (i > 0) out.put(l.substring(0, i).trim(), l.substring(i + 1).trim());
         }
-        br.close(); return m;
+        br.close();
+        return out;
     }
 
     /* ---------- Constantes ---------- */
@@ -35,119 +36,141 @@ public final class Seed {
         "Ficus","Sansevieria","Philodendron","Yucca","Zamioculcas","Monstera"
     };
 
-    private static final String[] FIRST = {"Alice","Bob","Cathy","David","Emma","Franck","Gwen","Hugo","Iris","Jack"};
-    private static final String[] LAST  = {"Dupont","Martin","Bernard","Petit","Robert","Richard","Durand","Moreau"};
+    private static final String[] FIRST   = {"Alice","Bob","Cathy","David","Emma","Franck","Gwen","Hugo","Iris","Jack"};
+    private static final String[] LAST    = {"Dupont","Martin","Bernard","Petit","Robert","Richard","Durand","Moreau"};
     private static final String[] DOMAINS = {"test.com","mail.test","example.com"};
 
-    /* ---------- Helpers ---------- */
-    private static int rnd(int min,int max){ return min + new Random().nextInt(max-min+1); }
-    private static String pick(String[] arr){ return arr[rnd(0,arr.length-1)]; }
-    private static String randPwd(){ return "pw"+rnd(10000000,99999999); }
-    private static String hash(String p){ return "h$"+p; } // stub bcrypt
+    private static int rnd(int min, int max) { return min + new Random().nextInt(max - min + 1); }
+    private static String pick(String[] arr) { return arr[rnd(0, arr.length - 1)]; }
+    private static String randPwd()          { return "pw" + rnd(10000000, 99999999); }
+    private static String hash(String p)     { return "h$" + p; } // stub bcrypt hash
 
     /* ---------- Main ---------- */
     public static void main(String[] args) throws Exception {
+
         Map<String,String> cfg = env();
-        String url = cfg.get("DATABASE_URL");          // jdbc:postgresql://…/plant_shop_java
-        if(url==null) throw new IllegalStateException("DATABASE_URL manquant");
+        String url  = cfg.get("DATABASE_URL");
+        String user = cfg.get("DATABASE_USER");
+        String pass = cfg.get("DATABASE_PASS");
+        if (url == null || user == null || pass == null)
+            throw new IllegalStateException("DATABASE_URL / USER / PASS manquants");
 
         System.out.println("🧹  Reset DB…");
-        Connection db = DriverManager.getConnection(url);
-        Statement st  = db.createStatement();
+        Connection db = DriverManager.getConnection(url, user, pass);
+        Statement  st = db.createStatement();
         st.execute("TRUNCATE order_items,orders,plants,users RESTART IDENTITY CASCADE");
         System.out.println("✅  Vidée.");
 
-        /* ---------- Users ---------- */
-        PreparedStatement insUser = db.prepareStatement(
-            "INSERT INTO users(name,email,password_hash,role) VALUES (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+				/* ---------- Users ---------- */
+				PreparedStatement insUser = db.prepareStatement(
+						"INSERT INTO users(name,email,password_hash,is_admin) VALUES (?,?,?,?)",
+						Statement.RETURN_GENERATED_KEYS);
 
-        List<Integer> userIds   = new ArrayList<Integer>();
-        List<Integer> adminIds  = new ArrayList<Integer>();
+				Set<String> usedEmails = new HashSet<String>();          // ← nouveau
+				List<Integer> adminIds = new ArrayList<Integer>();
+				List<Integer> userIds  = new ArrayList<Integer>();
 
-        System.out.println("👑  Création admins…");
-        for(int i=1;i<=NB_ADMINS;i++){
-            insUser.setString(1,"Admin "+i);
-            insUser.setString(2,"admin"+i+"@planteshop.com");
-            insUser.setString(3,hash("password"));
-            insUser.setString(4,"ADMIN");
-            insUser.executeUpdate();
-            ResultSet rs = insUser.getGeneratedKeys(); rs.next();
-            adminIds.add(rs.getInt(1));
-        }
-        System.out.println("✅  "+adminIds.size()+" admins.");
+				System.out.println("👑  Création admins…");
+				for (int i = 1; i <= NB_ADMINS; i++) {
+						insUser.setString(1, "Admin " + i);
+						insUser.setString(2, "admin" + i + "@planteshop.com");
+						insUser.setString(3, hash("password"));
+						insUser.setBoolean(4, true);
+						insUser.executeUpdate();
+						ResultSet rs = insUser.getGeneratedKeys(); rs.next();
+						adminIds.add(rs.getInt(1));
+						usedEmails.add("admin" + i + "@planteshop.com");    // ← consigne
+				}
+				System.out.println("✅  " + adminIds.size() + " admins.");
 
-        System.out.println("👥  Création users…");
-        for(int i=1;i<=NB_USERS;i++){
-            String fn = pick(FIRST), ln = pick(LAST);
-            String mail = fn.toLowerCase()+"."+ln.toLowerCase()+rnd(10,99)+"@"+pick(DOMAINS);
-            insUser.setString(1,fn+" "+ln);
-            insUser.setString(2,mail);
-            insUser.setString(3,hash(randPwd()));
-            insUser.setString(4,"USER");
-            insUser.executeUpdate();
-            ResultSet rs = insUser.getGeneratedKeys(); rs.next();
-            userIds.add(rs.getInt(1));
-        }
-        System.out.println("✅  "+userIds.size()+" users.");
+				System.out.println("👥  Création users…");
+				Random rng = new Random();
+				for (int i = 1; i <= NB_USERS; i++) {
+						String email;
+						do {                                                // ← boucle jusqu’à unicité
+								String fn = pick(FIRST), ln = pick(LAST);
+								email = fn.toLowerCase() + "." + ln.toLowerCase()
+											+ (10 + rng.nextInt(90)) + "@" + pick(DOMAINS);
+						} while (!usedEmails.add(email));                   // false si déjà présent
+
+						insUser.setString(1, "User " + i);
+						insUser.setString(2, email);
+						insUser.setString(3, hash(randPwd()));
+						insUser.setBoolean(4, false);
+						insUser.executeUpdate();
+						ResultSet rs = insUser.getGeneratedKeys(); rs.next();
+						userIds.add(rs.getInt(1));
+				}
+				System.out.println("✅  " + userIds.size() + " users.");
 
         /* ---------- Plants ---------- */
         PreparedStatement insPlant = db.prepareStatement(
-            "INSERT INTO plants(name,price,stock) VALUES (?,?,?)",
-            Statement.RETURN_GENERATED_KEYS
-        );
+            "INSERT INTO plants(name,description,price,stock) VALUES (?,?,?,?)",
+            Statement.RETURN_GENERATED_KEYS);
+
         List<Integer> plantIds = new ArrayList<Integer>();
 
         System.out.println("🌱  Création plantes…");
-        for(int i=0;i<NB_PLANTS;i++){
+        for (int i = 0; i < NB_PLANTS; i++) {
             String base = PLANT_NAMES[i % PLANT_NAMES.length];
-            String name = NB_PLANTS>PLANT_NAMES.length ? base+" "+(i/PLANT_NAMES.length+1) : base;
-            insPlant.setString(1,name);
-            insPlant.setInt(2,rnd(5,50));
-            insPlant.setInt(3,rnd(5,30));
+            String name = NB_PLANTS > PLANT_NAMES.length ? base + " " + (i / PLANT_NAMES.length + 1) : base;
+            insPlant.setString(1, name);
+            insPlant.setString(2, null);               // description NULL
+            insPlant.setBigDecimal(3, new BigDecimal(rnd(5, 50)));
+            insPlant.setInt(4, rnd(5, 30));
             insPlant.executeUpdate();
             ResultSet rs = insPlant.getGeneratedKeys(); rs.next();
             plantIds.add(rs.getInt(1));
         }
-        System.out.println("✅  "+plantIds.size()+" plantes.");
+        System.out.println("✅  " + plantIds.size() + " plantes.");
 
         /* ---------- Orders & items ---------- */
         PreparedStatement insOrder = db.prepareStatement(
-            "INSERT INTO orders(user_id,total,status) VALUES (?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            "INSERT INTO orders(user_id,total,status) VALUES (?,?,?)",
+            Statement.RETURN_GENERATED_KEYS);
         PreparedStatement insItem  = db.prepareStatement(
             "INSERT INTO order_items(order_id,plant_id,quantity,price) VALUES (?,?,?,?)");
 
-        String[] status = {"confirmed","pending","shipped","delivered"};
+        String[] statusArr = {"confirmed", "pending", "shipped", "delivered"};
         int totalOrders = 0;
 
         System.out.println("🛒  Création commandes…");
-        for(Integer uid : userIds){
-            int n = rnd(0,MAX_ORDERS_PER_USER);
-            for(int k=0;k<n;k++){
-                insOrder.setInt(1,uid);
-                insOrder.setBigDecimal(2, BigDecimal.ZERO);
-                insOrder.setString(3, status[rnd(0,3)]);
+        for (Integer uid : userIds) {
+            int nb = rnd(0, MAX_ORDERS_PER_USER);
+            for (int k = 0; k < nb; k++) {
+
+                insOrder.setInt(1, uid);
+                insOrder.setBigDecimal(2, BigDecimal.ZERO); // placeholder
+                insOrder.setString(3, statusArr[rnd(0, 3)]);
                 insOrder.executeUpdate();
+
                 ResultSet oRs = insOrder.getGeneratedKeys(); oRs.next();
-                int oid = oRs.getInt(1);
+                int orderId = oRs.getInt(1);
 
-                int orderTotal = 0;
-                for(int it=0;it<2;it++){
-                    int pid = plantIds.get(rnd(0,plantIds.size()-1));
-                    int qty = rnd(1,5);
-                    int price = rnd(5,50);
+                BigDecimal orderTotal = BigDecimal.ZERO;
+                for (int it = 0; it < 2; it++) {
+                    int pid = plantIds.get(rnd(0, plantIds.size() - 1));
+                    int qty = rnd(1, 5);
+                    BigDecimal price = new BigDecimal(rnd(5, 50));
 
-                    insItem.setInt(1,oid);
-                    insItem.setInt(2,pid);
-                    insItem.setInt(3,qty);
-                    insItem.setInt(4,price);
+                    insItem.setInt(1, orderId);
+                    insItem.setInt(2, pid);
+                    insItem.setInt(3, qty);
+                    insItem.setBigDecimal(4, price);
                     insItem.executeUpdate();
-                    orderTotal += price*qty;
+
+                    orderTotal = orderTotal.add(price.multiply(new BigDecimal(qty)));
                 }
-                st.executeUpdate("UPDATE orders SET total="+orderTotal+" WHERE id="+oid);
+                PreparedStatement up = db.prepareStatement("UPDATE orders SET total=? WHERE id=?");
+                up.setBigDecimal(1, orderTotal);
+                up.setInt(2, orderId);
+                up.executeUpdate();
+                up.close();
+
                 totalOrders++;
             }
         }
-        System.out.println("✅  "+totalOrders+" commandes.");
+        System.out.println("✅  " + totalOrders + " commandes.");
 
         db.close();
         System.out.println("\n🎉  Seed terminée avec succès !");

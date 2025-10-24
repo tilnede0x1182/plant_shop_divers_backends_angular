@@ -234,6 +234,7 @@ public final class Test {
 		call("PATCH", "/admin/plants/" + id, 200, price_update, "admin");
 		JSONObject check = call("GET", "/plants/" + id, 200, null, "admin");
 		assert_eq(check, "price", 15);
+		System.out.printf("   ↳ name=%s%n", check.getString("name"));
 		call("DELETE", "/admin/plants/" + id, 200, null, "admin");
 	}
 

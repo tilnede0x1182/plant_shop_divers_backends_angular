@@ -65,12 +65,18 @@ public final class PlantController extends BaseController {
             sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
             return;
         }
-        List<Plant> all = repo.list();
-        JSONArray jsonArray = new JSONArray();
-        for (Plant p : all) {
-            jsonArray.put(toJson(p));
-        }
-        sendJsonResponse(ex, 200, jsonArray.toString());
+				/* tri alphabétique croissant, sensible aux accents comme localeCompare JS */
+				java.text.Collator col = java.text.Collator.getInstance(java.util.Locale.ROOT);
+				col.setStrength(java.text.Collator.TERTIARY);          // casse + accents pris en compte
+
+				List<Plant> all = repo.list();
+				all.sort((p1, p2) -> col.compare(p1.name, p2.name));
+
+				org.json.JSONArray jsonArray = new org.json.JSONArray();
+				for (Plant p : all) {
+						jsonArray.put(toJson(p));
+				}
+				sendJsonResponse(ex, 200, jsonArray.toString());
     }
 
     private void show(HttpExchange ex, int id) throws Exception {

@@ -24,7 +24,7 @@ compile-seed:
 	mkdir -p bin
 	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
 
-seed: compile-seed
+seed:
 	java -cp $(CLASSPATH) db.Seed
 
 seed-dev: compile-seed seed
@@ -54,7 +54,7 @@ compile-test:
 	mkdir -p bin
 	javac -cp $(CLASSPATH) -d bin Tests/Test.java
 
-tests: compile-test
+tests:
 	java -cp $(CLASSPATH) Tests.Test
 
 test-dev: compile-test tests

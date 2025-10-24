@@ -29,10 +29,13 @@ public final class PlantController extends BaseController {
             String[] seg = path.split("/");
             boolean isAdminRoute = path.startsWith("/api/admin/plants");
 
-            int id = -1;
-            if (seg.length == 4) { // /api/plants/{id} ou /api/admin/plants/{id}
-                try { id = Integer.parseInt(seg[3]); } catch (NumberFormatException e) {}
-            }
+						int id = -1;
+						/* Accepte /api/plants/{id} et /api/admin/plants/{id}
+							Le dernier segment est l’ID, quelle que soit la profondeur. */
+						if (seg.length >= 4) {
+								String last = seg[seg.length - 1];
+								try { id = Integer.parseInt(last); } catch (NumberFormatException ignore) {}
+						}
 
             if ("GET".equals(method)) {
                 if (id != -1) show(ex, id);

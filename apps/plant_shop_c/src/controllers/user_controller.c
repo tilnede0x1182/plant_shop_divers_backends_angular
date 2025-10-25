@@ -92,7 +92,7 @@ void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
     cJSON* j = cJSON_CreateObject();
     cJSON_AddNumberToObject(j, "id", u.id);
     cJSON_AddStringToObject(j, "name", u.name);
-    // cJSON_AddStringToObject(j, "description", u.description);
+    cJSON_AddStringToObject(j, "description", u.description);
     cJSON_AddStringToObject(j, "email", u.email);
     cJSON_AddBoolToObject(j, "admin", u.is_admin);
     send_json_reply(c, j, 200);

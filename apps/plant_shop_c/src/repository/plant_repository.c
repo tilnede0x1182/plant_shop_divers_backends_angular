@@ -7,9 +7,10 @@ static void fill_plant(Plant *p, PGresult *r, int row) {
 	p->id = atoi(PQgetvalue(r, row, 0));
 	strncpy(p->name, PQgetvalue(r, row, 1), sizeof(p->name) - 1);
 	p->name[sizeof(p->name) - 1] = '\0';
-	p->description[0] = '\0';
-	p->price = atoi(PQgetvalue(r, row, 2));
-	p->stock = atoi(PQgetvalue(r, row, 3));
+	strncpy(p->description, PQgetvalue(r, row, 2), sizeof(p->description) - 1);
+	p->description[sizeof(p->description) - 1] = '\0';
+	p->price = atoi(PQgetvalue(r, row, 3));
+	p->stock = atoi(PQgetvalue(r, row, 4));
 }
 
 int plant_repo_add(PGconn *c, const Plant *p) {
@@ -21,8 +22,8 @@ int plant_repo_add(PGconn *c, const Plant *p) {
 
 	PGresult *r = PQexecParams(
 		c,
-		"INSERT INTO plants(name,description,price,stock) VALUES($1,$2,$3,$4) RETURNING id",
-		4, NULL, v, NULL, NULL, 0);
+		"SELECT id,name,description,price,stock FROM plants WHERE id=$1",
+		1, NULL, v, NULL, NULL, 0);
 
 	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
 		fprintf(stderr, "plant_repo_add failed: %s\n", PQerrorMessage(c));
@@ -45,13 +46,7 @@ int plant_repo_find(PGconn *c, int id, Plant *p) {
 		1, NULL, v, NULL, NULL, 0);
 
 	int found = PQntuples(r);
-	if (found) {
-		p->id = atoi(PQgetvalue(r, 0, 0));
-		strncpy(p->name, PQgetvalue(r, 0, 1), sizeof(p->name) - 1);
-		p->name[sizeof(p->name) - 1] = '\0';
-		p->price = atoi(PQgetvalue(r, 0, 2));
-		p->stock = atoi(PQgetvalue(r, 0, 3));
-	}
+	if (found) fill_plant(p, r, 0);
 	PQclear(r);
 	return found;
 }
@@ -95,7 +90,7 @@ void plant_repo_del(PGconn *c, int id) {
 }
 
 void plant_repo_each(PGconn *c, void (*cb)(Plant*, void*), void *ctx) {
-	PGresult *r = PQexec(c, "SELECT id,name,price,stock FROM plants");
+	PGresult *r = PQexec(c, "SELECT id,name,description,price,stock FROM plants");
 	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
 		fprintf(stderr, "plant_repo_each failed: %s\n", PQerrorMessage(c));
 		PQclear(r);

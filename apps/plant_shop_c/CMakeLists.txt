@@ -14,16 +14,19 @@ pkg_check_modules(CJSON REQUIRED libcjson)
 pkg_check_modules(ARGON2 REQUIRED libargon2)
 pkg_check_modules(CURL REQUIRED libcurl)
 
-# Kore n’a pas de pc : supposer install “/usr/local/include/kore”
-include_directories(/usr/local/include ${LIBPQ_INCLUDE_DIRS}
-	${CJSON_INCLUDE_DIRS} ${ARGON2_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
-link_directories(/usr/local/lib ${LIBPQ_LIBRARY_DIRS}
-	${CJSON_LIBRARY_DIRS} ${ARGON2_LIBRARY_DIRS} ${CURL_LIBRARY_DIRS})
+# Inclure Kore et dépendances système depuis l'installation globale
+include_directories(/usr/local/include/kore
+	${LIBPQ_INCLUDE_DIRS} ${CJSON_INCLUDE_DIRS}
+	${ARGON2_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
+
+link_directories(/usr/local/lib
+	${LIBPQ_LIBRARY_DIRS} ${CJSON_LIBRARY_DIRS}
+	${ARGON2_LIBRARY_DIRS} ${CURL_LIBRARY_DIRS})
 
 # ----------------------------------
-# Définition des bibliothèques communes
+# Définition des bibliothèques communes (Kore global)
 set(COMMON_LIBS
-	/usr/local/lib/libkore.a # Kore compilé via “make install”
+	kore
 	${LIBPQ_LIBRARIES}
 	${CJSON_LIBRARIES}
 	${ARGON2_LIBRARIES}

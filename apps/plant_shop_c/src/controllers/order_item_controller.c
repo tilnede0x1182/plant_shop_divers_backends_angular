@@ -5,12 +5,30 @@
 #include "../repository/order_item_repository.h"
 #include "../repository/order_repository.h"
 #include "../repository/user_repository.h"
+#include <kore/kore.h>
+#include <stdint.h>
 
 extern PGconn* DB;
 
+// Fonction utilitaire pour lire le corps de la requête dans un buffer
+static int read_body_to_buf(struct http_request *req, struct kore_buf *buf) {
+    ssize_t ret;
+    u_int8_t tmp[1024];
+    if (http_body_rewind(req) != KORE_RESULT_OK) return KORE_RESULT_ERROR;
+    for (;;) {
+        ret = http_body_read(req, tmp, sizeof(tmp));
+        if (ret == -1) return KORE_RESULT_ERROR;
+        if (ret == 0) break;
+        kore_buf_append(buf, tmp, ret);
+    }
+    return KORE_RESULT_OK;
+}
+
 static int current_uid(struct http_request* req) {
-    const char *ck = http_request_header(req, "cookie");
-    if (!ck) return 0;
+    const char *ck = NULL;
+    if (!http_request_header(req, "cookie", &ck) || !ck) {
+        return 0;
+    }
     const char* jwt_val = strstr(ck, "jwt=");
     if (!jwt_val) return 0;
     return atoi(jwt_val + 4);
@@ -27,6 +45,15 @@ static void json_out(struct http_request* r, cJSON* j, int code) {
     cJSON_Delete(j);
 }
 
+static void order_items_by_order_cb(OrderItem *it, void *ud) {
+    cJSON *j = cJSON_CreateObject();
+    cJSON_AddNumberToObject(j, "id", it->id);
+    cJSON_AddNumberToObject(j, "plantId", it->plant_id);
+    cJSON_AddNumberToObject(j, "quantity", it->qty);
+    cJSON_AddNumberToObject(j, "price", it->price);
+    cJSON_AddItemToArray((cJSON*)ud, j);
+}
+
 int order_items_by_order(struct http_request* req) {
     int oid;
     http_populate_get(req);
@@ -41,14 +68,7 @@ int order_items_by_order(struct http_request* req) {
         return KORE_RESULT_OK;
     }
     cJSON *arr = cJSON_CreateArray();
-    order_item_repo_by_order(DB, oid, [](OrderItem *it, void *ud) {
-        cJSON *j = cJSON_CreateObject();
-        cJSON_AddNumberToObject(j, "id", it->id);
-        cJSON_AddNumberToObject(j, "plantId", it->plant_id);
-        cJSON_AddNumberToObject(j, "quantity", it->qty);
-        cJSON_AddNumberToObject(j, "price", it->price);
-        cJSON_AddItemToArray((cJSON*)ud, j);
-    }, arr);
+    order_item_repo_by_order(DB, oid, order_items_by_order_cb, arr);
     json_out(req, arr, 200);
     return KORE_RESULT_OK;
 }
@@ -61,9 +81,18 @@ int order_item_patch(struct http_request* req) {
         http_response(req, 400, "Invalid Item ID", 15);
         return KORE_RESULT_OK;
     }
-    size_t len;
-    const uint8_t *b = http_body_read(req, &len);
-    cJSON *upd = cJSON_ParseWithLength((const char*)b, len);
+
+    struct kore_buf *buf = kore_buf_alloc(0);
+    if (read_body_to_buf(req, buf) != KORE_RESULT_OK) {
+        kore_buf_free(buf);
+        http_response(req, 500, "Cannot read body", 15);
+        return KORE_RESULT_OK;
+    }
+    cJSON *upd = cJSON_ParseWithLength((const char*)buf->data, buf->offset);
+    kore_buf_free(buf);
+
+    if (!upd) { http_response(req, 400, "Invalid JSON", 12); return KORE_RESULT_OK; }
+
     order_item_repo_patch(DB, id, upd);
     cJSON_Delete(upd);
     http_response(req, 200, NULL, 0);

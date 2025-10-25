@@ -82,4 +82,4 @@ db-reset: db-drop db-create db-migrate
 # ───────────────────────────────
 
 tree:
-	tree . -I "Kore" -I "CMakeFiles"
+	tree . -I "kore" -I "CMakeFiles"

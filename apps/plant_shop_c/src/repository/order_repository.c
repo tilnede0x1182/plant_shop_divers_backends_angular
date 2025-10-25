@@ -6,21 +6,13 @@
 #include <string.h>
 #include <stdlib.h>
 
-int order_repo_add(PGconn *c, int user_id, cJSON* items) {
+int order_repo_add(PGconn *c, int user_id, cJSON* items_json) {
     int total = 0;
     cJSON* item = NULL;
-    cJSON_ArrayForEach(item, items) {
-        int plant_id = cJSON_GetObjectItem(item, "plantId")->valueint;
-        int quantity = cJSON_GetObjectItem(item, "quantity")->valueint;
-        Plant p;
-        if (plant_repo_find(c, plant_id, &p)) {
-            total += p.price * quantity;
-        }
-    }
 
     char uid_str[12], total_str[12];
     sprintf(uid_str, "%d", user_id);
-    sprintf(total_str, "%d", total);
+    sprintf(total_str, "%d", 0); // Total initial à 0
     const char *v[3] = {uid_str, total_str, "pending"};
     PGresult *r = PQexecParams(c,
         "INSERT INTO orders(user_id,total,status) VALUES($1,$2,$3) RETURNING id",
@@ -34,7 +26,7 @@ int order_repo_add(PGconn *c, int user_id, cJSON* items) {
     int order_id = atoi(PQgetvalue(r, 0, 0));
     PQclear(r);
 
-    cJSON_ArrayForEach(item, items) {
+    cJSON_ArrayForEach(item, items_json) {
         OrderItem oi = {0};
         oi.order_id = order_id;
         oi.plant_id = cJSON_GetObjectItem(item, "plantId")->valueint;
@@ -43,8 +35,17 @@ int order_repo_add(PGconn *c, int user_id, cJSON* items) {
         if (plant_repo_find(c, oi.plant_id, &p)) {
             oi.price = p.price;
             order_item_repo_add(c, &oi);
+            total += oi.price * oi.qty;
         }
     }
+
+    char order_id_str[12], new_total_str[12];
+    sprintf(order_id_str, "%d", order_id);
+    sprintf(new_total_str, "%d", total);
+    const char *update_params[2] = {new_total_str, order_id_str};
+    r = PQexecParams(c, "UPDATE orders SET total = $1 WHERE id = $2", 2, NULL, update_params, NULL, NULL, 0);
+    PQclear(r);
+
     return order_id;
 }
 
@@ -92,8 +93,4 @@ int order_repo_belongs_to(PGconn *c, int order_id, int user_id) {
     int found = PQntuples(r);
     PQclear(r);
     return found;
-}
-
-int order_repo_is_admin(PGconn *db, int user_id) {
-    return user_repo_is_admin(db, user_id);
 }

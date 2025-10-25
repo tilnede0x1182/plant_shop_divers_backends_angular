@@ -10,7 +10,7 @@
 
 /*
  * ======================================================
- * 🧪 Tests End-to-End — Clone C de test_e2e.cpp
+ * 🧪 Tests End-to-End
  * ======================================================
  */
 
@@ -133,7 +133,7 @@ cJSON* api_call(const char* who, const char* method, const char* path, int expec
     long response_code;
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 
-    printf("%s %-7s %-40s [%ld]\n", (response_code == expected_status) ? "✅" : "❌", method, path, response_code);
+    printf("%s %-7s%s [%ld]\n", (response_code == expected_status) ? "✅" : "❌", method, path, response_code);
 
     if (res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() a échoué: %s\n", curl_easy_strerror(res));
@@ -311,6 +311,89 @@ void test_orders() {
     api_call("admin", "DELETE", path, 200, NULL);
 }
 
+/* ------------------------------------------------------------------
+ * 👤  USER PROFILE
+ * ------------------------------------------------------------------*/
+void test_user_profile(const char* user_email) {
+	printf("\n📌 TEST MODULE: USER PROFILE (user)\n");
+	cJSON *users = api_call("admin", "GET", "/users", 200, NULL);
+	cJSON *u = NULL, *cur;
+	cJSON_ArrayForEach(cur, users) {
+		cJSON *e = cJSON_GetObjectItem(cur, "email");
+		if (e && cJSON_IsString(e) && strcmp(e->valuestring, user_email) == 0) { u = cur; break; }
+	}
+	if (!u) { fprintf(stderr, "Utilisateur introuvable\n"); exit(1); }
+	int uid = cJSON_GetObjectItem(u, "id")->valueint;
+	char path[64]; snprintf(path, sizeof(path), "/users/%d", uid);
+	cJSON *profile = api_call("user", "GET", path, 200, NULL);
+	assert_eq_int(profile, "id", uid); cJSON_Delete(profile);
+
+	char new_name[64]; snprintf(new_name, sizeof(new_name), "Utilisateur_de_test_c_%s", timestamp_str);
+	cJSON *name_upd = cJSON_CreateObject(); cJSON_AddStringToObject(name_upd, "name", new_name);
+	api_call("user", "PATCH", path, 200, name_upd); cJSON_Delete(name_upd);
+
+	cJSON *updated = api_call("user", "GET", path, 200, NULL);
+	assert_eq_str(updated, "name", new_name); cJSON_Delete(updated);
+
+	cJSON *adm_upd = cJSON_CreateObject(); cJSON_AddBoolToObject(adm_upd, "admin", 1);
+	api_call("user", "PATCH", path, 200, adm_upd); cJSON_Delete(adm_upd);
+
+	cJSON *check = api_call("admin", "GET", path, 200, NULL);
+	assert_eq_bool(check, "admin", 0); cJSON_Delete(check); cJSON_Delete(users);
+}
+
+/* ------------------------------------------------------------------
+ * 🌿  ADMIN / PLANTS
+ * ------------------------------------------------------------------*/
+void test_admin_plants() {
+	printf("\n📌 TEST MODULE: ADMIN PLANTS\n");
+	cJSON *list = api_call("admin", "GET", "/admin/plants", 200, NULL);
+	printf("   ↳ %d plantes récupérées\n", cJSON_GetArraySize(list)); cJSON_Delete(list);
+
+	char plant_name[64]; snprintf(plant_name, sizeof(plant_name), "Plante_admin_c_%s", timestamp_str);
+	cJSON *data = cJSON_CreateObject(); cJSON_AddStringToObject(data, "name", plant_name);
+	cJSON_AddNumberToObject(data, "price", 99); cJSON_AddNumberToObject(data, "stock", 12);
+	cJSON *p = api_call("admin", "POST", "/admin/plants", 201, data); int pid = cJSON_GetObjectItem(p, "id")->valueint;
+	cJSON_Delete(data); cJSON_Delete(p);
+
+	char path[64]; snprintf(path, sizeof(path), "/admin/plants/%d", pid);
+	cJSON *upd = cJSON_CreateObject(); cJSON_AddNumberToObject(upd, "price", 123);
+	api_call("admin", "PATCH", path, 200, upd); cJSON_Delete(upd);
+	api_call("admin", "DELETE", path, 200, NULL);
+}
+
+/* ------------------------------------------------------------------
+ * 👥  ADMIN / USERS
+ * ------------------------------------------------------------------*/
+void test_admin_users() {
+	printf("\n📌 TEST MODULE: ADMIN USERS\n");
+	char email[64]; snprintf(email, sizeof(email), "admin_temp_c_%s@example.com", timestamp_str);
+	char nom[64]; snprintf(nom, sizeof(nom), "Admin Temporaire %s", timestamp_str);
+
+	cJSON *data = cJSON_CreateObject();
+	cJSON_AddStringToObject(data, "email", email); cJSON_AddStringToObject(data, "name", nom);
+	cJSON_AddStringToObject(data, "password", "password"); cJSON_AddBoolToObject(data, "admin", 1);
+	cJSON *tmp = api_call("admin", "POST", "/users", 201, data);
+	int uid = cJSON_GetObjectItem(tmp, "id")->valueint; cJSON_Delete(data); cJSON_Delete(tmp);
+
+	cJSON *list = api_call("admin", "GET", "/admin/users", 200, NULL);
+	cJSON *found = NULL, *u; cJSON_ArrayForEach(u, list) {
+		cJSON *e = cJSON_GetObjectItem(u, "email");
+		if (e && strcmp(e->valuestring, email) == 0) { found = u; break; }
+	}
+	if (!found) { fprintf(stderr, "Admin temporaire introuvable\n"); exit(1); }
+	assert_eq_str(found, "name", nom); cJSON_Delete(list);
+
+	char new_nom[64]; snprintf(new_nom, sizeof(new_nom), "Admin_temp_modifié_%s", timestamp_str);
+	cJSON *name_upd = cJSON_CreateObject(); cJSON_AddStringToObject(name_upd, "name", new_nom);
+	char path[64]; snprintf(path, sizeof(path), "/users/%d", uid);
+	api_call("admin", "PATCH", path, 200, name_upd); cJSON_Delete(name_upd);
+
+	cJSON *user_get = api_call("admin", "GET", path, 200, NULL);
+	assert_eq_str(user_get, "name", new_nom); cJSON_Delete(user_get);
+	api_call("admin", "DELETE", path, 200, NULL);
+}
+
 void test_auth_roles() {
     printf("\n📌 TEST MODULE: ROLES\n");
     cJSON *bad_plant = cJSON_CreateObject();
@@ -378,8 +461,12 @@ int main(void) {
     test_plants();
     test_users();
     test_orders();
+    test_user_profile(user_email);
     test_auth_roles();
+    test_admin_plants();
+    test_admin_users();
     test_auth_me(user_email, user_name);
+
 
     // --- Nettoyage ---
     cleanup_session(&admin_session);

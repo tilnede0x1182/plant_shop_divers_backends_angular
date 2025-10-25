@@ -42,22 +42,19 @@ seed-build:
 #   Gestion du test end-to-end
 # ───────────────────────────────
 
-# Cible principale : compile si nécessaire, puis lance les tests.
-# C'est la commande à utiliser la plupart du temps.
-test: run-test
-
-# Lance les tests (dépend de la compilation pour s'assurer que l'exécutable est à jour).
-run-test: compile-test
+tests:
+	if [ ! -f build/test_e2e_c ]; then \
+		CMAKE_C_COMPILER_LAUNCHER=ccache cmake -S . -B build; \
+		cmake --build build --target test_e2e_c -j$$(nproc); \
+	fi; \
 	./build/test_e2e_c
 
-# Compile uniquement l'exécutable de test.
 compile-test:
-	# Configure cmake la première fois si le dossier build n'existe pas
 	if [ ! -d build ]; then cmake -S . -B build; fi
-	# Construit la cible de test
 	cmake --build build --target test_e2e_c -j$$(nproc)
 
-# Re-configure et re-compile proprement les tests (utile après un changement de CMakeLists.txt)
+test-dev: compile-test tests
+
 test-build:
 	CMAKE_C_COMPILER_LAUNCHER=ccache cmake -S . -B build
 	cmake --build build --target test_e2e_c -j$$(nproc)

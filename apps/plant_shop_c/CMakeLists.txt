@@ -12,7 +12,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBPQ REQUIRED libpq)
 pkg_check_modules(CJSON REQUIRED libcjson)
 pkg_check_modules(ARGON2 REQUIRED libargon2)
-pkg_check_modules(CURL REQUIRED libcurl) # Ajouté pour le test
+pkg_check_modules(CURL REQUIRED libcurl)
 
 # Kore n’a pas de pc : supposer install “/usr/local/include/kore”
 include_directories(/usr/local/include ${LIBPQ_INCLUDE_DIRS}
@@ -56,5 +56,5 @@ target_link_libraries(seed_c ${LIBPQ_LIBRARIES} ${ARGON2_LIBRARIES})
 
 # ----------------------------------
 # Exécutable pour les tests E2E
-add_executable(test_e2e_c tests/test.c)
+add_executable(test_e2e_c test/test_e2e.c)
 target_link_libraries(test_e2e_c ${CURL_LIBRARIES} ${CJSON_LIBRARIES})

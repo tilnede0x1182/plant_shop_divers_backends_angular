@@ -1,121 +1,93 @@
 #include "order_controller.h"
-#include <kore/kore.h>
 #include <stdint.h>
 #include <cjson/cJSON.h>
 #include <string.h>
 #include <stdlib.h>
 #include "../repository/order_repository.h"
 #include "../repository/user_repository.h"
+#include "mongoose/mongoose.h"
 
 extern PGconn* DB;
 
-
-/** """ lit entièrement le body HTTP dans un kore_buf """ */
-static int read_body_to_buf(struct http_request *req, struct kore_buf *buf){
-	ssize_t ret; u_int8_t tmp[1024];
-	if (http_body_rewind(req) != KORE_RESULT_OK) return KORE_RESULT_ERROR;
-	for (;;){
-		ret = http_body_read(req, tmp, sizeof tmp);
-		if (ret == -1) return KORE_RESULT_ERROR;
-		if (ret == 0) break;
-		kore_buf_append(buf, tmp, ret);
-	}
-	return KORE_RESULT_OK;
+static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
+    char *text = cJSON_PrintUnformatted(j);
+    mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
+    free(text);
+    if (j) cJSON_Delete(j);
 }
 
-static int current_uid(struct http_request* req) {
-    const char* ck = NULL;
-    http_request_header(req, "cookie", &ck);
-    if (!ck) return 0;
-    const char* jwt_val = strstr(ck, "jwt=");
-    if (!jwt_val) return 0;
-    return atoi(jwt_val + 4);
+static int get_current_user_id(struct mg_http_message* hm) {
+    struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
+    if (!cookie_hdr) return 0;
+    char jwt_val_str[32];
+    if (mg_http_get_var(cookie_hdr, "jwt", jwt_val_str, sizeof(jwt_val_str)) <= 0) return 0;
+    return atoi(jwt_val_str);
 }
 
-static int admin(struct http_request* req) {
-    return user_repo_is_admin(DB, current_uid(req));
+static int is_admin(struct mg_http_message* hm) {
+    int uid = get_current_user_id(hm);
+    return user_repo_is_admin(DB, uid);
 }
 
-static void jout(struct http_request* r, cJSON* j, int c) {
-    char* t = cJSON_PrintUnformatted(j);
-    http_response(r, c, t, strlen(t));
-    free(t);
-    cJSON_Delete(j);
-}
+void orders_create(struct mg_connection* c, struct mg_http_message *hm) {
+    int uid = get_current_user_id(hm);
+    if (!uid) {
+        mg_http_reply(c, 401, "", "");
+        return;
+    }
 
-int orders_create(struct http_request* req) {
-    int uid = current_uid(req);
-    if (!uid) { http_response(req, 401, NULL, 0); return KORE_RESULT_OK; }
-
-		struct kore_buf *buf = kore_buf_alloc(0);
-		if (read_body_to_buf(req, buf) != KORE_RESULT_OK){
-			kore_buf_free(buf);
-			http_response(req, 500, "Cannot read body", 15);
-			return KORE_RESULT_OK;
-		}
-    cJSON* j = cJSON_ParseWithLength((const char*)buf->data, buf->offset);
-    kore_buf_free(buf);
-
-    if (!j) { http_response(req, 400, "Invalid JSON", 12); return KORE_RESULT_OK; }
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
 
     cJSON *items = cJSON_GetObjectItem(j, "items");
     if (!items || !cJSON_IsArray(items)) {
         cJSON_Delete(j);
-        http_response(req, 400, "Missing 'items' array", 21);
-        return KORE_RESULT_OK;
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing 'items' array\"}");
+        return;
     }
 
     int oid = order_repo_add(DB, uid, items);
     cJSON_Delete(j);
     cJSON* o = cJSON_CreateObject();
     cJSON_AddNumberToObject(o, "id", oid);
-    jout(req, o, 201);
-    return KORE_RESULT_OK;
+    send_json_reply(c, o, 201);
 }
 
-int orders_list(struct http_request* req) {
-    int uid = current_uid(req);
-    if (!uid) { http_response(req, 401, NULL, 0); return KORE_RESULT_OK; }
-    cJSON* arr = order_repo_list(DB, uid);
-    jout(req, arr, 200);
-    return KORE_RESULT_OK;
-}
-
-int orders_patch(struct http_request* req) {
-    int id;
-    http_populate_get(req);
-    if (!http_argument_get_int32(req, "id", &id)) {
-        http_response(req, 400, "Invalid ID", 10);
-        return KORE_RESULT_OK;
+void orders_list(struct mg_connection* c, struct mg_http_message *hm) {
+    int uid = get_current_user_id(hm);
+    if (!uid) {
+        mg_http_reply(c, 401, "", "");
+        return;
     }
-    if (!admin(req)) { http_response(req, 403, NULL, 0); return KORE_RESULT_OK; }
+    cJSON* arr = order_repo_list(DB, uid);
+    send_json_reply(c, arr, 200);
+}
 
-		struct kore_buf *buf = kore_buf_alloc(0);
-		if (read_body_to_buf(req, buf) != KORE_RESULT_OK){
-			kore_buf_free(buf);
-			http_response(req, 500, "Cannot read body", 15);
-			return KORE_RESULT_OK;
-		}
-    cJSON* j = cJSON_ParseWithLength((const char*)buf->data, buf->offset);
-    kore_buf_free(buf);
+void orders_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
 
-    if (!j) { http_response(req, 400, "Invalid JSON", 12); return KORE_RESULT_OK; }
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
 
     order_repo_patch(DB, id, j);
     cJSON_Delete(j);
-    http_response(req, 200, NULL, 0);
-    return KORE_RESULT_OK;
+    mg_http_reply(c, 200, "", "");
 }
 
-int orders_del(struct http_request* req) {
-    int id;
-    http_populate_get(req);
-    if (!http_argument_get_int32(req, "id", &id)) {
-        http_response(req, 400, "Invalid ID", 10);
-        return KORE_RESULT_OK;
+void orders_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
     }
-    if (!admin(req)) { http_response(req, 403, NULL, 0); return KORE_RESULT_OK; }
     order_repo_del(DB, id);
-    http_response(req, 200, NULL, 0);
-    return KORE_RESULT_OK;
+    mg_http_reply(c, 200, "", "");
 }

@@ -14,19 +14,17 @@ pkg_check_modules(CJSON REQUIRED libcjson)
 pkg_check_modules(ARGON2 REQUIRED libargon2)
 pkg_check_modules(CURL REQUIRED libcurl)
 
-# Inclure Kore et dépendances système depuis l'installation globale
-include_directories(/usr/local/include/kore
-	${LIBPQ_INCLUDE_DIRS} ${CJSON_INCLUDE_DIRS}
-	${ARGON2_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
+# Inclure les dépendances système
+include_directories(${LIBPQ_INCLUDE_DIRS} ${CJSON_INCLUDE_DIRS} ${ARGON2_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
 
-link_directories(/usr/local/lib
-	${LIBPQ_LIBRARY_DIRS} ${CJSON_LIBRARY_DIRS}
-	${ARGON2_LIBRARY_DIRS} ${CURL_LIBRARY_DIRS})
+# Ajout du répertoire racine pour que les includes comme "routes.h" fonctionnent depuis les sous-dossiers
+include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/src)
+link_directories(${LIBPQ_LIBRARY_DIRS} ${CJSON_LIBRARY_DIRS} ${ARGON2_LIBRARY_DIRS} ${CURL_LIBRARY_DIRS})
 
 # ----------------------------------
-# Définition des bibliothèques communes (Kore global)
+# Définition des bibliothèques communes
 set(COMMON_LIBS
-	kore
 	${LIBPQ_LIBRARIES}
 	${CJSON_LIBRARIES}
 	${ARGON2_LIBRARIES}
@@ -34,8 +32,10 @@ set(COMMON_LIBS
 
 # ----------------------------------
 # Sources du serveur principal
+# On inclut mongoose.c directement dans les sources du serveur
 file(GLOB_RECURSE SERVER_SOURCES
 	"src/main.c"
+	"src/mongoose/mongoose.c"
 	"routes.c"
 	"src/controllers/*.c"
 	"src/repository/*.c"
@@ -43,12 +43,6 @@ file(GLOB_RECURSE SERVER_SOURCES
 
 add_executable(server ${SERVER_SOURCES})
 target_link_libraries(server ${COMMON_LIBS})
-
-# Flags Kore recommandés
-target_compile_definitions(server PRIVATE
-	KORE_NO_HTTP_GZIP
-	KORE_SINGLE_BINARY
-)
 
 install(TARGETS server DESTINATION bin)
 

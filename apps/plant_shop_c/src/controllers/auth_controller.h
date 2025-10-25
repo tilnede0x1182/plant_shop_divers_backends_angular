@@ -1,11 +1,10 @@
 #ifndef CTRL_AUTH_H
 #define CTRL_AUTH_H
 
-#include <regex.h>
-#include <kore/http.h>
+#include "mongoose/mongoose.h"
 
-int auth_login(struct http_request*);
-int auth_register(struct http_request*);
-int auth_me(struct http_request*);
+void auth_login(struct mg_connection *c, struct mg_http_message *hm);
+void auth_register(struct mg_connection *c, struct mg_http_message *hm);
+void auth_me(struct mg_connection *c, struct mg_http_message *hm);
 
 #endif

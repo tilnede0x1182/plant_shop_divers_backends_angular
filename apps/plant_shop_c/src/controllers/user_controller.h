@@ -1,13 +1,12 @@
 #ifndef CTRL_USER_H
 #define CTRL_USER_H
 
-#include <regex.h>
-#include <kore/http.h>
+#include "mongoose/mongoose.h"
 
-int user_create(struct http_request*);
-int user_get(struct http_request*);
-int user_patch(struct http_request*);
-int user_del(struct http_request*);
-int admin_users_list(struct http_request*);
+void user_create(struct mg_connection *c, struct mg_http_message *hm);
+void user_get(struct mg_connection *c, struct mg_http_message *hm, int id);
+void user_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
+void user_del(struct mg_connection *c, struct mg_http_message *hm, int id);
+void admin_users_list(struct mg_connection *c, struct mg_http_message *hm);
 
 #endif

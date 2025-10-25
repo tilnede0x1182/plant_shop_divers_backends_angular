@@ -1,5 +1,4 @@
 #include "user_controller.h"
-#include <kore/kore.h>
 #include <cjson/cJSON.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,72 +8,46 @@
 
 extern PGconn* DB;
 
-// Fonction utilitaire pour lire le corps de la requête dans un buffer
-static int read_body_to_buf(struct http_request *req, struct kore_buf *buf) {
-    size_t len;
-    ssize_t ret;
-    u_int8_t tmp[1024];
-
-    if (http_body_rewind(req) != KORE_RESULT_OK) {
-        return KORE_RESULT_ERROR;
-    }
-
-    for (;;) {
-        ret = http_body_read(req, tmp, sizeof(tmp));
-        if (ret == -1) {
-            kore_log(LOG_ERR, "failed to read http body");
-            return KORE_RESULT_ERROR;
-        }
-        if (ret == 0) {
-            break;
-        }
-        kore_buf_append(buf, tmp, ret);
-    }
-    return KORE_RESULT_OK;
+static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
+    char *text = cJSON_PrintUnformatted(j);
+    mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
+    free(text);
+    if (j) cJSON_Delete(j);
 }
 
-static void jout(struct http_request* r, cJSON* j, int c) {
-    char *t = cJSON_PrintUnformatted(j);
-    http_response(r, c, t, strlen(t));
-    free(t);
-    cJSON_Delete(j);
+static int get_current_user_id(struct mg_http_message* hm) {
+    struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
+    if (!cookie_hdr) return 0;
+
+    char jwt_val_str[32];
+    if (mg_http_get_var(cookie_hdr, "jwt", jwt_val_str, sizeof(jwt_val_str)) <= 0) return 0;
+
+    return atoi(jwt_val_str);
 }
 
-static int get_current_user_id(struct http_request* req) {
-    const char* ck = NULL;
-    if (!http_request_header(req, "cookie", &ck) || !ck) {
-        return 0;
-    }
-    const char* jwt_val = strstr(ck, "jwt=");
-    if (!jwt_val) return 0;
-    return atoi(jwt_val + 4);
-}
-
-static int is_admin(struct http_request* req) {
-    int uid = get_current_user_id(req);
+static int is_admin(struct mg_http_message* hm) {
+    int uid = get_current_user_id(hm);
     if (uid == 0) return 0;
     return user_repo_is_admin(DB, uid);
 }
 
 static void generate_salt(uint8_t *salt, size_t len) {
     for (size_t i = 0; i < len; i++) {
-        salt[i] = rand();
+        salt[i] = (uint8_t)rand();
     }
 }
 
-int user_create(struct http_request* req) {
-    if (!is_admin(req)) { http_response(req, 403, NULL, 0); return KORE_RESULT_OK; }
-
-    struct kore_buf *buf = kore_buf_alloc(0);
-    if (read_body_to_buf(req, buf) != KORE_RESULT_OK) {
-        kore_buf_free(buf);
-        http_response(req, 500, "Cannot read body", 15);
-        return KORE_RESULT_OK;
+void user_create(struct mg_connection* c, struct mg_http_message *hm) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
     }
-    cJSON* j = cJSON_ParseWithLength((const char*)buf->data, buf->offset);
-    kore_buf_free(buf);
 
-    if (!j) { http_response(req, 400, "Invalid JSON", 12); return KORE_RESULT_OK; }
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
 
     const char *name_str = cJSON_GetStringValue(cJSON_GetObjectItem(j, "name"));
     const char *email_str = cJSON_GetStringValue(cJSON_GetObjectItem(j, "email"));
@@ -82,8 +55,8 @@ int user_create(struct http_request* req) {
 
     if (!name_str || !email_str || !pwd_str) {
         cJSON_Delete(j);
-        http_response(req, 400, "Missing fields", 14);
-        return KORE_RESULT_OK;
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing fields\"}");
+        return;
     }
 
     uint8_t salt[16];
@@ -91,8 +64,8 @@ int user_create(struct http_request* req) {
     char encoded_hash[128];
     if (argon2id_hash_encoded(2, 1 << 16, 1, pwd_str, strlen(pwd_str), salt, sizeof(salt), 32, encoded_hash, sizeof(encoded_hash)) != ARGON2_OK) {
         cJSON_Delete(j);
-        http_response(req, 500, "Hashing failed", 14);
-        return KORE_RESULT_OK;
+        mg_http_reply(c, 500, "Content-Type: application/json\r\n", "{\"error\":\"Hashing failed\"}");
+        return;
     }
 
     User u = {0};
@@ -106,95 +79,74 @@ int user_create(struct http_request* req) {
 
     cJSON *o = cJSON_CreateObject();
     cJSON_AddNumberToObject(o, "id", u.id);
-    jout(req, o, 201);
-    return KORE_RESULT_OK;
+    send_json_reply(c, o, 201);
 }
 
-int user_get(struct http_request* req) {
-    int id;
-    http_populate_get(req);
-    if (!http_argument_get_int32(req, "id", &id)) {
-        http_response(req, 400, "Invalid ID", 10);
-        return KORE_RESULT_OK;
-    }
+void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
     User u;
-    if (!user_repo_find(DB, id, &u)) { http_response(req, 404, NULL, 0); return KORE_RESULT_OK; }
+    if (!user_repo_find(DB, id, &u)) {
+        mg_http_reply(c, 404, "", "");
+        return;
+    }
 
     cJSON* j = cJSON_CreateObject();
     cJSON_AddNumberToObject(j, "id", u.id);
     cJSON_AddStringToObject(j, "name", u.name);
     cJSON_AddStringToObject(j, "email", u.email);
     cJSON_AddBoolToObject(j, "admin", u.is_admin);
-    jout(req, j, 200);
-    return KORE_RESULT_OK;
+    send_json_reply(c, j, 200);
+    (void)hm;
 }
 
-int user_patch(struct http_request* req) {
-    int id;
-    http_populate_get(req);
-    if (!http_argument_get_int32(req, "id", &id)) {
-        http_response(req, 400, "Invalid ID", 10);
-        return KORE_RESULT_OK;
-    }
-    int current_user_id = get_current_user_id(req);
+void user_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    int current_user_id = get_current_user_id(hm);
     int current_user_is_admin = user_repo_is_admin(DB, current_user_id);
 
     if (current_user_id != id && !current_user_is_admin) {
-        http_response(req, 403, NULL, 0);
-        return KORE_RESULT_OK;
+        mg_http_reply(c, 403, "", "");
+        return;
     }
 
-    struct kore_buf *buf = kore_buf_alloc(0);
-    if (read_body_to_buf(req, buf) != KORE_RESULT_OK) {
-        kore_buf_free(buf);
-        http_response(req, 500, "Cannot read body", 15);
-        return KORE_RESULT_OK;
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
     }
-    cJSON* j = cJSON_ParseWithLength((const char*)buf->data, buf->offset);
-    kore_buf_free(buf);
 
-    if (!j) { http_response(req, 400, "Invalid JSON", 12); return KORE_RESULT_OK; }
-
-    // Un utilisateur ne peut pas changer son propre statut admin. Seul un admin peut le faire.
-    if (!current_user_is_admin) {
-        if (cJSON_HasObjectItem(j, "admin")) {
-            cJSON_DeleteItemFromObject(j, "admin");
-        }
+    if (!current_user_is_admin && cJSON_HasObjectItem(j, "admin")) {
+        cJSON_DeleteItemFromObject(j, "admin");
     }
 
     user_repo_patch(DB, id, j);
     cJSON_Delete(j);
-    http_response(req, 200, NULL, 0);
-    return KORE_RESULT_OK;
+    mg_http_reply(c, 200, "", "");
 }
 
-int user_del(struct http_request* req) {
-    if (!is_admin(req)) { http_response(req, 403, NULL, 0); return KORE_RESULT_OK; }
-    int id;
-    http_populate_get(req);
-    if (!http_argument_get_int32(req, "id", &id)) {
-        http_response(req, 400, "Invalid ID", 10);
-        return KORE_RESULT_OK;
+void user_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
     }
     user_repo_del(DB, id);
-    http_response(req, 200, NULL, 0);
-    return KORE_RESULT_OK;
+    mg_http_reply(c, 200, "", "");
 }
 
 static void admin_users_list_cb(User* u, void* arg) {
-    cJSON* arr = (cJSON*)arg;
-    cJSON* j = cJSON_CreateObject();
-    cJSON_AddNumberToObject(j, "id", u->id);
-    cJSON_AddStringToObject(j, "email", u->email);
-    cJSON_AddStringToObject(j, "name", u->name);
-    cJSON_AddBoolToObject(j, "admin", u->is_admin);
-    cJSON_AddItemToArray(arr, j);
+	cJSON* arr = (cJSON*)arg;
+	cJSON* j = cJSON_CreateObject();
+	cJSON_AddNumberToObject(j, "id", u->id);
+	cJSON_AddStringToObject(j, "email", u->email);
+	cJSON_AddStringToObject(j, "name", u->name);
+	cJSON_AddBoolToObject(j, "admin", u->is_admin);
+	cJSON_AddItemToArray(arr, j);
 }
 
-int admin_users_list(struct http_request* req) {
-    if (!is_admin(req)) { http_response(req, 403, NULL, 0); return KORE_RESULT_OK; }
+void admin_users_list(struct mg_connection* c, struct mg_http_message *hm) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
     cJSON* arr = cJSON_CreateArray();
     user_repo_each(DB, admin_users_list_cb, arr);
-    jout(req, arr, 200);
-    return KORE_RESULT_OK;
+    send_json_reply(c, arr, 200);
 }

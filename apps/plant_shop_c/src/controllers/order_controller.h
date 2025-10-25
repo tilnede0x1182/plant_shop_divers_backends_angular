@@ -1,9 +1,11 @@
 #ifndef CTRL_ORDER_H
 #define CTRL_ORDER_H
-#include <regex.h>
-#include <kore/http.h>
-int orders_list(struct http_request*);
-int orders_create(struct http_request*);
-int orders_patch(struct http_request*);
-int orders_del(struct http_request*);
+
+#include "mongoose/mongoose.h"
+
+void orders_list(struct mg_connection *c, struct mg_http_message *hm);
+void orders_create(struct mg_connection *c, struct mg_http_message *hm);
+void orders_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
+void orders_del(struct mg_connection *c, struct mg_http_message *hm, int id);
+
 #endif

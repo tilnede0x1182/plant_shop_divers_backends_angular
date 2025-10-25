@@ -1,13 +1,12 @@
 #ifndef CTRL_PLANT_H
 #define CTRL_PLANT_H
 
-#include <regex.h>
-#include <kore/http.h>
+#include "mongoose/mongoose.h"
 
-int plant_get(struct http_request*);
-int admin_plants_list(struct http_request*);
-int admin_plants_add(struct http_request*);
-int admin_plants_patch(struct http_request*);
-int admin_plants_del(struct http_request*);
+void plant_get(struct mg_connection *c, struct mg_http_message *hm, int id);
+void admin_plants_list(struct mg_connection *c, struct mg_http_message *hm);
+void admin_plants_add(struct mg_connection *c, struct mg_http_message *hm);
+void admin_plants_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
+void admin_plants_del(struct mg_connection *c, struct mg_http_message *hm, int id);
 
 #endif

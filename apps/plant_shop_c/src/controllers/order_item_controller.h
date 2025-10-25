@@ -1,11 +1,10 @@
 #ifndef CTRL_ORDER_ITEM_H
 #define CTRL_ORDER_ITEM_H
 
-#include <regex.h>
-#include <kore/http.h>
+#include "mongoose/mongoose.h"
 
-int order_items_by_order(struct http_request*);
-int order_item_patch(struct http_request*);
-int order_item_del(struct http_request*);
+void order_items_by_order(struct mg_connection *c, struct mg_http_message *hm, int order_id);
+void order_item_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
+void order_item_del(struct mg_connection *c, struct mg_http_message *hm, int id);
 
 #endif

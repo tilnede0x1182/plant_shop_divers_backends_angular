@@ -96,6 +96,22 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 		}
 	}
 
+	/* ----- Alias admin sur /api/admin/users/:id ----- */
+	else if (sscanf(hm->uri.buf, "/api/admin/users/%d", &id) == 1) {
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			log_route(hm, "admin_user_get");
+			user_get(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
+			log_route(hm, "admin_user_patch");
+			user_patch(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
+			log_route(hm, "admin_user_del");
+			user_del(c, hm, id);
+		} else {
+			cors_reply(c, 405, "Allow: GET,PATCH,DELETE\r\n", "");
+		}
+	}
+
 	/* ----- Orders (items avant id, id avant liste) ----- */
 	else if (mg_http_match_uri(hm, "/api/orders/*/items")) {    /* /orders/:id/items */
 		if (sscanf(hm->uri.buf, "/api/orders/%d/items", &id) == 1) {

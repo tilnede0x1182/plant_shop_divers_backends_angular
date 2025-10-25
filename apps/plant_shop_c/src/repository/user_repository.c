@@ -75,6 +75,12 @@ void user_repo_patch(PGconn *conn, int id, cJSON *patch_data) {
         PQclear(PQexecParams(conn, "UPDATE users SET name = $1 WHERE id = $2", 2, NULL, params, NULL, NULL, 0));
     }
 
+    cJSON *email = cJSON_GetObjectItem(patch_data, "email");
+    if (email && cJSON_IsString(email)) {
+        const char *params[2] = {email->valuestring, id_str};
+        PQclear(PQexecParams(conn, "UPDATE users SET email = $1 WHERE id = $2", 2, NULL, params, NULL, NULL, 0));
+    }
+
     cJSON *admin = cJSON_GetObjectItem(patch_data, "admin");
     if (admin && cJSON_IsBool(admin)) {
         const char *params[2] = {cJSON_IsTrue(admin) ? "t" : "f", id_str};

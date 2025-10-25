@@ -32,9 +32,14 @@ static char* hash_argon2(const char* pwd) {
     uint8_t salt[16];
     generate_salt(salt, sizeof(salt));
 
-    if (argon2id_hash_encoded(2, 1 << 16, 1, pwd, strlen(pwd), salt, sizeof(salt), encoded_hash, sizeof(encoded_hash)) != ARGON2_OK) {
-        fprintf(stderr, "Erreur de hachage Argon2\n");
-        exit(1);
+    size_t hashlen = 32;
+		if (argon2id_hash_encoded(2, 1 << 16, 1,
+				pwd, strlen(pwd),
+				salt, sizeof(salt),
+				hashlen,
+				encoded_hash, sizeof(encoded_hash)) != ARGON2_OK) {
+					fprintf(stderr, "Erreur de hachage Argon2\n");
+					exit(1);
     }
     return encoded_hash;
 }

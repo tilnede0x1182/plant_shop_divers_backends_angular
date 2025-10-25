@@ -67,7 +67,7 @@ test-build:
 # ───────────────────────────────
 
 # Extrait la valeur de DATABASE_URL du fichier .env
-DB_NAME := $(shell grep DATABASE_URL .env | cut -d'=' -f2)
+DB_NAME := $(shell grep '^DATABASE_URL=' .env | cut -d'=' -f2 | cut -d'#' -f1 | xargs)
 
 db-create:
 	sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME)" || echo "↳ base déjà existante."
@@ -79,3 +79,10 @@ db-drop:
 	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
 
 db-reset: db-drop db-create db-migrate
+
+# ───────────────────────────────
+#   Utilitaires
+# ───────────────────────────────
+
+tree:
+	tree . -I "Kore" -I "CMakeFiles"

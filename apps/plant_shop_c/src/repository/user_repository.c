@@ -47,6 +47,7 @@ int user_repo_find(PGconn *conn, int id, User *out) {
 }
 
 int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
+    printf("[DEBUG][SQL] Recherche email : '%s'\n", email);
     const char *params[1] = {email};
     PGresult *r = PQexecParams(conn,
         "SELECT id, name, email, password_hash, is_admin FROM users WHERE email = $1",
@@ -55,6 +56,10 @@ int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
     int found = PQntuples(r);
     if (found) {
         fill_user(out, r, 0);
+        printf("[DEBUG][SQL] Utilisateur trouvé : email='%s' hash='%s'\n",
+            PQgetvalue(r, 0, 2), PQgetvalue(r, 0, 3));
+    } else {
+        printf("[DEBUG][SQL] Aucun utilisateur trouvé\n");
     }
     PQclear(r);
     return found;

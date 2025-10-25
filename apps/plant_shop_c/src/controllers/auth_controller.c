@@ -74,35 +74,55 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
         return;
     }
 
-    const char* e = cJSON_GetStringValue(cJSON_GetObjectItem(j, "email"));
-    const char* p = cJSON_GetStringValue(cJSON_GetObjectItem(j, "password"));
-    cJSON_Delete(j);
+		const cJSON *email_item = cJSON_GetObjectItem(j, "email");
+		const cJSON *password_item = cJSON_GetObjectItem(j, "password");
+		const char* e = cJSON_GetStringValue(email_item);
+		const char* p = cJSON_GetStringValue(password_item);
 
-    if (!e || !p) {
-        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing fields\"}\n");
-        return;
-    }
+		char email_buf[128] = {0};
+		char password_buf[128] = {0};
+		if (e) snprintf(email_buf, sizeof(email_buf), "%s", e);
+		if (p) snprintf(password_buf, sizeof(password_buf), "%s", p);
 
-    User u;
-    if (!user_repo_find_by_mail(DB, e, &u)) {
-        mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid credentials\"}\n");
-        return;
-    }
+		printf("[DEBUG][LOGIN] Email reçu : '%s' | Password reçu : '%s'\n", email_buf, password_buf);
 
-    if (argon2id_verify(u.password_hash, p, strlen(p)) != ARGON2_OK) {
-        mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid credentials\"}\n");
-        return;
-    }
+		cJSON_Delete(j);
 
-    char cookie[256];
-    snprintf(cookie, sizeof(cookie), "Set-Cookie: jwt=%d; Path=/; HttpOnly; Max-Age=86400", u.id);
+		if (!e || !p) {
+				mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing fields\"}\n");
+				return;
+		}
 
-    cJSON *o = cJSON_CreateObject();
-    cJSON_AddStringToObject(o, "email", u.email);
-    char* txt = cJSON_PrintUnformatted(o);
-    mg_http_reply(c, 201, cookie, "Content-Type: application/json\r\n%s", txt);
-    free(txt);
-    cJSON_Delete(o);
+		User u;
+		if (!user_repo_find_by_mail(DB, email_buf, &u)) {
+				mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid credentials\"}\n");
+				return;
+		}
+
+		printf("[DEBUG][LOGIN] Password_hash (base) : '%s'\n", u.password_hash);
+
+		int verify_result = argon2id_verify(u.password_hash, password_buf, strlen(password_buf));
+		printf("[DEBUG][LOGIN] argon2id_verify result: %d\n", verify_result);
+		if (verify_result != ARGON2_OK) {
+				mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid credentials\"}\n");
+				return;
+		}
+
+		char cookie[256];
+		snprintf(cookie, sizeof(cookie), "Set-Cookie: jwt=%d; Path=/; HttpOnly; Max-Age=86400", u.id);
+
+		char headers[512];
+		snprintf(headers, sizeof(headers),
+				"%s\r\nContent-Type: application/json\r\n",
+				cookie
+		);
+
+		cJSON *o = cJSON_CreateObject();
+		cJSON_AddStringToObject(o, "email", u.email);
+		char* txt = cJSON_PrintUnformatted(o);
+		mg_http_reply(c, 201, headers, "%s", txt);
+		free(txt);
+		cJSON_Delete(o);
 }
 
 void auth_me(struct mg_connection* c, struct mg_http_message *hm) {

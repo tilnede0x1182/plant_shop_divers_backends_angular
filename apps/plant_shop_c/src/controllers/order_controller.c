@@ -6,8 +6,36 @@
 #include "../repository/order_repository.h"
 #include "../repository/user_repository.h"
 #include "mongoose/mongoose.h"
+#include <stdio.h>
 
 extern PGconn* DB;
+
+static int is_admin(struct mg_http_message* hm);
+
+void patch_order_status(struct mg_connection* c, struct mg_http_message* hm, int order_id) {
+	if (!is_admin(hm)) {
+			mg_http_reply(c, 403, "Content-Type: application/json\r\n", "{\"error\":\"Accès interdit\"}\n");
+			return;
+	}
+	cJSON* json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+	if (!json) {
+		mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}\n");
+		return;
+	}
+	const char* new_status = cJSON_GetStringValue(cJSON_GetObjectItem(json, "status"));
+	if (!new_status) {
+		cJSON_Delete(json);
+		mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing status\"}\n");
+		return;
+	}
+	if (!order_repo_update_status(DB, order_id, new_status)) {
+		cJSON_Delete(json);
+		mg_http_reply(c, 500, "Content-Type: application/json\r\n", "{\"error\":\"Update failed\"}\n");
+		return;
+	}
+	cJSON_Delete(json);
+	mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{\"status\":\"%s\"}\n", new_status);
+}
 
 static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
     char *text = cJSON_PrintUnformatted(j);
@@ -67,20 +95,28 @@ void orders_list(struct mg_connection* c, struct mg_http_message *hm) {
 }
 
 void orders_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
-    if (!is_admin(hm)) {
-        mg_http_reply(c, 403, "", "");
-        return;
-    }
+	fprintf(stderr, "[DEBUG][PATCH] appel /api/orders/%d\n", id);
 
-    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
-    if (!j) {
-        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
-        return;
-    }
+	if (!is_admin(hm)) {
+		fprintf(stderr, "[DEBUG][PATCH] refus : utilisateur non-admin\n");
+		mg_http_reply(c, 403, "", "");
+		return;
+	}
 
-    order_repo_patch(DB, id, j);
-    cJSON_Delete(j);
-    mg_http_reply(c, 200, "", "");
+	cJSON *j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+	if (!j) {
+		fprintf(stderr, "[DEBUG][PATCH] JSON invalide\n");
+		mg_http_reply(c, 400,
+		              "Content-Type: application/json\r\n",
+		              "{\"error\":\"Invalid JSON\"}");
+		return;
+	}
+
+	order_repo_patch(DB, id, j);
+	cJSON_Delete(j);
+
+	fprintf(stderr, "[DEBUG][PATCH] ordre %d traité\n", id);
+	mg_http_reply(c, 200, "", "");
 }
 
 void orders_del(struct mg_connection* c, struct mg_http_message *hm, int id) {

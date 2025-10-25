@@ -7,15 +7,20 @@ run:
 
 prod: run
 
-build-dev:
+build: clean
 	CMAKE_C_COMPILER_LAUNCHER=ccache cmake -S . -B build
 	cmake --build build --target server -j$$(nproc)
+
+build-dev: build run
 
 compile:
 	if [ ! -d build ]; then cmake -S . -B build; fi
 	cmake --build build --target server -j$$(nproc)
 
 compile_run: compile run
+
+clean:
+	rm -rf
 
 # ───────────────────────────────
 #   Gestion de la seed

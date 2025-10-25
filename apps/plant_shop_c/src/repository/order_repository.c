@@ -6,6 +6,20 @@
 #include <string.h>
 #include <stdlib.h>
 
+int order_repo_update_status(PGconn *conn, int order_id, const char* status) {
+    char id_str[12];
+    sprintf(id_str, "%d", order_id);
+    const char *params[2] = {status, id_str};
+    PGresult *r = PQexecParams(conn, "UPDATE orders SET status=$1 WHERE id=$2", 2, NULL, params, NULL, NULL, 0);
+    if (PQresultStatus(r) != PGRES_COMMAND_OK) {
+        fprintf(stderr, "order_repo_update_status failed: %s\n", PQerrorMessage(conn));
+        PQclear(r);
+        return 0;
+    }
+    PQclear(r);
+    return 1;
+}
+
 int order_repo_add(PGconn *c, int user_id, cJSON* items_json) {
     int total = 0;
     cJSON* item = NULL;
@@ -49,32 +63,81 @@ int order_repo_add(PGconn *c, int user_id, cJSON* items_json) {
     return order_id;
 }
 
+/* ---------- helpers ---------- */
+struct _item_ctx { PGconn *db; cJSON *dst; };
+static void _item_to_json(OrderItem *it, void *ud) {
+	struct _item_ctx *ctx = ud;
+	Plant p = {0};
+	if (!plant_repo_find(ctx->db, it->plant_id, &p)) return;
+
+	cJSON *itm = cJSON_CreateObject();
+	cJSON_AddNumberToObject(itm, "id", it->id);
+	cJSON_AddNumberToObject(itm, "quantity", it->qty);
+	cJSON_AddNumberToObject(itm, "price", it->price);
+
+	cJSON *pl = cJSON_CreateObject();
+	cJSON_AddNumberToObject(pl, "id", p.id);
+	cJSON_AddStringToObject(pl, "name", p.name);
+	cJSON_AddItemToObject(itm, "plant", pl);
+
+	cJSON_AddItemToArray(ctx->dst, itm);
+}
+
+/* ---------- liste des commandes utilisateur ---------- */
 cJSON* order_repo_list(PGconn *c, int uid) {
-    cJSON *arr = cJSON_CreateArray();
-    char s[12];
-    sprintf(s, "%d", uid);
-    const char *v[1] = {s};
-    PGresult *r = PQexecParams(c, "SELECT id,user_id,total,status FROM orders WHERE user_id=$1", 1, NULL, v, NULL, NULL, 0);
-    for (int i = 0; i < PQntuples(r); i++) {
-        cJSON *j = cJSON_CreateObject();
-        cJSON_AddNumberToObject(j, "id", atoi(PQgetvalue(r, i, 0)));
-        cJSON_AddNumberToObject(j, "userId", atoi(PQgetvalue(r, i, 1)));
-        cJSON_AddNumberToObject(j, "total", atoi(PQgetvalue(r, i, 2)));
-        cJSON_AddStringToObject(j, "status", PQgetvalue(r, i, 3));
-        cJSON_AddItemToArray(arr, j);
-    }
-    PQclear(r);
-    return arr;
+	char uid_str[12]; sprintf(uid_str, "%d", uid);
+	const char *params[1] = {uid_str};
+
+	PGresult *r = PQexecParams(
+		c,
+		"SELECT id,total,status FROM orders WHERE user_id=$1 ORDER BY id",
+		1, NULL, params, NULL, NULL, 0);
+
+	cJSON *out = cJSON_CreateArray();
+	for (int i = 0; i < PQntuples(r); i++) {
+		int oid = atoi(PQgetvalue(r, i, 0));
+
+		cJSON *j = cJSON_CreateObject();
+		cJSON_AddNumberToObject(j, "id", oid);
+		cJSON_AddNumberToObject(j, "userId", uid);
+		cJSON_AddNumberToObject(j, "total", atoi(PQgetvalue(r, i, 1)));
+		cJSON_AddStringToObject(j, "status", PQgetvalue(r, i, 2));
+
+		/* items */
+		cJSON *items = cJSON_CreateArray();
+		struct _item_ctx ctx = { .db = c, .dst = items };
+		order_item_repo_by_order(c, oid, _item_to_json, &ctx);
+		cJSON_AddItemToObject(j, "orderItems", items);
+
+		cJSON_AddItemToArray(out, j);
+	}
+	PQclear(r);
+	return out;
 }
 
 void order_repo_patch(PGconn *c, int id, cJSON *j) {
-    char sid[12];
-    sprintf(sid, "%d", id);
-    cJSON *status = cJSON_GetObjectItem(j, "status");
-    if (status && cJSON_IsString(status)) {
-        const char *v[2] = {status->valuestring, sid};
-        PQclear(PQexecParams(c, "UPDATE orders SET status=$1 WHERE id=$2", 2, NULL, v, NULL, NULL, 0));
-    }
+	char sid[12];
+	sprintf(sid, "%d", id);
+
+	cJSON *status = cJSON_GetObjectItem(j, "status");
+	if (!status || !cJSON_IsString(status)) {
+		fprintf(stderr, "[DEBUG][ORDER_REPO] ordre %d : champ « status » absent ou invalide\n", id);
+		return;
+	}
+
+	const char *v[2] = {status->valuestring, sid};
+	PGresult *r = PQexecParams(c,
+	    "UPDATE orders SET status=$1 WHERE id=$2",
+	    2, NULL, v, NULL, NULL, 0);
+
+	if (PQresultStatus(r) != PGRES_COMMAND_OK) {
+		fprintf(stderr, "[ERROR][ORDER_REPO] update ordre %d -> « %s » : %s\n",
+		        id, status->valuestring, PQerrorMessage(c));
+	} else {
+		fprintf(stderr, "[DEBUG][ORDER_REPO] ordre %d mis à jour -> « %s »\n",
+		        id, status->valuestring);
+	}
+	PQclear(r);
 }
 
 void order_repo_del(PGconn *c, int id) {

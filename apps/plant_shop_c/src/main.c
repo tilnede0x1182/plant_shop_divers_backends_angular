@@ -50,12 +50,12 @@ int main(void) {
 			return 1;
 		}
 
-    for (;;) {
-        mg_mgr_poll(&mgr, 1000);
-    }
+		for (;;) {
+			mg_mgr_poll(&mgr, 1000);
+		}
 
-    mg_mgr_free(&mgr);
-    PQfinish(DB);
-
-    return 0;
+		// Jamais atteint mais propre :
+		mg_mgr_free(&mgr);
+		PQfinish(DB);
+		return 0;
 }

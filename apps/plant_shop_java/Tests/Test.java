@@ -139,11 +139,10 @@ public final class Test {
 		}
 
 		String contentType = response.headers().firstValue("Content-Type").orElse("");
-		if (contentType.startsWith("application/json")) {
-			String txt = response.body();
-			return txt.trim().isEmpty() ? new JSONObject() : new JSONObject(txt);
+		String txt = response.body().trim();
+		if (contentType.startsWith("application/json") || txt.startsWith("{")) {
+				return txt.isEmpty() ? new JSONObject() : new JSONObject(txt);
 		}
-		// Pour les réponses non-JSON (ex: 204 No Content), retourner un objet vide
 		return new JSONObject();
 	}
 

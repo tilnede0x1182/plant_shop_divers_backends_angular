@@ -154,6 +154,7 @@ void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
     cJSON_AddStringToObject(o, "email", u.email);
     cJSON_AddStringToObject(o, "name", u.name);
     cJSON_AddNumberToObject(o, "id", u.id);
+		cJSON_AddBoolToObject  (o, "admin", u.is_admin);
     send_json(c, o, 200);
 }
 

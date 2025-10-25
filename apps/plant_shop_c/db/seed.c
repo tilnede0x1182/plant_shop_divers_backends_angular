@@ -26,25 +26,25 @@ static void generate_salt(uint8_t *salt, size_t len) {
     }
 }
 
-/** """ Renvoie une chaîne hachée Argon2id encodée """ */
+/** Renvoie une chaîne hachée Argon2id encodée */
 static char* hash_argon2(const char* pwd) {
     static char encoded_hash[128];
     uint8_t salt[16];
     generate_salt(salt, sizeof(salt));
 
     size_t hashlen = 32;
-		if (argon2id_hash_encoded(2, 1 << 16, 1,
-				pwd, strlen(pwd),
-				salt, sizeof(salt),
-				hashlen,
-				encoded_hash, sizeof(encoded_hash)) != ARGON2_OK) {
-					fprintf(stderr, "Erreur de hachage Argon2\n");
-					exit(1);
+    if (argon2id_hash_encoded(2, 1 << 16, 1,
+                              pwd, strlen(pwd),
+                              salt, sizeof(salt),
+                              hashlen,
+                              encoded_hash, sizeof(encoded_hash)) != ARGON2_OK) {
+        fprintf(stderr, "Erreur de hachage Argon2\n");
+        exit(1);
     }
     return encoded_hash;
 }
 
-/** """ Charge .env """ */
+/** Charge .env */
 static void read_env(char* url, char* user, char* pass) {
     FILE* f = fopen(".env", "r");
     if (!f) { perror(".env"); exit(1); }
@@ -144,21 +144,28 @@ int main(void) {
     FILE* txt = fopen("users.txt", "w");
     fprintf(txt, "Administrateurs :\n\n");
 
+    /* ---------- Administrateurs ---------- */
     printf("👑 Création des administrateurs...\n");
     for (int i = 0; i < NB_ADMINS; i++) {
-        char email[64];
+        const char* first = pick(FIRST, sizeof(FIRST) / sizeof(char*));
+        const char* last  = pick(LAST,  sizeof(LAST)  / sizeof(char*));
+        char name[64], email[64];
+        sprintf(name,  "%s %s", first, last);
         sprintf(email, "admin%d@planteshop.com", i + 1);
-        insert_user(db, "Admin", email, hash_argon2("password"), 1);
+
+        insert_user(db, name, email, hash_argon2("password"), 1);
         fprintf(txt, "%s password\n", email);
     }
 
     fprintf(txt, "\nUtilisateurs :\n\n");
+
+    /* ---------- Utilisateurs ---------- */
     printf("👥 Création des utilisateurs...\n");
     int user_ids[NB_USERS];
     for (int i = 0; i < NB_USERS; i++) {
         const char* first = pick(FIRST, sizeof(FIRST) / sizeof(char*));
-        const char* last = pick(LAST, sizeof(LAST) / sizeof(char*));
-        char email[64], pwd[12], name[64];
+        const char* last  = pick(LAST,  sizeof(LAST)  / sizeof(char*));
+        char email[64], pwd[16], name[64];
         sprintf(email, "%s_%s%d@%s", first, last, rnd(20, 99), pick(EMAIL_DOMAINS, 3));
         sprintf(pwd, "pw%d", rnd(100000000, 999999999));
         sprintf(name, "%s %s", first, last);
@@ -166,6 +173,7 @@ int main(void) {
         fprintf(txt, "%s %s\n", email, pwd);
     }
 
+    /* ---------- Plantes ---------- */
     printf("🌱 Création des plantes...\n");
     int plant_ids[NB_PLANTS], plant_prices[NB_PLANTS], plant_stocks[NB_PLANTS];
     for (int i = 0; i < NB_PLANTS; i++) {
@@ -174,6 +182,7 @@ int main(void) {
         plant_ids[i] = insert_plant(db, PLANT_NAMES[i], "Une belle plante à découvrir.", plant_prices[i], plant_stocks[i]);
     }
 
+    /* ---------- Commandes ---------- */
     printf("🛒 Création des commandes et articles...\n");
     int total_orders = 0;
     for (int i = 0; i < NB_USERS; i++) {

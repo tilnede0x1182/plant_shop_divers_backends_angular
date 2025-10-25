@@ -21,9 +21,9 @@ int plant_repo_add(PGconn *c, const Plant *p) {
 	const char *v[4] = {p->name, desc, price_str, stock_str};
 
 	PGresult *r = PQexecParams(
-		c,
-		"SELECT id,name,description,price,stock FROM plants WHERE id=$1",
-		1, NULL, v, NULL, NULL, 0);
+			c,
+			"INSERT INTO plants(name,description,price,stock) VALUES($1,$2,$3,$4) RETURNING id",
+			4, NULL, v, NULL, NULL, 0);
 
 	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
 		fprintf(stderr, "plant_repo_add failed: %s\n", PQerrorMessage(c));
@@ -42,7 +42,7 @@ int plant_repo_find(PGconn *c, int id, Plant *p) {
 
 	PGresult *r = PQexecParams(
 		c,
-		"SELECT id,name,price,stock FROM plants WHERE id=$1",
+		"SELECT id,name,description,price,stock FROM plants WHERE id=$1",
 		1, NULL, v, NULL, NULL, 0);
 
 	int found = PQntuples(r);
@@ -52,30 +52,48 @@ int plant_repo_find(PGconn *c, int id, Plant *p) {
 }
 
 void plant_repo_patch(PGconn *c, int id, cJSON *j) {
-	char sid[12];
-	sprintf(sid, "%d", id);
+    char sid[12];
+    sprintf(sid, "%d", id);
 
-	cJSON *price_json = cJSON_GetObjectItem(j, "price");
-	if (price_json && cJSON_IsNumber(price_json)) {
-		char price_str[12];
-		sprintf(price_str, "%.2f", (double)price_json->valueint);
-		const char *p[2] = {price_str, sid};
-		PGresult *res = PQexecParams(
-			c, "UPDATE plants SET price=$1 WHERE id=$2",
-			2, NULL, p, NULL, NULL, 0);
-		PQclear(res);
-	}
+    cJSON *name_json = cJSON_GetObjectItem(j, "name");
+    if (name_json && cJSON_IsString(name_json)) {
+        const char *p[2] = {name_json->valuestring, sid};
+        PGresult *res = PQexecParams(
+            c, "UPDATE plants SET name=$1 WHERE id=$2",
+            2, NULL, p, NULL, NULL, 0);
+        PQclear(res);
+    }
 
-	cJSON *stock_json = cJSON_GetObjectItem(j, "stock");
-	if (stock_json && cJSON_IsNumber(stock_json)) {
-		char stock_str[12];
-		sprintf(stock_str, "%d", stock_json->valueint);
-		const char *p[2] = {stock_str, sid};
-		PGresult *res = PQexecParams(
-			c, "UPDATE plants SET stock=$1 WHERE id=$2",
-			2, NULL, p, NULL, NULL, 0);
-		PQclear(res);
-	}
+    cJSON *desc_json = cJSON_GetObjectItem(j, "description");
+    if (desc_json && cJSON_IsString(desc_json)) {
+        const char *p[2] = {desc_json->valuestring, sid};
+        PGresult *res = PQexecParams(
+            c, "UPDATE plants SET description=$1 WHERE id=$2",
+            2, NULL, p, NULL, NULL, 0);
+        PQclear(res);
+    }
+
+    cJSON *price_json = cJSON_GetObjectItem(j, "price");
+    if (price_json && cJSON_IsNumber(price_json)) {
+        char price_str[12];
+        sprintf(price_str, "%.2f", (double)price_json->valuedouble);
+        const char *p[2] = {price_str, sid};
+        PGresult *res = PQexecParams(
+            c, "UPDATE plants SET price=$1 WHERE id=$2",
+            2, NULL, p, NULL, NULL, 0);
+        PQclear(res);
+    }
+
+    cJSON *stock_json = cJSON_GetObjectItem(j, "stock");
+    if (stock_json && cJSON_IsNumber(stock_json)) {
+        char stock_str[12];
+        sprintf(stock_str, "%d", stock_json->valueint);
+        const char *p[2] = {stock_str, sid};
+        PGresult *res = PQexecParams(
+            c, "UPDATE plants SET stock=$1 WHERE id=$2",
+            2, NULL, p, NULL, NULL, 0);
+        PQclear(res);
+    }
 }
 
 void plant_repo_del(PGconn *c, int id) {

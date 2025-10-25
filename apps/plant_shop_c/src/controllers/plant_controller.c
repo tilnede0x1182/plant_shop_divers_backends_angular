@@ -38,8 +38,9 @@ void plant_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
     cJSON *j = cJSON_CreateObject();
     cJSON_AddNumberToObject(j, "id", p.id);
     cJSON_AddStringToObject(j, "name", p.name);
+    cJSON_AddStringToObject(j, "description", p.description);
     cJSON_AddNumberToObject(j, "price", p.price);
-    // Le test n'attend pas le stock, on ne l'ajoute pas.
+    cJSON_AddNumberToObject(j, "stock", p.stock);
     send_json_reply(c, j, 200);
     (void)hm;
 }
@@ -81,12 +82,14 @@ void admin_plants_add(struct mg_connection* c, struct mg_http_message *hm) {
         return;
     }
 
-    Plant p = {0};
-    const char *name = cJSON_GetStringValue(cJSON_GetObjectItem(j, "name"));
-    if (name) strncpy(p.name, name, sizeof(p.name) - 1);
-    p.price = cJSON_GetObjectItem(j, "price")->valueint;
-    p.stock = cJSON_GetObjectItem(j, "stock")->valueint;
-    p.id = plant_repo_add(DB, &p);
+		Plant p = {0};
+		const char *name = cJSON_GetStringValue(cJSON_GetObjectItem(j, "name"));
+		const char *desc = cJSON_GetStringValue(cJSON_GetObjectItem(j, "description"));
+		if (name) strncpy(p.name, name, sizeof(p.name) - 1);
+		if (desc) strncpy(p.description, desc, sizeof(p.description) - 1);
+		p.price = cJSON_GetObjectItem(j, "price")->valueint;
+		p.stock = cJSON_GetObjectItem(j, "stock")->valueint;
+		p.id = plant_repo_add(DB, &p);
     cJSON_Delete(j);
 
     cJSON *o = cJSON_CreateObject();

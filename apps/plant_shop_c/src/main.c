@@ -1,34 +1,34 @@
-/** """ Point d’entrée Kore – bootstrap minimal
-	@db_connect  ouvre PostgreSQL
-	@init        charge routes via register_routes (routes.c)                 """ */
-
 #include <kore/kore.h>
 #include <kore/http.h>
 #include <libpq-fe.h>
-#include "routes.h"              /* prototype register_routes() */
+#include "routes.h"
+#include "utils/utils.h"
 
-static PGconn *DB = NULL;
+PGconn *DB = NULL;
 
-/* -------- Connexion DB (≤15 lignes) -------- */
+/* -------- Connexion DB (corrigée) -------- */
 static void db_connect(void){
-	const char *url  = kore_config_get_string("db_url");
-	const char *user = kore_config_get_string("db_user");
-	const char *pass = kore_config_get_string("db_pass");
-	const char *k[]  = {"dbname","user","password",NULL};
-	const char *v[]  = {url,user,pass,NULL};
-	DB = PQconnectdbParams(k,v,0);
-	if(PQstatus(DB)!=CONNECTION_OK){
-		kore_log(LOG_ERR,"DB connect failed: %s",PQerrorMessage(DB));
-		exit(1);
-	}
+    char db_url[128], db_user[64], db_pass[64];
+    read_env(db_url, db_user, db_pass); // Lecture du .env
+
+    const char *k[] = {"dbname", "user", "password", NULL};
+    const char *v[] = {db_url, db_user, db_pass, NULL};
+
+    DB = PQconnectdbParams(k, v, 0);
+    if (PQstatus(DB) != CONNECTION_OK) {
+        kore_log(LOG_ERR, "DB connect failed: %s", PQerrorMessage(DB));
+        PQfinish(DB);
+        exit(1);
+    }
+    kore_log(LOG_INFO, "Successfully connected to database '%s'", db_url);
 }
 
-/* -------- init Kore (≤15 lignes) -------- */
+/* -------- init Kore (inchangé) -------- */
 int init(int state){
-	if(state==KORE_MODULE_LOAD){
-		db_connect();
-		register_routes();        /* ajouté dans routes.c */
-		kore_log(LOG_INFO,"Plant-Shop C ready");
-	}
-	return KORE_RESULT_OK;
+    if (state == KORE_MODULE_LOAD) {
+        db_connect();
+        register_routes();
+        kore_log(LOG_INFO, "Plant-Shop C ready");
+    }
+    return KORE_RESULT_OK;
 }

@@ -1,12 +1,15 @@
 #ifndef REPO_ORDER_H
 #define REPO_ORDER_H
+
 #include <libpq-fe.h>
+#include <cjson/cJSON.h>
 #include "../models/order.h"
 
-int  order_repo_insert(PGconn*,const Order*);
-int  order_repo_find(PGconn*,int,Order*);
-void order_repo_update_status(PGconn*,int,const char*);
-void order_repo_update_total(PGconn*,int,int);
-void order_repo_delete(PGconn*,int);
-void order_repo_all_by_user(PGconn*,int,void(*)(Order*,void*),void*);
+int  order_repo_add(PGconn*, int user_id, cJSON* items);
+cJSON* order_repo_list(PGconn*, int user_id);
+void order_repo_patch(PGconn*, int id, cJSON* data);
+void order_repo_del(PGconn*, int id);
+int  order_repo_belongs_to(PGconn*, int order_id, int user_id);
+int  order_repo_is_admin(PGconn *db, int user_id); // Utilisé par order_controller
+
 #endif

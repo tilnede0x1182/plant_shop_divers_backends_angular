@@ -9,40 +9,52 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # ----------------------------------
 # Dépendances système (pkg-config)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(LIBPQ   REQUIRED libpq)
-pkg_check_modules(CJSON   REQUIRED libcjson)
-pkg_check_modules(ARGON2  REQUIRED libargon2)
+pkg_check_modules(LIBPQ REQUIRED libpq)
+pkg_check_modules(CJSON REQUIRED libcjson)
+pkg_check_modules(ARGON2 REQUIRED libargon2)
+pkg_check_modules(CURL REQUIRED libcurl) # Ajouté pour le test
 
 # Kore n’a pas de pc : supposer install “/usr/local/include/kore”
 include_directories(/usr/local/include ${LIBPQ_INCLUDE_DIRS}
-                    ${CJSON_INCLUDE_DIRS} ${ARGON2_INCLUDE_DIRS})
+	${CJSON_INCLUDE_DIRS} ${ARGON2_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
 link_directories(/usr/local/lib ${LIBPQ_LIBRARY_DIRS}
-                 ${CJSON_LIBRARY_DIRS} ${ARGON2_LIBRARY_DIRS})
+	${CJSON_LIBRARY_DIRS} ${ARGON2_LIBRARY_DIRS} ${CURL_LIBRARY_DIRS})
 
 # ----------------------------------
-# Sources
-file(GLOB_RECURSE SRC
-     "src/*.c"
-     "db/seed.c")
-
-add_executable(server ${SRC})
-
-# ----------------------------------
-# Lien
-target_link_libraries(server
-	/usr/local/lib/libkore.a     # Kore compilé via “make install”
+# Définition des bibliothèques communes
+set(COMMON_LIBS
+	/usr/local/lib/libkore.a # Kore compilé via “make install”
 	${LIBPQ_LIBRARIES}
 	${CJSON_LIBRARIES}
 	${ARGON2_LIBRARIES}
 	pthread m ssl crypto z)
 
 # ----------------------------------
+# Sources du serveur principal
+file(GLOB_RECURSE SERVER_SOURCES
+	"src/main.c"
+	"routes.c"
+	"src/controllers/*.c"
+	"src/repository/*.c"
+	"src/utils/utils.c")
+
+add_executable(server ${SERVER_SOURCES})
+target_link_libraries(server ${COMMON_LIBS})
+
 # Flags Kore recommandés
 target_compile_definitions(server PRIVATE
 	KORE_NO_HTTP_GZIP
 	KORE_SINGLE_BINARY
 )
 
-# ----------------------------------
-# Installation simple
 install(TARGETS server DESTINATION bin)
+
+# ----------------------------------
+# Exécutable pour le seeding
+add_executable(seed_c db/seed.c)
+target_link_libraries(seed_c ${LIBPQ_LIBRARIES} ${ARGON2_LIBRARIES})
+
+# ----------------------------------
+# Exécutable pour les tests E2E
+add_executable(test_e2e_c tests/test.c)
+target_link_libraries(test_e2e_c ${CURL_LIBRARIES} ${CJSON_LIBRARIES})

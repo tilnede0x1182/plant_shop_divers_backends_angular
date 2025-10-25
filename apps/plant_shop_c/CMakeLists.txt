@@ -39,7 +39,8 @@ file(GLOB_RECURSE SERVER_SOURCES
 	"routes.c"
 	"src/controllers/*.c"
 	"src/repository/*.c"
-	"src/utils/utils.c")
+	"src/utils/utils.c"
+	"src/utils/cors.c")
 
 add_executable(server ${SERVER_SOURCES})
 target_link_libraries(server ${COMMON_LIBS})

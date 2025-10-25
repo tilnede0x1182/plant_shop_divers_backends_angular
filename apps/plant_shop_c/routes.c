@@ -7,6 +7,7 @@
 #include "src/controllers/user_controller.h"
 #include "src/controllers/order_controller.h"
 #include "src/controllers/order_item_controller.h"
+#include "src/utils/cors.h"
 
 /* -------- trace utilitaire -------- */
 static void log_route(struct mg_http_message *hm, const char *h) {
@@ -19,11 +20,12 @@ static void log_route(struct mg_http_message *hm, const char *h) {
 /* -------- /api/ping -------- */
 static void api_ping(struct mg_connection *c, struct mg_http_message *hm) {
 	log_route(hm, "api_ping");
-	mg_http_reply(c, 200, "", "");
+	cors_reply(c, 200, "", "");
 }
 
 /* -------- routeur principal -------- */
 void route_request(struct mg_connection *c, struct mg_http_message *hm) {
+  if (cors_handle_preflight(c, hm)) return;
 	int id = 0;                               /* buffer id */
 
 	/* ----- Auth ----- */
@@ -33,10 +35,22 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 		log_route(hm, "auth_register"), auth_register(c, hm);
 	} else if (mg_http_match_uri(hm, "/api/auth/me")) {
 		log_route(hm, "auth_me"), auth_me(c, hm);
+	} else if (mg_http_match_uri(hm, "/api/auth/logout")) {
+		if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
+			log_route(hm, "auth_logout"), auth_logout(c, hm);
+		} else {
+			cors_reply(c, 405, "Allow: POST\r\n", "");
+		}
 	}
 
 	/* ----- Plants ----- */
-	else if (sscanf(hm->uri.buf, "/api/plants/%d", &id) == 1) {
+	else if (mg_http_match_uri(hm, "/api/plants")) {
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			log_route(hm, "plants_list_public"), plants_list_public(c, hm);
+		} else {
+			cors_reply(c, 405, "Allow: GET\r\n", "");
+		}
+	} else if (sscanf(hm->uri.buf, "/api/plants/%d", &id) == 1) {
 		log_route(hm, "plant_get"), plant_get(c, hm, id);
 	} else if (mg_http_match_uri(hm, "/api/admin/plants")) {
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
@@ -114,6 +128,6 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 	else if (mg_http_match_uri(hm, "/api/ping")) {
 		api_ping(c, hm);
 	} else {
-		log_route(hm, "404"), mg_http_reply(c, 404, "", "Not Found\n");
+		log_route(hm, "404"), cors_reply(c, 404, "Content-Type: text/plain\r\n", "Not Found\n");
 	}
 }

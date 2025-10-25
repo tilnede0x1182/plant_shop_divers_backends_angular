@@ -8,5 +8,6 @@ void admin_plants_list(struct mg_connection *c, struct mg_http_message *hm);
 void admin_plants_add(struct mg_connection *c, struct mg_http_message *hm);
 void admin_plants_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
 void admin_plants_del(struct mg_connection *c, struct mg_http_message *hm, int id);
+void plants_list_public(struct mg_connection *c, struct mg_http_message *hm);
 
 #endif

@@ -156,3 +156,7 @@ void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
     cJSON_AddNumberToObject(o, "id", u.id);
     send_json(c, o, 200);
 }
+
+void auth_logout(struct mg_connection* c, struct mg_http_message *hm) {
+    mg_http_reply(c, 200, "Set-Cookie: jwt=; Path=/; HttpOnly; Max-Age=0\r\n", "");
+}

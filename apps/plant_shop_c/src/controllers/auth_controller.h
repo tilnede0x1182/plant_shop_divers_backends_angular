@@ -6,5 +6,6 @@
 void auth_login(struct mg_connection *c, struct mg_http_message *hm);
 void auth_register(struct mg_connection *c, struct mg_http_message *hm);
 void auth_me(struct mg_connection *c, struct mg_http_message *hm);
+void auth_logout(struct mg_connection *c, struct mg_http_message *hm);
 
 #endif

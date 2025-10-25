@@ -53,6 +53,12 @@ static void admin_plants_list_cb(Plant* p, void* a) {
     cJSON_AddItemToArray((cJSON*)a, j);
 }
 
+void plants_list_public(struct mg_connection* c, struct mg_http_message *hm) {
+    cJSON *arr = cJSON_CreateArray();
+    plant_repo_each(DB, admin_plants_list_cb, arr);
+    send_json_reply(c, arr, 200);
+}
+
 void admin_plants_list(struct mg_connection* c, struct mg_http_message *hm) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");

@@ -109,7 +109,7 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
 		}
 
 		char cookie[256];
-		snprintf(cookie, sizeof(cookie), "Set-Cookie: jwt=%d; Path=/; HttpOnly; Max-Age=86400", u.id);
+		snprintf(cookie, sizeof(cookie), "Set-Cookie: plant_shop_c_backend=%d; Path=/; HttpOnly; Max-Age=86400", u.id);
 
 		char headers[512];
 		snprintf(headers, sizeof(headers),
@@ -135,7 +135,7 @@ void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
     }
 
     char jwt_val_str[32];
-    if (mg_http_get_var(cookie_hdr, "jwt", jwt_val_str, sizeof(jwt_val_str)) <= 0) {
+    if (mg_http_get_var(cookie_hdr, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str)) <= 0) {
         mg_http_reply(c, 401, "", "{\"error\":\"Unauthorized\"}\n");
         return;
     }
@@ -162,5 +162,5 @@ void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
 }
 
 void auth_logout(struct mg_connection* c, struct mg_http_message *hm) {
-    mg_http_reply(c, 200, "Set-Cookie: jwt=; Path=/; HttpOnly; Max-Age=0\r\n", "");
+    mg_http_reply(c, 200, "Set-Cookie: plant_shop_c_backend=; Path=/; HttpOnly; Max-Age=0\r\n", "");
 }

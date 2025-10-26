@@ -223,7 +223,7 @@ int extract_user_id_from_cookie(struct mg_http_message* hm) {
     struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
     if (!cookie_hdr) return 0;
     char jwt[512];
-    if (mg_http_get_var(cookie_hdr, "jwt", jwt, sizeof jwt) <= 0) return 0;
+    if (mg_http_get_var(cookie_hdr, "plant_shop_c_backend", jwt, sizeof jwt) <= 0) return 0;
     int uid = 0; char email[128];
     if (!jwt_verify_token(jwt, &uid, email, sizeof email)) return 0;
     return uid;

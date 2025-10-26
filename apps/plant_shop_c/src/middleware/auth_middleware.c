@@ -22,7 +22,7 @@ static int extract_token(struct mg_http_message* hm, char* out, size_t out_size)
     // Fallback : lire le cookie 'jwt'
     struct mg_str* cookie_hdr = mg_http_get_header(hm, "Cookie");
     if (!cookie_hdr) return 0;
-    if (mg_http_get_var(cookie_hdr, "jwt", out, out_size) <= 0) return 0;
+    if (mg_http_get_var(cookie_hdr, "plant_shop_c_backend", out, out_size) <= 0) return 0;
     return 1;
 }
 

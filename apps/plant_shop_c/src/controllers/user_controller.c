@@ -22,7 +22,7 @@ static int get_current_user_id(struct mg_http_message* hm) {
     }
 
     char jwt_val_str[32];
-    int jwt_found = mg_http_get_var(cookie_hdr, "jwt", jwt_val_str, sizeof(jwt_val_str));
+    int jwt_found = mg_http_get_var(cookie_hdr, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str));
     if (jwt_found <= 0) {
         return 0;
     }

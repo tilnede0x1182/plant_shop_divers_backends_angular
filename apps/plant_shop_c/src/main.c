@@ -25,11 +25,11 @@ static void db_connect(void) {
 
     DB = PQconnectdb(conn_str);
     if (PQstatus(DB) != CONNECTION_OK) {
-        MG_ERROR(("DB connect failed: %s", PQerrorMessage(DB)));
+        printf("❌ Connexion à la base de données échouée : %s\n", PQerrorMessage(DB));
         PQfinish(DB);
         exit(1);
     }
-    MG_INFO(("Successfully connected to database '%s'", db_url));
+    printf("✅ Connexion à la base de données '%s' réussie\n", db_url);
 }
 
 int main(void) {
@@ -37,25 +37,27 @@ int main(void) {
     char port[16];
     char url[32];
 
+    mg_log_set(MG_LL_NONE);
+
     db_connect();
     read_server_env(port, JWT_SECRET);
     snprintf(url, sizeof(url), "http://0.0.0.0:%s", port);
 
-		mg_mgr_init(&mgr);
-		MG_INFO(("Starting Mongoose v%s on %s", MG_VERSION, url));
-		struct mg_connection *lc = mg_http_listen(&mgr, url, fn, NULL);
-		if (lc == NULL) {
-			MG_ERROR(("❌ Port occupé ou droits insuffisants : %s", url));
-			PQfinish(DB);
-			return 1;
-		}
+    mg_mgr_init(&mgr);
+    printf("🚀 Démarrage de Mongoose v%s sur %s\n", MG_VERSION, url);
 
-		for (;;) {
-			mg_mgr_poll(&mgr, 1000);
-		}
+    struct mg_connection *lc = mg_http_listen(&mgr, url, fn, NULL);
+    if (lc == NULL) {
+        printf("❌ Port occupé ou droits insuffisants : %s\n", url);
+        PQfinish(DB);
+        return 1;
+    }
 
-		// Jamais atteint mais propre :
-		mg_mgr_free(&mgr);
-		PQfinish(DB);
-		return 0;
+    for (;;) {
+        mg_mgr_poll(&mgr, 1000);
+    }
+
+    mg_mgr_free(&mgr);
+    PQfinish(DB);
+    return 0;
 }

@@ -76,6 +76,8 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 			user_create(c, hm);
 		}
 	} else if (sscanf(hm->uri.buf, "/api/users/%d", &id) == 1) {
+		printf("[Route] /api/users/%d, en cours de modification d'un user : (id = %d)\n", id, id);
+
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
 			log_route(hm, "user_get");
 			user_get(c, hm, id);

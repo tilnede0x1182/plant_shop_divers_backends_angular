@@ -99,6 +99,7 @@ void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
 }
 
 void user_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
+		printf("[USER CONTROLLER] En cours de modification d'un user : (id = %d)\n", id);
     int current_user_id = get_current_user_id(hm);
     int current_user_is_admin = user_repo_is_admin(DB, current_user_id);
 

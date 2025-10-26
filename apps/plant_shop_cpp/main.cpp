@@ -183,7 +183,6 @@ int main() {
 			std::cerr << "❌ Impossible de démarrer : port 4100 déjà utilisé" << std::endl;
 			return 1;
 		}
-		app().addListener("0.0.0.0", 4100);
 		enableCors();
 
 		try {

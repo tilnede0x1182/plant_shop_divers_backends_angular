@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "../repository/user_repository.h"
+#include "../utils/utils.h"
 
 extern PGconn* DB;
 
@@ -68,96 +69,120 @@ void auth_register(struct mg_connection* c, struct mg_http_message *hm) {
 }
 
 void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
+    struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
+    if (cookie_hdr) {
+        printf("[LOGIN] Cookie: \"%.*s\"\n",
+               (int)cookie_hdr->len, cookie_hdr->buf);
+    } else {
+        printf("[LOGIN] No Cookie\n");
+    }
+
+    printf("[LOGIN] Body: \"%.*s\"\n",
+           (int)hm->body.len, hm->body.buf);
+
     cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
     if (!j) {
-        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}\n");
+        printf("[LOGIN] Invalid JSON\n");
+        mg_http_reply(c, 400,
+                      "Content-Type: application/json\r\n",
+                      "{\"error\":\"Invalid JSON\"}\n");
         return;
     }
 
-		const cJSON *email_item = cJSON_GetObjectItem(j, "email");
-		const cJSON *password_item = cJSON_GetObjectItem(j, "password");
-		const char* e = cJSON_GetStringValue(email_item);
-		const char* p = cJSON_GetStringValue(password_item);
+    const char* e = cJSON_GetStringValue(cJSON_GetObjectItem(j, "email"));
+    const char* p = cJSON_GetStringValue(cJSON_GetObjectItem(j, "password"));
 
-		char email_buf[128] = {0};
-		char password_buf[128] = {0};
-		if (e) snprintf(email_buf, sizeof(email_buf), "%s", e);
-		if (p) snprintf(password_buf, sizeof(password_buf), "%s", p);
+    char email_buf[128]    = {0};
+    char password_buf[128] = {0};
+    if (e) snprintf(email_buf, sizeof(email_buf), "%s", e);
+    if (p) snprintf(password_buf, sizeof(password_buf), "%s", p);
 
-		printf("[DEBUG][LOGIN] Email reçu : '%s' | Password reçu : '%s'\n", email_buf, password_buf);
+    printf("[LOGIN] Email: '%s', Password: '%s'\n",
+           email_buf, password_buf);
 
-		cJSON_Delete(j);
+    cJSON_Delete(j);
 
-		if (!e || !p) {
-				mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing fields\"}\n");
-				return;
-		}
+    if (!e || !p) {
+        printf("[LOGIN] Missing fields\n");
+        mg_http_reply(c, 400,
+                      "Content-Type: application/json\r\n",
+                      "{\"error\":\"Missing fields\"}\n");
+        return;
+    }
 
-		User u;
-		if (!user_repo_find_by_mail(DB, email_buf, &u)) {
-				mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid credentials\"}\n");
-				return;
-		}
+    User u;
+    if (!user_repo_find_by_mail(DB, email_buf, &u)) {
+        printf("[LOGIN] User not found\n");
+        mg_http_reply(c, 401,
+                      "Content-Type: application/json\r\n",
+                      "{\"error\":\"Invalid credentials\"}\n");
+        return;
+    }
+    printf("[LOGIN] Found user id=%d\n", u.id);
 
-		printf("[DEBUG][LOGIN] Password_hash (base) : '%s'\n", u.password_hash);
+    int verify_result = argon2id_verify(u.password_hash,
+                                        password_buf,
+                                        strlen(password_buf));
+    printf("[LOGIN] Password verify result: %d\n", verify_result);
+    if (verify_result != ARGON2_OK) {
+        printf("[LOGIN] Incorrect password\n");
+        mg_http_reply(c, 401,
+                      "Content-Type: application/json\r\n",
+                      "{\"error\":\"Invalid credentials\"}\n");
+        return;
+    }
 
-		int verify_result = argon2id_verify(u.password_hash, password_buf, strlen(password_buf));
-		printf("[DEBUG][LOGIN] argon2id_verify result: %d\n", verify_result);
-		if (verify_result != ARGON2_OK) {
-				mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid credentials\"}\n");
-				return;
-		}
+    char cookie[256];
+    snprintf(cookie, sizeof(cookie),
+             "Set-Cookie: plant_shop_c_backend=%d; Path=/; HttpOnly; Max-Age=86400",
+             u.id);
+    printf("[LOGIN] Set-Cookie: %s\n", cookie);
 
-		char cookie[256];
-		snprintf(cookie, sizeof(cookie), "Set-Cookie: plant_shop_c_backend=%d; Path=/; HttpOnly; Max-Age=86400", u.id);
+    char headers[512];
+    snprintf(headers, sizeof(headers),
+             "%s\r\nContent-Type: application/json\r\n",
+             cookie);
 
-		char headers[512];
-		snprintf(headers, sizeof(headers),
-				"%s\r\nContent-Type: application/json\r\n",
-				cookie
-		);
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddStringToObject(o, "email", u.email);
+    char* txt = cJSON_PrintUnformatted(o);
 
-		cJSON *o = cJSON_CreateObject();
-		cJSON_AddStringToObject(o, "email", u.email);
-		char* txt = cJSON_PrintUnformatted(o);
-		mg_http_reply(c, 201, headers, "%s", txt);
-		free(txt);
-		cJSON_Delete(o);
+    mg_http_reply(c, 201,
+                  headers,
+                  "%s", txt);
+
+    free(txt);
+    cJSON_Delete(o);
 }
 
 void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
-    // Log : réception des données (début)
-
-    struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
-    if (!cookie_hdr) {
-        mg_http_reply(c, 401, "", "{\"error\":\"Unauthorized\"}\n");
-        return;
-    }
-
-    char jwt_val_str[32];
-    if (mg_http_get_var(cookie_hdr, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str)) <= 0) {
-        mg_http_reply(c, 401, "", "{\"error\":\"Unauthorized\"}\n");
+    char jwt_val_str[32] = {0};
+    if (!get_cookie_manual(hm, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str))) {
+        mg_http_reply(c, 401, "Content-Type: application/json\r\n",
+                      "{\"error\":\"Unauthorized\"}\n");
         return;
     }
 
     int uid = atoi(jwt_val_str);
     if (uid == 0) {
-        mg_http_reply(c, 401, "", "{\"error\":\"Invalid token\"}\n");
+        mg_http_reply(c, 401, "Content-Type: application/json\r\n",
+                      "{\"error\":\"Invalid token\"}\n");
         return;
     }
 
     User u;
     if (!user_repo_find(DB, uid, &u)) {
-        printf("❌ [auth_me] Aucun utilisateur avec l'id %d\n", uid);
-        mg_http_reply(c, 401, "", "{\"error\":\"User not found\"}\n");
+        printf("[auth_me] No user with id %d\n", uid);
+        mg_http_reply(c, 401, "Content-Type: application/json\r\n",
+                      "{\"error\":\"User not found\"}\n");
         return;
     }
 
     cJSON* o = cJSON_CreateObject();
     cJSON_AddStringToObject(o, "email", u.email);
-    cJSON_AddStringToObject(o, "name", u.name);
-    cJSON_AddNumberToObject(o, "id", u.id);
-    cJSON_AddBoolToObject(o, "admin", u.is_admin);
+    cJSON_AddStringToObject(o, "name",  u.name);
+    cJSON_AddNumberToObject(o, "id",    u.id);
+    cJSON_AddBoolToObject(o,   "admin", u.is_admin);
     send_json(c, o, 200);
 }
 

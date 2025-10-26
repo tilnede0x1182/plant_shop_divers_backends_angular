@@ -146,6 +146,30 @@ compile-test-backend-java:
 	make -C apps/plant_shop_java compile-test
 
 # ======================================================
+# 🛠️ Backend C (HTTPServer + PostgreSQL)
+# ======================================================
+
+run-backend-c:
+	make -C apps/plant_shop_c run
+
+compile-backend-c:
+	make -C apps/plant_shop_c compile
+
+seed-backend-c:
+	make -C apps/plant_shop_c seed
+
+compile-run-backend-c: compile-backend-c run-backend-c
+
+prod-backend-c:
+	make -C apps/plant_shop_c prod
+
+test-backend-c:
+	make -C apps/plant_shop_c tests
+
+compile-test-backend-c:
+	make -C apps/plant_shop_c compile-test
+
+# ======================================================
 # 🎨 Frontend Angular
 # ======================================================
 

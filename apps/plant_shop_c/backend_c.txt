@@ -1,0 +1,4093 @@
+# Arborescence du projet (.)
+.
+├── build
+│   ├── CMakeCache.txt
+│   ├── CMakeFiles
+│   │   ├── 3.28.3
+│   │   │   ├── CMakeCCompiler.cmake
+│   │   │   ├── CMakeDetermineCompilerABI_C.bin
+│   │   │   ├── CMakeSystem.cmake
+│   │   │   └── CompilerIdC
+│   │   │       ├── a.out
+│   │   │       ├── CMakeCCompilerId.c
+│   │   │       └── tmp
+│   │   ├── cmake.check_cache
+│   │   ├── CMakeConfigureLog.yaml
+│   │   ├── CMakeDirectoryInformation.cmake
+│   │   ├── Makefile2
+│   │   ├── Makefile.cmake
+│   │   ├── pkgRedirects
+│   │   ├── progress.marks
+│   │   ├── seed_c.dir
+│   │   │   ├── build.make
+│   │   │   ├── cmake_clean.cmake
+│   │   │   ├── compiler_depend.internal
+│   │   │   ├── compiler_depend.make
+│   │   │   ├── compiler_depend.ts
+│   │   │   ├── db
+│   │   │   │   ├── seed.c.o
+│   │   │   │   └── seed.c.o.d
+│   │   │   ├── DependInfo.cmake
+│   │   │   ├── depend.make
+│   │   │   ├── flags.make
+│   │   │   ├── link.txt
+│   │   │   └── progress.make
+│   │   ├── server.dir
+│   │   │   ├── build.make
+│   │   │   ├── cmake_clean.cmake
+│   │   │   ├── compiler_depend.internal
+│   │   │   ├── compiler_depend.make
+│   │   │   ├── compiler_depend.ts
+│   │   │   ├── DependInfo.cmake
+│   │   │   ├── depend.make
+│   │   │   ├── flags.make
+│   │   │   ├── link.txt
+│   │   │   ├── progress.make
+│   │   │   ├── routes.c.o
+│   │   │   ├── routes.c.o.d
+│   │   │   └── src
+│   │   │       ├── auth
+│   │   │       │   ├── jwt.c.o
+│   │   │       │   └── jwt.c.o.d
+│   │   │       ├── controllers
+│   │   │       │   ├── auth_controller.c.o
+│   │   │       │   ├── auth_controller.c.o.d
+│   │   │       │   ├── order_controller.c.o
+│   │   │       │   ├── order_controller.c.o.d
+│   │   │       │   ├── order_item_controller.c.o
+│   │   │       │   ├── order_item_controller.c.o.d
+│   │   │       │   ├── plant_controller.c.o
+│   │   │       │   ├── plant_controller.c.o.d
+│   │   │       │   ├── user_controller.c.o
+│   │   │       │   └── user_controller.c.o.d
+│   │   │       ├── main.c.o
+│   │   │       ├── main.c.o.d
+│   │   │       ├── middleware
+│   │   │       │   ├── auth_middleware.c.o
+│   │   │       │   └── auth_middleware.c.o.d
+│   │   │       ├── mongoose
+│   │   │       │   ├── mongoose.c.o
+│   │   │       │   └── mongoose.c.o.d
+│   │   │       ├── repository
+│   │   │       │   ├── order_item_repository.c.o
+│   │   │       │   ├── order_item_repository.c.o.d
+│   │   │       │   ├── order_repository.c.o
+│   │   │       │   ├── order_repository.c.o.d
+│   │   │       │   ├── plant_repository.c.o
+│   │   │       │   ├── plant_repository.c.o.d
+│   │   │       │   ├── user_repository.c.o
+│   │   │       │   └── user_repository.c.o.d
+│   │   │       └── utils
+│   │   │           ├── cors.c.o
+│   │   │           ├── cors.c.o.d
+│   │   │           ├── utils.c.o
+│   │   │           └── utils.c.o.d
+│   │   ├── TargetDirectories.txt
+│   │   └── test_e2e_c.dir
+│   │       ├── build.make
+│   │       ├── cmake_clean.cmake
+│   │       ├── compiler_depend.internal
+│   │       ├── compiler_depend.make
+│   │       ├── compiler_depend.ts
+│   │       ├── DependInfo.cmake
+│   │       ├── depend.make
+│   │       ├── flags.make
+│   │       ├── link.txt
+│   │       ├── progress.make
+│   │       └── test
+│   │           ├── test_e2e.c.o
+│   │           └── test_e2e.c.o.d
+│   ├── cmake_install.cmake
+│   ├── Makefile
+│   ├── seed_c
+│   ├── server
+│   └── test_e2e_c
+├── CMakeLists.txt
+├── db
+│   ├── schema.sql
+│   ├── seed.c
+│   └── seed_data.h
+├── Makefile
+├── projet.txt
+├── Reflexion (débug).txt
+├── routes.c
+├── routes.h
+├── src
+│   ├── auth
+│   │   ├── jwt.c
+│   │   └── jwt.h
+│   ├── controllers
+│   │   ├── auth_controller.c
+│   │   ├── auth_controller.h
+│   │   ├── order_controller.c
+│   │   ├── order_controller.h
+│   │   ├── order_item_controller.c
+│   │   ├── order_item_controller.h
+│   │   ├── plant_controller.c
+│   │   ├── plant_controller.h
+│   │   ├── user_controller.c
+│   │   └── user_controller.h
+│   ├── main.c
+│   ├── models
+│   │   ├── order.h
+│   │   ├── order_item.h
+│   │   ├── plant.h
+│   │   └── user.h
+│   ├── mongoose
+│   │   ├── mongoose.c
+│   │   └── mongoose.h
+│   ├── repository
+│   │   ├── order_item_repository.c
+│   │   ├── order_item_repository.h
+│   │   ├── order_repository.c
+│   │   ├── order_repository.h
+│   │   ├── plant_repository.c
+│   │   ├── plant_repository.h
+│   │   ├── user_repository.c
+│   │   └── user_repository.h
+│   └── utils
+│       ├── cors.c
+│       ├── cors.h
+│       ├── utils.c
+│       └── utils.h
+├── test
+│   └── test_e2e.c
+└── users.txt
+
+28 directories, 126 files
+
+
+# ./Makefile
+
+# ───────────────────────────────
+#   Compilation et exécution principales
+# ───────────────────────────────
+
+run:
+	./build/server
+
+prod: run
+
+build: clean
+	CMAKE_C_COMPILER_LAUNCHER=ccache cmake -S . -B build
+	cmake --build build --target server -j$$(nproc)
+
+build-dev: build run
+
+compile:
+	if [ ! -d build ]; then cmake -S . -B build; fi
+	cmake --build build --target server -j$$(nproc)
+
+compile_run: compile run
+
+clean:
+	rm -rf
+
+# ───────────────────────────────
+#   Gestion de la seed
+# ───────────────────────────────
+
+seed:
+	if [ ! -f build/seed_c ]; then \
+		CMAKE_C_COMPILER_LAUNCHER=ccache cmake -S . -B build; \
+	fi; \
+	cmake --build build --target seed_c -j$$(nproc); \
+	./build/seed_c
+
+compile-seed:
+	if [ ! -d build ]; then cmake -S . -B build; fi
+	cmake --build build --target seed_c -j$$(nproc)
+
+seed-dev: compile-seed seed
+
+seed-build:
+	CMAKE_C_COMPILER_LAUNCHER=ccache cmake -S . -B build
+	cmake --build build --target seed_c -j$$(nproc)
+
+# ───────────────────────────────
+#   Gestion du test end-to-end
+# ───────────────────────────────
+
+tests:
+	if [ ! -f build/test_e2e_c ]; then \
+		CMAKE_C_COMPILER_LAUNCHER=ccache cmake -S . -B build; \
+		cmake --build build --target test_e2e_c -j$$(nproc); \
+	fi; \
+	./build/test_e2e_c
+
+compile-test:
+	if [ ! -d build ]; then cmake -S . -B build; fi
+	cmake --build build --target test_e2e_c -j$$(nproc)
+
+test-dev: compile-test tests
+
+test-build:
+	CMAKE_C_COMPILER_LAUNCHER=ccache cmake -S . -B build
+	cmake --build build --target test_e2e_c -j$$(nproc)
+
+# ───────────────────────────────
+#   Commandes Base de données
+# ───────────────────────────────
+
+# Extrait la valeur de DATABASE_URL du fichier .env
+DB_NAME := $(shell grep '^DATABASE_URL=' .env | cut -d'=' -f2 | cut -d'#' -f1 | xargs)
+
+db-create:
+	sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME)" || echo "↳ base déjà existante."
+
+db-migrate:
+	sudo -u postgres psql -d $(DB_NAME) -f db/schema.sql
+
+db-drop:
+	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
+
+db-reset: db-drop db-create db-migrate
+
+# ───────────────────────────────
+#   Utilitaires
+# ───────────────────────────────
+
+tree:
+	tree . -I "kore" -I "CMakeFiles"
+
+
+# ./.env
+
+DATABASE_URL=plant_shop_c
+DATABASE_USER=tilnede0x1182
+DATABASE_PASS=tilnede0x1182
+
+SERVER_ADDRESS=4100
+
+JWT_SECRET=henxlazhdkalnxehknkdhzqedjkhnzkxdjhnjkdxhnzklhdx
+
+
+# ./.env.example
+
+# ───────────────
+#  Base PostgreSQL
+# ───────────────
+DATABASE_URL=plant_shop_c         # nom de la base (pas d’URI)
+DATABASE_USER=            				# utilisateur SQL
+DATABASE_PASS=            				# mot de passe SQL
+
+# ───────────────
+#  HTTP serveur
+# ───────────────
+SERVER_ADDRESS=4100               # port exposé par Kore
+
+# ───────────────
+#  JWT / Sécurité
+# ───────────────
+JWT_SECRET=
+
+
+# ./CMakeLists.txt
+
+cmake_minimum_required(VERSION 3.20)
+project(plant_shop_c C)
+
+# ----------------------------------
+# Options globales
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+# ----------------------------------
+# Dépendances système (pkg-config)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBPQ REQUIRED libpq)
+pkg_check_modules(CJSON REQUIRED libcjson)
+pkg_check_modules(ARGON2 REQUIRED libargon2)
+pkg_check_modules(CURL REQUIRED libcurl)
+
+# Inclure les dépendances système
+include_directories(${LIBPQ_INCLUDE_DIRS} ${CJSON_INCLUDE_DIRS} ${ARGON2_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
+
+# Ajout du répertoire racine pour que les includes comme "routes.h" fonctionnent depuis les sous-dossiers
+include_directories(${CMAKE_SOURCE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/src)
+link_directories(${LIBPQ_LIBRARY_DIRS} ${CJSON_LIBRARY_DIRS} ${ARGON2_LIBRARY_DIRS} ${CURL_LIBRARY_DIRS})
+
+# ----------------------------------
+# Définition des bibliothèques communes
+set(COMMON_LIBS
+	${LIBPQ_LIBRARIES}
+	${CJSON_LIBRARIES}
+	${ARGON2_LIBRARIES}
+	pthread m ssl crypto z)
+
+# ----------------------------------
+# Sources du serveur principal
+# On inclut mongoose.c directement dans les sources du serveur
+file(GLOB_RECURSE SERVER_SOURCES
+	"src/main.c"
+	"src/mongoose/mongoose.c"
+	"routes.c"
+	"src/controllers/*.c"
+	"src/repository/*.c"
+	"src/utils/utils.c"
+	"src/utils/cors.c")
+
+add_executable(server ${SERVER_SOURCES})
+target_link_libraries(server ${COMMON_LIBS})
+
+install(TARGETS server DESTINATION bin)
+
+# ----------------------------------
+# Exécutable pour le seeding
+add_executable(seed_c db/seed.c)
+target_link_libraries(seed_c ${LIBPQ_LIBRARIES} ${ARGON2_LIBRARIES})
+
+# ----------------------------------
+# Exécutable pour les tests E2E
+add_executable(test_e2e_c test/test_e2e.c)
+target_link_libraries(test_e2e_c ${CURL_LIBRARIES} ${CJSON_LIBRARIES})
+
+
+# ./test/test_e2e.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <curl/curl.h>
+#include <cjson/cJSON.h>
+
+/*
+ * ======================================================
+ * 🧪 Tests End-to-End
+ * ======================================================
+ */
+
+#define BASE_URL "http://localhost:4100/api"
+#define ADMIN_EMAIL "admin1@planteshop.com"
+#define ADMIN_PASSWORD "password"
+
+// Contexte pour une session (admin ou user)
+typedef struct {
+    CURL *curl;
+    char cookie_jar[L_tmpnam];
+} TestSession;
+
+// Variables globales pour les sessions et le timestamp
+static TestSession admin_session;
+static TestSession user_session;
+static char timestamp_str[20];
+
+// ------------------------------------------------------
+// ⚙️ Utilitaires et Contexte de Test
+// ------------------------------------------------------
+
+// Buffer pour les réponses HTTP de cURL
+struct MemoryStruct {
+    char *memory;
+    size_t size;
+};
+
+static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if (!ptr) {
+        printf("Pas assez de mémoire (realloc a échoué)\n");
+        return 0;
+    }
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+    return realsize;
+}
+
+// Vérifie si le serveur est prêt
+int waitForServer(const char* host, unsigned short port, int timeout_ms) {
+    struct timespec start, now;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    long elapsed_ms;
+
+    do {
+        int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+        if (sockfd < 0) return 0;
+
+        struct sockaddr_in addr;
+        memset(&addr, 0, sizeof(addr));
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+        inet_pton(AF_INET, host, &addr.sin_addr);
+
+        int result = connect(sockfd, (struct sockaddr*)&addr, sizeof(addr));
+        close(sockfd);
+        if (result == 0) return 1;
+
+        usleep(100 * 1000); // 100ms
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        elapsed_ms = (now.tv_sec - start.tv_sec) * 1000 + (now.tv_nsec - start.tv_nsec) / 1000000;
+    } while (elapsed_ms < timeout_ms);
+
+    return 0;
+}
+
+
+// Initialise une session de test (contexte cURL avec cookies)
+void init_session(TestSession *session) {
+    session->curl = curl_easy_init();
+    if (!session->curl) {
+        fprintf(stderr, "Erreur: curl_easy_init() a échoué\n");
+        exit(1);
+    }
+    // Crée un nom de fichier temporaire pour le cookie jar
+    tmpnam(session->cookie_jar);
+    curl_easy_setopt(session->curl, CURLOPT_COOKIEJAR, session->cookie_jar);
+    curl_easy_setopt(session->curl, CURLOPT_COOKIEFILE, session->cookie_jar);
+}
+
+void cleanup_session(TestSession *session) {
+    curl_easy_cleanup(session->curl);
+    remove(session->cookie_jar); // Supprime le fichier de cookies
+}
+
+// Requête API générique
+cJSON* api_call(const char* who, const char* method, const char* path, int expected_status, const cJSON* body_json) {
+    TestSession *session = (strcmp(who, "admin") == 0) ? &admin_session : &user_session;
+    CURL *curl = session->curl;
+
+    char url[256];
+    snprintf(url, sizeof(url), "%s%s", BASE_URL, path);
+
+    struct MemoryStruct chunk = {0};
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
+
+    struct curl_slist *headers = NULL;
+    char *json_str = NULL;
+    if (body_json) {
+        json_str = cJSON_PrintUnformatted(body_json);
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_str);
+    } else {
+        // Pour les requêtes PATCH/POST sans corps
+        if (strcmp(method, "POST") == 0 || strcmp(method, "PATCH") == 0) {
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
+        }
+    }
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    CURLcode res = curl_easy_perform(curl);
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+
+    printf("%s %-7s%s [%ld]\n", (response_code == expected_status) ? "✅" : "❌", method, path, response_code);
+
+    if (res != CURLE_OK) {
+        fprintf(stderr, "curl_easy_perform() a échoué: %s\n", curl_easy_strerror(res));
+        exit(1);
+    }
+    if (response_code != expected_status) {
+        fprintf(stderr, "Erreur API: Attendu %d, reçu %ld. Réponse: %s\n", expected_status, response_code, chunk.memory ? chunk.memory : "vide");
+        exit(1);
+    }
+
+    cJSON *json_response = NULL;
+    if (chunk.memory && strlen(chunk.memory) > 0) {
+        json_response = cJSON_Parse(chunk.memory);
+        if (!json_response) {
+            fprintf(stderr, "Erreur de parsing JSON pour la réponse: %s\n", chunk.memory);
+        }
+    }
+
+    free(chunk.memory);
+    if (json_str) free(json_str);
+    if (headers) curl_slist_free_all(headers);
+
+    return json_response;
+}
+
+// ------------------------------------------------------
+// 🔎 Fonctions d'Assertion
+// ------------------------------------------------------
+
+void assert_is_number(cJSON* obj, const char* key) {
+    if (!cJSON_HasObjectItem(obj, key) || !cJSON_IsNumber(cJSON_GetObjectItem(obj, key))) {
+        fprintf(stderr, "Assertion échouée: la clé '%s' n'est pas un nombre ou est absente.\n", key);
+        exit(1);
+    }
+}
+
+void assert_eq_str(cJSON* obj, const char* key, const char* expected) {
+    cJSON* item = cJSON_GetObjectItem(obj, key);
+    int ok = item && cJSON_IsString(item) && strcmp(item->valuestring, expected) == 0;
+    printf("%s   ↳ %s=\"%s\" (attendu \"%s\")\n", ok ? "✅" : "❌", key, item ? item->valuestring : "NULL", expected);
+    if (!ok) exit(1);
+}
+
+void assert_eq_int(cJSON* obj, const char* key, int expected) {
+    cJSON* item = cJSON_GetObjectItem(obj, key);
+    int ok = item && cJSON_IsNumber(item) && item->valueint == expected;
+    printf("%s   ↳ %s=%d (attendu %d)\n", ok ? "✅" : "❌", key, item ? item->valueint : -1, expected);
+    if (!ok) exit(1);
+}
+
+void assert_eq_bool(cJSON* obj, const char* key, int expected) {
+    cJSON* item = cJSON_GetObjectItem(obj, key);
+    int ok = item && cJSON_IsBool(item) && cJSON_IsTrue(item) == expected;
+    printf("%s   ↳ %s=%s (attendu %s)\n", ok ? "✅" : "❌", key, cJSON_IsTrue(item) ? "true" : "false", expected ? "true" : "false");
+    if (!ok) exit(1);
+}
+
+// ------------------------------------------------------
+// 🧪 Modules de Test
+// ------------------------------------------------------
+
+void test_plants() {
+    printf("\n📌 TEST MODULE: PLANTS (admin)\n");
+    cJSON *plant_data = cJSON_CreateObject();
+    cJSON_AddStringToObject(plant_data, "name", "Test Plant C");
+    cJSON_AddNumberToObject(plant_data, "price", 10);
+    cJSON_AddNumberToObject(plant_data, "stock", 5);
+
+    cJSON *plant = api_call("admin", "POST", "/admin/plants", 201, plant_data);
+    assert_is_number(plant, "id");
+    int id = cJSON_GetObjectItem(plant, "id")->valueint;
+    cJSON_Delete(plant_data);
+    cJSON_Delete(plant);
+
+    char path[64];
+    snprintf(path, sizeof(path), "/plants/%d", id);
+    cJSON *get = api_call("admin", "GET", path, 200, NULL);
+    assert_eq_str(get, "name", "Test Plant C");
+    cJSON_Delete(get);
+
+    cJSON *price_update = cJSON_CreateObject();
+    cJSON_AddNumberToObject(price_update, "price", 15);
+    snprintf(path, sizeof(path), "/admin/plants/%d", id);
+    api_call("admin", "PATCH", path, 200, price_update);
+    cJSON_Delete(price_update);
+
+    snprintf(path, sizeof(path), "/plants/%d", id);
+    cJSON *check = api_call("admin", "GET", path, 200, NULL);
+    assert_eq_int(check, "price", 15);
+    cJSON_Delete(check);
+
+    snprintf(path, sizeof(path), "/admin/plants/%d", id);
+    api_call("admin", "DELETE", path, 200, NULL);
+}
+
+void test_users() {
+    printf("\n📌 TEST MODULE: USERS (admin)\n");
+    char email[64];
+    snprintf(email, sizeof(email), "utilisateur_test_c_%s@example.com", timestamp_str);
+
+    cJSON *user_data = cJSON_CreateObject();
+    cJSON_AddStringToObject(user_data, "email", email);
+    cJSON_AddStringToObject(user_data, "name", "Utilisateur de test C");
+    cJSON_AddStringToObject(user_data, "password", "pass123");
+
+    cJSON *user = api_call("admin", "POST", "/users", 201, user_data);
+    int id = cJSON_GetObjectItem(user, "id")->valueint;
+    cJSON_Delete(user_data);
+    cJSON_Delete(user);
+
+    cJSON *name_update = cJSON_CreateObject();
+    cJSON_AddStringToObject(name_update, "name", "Tester Update C");
+    char path[64];
+    snprintf(path, sizeof(path), "/users/%d", id);
+    api_call("admin", "PATCH", path, 200, name_update);
+    cJSON_Delete(name_update);
+
+    cJSON *get = api_call("admin", "GET", path, 200, NULL);
+    assert_eq_str(get, "name", "Tester Update C");
+    cJSON_Delete(get);
+
+    api_call("admin", "DELETE", path, 200, NULL);
+}
+
+void test_orders() {
+    printf("\n📌 TEST MODULE: ORDERS & ORDER ITEMS\n");
+    char plant_name[64];
+    snprintf(plant_name, sizeof(plant_name), "Plante_de_test_c_%s", timestamp_str);
+
+    cJSON *plant_data = cJSON_CreateObject();
+    cJSON_AddStringToObject(plant_data, "name", plant_name);
+    cJSON_AddNumberToObject(plant_data, "price", 10);
+    cJSON_AddNumberToObject(plant_data, "stock", 5);
+    cJSON *plant = api_call("admin", "POST", "/admin/plants", 201, plant_data);
+    int pid = cJSON_GetObjectItem(plant, "id")->valueint;
+    cJSON_Delete(plant_data);
+    cJSON_Delete(plant);
+
+    cJSON *order_data = cJSON_CreateObject();
+    cJSON *items_array = cJSON_AddArrayToObject(order_data, "items");
+    cJSON *item = cJSON_CreateObject();
+    cJSON_AddNumberToObject(item, "plantId", pid);
+    cJSON_AddNumberToObject(item, "quantity", 2);
+    cJSON_AddItemToArray(items_array, item);
+
+    cJSON *order = api_call("user", "POST", "/orders", 201, order_data);
+    int oid = cJSON_GetObjectItem(order, "id")->valueint;
+    cJSON_Delete(order_data);
+    cJSON_Delete(order);
+
+    cJSON *status_update = cJSON_CreateObject();
+    cJSON_AddStringToObject(status_update, "status", "shipped");
+    char path[64];
+    snprintf(path, sizeof(path), "/orders/%d", oid);
+    api_call("admin", "PATCH", path, 200, status_update);
+    cJSON_Delete(status_update);
+
+    cJSON *list = api_call("user", "GET", "/orders", 200, NULL);
+    cJSON *found = NULL;
+    cJSON *o;
+    cJSON_ArrayForEach(o, list) {
+        if (cJSON_GetObjectItem(o, "id")->valueint == oid) {
+            found = o;
+            break;
+        }
+    }
+    if (!found) { fprintf(stderr, "Commande non trouvée dans la liste\n"); exit(1); }
+    assert_eq_str(found, "status", "shipped");
+    cJSON_Delete(list);
+
+    // Cleanup
+    snprintf(path, sizeof(path), "/orders/%d", oid);
+    api_call("admin", "DELETE", path, 200, NULL);
+    snprintf(path, sizeof(path), "/admin/plants/%d", pid);
+    api_call("admin", "DELETE", path, 200, NULL);
+}
+
+/* ------------------------------------------------------------------
+ * 👤  USER PROFILE
+ * ------------------------------------------------------------------*/
+void test_user_profile(const char* user_email) {
+	printf("\n📌 TEST MODULE: USER PROFILE (user)\n");
+	cJSON *users = api_call("admin", "GET", "/users", 200, NULL);
+	cJSON *u = NULL, *cur;
+	cJSON_ArrayForEach(cur, users) {
+		cJSON *e = cJSON_GetObjectItem(cur, "email");
+		if (e && cJSON_IsString(e) && strcmp(e->valuestring, user_email) == 0) { u = cur; break; }
+	}
+	if (!u) { fprintf(stderr, "Utilisateur introuvable\n"); exit(1); }
+	int uid = cJSON_GetObjectItem(u, "id")->valueint;
+	char path[64]; snprintf(path, sizeof(path), "/users/%d", uid);
+	cJSON *profile = api_call("user", "GET", path, 200, NULL);
+	assert_eq_int(profile, "id", uid); cJSON_Delete(profile);
+
+	char new_name[64]; snprintf(new_name, sizeof(new_name), "Utilisateur_de_test_c_%s", timestamp_str);
+	cJSON *name_upd = cJSON_CreateObject(); cJSON_AddStringToObject(name_upd, "name", new_name);
+	api_call("user", "PATCH", path, 200, name_upd); cJSON_Delete(name_upd);
+
+	cJSON *updated = api_call("user", "GET", path, 200, NULL);
+	assert_eq_str(updated, "name", new_name); cJSON_Delete(updated);
+
+	cJSON *adm_upd = cJSON_CreateObject(); cJSON_AddBoolToObject(adm_upd, "admin", 1);
+	api_call("user", "PATCH", path, 200, adm_upd); cJSON_Delete(adm_upd);
+
+	cJSON *check = api_call("admin", "GET", path, 200, NULL);
+	assert_eq_bool(check, "admin", 0); cJSON_Delete(check); cJSON_Delete(users);
+}
+
+/* ------------------------------------------------------------------
+ * 🌿  ADMIN / PLANTS
+ * ------------------------------------------------------------------*/
+void test_admin_plants() {
+	printf("\n📌 TEST MODULE: ADMIN PLANTS\n");
+	cJSON *list = api_call("admin", "GET", "/admin/plants", 200, NULL);
+	printf("   ↳ %d plantes récupérées\n", cJSON_GetArraySize(list)); cJSON_Delete(list);
+
+	char plant_name[64]; snprintf(plant_name, sizeof(plant_name), "Plante_admin_c_%s", timestamp_str);
+	cJSON *data = cJSON_CreateObject(); cJSON_AddStringToObject(data, "name", plant_name);
+	cJSON_AddNumberToObject(data, "price", 99); cJSON_AddNumberToObject(data, "stock", 12);
+	cJSON *p = api_call("admin", "POST", "/admin/plants", 201, data); int pid = cJSON_GetObjectItem(p, "id")->valueint;
+	cJSON_Delete(data); cJSON_Delete(p);
+
+	char path[64]; snprintf(path, sizeof(path), "/admin/plants/%d", pid);
+	cJSON *upd = cJSON_CreateObject(); cJSON_AddNumberToObject(upd, "price", 123);
+	api_call("admin", "PATCH", path, 200, upd); cJSON_Delete(upd);
+	api_call("admin", "DELETE", path, 200, NULL);
+}
+
+/* ------------------------------------------------------------------
+ * 👥  ADMIN / USERS
+ * ------------------------------------------------------------------*/
+void test_admin_users() {
+	printf("\n📌 TEST MODULE: ADMIN USERS\n");
+	char email[64]; snprintf(email, sizeof(email), "admin_temp_c_%s@example.com", timestamp_str);
+	char nom[64]; snprintf(nom, sizeof(nom), "Admin Temporaire %s", timestamp_str);
+
+	cJSON *data = cJSON_CreateObject();
+	cJSON_AddStringToObject(data, "email", email); cJSON_AddStringToObject(data, "name", nom);
+	cJSON_AddStringToObject(data, "password", "password"); cJSON_AddBoolToObject(data, "admin", 1);
+	cJSON *tmp = api_call("admin", "POST", "/users", 201, data);
+	int uid = cJSON_GetObjectItem(tmp, "id")->valueint; cJSON_Delete(data); cJSON_Delete(tmp);
+
+	cJSON *list = api_call("admin", "GET", "/admin/users", 200, NULL);
+	cJSON *found = NULL, *u; cJSON_ArrayForEach(u, list) {
+		cJSON *e = cJSON_GetObjectItem(u, "email");
+		if (e && strcmp(e->valuestring, email) == 0) { found = u; break; }
+	}
+	if (!found) { fprintf(stderr, "Admin temporaire introuvable\n"); exit(1); }
+	assert_eq_str(found, "name", nom); cJSON_Delete(list);
+
+	char new_nom[64]; snprintf(new_nom, sizeof(new_nom), "Admin_temp_modifié_%s", timestamp_str);
+	cJSON *name_upd = cJSON_CreateObject(); cJSON_AddStringToObject(name_upd, "name", new_nom);
+	char path[64]; snprintf(path, sizeof(path), "/users/%d", uid);
+	api_call("admin", "PATCH", path, 200, name_upd); cJSON_Delete(name_upd);
+
+	cJSON *user_get = api_call("admin", "GET", path, 200, NULL);
+	assert_eq_str(user_get, "name", new_nom); cJSON_Delete(user_get);
+	api_call("admin", "DELETE", path, 200, NULL);
+}
+
+void test_auth_roles() {
+    printf("\n📌 TEST MODULE: ROLES\n");
+    cJSON *bad_plant = cJSON_CreateObject();
+    cJSON_AddStringToObject(bad_plant, "name", "Bad Plant");
+    cJSON_AddNumberToObject(bad_plant, "price", 1);
+    cJSON_AddNumberToObject(bad_plant, "stock", 1);
+    api_call("user", "POST", "/admin/plants", 403, bad_plant);
+    cJSON_Delete(bad_plant);
+
+    api_call("user", "GET", "/users", 403, NULL);
+}
+
+void test_auth_me(const char* user_email, const char* user_name) {
+    printf("\n📌 TEST MODULE: AUTH /me\n");
+    cJSON *me = api_call("user", "GET", "/auth/me", 200, NULL);
+    assert_eq_str(me, "email", user_email);
+    assert_eq_str(me, "name", user_name);
+    printf("   ↳ Utilisateur connecté: %s (%s)\n", user_email, user_name);
+    cJSON_Delete(me);
+}
+
+
+// ------------------------------------------------------
+// 🚀 Exécution Principale
+// ------------------------------------------------------
+int main(void) {
+    if (!waitForServer("127.0.0.1", 4100, 5000)) {
+        fprintf(stderr, "❌ Serveur http://localhost:4100 injoignable.\n");
+        return 2;
+    }
+
+    curl_global_init(CURL_GLOBAL_ALL);
+    init_session(&admin_session);
+    init_session(&user_session);
+
+    // Génération du timestamp unique
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+    strftime(timestamp_str, sizeof(timestamp_str), "%Y%m%d%H%M%S", tm);
+
+    char user_email[64];
+    snprintf(user_email, sizeof(user_email), "user_c_%s@example.com", timestamp_str);
+    const char* user_name = "User C";
+    const char* user_password = "password123";
+
+    printf("🧪 Démarrage des tests C: %s\n\n", BASE_URL);
+
+    // --- Séquence d'initialisation ---
+    cJSON *login_payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(login_payload, "email", ADMIN_EMAIL);
+    cJSON_AddStringToObject(login_payload, "password", ADMIN_PASSWORD);
+    api_call("admin", "POST", "/auth/login", 201, login_payload);
+    cJSON_Delete(login_payload);
+
+    cJSON *register_payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(register_payload, "name", user_name);
+    cJSON_AddStringToObject(register_payload, "email", user_email);
+    cJSON_AddStringToObject(register_payload, "password", user_password);
+    api_call("user", "POST", "/auth/register", 201, register_payload);
+
+    api_call("user", "POST", "/auth/login", 201, register_payload);
+    cJSON_Delete(register_payload);
+
+    // --- Exécution des tests ---
+    test_plants();
+    test_users();
+    test_orders();
+    test_user_profile(user_email);
+    test_auth_roles();
+    test_admin_plants();
+    test_admin_users();
+    test_auth_me(user_email, user_name);
+
+
+    // --- Nettoyage ---
+    cleanup_session(&admin_session);
+    cleanup_session(&user_session);
+    curl_global_cleanup();
+
+    printf("\n🎉 Tous les tests C ont réussi!\n");
+    return 0;
+}
+
+
+# ./build/CMakeFiles/3.28.3/CompilerIdC/CMakeCCompilerId.c
+
+#ifdef __cplusplus
+# error "A C++ compiler has been selected for C."
+#endif
+
+#if defined(__18CXX)
+# define ID_VOID_MAIN
+#endif
+#if defined(__CLASSIC_C__)
+/* cv-qualifiers did not exist in K&R C */
+# define const
+# define volatile
+#endif
+
+#if !defined(__has_include)
+/* If the compiler does not have __has_include, pretend the answer is
+   always no.  */
+#  define __has_include(x) 0
+#endif
+
+
+/* Version number components: V=Version, R=Revision, P=Patch
+   Version date components:   YYYY=Year, MM=Month,   DD=Day  */
+
+#if defined(__INTEL_COMPILER) || defined(__ICC)
+# define COMPILER_ID "Intel"
+# if defined(_MSC_VER)
+#  define SIMULATE_ID "MSVC"
+# endif
+# if defined(__GNUC__)
+#  define SIMULATE_ID "GNU"
+# endif
+  /* __INTEL_COMPILER = VRP prior to 2021, and then VVVV for 2021 and later,
+     except that a few beta releases use the old format with V=2021.  */
+# if __INTEL_COMPILER < 2021 || __INTEL_COMPILER == 202110 || __INTEL_COMPILER == 202111
+#  define COMPILER_VERSION_MAJOR DEC(__INTEL_COMPILER/100)
+#  define COMPILER_VERSION_MINOR DEC(__INTEL_COMPILER/10 % 10)
+#  if defined(__INTEL_COMPILER_UPDATE)
+#   define COMPILER_VERSION_PATCH DEC(__INTEL_COMPILER_UPDATE)
+#  else
+#   define COMPILER_VERSION_PATCH DEC(__INTEL_COMPILER   % 10)
+#  endif
+# else
+#  define COMPILER_VERSION_MAJOR DEC(__INTEL_COMPILER)
+#  define COMPILER_VERSION_MINOR DEC(__INTEL_COMPILER_UPDATE)
+   /* The third version component from --version is an update index,
+      but no macro is provided for it.  */
+#  define COMPILER_VERSION_PATCH DEC(0)
+# endif
+# if defined(__INTEL_COMPILER_BUILD_DATE)
+   /* __INTEL_COMPILER_BUILD_DATE = YYYYMMDD */
+#  define COMPILER_VERSION_TWEAK DEC(__INTEL_COMPILER_BUILD_DATE)
+# endif
+# if defined(_MSC_VER)
+   /* _MSC_VER = VVRR */
+#  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+#  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+# endif
+# if defined(__GNUC__)
+#  define SIMULATE_VERSION_MAJOR DEC(__GNUC__)
+# elif defined(__GNUG__)
+#  define SIMULATE_VERSION_MAJOR DEC(__GNUG__)
+# endif
+# if defined(__GNUC_MINOR__)
+#  define SIMULATE_VERSION_MINOR DEC(__GNUC_MINOR__)
+# endif
+# if defined(__GNUC_PATCHLEVEL__)
+#  define SIMULATE_VERSION_PATCH DEC(__GNUC_PATCHLEVEL__)
+# endif
+
+#elif (defined(__clang__) && defined(__INTEL_CLANG_COMPILER)) || defined(__INTEL_LLVM_COMPILER)
+# define COMPILER_ID "IntelLLVM"
+#if defined(_MSC_VER)
+# define SIMULATE_ID "MSVC"
+#endif
+#if defined(__GNUC__)
+# define SIMULATE_ID "GNU"
+#endif
+/* __INTEL_LLVM_COMPILER = VVVVRP prior to 2021.2.0, VVVVRRPP for 2021.2.0 and
+ * later.  Look for 6 digit vs. 8 digit version number to decide encoding.
+ * VVVV is no smaller than the current year when a version is released.
+ */
+#if __INTEL_LLVM_COMPILER < 1000000L
+# define COMPILER_VERSION_MAJOR DEC(__INTEL_LLVM_COMPILER/100)
+# define COMPILER_VERSION_MINOR DEC(__INTEL_LLVM_COMPILER/10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__INTEL_LLVM_COMPILER    % 10)
+#else
+# define COMPILER_VERSION_MAJOR DEC(__INTEL_LLVM_COMPILER/10000)
+# define COMPILER_VERSION_MINOR DEC(__INTEL_LLVM_COMPILER/100 % 100)
+# define COMPILER_VERSION_PATCH DEC(__INTEL_LLVM_COMPILER     % 100)
+#endif
+#if defined(_MSC_VER)
+  /* _MSC_VER = VVRR */
+# define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+# define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+#endif
+#if defined(__GNUC__)
+# define SIMULATE_VERSION_MAJOR DEC(__GNUC__)
+#elif defined(__GNUG__)
+# define SIMULATE_VERSION_MAJOR DEC(__GNUG__)
+#endif
+#if defined(__GNUC_MINOR__)
+# define SIMULATE_VERSION_MINOR DEC(__GNUC_MINOR__)
+#endif
+#if defined(__GNUC_PATCHLEVEL__)
+# define SIMULATE_VERSION_PATCH DEC(__GNUC_PATCHLEVEL__)
+#endif
+
+#elif defined(__PATHCC__)
+# define COMPILER_ID "PathScale"
+# define COMPILER_VERSION_MAJOR DEC(__PATHCC__)
+# define COMPILER_VERSION_MINOR DEC(__PATHCC_MINOR__)
+# if defined(__PATHCC_PATCHLEVEL__)
+#  define COMPILER_VERSION_PATCH DEC(__PATHCC_PATCHLEVEL__)
+# endif
+
+#elif defined(__BORLANDC__) && defined(__CODEGEARC_VERSION__)
+# define COMPILER_ID "Embarcadero"
+# define COMPILER_VERSION_MAJOR HEX(__CODEGEARC_VERSION__>>24 & 0x00FF)
+# define COMPILER_VERSION_MINOR HEX(__CODEGEARC_VERSION__>>16 & 0x00FF)
+# define COMPILER_VERSION_PATCH DEC(__CODEGEARC_VERSION__     & 0xFFFF)
+
+#elif defined(__BORLANDC__)
+# define COMPILER_ID "Borland"
+  /* __BORLANDC__ = 0xVRR */
+# define COMPILER_VERSION_MAJOR HEX(__BORLANDC__>>8)
+# define COMPILER_VERSION_MINOR HEX(__BORLANDC__ & 0xFF)
+
+#elif defined(__WATCOMC__) && __WATCOMC__ < 1200
+# define COMPILER_ID "Watcom"
+   /* __WATCOMC__ = VVRR */
+# define COMPILER_VERSION_MAJOR DEC(__WATCOMC__ / 100)
+# define COMPILER_VERSION_MINOR DEC((__WATCOMC__ / 10) % 10)
+# if (__WATCOMC__ % 10) > 0
+#  define COMPILER_VERSION_PATCH DEC(__WATCOMC__ % 10)
+# endif
+
+#elif defined(__WATCOMC__)
+# define COMPILER_ID "OpenWatcom"
+   /* __WATCOMC__ = VVRP + 1100 */
+# define COMPILER_VERSION_MAJOR DEC((__WATCOMC__ - 1100) / 100)
+# define COMPILER_VERSION_MINOR DEC((__WATCOMC__ / 10) % 10)
+# if (__WATCOMC__ % 10) > 0
+#  define COMPILER_VERSION_PATCH DEC(__WATCOMC__ % 10)
+# endif
+
+#elif defined(__SUNPRO_C)
+# define COMPILER_ID "SunPro"
+# if __SUNPRO_C >= 0x5100
+   /* __SUNPRO_C = 0xVRRP */
+#  define COMPILER_VERSION_MAJOR HEX(__SUNPRO_C>>12)
+#  define COMPILER_VERSION_MINOR HEX(__SUNPRO_C>>4 & 0xFF)
+#  define COMPILER_VERSION_PATCH HEX(__SUNPRO_C    & 0xF)
+# else
+   /* __SUNPRO_CC = 0xVRP */
+#  define COMPILER_VERSION_MAJOR HEX(__SUNPRO_C>>8)
+#  define COMPILER_VERSION_MINOR HEX(__SUNPRO_C>>4 & 0xF)
+#  define COMPILER_VERSION_PATCH HEX(__SUNPRO_C    & 0xF)
+# endif
+
+#elif defined(__HP_cc)
+# define COMPILER_ID "HP"
+  /* __HP_cc = VVRRPP */
+# define COMPILER_VERSION_MAJOR DEC(__HP_cc/10000)
+# define COMPILER_VERSION_MINOR DEC(__HP_cc/100 % 100)
+# define COMPILER_VERSION_PATCH DEC(__HP_cc     % 100)
+
+#elif defined(__DECC)
+# define COMPILER_ID "Compaq"
+  /* __DECC_VER = VVRRTPPPP */
+# define COMPILER_VERSION_MAJOR DEC(__DECC_VER/10000000)
+# define COMPILER_VERSION_MINOR DEC(__DECC_VER/100000  % 100)
+# define COMPILER_VERSION_PATCH DEC(__DECC_VER         % 10000)
+
+#elif defined(__IBMC__) && defined(__COMPILER_VER__)
+# define COMPILER_ID "zOS"
+  /* __IBMC__ = VRP */
+# define COMPILER_VERSION_MAJOR DEC(__IBMC__/100)
+# define COMPILER_VERSION_MINOR DEC(__IBMC__/10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__IBMC__    % 10)
+
+#elif defined(__open_xl__) && defined(__clang__)
+# define COMPILER_ID "IBMClang"
+# define COMPILER_VERSION_MAJOR DEC(__open_xl_version__)
+# define COMPILER_VERSION_MINOR DEC(__open_xl_release__)
+# define COMPILER_VERSION_PATCH DEC(__open_xl_modification__)
+# define COMPILER_VERSION_TWEAK DEC(__open_xl_ptf_fix_level__)
+
+
+#elif defined(__ibmxl__) && defined(__clang__)
+# define COMPILER_ID "XLClang"
+# define COMPILER_VERSION_MAJOR DEC(__ibmxl_version__)
+# define COMPILER_VERSION_MINOR DEC(__ibmxl_release__)
+# define COMPILER_VERSION_PATCH DEC(__ibmxl_modification__)
+# define COMPILER_VERSION_TWEAK DEC(__ibmxl_ptf_fix_level__)
+
+
+#elif defined(__IBMC__) && !defined(__COMPILER_VER__) && __IBMC__ >= 800
+# define COMPILER_ID "XL"
+  /* __IBMC__ = VRP */
+# define COMPILER_VERSION_MAJOR DEC(__IBMC__/100)
+# define COMPILER_VERSION_MINOR DEC(__IBMC__/10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__IBMC__    % 10)
+
+#elif defined(__IBMC__) && !defined(__COMPILER_VER__) && __IBMC__ < 800
+# define COMPILER_ID "VisualAge"
+  /* __IBMC__ = VRP */
+# define COMPILER_VERSION_MAJOR DEC(__IBMC__/100)
+# define COMPILER_VERSION_MINOR DEC(__IBMC__/10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__IBMC__    % 10)
+
+#elif defined(__NVCOMPILER)
+# define COMPILER_ID "NVHPC"
+# define COMPILER_VERSION_MAJOR DEC(__NVCOMPILER_MAJOR__)
+# define COMPILER_VERSION_MINOR DEC(__NVCOMPILER_MINOR__)
+# if defined(__NVCOMPILER_PATCHLEVEL__)
+#  define COMPILER_VERSION_PATCH DEC(__NVCOMPILER_PATCHLEVEL__)
+# endif
+
+#elif defined(__PGI)
+# define COMPILER_ID "PGI"
+# define COMPILER_VERSION_MAJOR DEC(__PGIC__)
+# define COMPILER_VERSION_MINOR DEC(__PGIC_MINOR__)
+# if defined(__PGIC_PATCHLEVEL__)
+#  define COMPILER_VERSION_PATCH DEC(__PGIC_PATCHLEVEL__)
+# endif
+
+#elif defined(__clang__) && defined(__cray__)
+# define COMPILER_ID "CrayClang"
+# define COMPILER_VERSION_MAJOR DEC(__cray_major__)
+# define COMPILER_VERSION_MINOR DEC(__cray_minor__)
+# define COMPILER_VERSION_PATCH DEC(__cray_patchlevel__)
+# define COMPILER_VERSION_INTERNAL_STR __clang_version__
+
+
+#elif defined(_CRAYC)
+# define COMPILER_ID "Cray"
+# define COMPILER_VERSION_MAJOR DEC(_RELEASE_MAJOR)
+# define COMPILER_VERSION_MINOR DEC(_RELEASE_MINOR)
+
+#elif defined(__TI_COMPILER_VERSION__)
+# define COMPILER_ID "TI"
+  /* __TI_COMPILER_VERSION__ = VVVRRRPPP */
+# define COMPILER_VERSION_MAJOR DEC(__TI_COMPILER_VERSION__/1000000)
+# define COMPILER_VERSION_MINOR DEC(__TI_COMPILER_VERSION__/1000   % 1000)
+# define COMPILER_VERSION_PATCH DEC(__TI_COMPILER_VERSION__        % 1000)
+
+#elif defined(__CLANG_FUJITSU)
+# define COMPILER_ID "FujitsuClang"
+# define COMPILER_VERSION_MAJOR DEC(__FCC_major__)
+# define COMPILER_VERSION_MINOR DEC(__FCC_minor__)
+# define COMPILER_VERSION_PATCH DEC(__FCC_patchlevel__)
+# define COMPILER_VERSION_INTERNAL_STR __clang_version__
+
+
+#elif defined(__FUJITSU)
+# define COMPILER_ID "Fujitsu"
+# if defined(__FCC_version__)
+#   define COMPILER_VERSION __FCC_version__
+# elif defined(__FCC_major__)
+#   define COMPILER_VERSION_MAJOR DEC(__FCC_major__)
+#   define COMPILER_VERSION_MINOR DEC(__FCC_minor__)
+#   define COMPILER_VERSION_PATCH DEC(__FCC_patchlevel__)
+# endif
+# if defined(__fcc_version)
+#   define COMPILER_VERSION_INTERNAL DEC(__fcc_version)
+# elif defined(__FCC_VERSION)
+#   define COMPILER_VERSION_INTERNAL DEC(__FCC_VERSION)
+# endif
+
+
+#elif defined(__ghs__)
+# define COMPILER_ID "GHS"
+/* __GHS_VERSION_NUMBER = VVVVRP */
+# ifdef __GHS_VERSION_NUMBER
+# define COMPILER_VERSION_MAJOR DEC(__GHS_VERSION_NUMBER / 100)
+# define COMPILER_VERSION_MINOR DEC(__GHS_VERSION_NUMBER / 10 % 10)
+# define COMPILER_VERSION_PATCH DEC(__GHS_VERSION_NUMBER      % 10)
+# endif
+
+#elif defined(__TASKING__)
+# define COMPILER_ID "Tasking"
+  # define COMPILER_VERSION_MAJOR DEC(__VERSION__/1000)
+  # define COMPILER_VERSION_MINOR DEC(__VERSION__ % 100)
+# define COMPILER_VERSION_INTERNAL DEC(__VERSION__)
+
+#elif defined(__ORANGEC__)
+# define COMPILER_ID "OrangeC"
+# define COMPILER_VERSION_MAJOR DEC(__ORANGEC_MAJOR__)
+# define COMPILER_VERSION_MINOR DEC(__ORANGEC_MINOR__)
+# define COMPILER_VERSION_PATCH DEC(__ORANGEC_PATCHLEVEL__)
+
+#elif defined(__TINYC__)
+# define COMPILER_ID "TinyCC"
+
+#elif defined(__BCC__)
+# define COMPILER_ID "Bruce"
+
+#elif defined(__SCO_VERSION__)
+# define COMPILER_ID "SCO"
+
+#elif defined(__ARMCC_VERSION) && !defined(__clang__)
+# define COMPILER_ID "ARMCC"
+#if __ARMCC_VERSION >= 1000000
+  /* __ARMCC_VERSION = VRRPPPP */
+  # define COMPILER_VERSION_MAJOR DEC(__ARMCC_VERSION/1000000)
+  # define COMPILER_VERSION_MINOR DEC(__ARMCC_VERSION/10000 % 100)
+  # define COMPILER_VERSION_PATCH DEC(__ARMCC_VERSION     % 10000)
+#else
+  /* __ARMCC_VERSION = VRPPPP */
+  # define COMPILER_VERSION_MAJOR DEC(__ARMCC_VERSION/100000)
+  # define COMPILER_VERSION_MINOR DEC(__ARMCC_VERSION/10000 % 10)
+  # define COMPILER_VERSION_PATCH DEC(__ARMCC_VERSION    % 10000)
+#endif
+
+
+#elif defined(__clang__) && defined(__apple_build_version__)
+# define COMPILER_ID "AppleClang"
+# if defined(_MSC_VER)
+#  define SIMULATE_ID "MSVC"
+# endif
+# define COMPILER_VERSION_MAJOR DEC(__clang_major__)
+# define COMPILER_VERSION_MINOR DEC(__clang_minor__)
+# define COMPILER_VERSION_PATCH DEC(__clang_patchlevel__)
+# if defined(_MSC_VER)
+   /* _MSC_VER = VVRR */
+#  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+#  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+# endif
+# define COMPILER_VERSION_TWEAK DEC(__apple_build_version__)
+
+#elif defined(__clang__) && defined(__ARMCOMPILER_VERSION)
+# define COMPILER_ID "ARMClang"
+  # define COMPILER_VERSION_MAJOR DEC(__ARMCOMPILER_VERSION/1000000)
+  # define COMPILER_VERSION_MINOR DEC(__ARMCOMPILER_VERSION/10000 % 100)
+  # define COMPILER_VERSION_PATCH DEC(__ARMCOMPILER_VERSION/100   % 100)
+# define COMPILER_VERSION_INTERNAL DEC(__ARMCOMPILER_VERSION)
+
+#elif defined(__clang__)
+# define COMPILER_ID "Clang"
+# if defined(_MSC_VER)
+#  define SIMULATE_ID "MSVC"
+# endif
+# define COMPILER_VERSION_MAJOR DEC(__clang_major__)
+# define COMPILER_VERSION_MINOR DEC(__clang_minor__)
+# define COMPILER_VERSION_PATCH DEC(__clang_patchlevel__)
+# if defined(_MSC_VER)
+   /* _MSC_VER = VVRR */
+#  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)
+#  define SIMULATE_VERSION_MINOR DEC(_MSC_VER % 100)
+# endif
+
+#elif defined(__LCC__) && (defined(__GNUC__) || defined(__GNUG__) || defined(__MCST__))
+# define COMPILER_ID "LCC"
+# define COMPILER_VERSION_MAJOR DEC(__LCC__ / 100)
+# define COMPILER_VERSION_MINOR DEC(__LCC__ % 100)
+# if defined(__LCC_MINOR__)
+#  define COMPILER_VERSION_PATCH DEC(__LCC_MINOR__)
+# endif
+# if defined(__GNUC__) && defined(__GNUC_MINOR__)
+#  define SIMULATE_ID "GNU"
+#  define SIMULATE_VERSION_MAJOR DEC(__GNUC__)
+#  define SIMULATE_VERSION_MINOR DEC(__GNUC_MINOR__)
+#  if defined(__GNUC_PATCHLEVEL__)
+#   define SIMULATE_VERSION_PATCH DEC(__GNUC_PATCHLEVEL__)
+#  endif
+# endif
+
+#elif defined(__GNUC__)
+# define COMPILER_ID "GNU"
+# define COMPILER_VERSION_MAJOR DEC(__GNUC__)
+# if defined(__GNUC_MINOR__)
+#  define COMPILER_VERSION_MINOR DEC(__GNUC_MINOR__)
+# endif
+# if defined(__GNUC_PATCHLEVEL__)
+#  define COMPILER_VERSION_PATCH DEC(__GNUC_PATCHLEVEL__)
+# endif
+
+#elif defined(_MSC_VER)
+# define COMPILER_ID "MSVC"
+  /* _MSC_VER = VVRR */
+# define COMPILER_VERSION_MAJOR DEC(_MSC_VER / 100)
+# define COMPILER_VERSION_MINOR DEC(_MSC_VER % 100)
+# if defined(_MSC_FULL_VER)
+#  if _MSC_VER >= 1400
+    /* _MSC_FULL_VER = VVRRPPPPP */
+#   define COMPILER_VERSION_PATCH DEC(_MSC_FULL_VER % 100000)
+#  else
+    /* _MSC_FULL_VER = VVRRPPPP */
+#   define COMPILER_VERSION_PATCH DEC(_MSC_FULL_VER % 10000)
+#  endif
+# endif
+# if defined(_MSC_BUILD)
+#  define COMPILER_VERSION_TWEAK DEC(_MSC_BUILD)
+# endif
+
+#elif defined(_ADI_COMPILER)
+# define COMPILER_ID "ADSP"
+#if defined(__VERSIONNUM__)
+  /* __VERSIONNUM__ = 0xVVRRPPTT */
+#  define COMPILER_VERSION_MAJOR DEC(__VERSIONNUM__ >> 24 & 0xFF)
+#  define COMPILER_VERSION_MINOR DEC(__VERSIONNUM__ >> 16 & 0xFF)
+#  define COMPILER_VERSION_PATCH DEC(__VERSIONNUM__ >> 8 & 0xFF)
+#  define COMPILER_VERSION_TWEAK DEC(__VERSIONNUM__ & 0xFF)
+#endif
+
+#elif defined(__IAR_SYSTEMS_ICC__) || defined(__IAR_SYSTEMS_ICC)
+# define COMPILER_ID "IAR"
+# if defined(__VER__) && defined(__ICCARM__)
+#  define COMPILER_VERSION_MAJOR DEC((__VER__) / 1000000)
+#  define COMPILER_VERSION_MINOR DEC(((__VER__) / 1000) % 1000)
+#  define COMPILER_VERSION_PATCH DEC((__VER__) % 1000)
+#  define COMPILER_VERSION_INTERNAL DEC(__IAR_SYSTEMS_ICC__)
+# elif defined(__VER__) && (defined(__ICCAVR__) || defined(__ICCRX__) || defined(__ICCRH850__) || defined(__ICCRL78__) || defined(__ICC430__) || defined(__ICCRISCV__) || defined(__ICCV850__) || defined(__ICC8051__) || defined(__ICCSTM8__))
+#  define COMPILER_VERSION_MAJOR DEC((__VER__) / 100)
+#  define COMPILER_VERSION_MINOR DEC((__VER__) - (((__VER__) / 100)*100))
+#  define COMPILER_VERSION_PATCH DEC(__SUBVERSION__)
+#  define COMPILER_VERSION_INTERNAL DEC(__IAR_SYSTEMS_ICC__)
+# endif
+
+#elif defined(__SDCC_VERSION_MAJOR) || defined(SDCC)
+# define COMPILER_ID "SDCC"
+# if defined(__SDCC_VERSION_MAJOR)
+#  define COMPILER_VERSION_MAJOR DEC(__SDCC_VERSION_MAJOR)
+#  define COMPILER_VERSION_MINOR DEC(__SDCC_VERSION_MINOR)
+#  define COMPILER_VERSION_PATCH DEC(__SDCC_VERSION_PATCH)
+# else
+  /* SDCC = VRP */
+#  define COMPILER_VERSION_MAJOR DEC(SDCC/100)
+#  define COMPILER_VERSION_MINOR DEC(SDCC/10 % 10)
+#  define COMPILER_VERSION_PATCH DEC(SDCC    % 10)
+# endif
+
+
+/* These compilers are either not known or too old to define an
+  identification macro.  Try to identify the platform and guess that
+  it is the native compiler.  */
+#elif defined(__hpux) || defined(__hpua)
+# define COMPILER_ID "HP"
+
+#else /* unknown compiler */
+# define COMPILER_ID ""
+#endif
+
+/* Construct the string literal in pieces to prevent the source from
+   getting matched.  Store it in a pointer rather than an array
+   because some compilers will just produce instructions to fill the
+   array rather than assigning a pointer to a static array.  */
+char const* info_compiler = "INFO" ":" "compiler[" COMPILER_ID "]";
+#ifdef SIMULATE_ID
+char const* info_simulate = "INFO" ":" "simulate[" SIMULATE_ID "]";
+#endif
+
+#ifdef __QNXNTO__
+char const* qnxnto = "INFO" ":" "qnxnto[]";
+#endif
+
+#if defined(__CRAYXT_COMPUTE_LINUX_TARGET)
+char const *info_cray = "INFO" ":" "compiler_wrapper[CrayPrgEnv]";
+#endif
+
+#define STRINGIFY_HELPER(X) #X
+#define STRINGIFY(X) STRINGIFY_HELPER(X)
+
+/* Identify known platforms by name.  */
+#if defined(__linux) || defined(__linux__) || defined(linux)
+# define PLATFORM_ID "Linux"
+
+#elif defined(__MSYS__)
+# define PLATFORM_ID "MSYS"
+
+#elif defined(__CYGWIN__)
+# define PLATFORM_ID "Cygwin"
+
+#elif defined(__MINGW32__)
+# define PLATFORM_ID "MinGW"
+
+#elif defined(__APPLE__)
+# define PLATFORM_ID "Darwin"
+
+#elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
+# define PLATFORM_ID "Windows"
+
+#elif defined(__FreeBSD__) || defined(__FreeBSD)
+# define PLATFORM_ID "FreeBSD"
+
+#elif defined(__NetBSD__) || defined(__NetBSD)
+# define PLATFORM_ID "NetBSD"
+
+#elif defined(__OpenBSD__) || defined(__OPENBSD)
+# define PLATFORM_ID "OpenBSD"
+
+#elif defined(__sun) || defined(sun)
+# define PLATFORM_ID "SunOS"
+
+#elif defined(_AIX) || defined(__AIX) || defined(__AIX__) || defined(__aix) || defined(__aix__)
+# define PLATFORM_ID "AIX"
+
+#elif defined(__hpux) || defined(__hpux__)
+# define PLATFORM_ID "HP-UX"
+
+#elif defined(__HAIKU__)
+# define PLATFORM_ID "Haiku"
+
+#elif defined(__BeOS) || defined(__BEOS__) || defined(_BEOS)
+# define PLATFORM_ID "BeOS"
+
+#elif defined(__QNX__) || defined(__QNXNTO__)
+# define PLATFORM_ID "QNX"
+
+#elif defined(__tru64) || defined(_tru64) || defined(__TRU64__)
+# define PLATFORM_ID "Tru64"
+
+#elif defined(__riscos) || defined(__riscos__)
+# define PLATFORM_ID "RISCos"
+
+#elif defined(__sinix) || defined(__sinix__) || defined(__SINIX__)
+# define PLATFORM_ID "SINIX"
+
+#elif defined(__UNIX_SV__)
+# define PLATFORM_ID "UNIX_SV"
+
+#elif defined(__bsdos__)
+# define PLATFORM_ID "BSDOS"
+
+#elif defined(_MPRAS) || defined(MPRAS)
+# define PLATFORM_ID "MP-RAS"
+
+#elif defined(__osf) || defined(__osf__)
+# define PLATFORM_ID "OSF1"
+
+#elif defined(_SCO_SV) || defined(SCO_SV) || defined(sco_sv)
+# define PLATFORM_ID "SCO_SV"
+
+#elif defined(__ultrix) || defined(__ultrix__) || defined(_ULTRIX)
+# define PLATFORM_ID "ULTRIX"
+
+#elif defined(__XENIX__) || defined(_XENIX) || defined(XENIX)
+# define PLATFORM_ID "Xenix"
+
+#elif defined(__WATCOMC__)
+# if defined(__LINUX__)
+#  define PLATFORM_ID "Linux"
+
+# elif defined(__DOS__)
+#  define PLATFORM_ID "DOS"
+
+# elif defined(__OS2__)
+#  define PLATFORM_ID "OS2"
+
+# elif defined(__WINDOWS__)
+#  define PLATFORM_ID "Windows3x"
+
+# elif defined(__VXWORKS__)
+#  define PLATFORM_ID "VxWorks"
+
+# else /* unknown platform */
+#  define PLATFORM_ID
+# endif
+
+#elif defined(__INTEGRITY)
+# if defined(INT_178B)
+#  define PLATFORM_ID "Integrity178"
+
+# else /* regular Integrity */
+#  define PLATFORM_ID "Integrity"
+# endif
+
+# elif defined(_ADI_COMPILER)
+#  define PLATFORM_ID "ADSP"
+
+#else /* unknown platform */
+# define PLATFORM_ID
+
+#endif
+
+/* For windows compilers MSVC and Intel we can determine
+   the architecture of the compiler being used.  This is because
+   the compilers do not have flags that can change the architecture,
+   but rather depend on which compiler is being used
+*/
+#if defined(_WIN32) && defined(_MSC_VER)
+# if defined(_M_IA64)
+#  define ARCHITECTURE_ID "IA64"
+
+# elif defined(_M_ARM64EC)
+#  define ARCHITECTURE_ID "ARM64EC"
+
+# elif defined(_M_X64) || defined(_M_AMD64)
+#  define ARCHITECTURE_ID "x64"
+
+# elif defined(_M_IX86)
+#  define ARCHITECTURE_ID "X86"
+
+# elif defined(_M_ARM64)
+#  define ARCHITECTURE_ID "ARM64"
+
+# elif defined(_M_ARM)
+#  if _M_ARM == 4
+#   define ARCHITECTURE_ID "ARMV4I"
+#  elif _M_ARM == 5
+#   define ARCHITECTURE_ID "ARMV5I"
+#  else
+#   define ARCHITECTURE_ID "ARMV" STRINGIFY(_M_ARM)
+#  endif
+
+# elif defined(_M_MIPS)
+#  define ARCHITECTURE_ID "MIPS"
+
+# elif defined(_M_SH)
+#  define ARCHITECTURE_ID "SHx"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__WATCOMC__)
+# if defined(_M_I86)
+#  define ARCHITECTURE_ID "I86"
+
+# elif defined(_M_IX86)
+#  define ARCHITECTURE_ID "X86"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__IAR_SYSTEMS_ICC__) || defined(__IAR_SYSTEMS_ICC)
+# if defined(__ICCARM__)
+#  define ARCHITECTURE_ID "ARM"
+
+# elif defined(__ICCRX__)
+#  define ARCHITECTURE_ID "RX"
+
+# elif defined(__ICCRH850__)
+#  define ARCHITECTURE_ID "RH850"
+
+# elif defined(__ICCRL78__)
+#  define ARCHITECTURE_ID "RL78"
+
+# elif defined(__ICCRISCV__)
+#  define ARCHITECTURE_ID "RISCV"
+
+# elif defined(__ICCAVR__)
+#  define ARCHITECTURE_ID "AVR"
+
+# elif defined(__ICC430__)
+#  define ARCHITECTURE_ID "MSP430"
+
+# elif defined(__ICCV850__)
+#  define ARCHITECTURE_ID "V850"
+
+# elif defined(__ICC8051__)
+#  define ARCHITECTURE_ID "8051"
+
+# elif defined(__ICCSTM8__)
+#  define ARCHITECTURE_ID "STM8"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__ghs__)
+# if defined(__PPC64__)
+#  define ARCHITECTURE_ID "PPC64"
+
+# elif defined(__ppc__)
+#  define ARCHITECTURE_ID "PPC"
+
+# elif defined(__ARM__)
+#  define ARCHITECTURE_ID "ARM"
+
+# elif defined(__x86_64__)
+#  define ARCHITECTURE_ID "x64"
+
+# elif defined(__i386__)
+#  define ARCHITECTURE_ID "X86"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+#elif defined(__TI_COMPILER_VERSION__)
+# if defined(__TI_ARM__)
+#  define ARCHITECTURE_ID "ARM"
+
+# elif defined(__MSP430__)
+#  define ARCHITECTURE_ID "MSP430"
+
+# elif defined(__TMS320C28XX__)
+#  define ARCHITECTURE_ID "TMS320C28x"
+
+# elif defined(__TMS320C6X__) || defined(_TMS320C6X)
+#  define ARCHITECTURE_ID "TMS320C6x"
+
+# else /* unknown architecture */
+#  define ARCHITECTURE_ID ""
+# endif
+
+# elif defined(__ADSPSHARC__)
+#  define ARCHITECTURE_ID "SHARC"
+
+# elif defined(__ADSPBLACKFIN__)
+#  define ARCHITECTURE_ID "Blackfin"
+
+#elif defined(__TASKING__)
+
+# if defined(__CTC__) || defined(__CPTC__)
+#  define ARCHITECTURE_ID "TriCore"
+
+# elif defined(__CMCS__)
+#  define ARCHITECTURE_ID "MCS"
+
+# elif defined(__CARM__)
+#  define ARCHITECTURE_ID "ARM"
+
+# elif defined(__CARC__)
+#  define ARCHITECTURE_ID "ARC"
+
+# elif defined(__C51__)
+#  define ARCHITECTURE_ID "8051"
+
+# elif defined(__CPCP__)
+#  define ARCHITECTURE_ID "PCP"
+
+# else
+#  define ARCHITECTURE_ID ""
+# endif
+
+#else
+#  define ARCHITECTURE_ID
+#endif
+
+/* Convert integer to decimal digit literals.  */
+#define DEC(n)                   \
+  ('0' + (((n) / 10000000)%10)), \
+  ('0' + (((n) / 1000000)%10)),  \
+  ('0' + (((n) / 100000)%10)),   \
+  ('0' + (((n) / 10000)%10)),    \
+  ('0' + (((n) / 1000)%10)),     \
+  ('0' + (((n) / 100)%10)),      \
+  ('0' + (((n) / 10)%10)),       \
+  ('0' +  ((n) % 10))
+
+/* Convert integer to hex digit literals.  */
+#define HEX(n)             \
+  ('0' + ((n)>>28 & 0xF)), \
+  ('0' + ((n)>>24 & 0xF)), \
+  ('0' + ((n)>>20 & 0xF)), \
+  ('0' + ((n)>>16 & 0xF)), \
+  ('0' + ((n)>>12 & 0xF)), \
+  ('0' + ((n)>>8  & 0xF)), \
+  ('0' + ((n)>>4  & 0xF)), \
+  ('0' + ((n)     & 0xF))
+
+/* Construct a string literal encoding the version number. */
+#ifdef COMPILER_VERSION
+char const* info_version = "INFO" ":" "compiler_version[" COMPILER_VERSION "]";
+
+/* Construct a string literal encoding the version number components. */
+#elif defined(COMPILER_VERSION_MAJOR)
+char const info_version[] = {
+  'I', 'N', 'F', 'O', ':',
+  'c','o','m','p','i','l','e','r','_','v','e','r','s','i','o','n','[',
+  COMPILER_VERSION_MAJOR,
+# ifdef COMPILER_VERSION_MINOR
+  '.', COMPILER_VERSION_MINOR,
+#  ifdef COMPILER_VERSION_PATCH
+   '.', COMPILER_VERSION_PATCH,
+#   ifdef COMPILER_VERSION_TWEAK
+    '.', COMPILER_VERSION_TWEAK,
+#   endif
+#  endif
+# endif
+  ']','\0'};
+#endif
+
+/* Construct a string literal encoding the internal version number. */
+#ifdef COMPILER_VERSION_INTERNAL
+char const info_version_internal[] = {
+  'I', 'N', 'F', 'O', ':',
+  'c','o','m','p','i','l','e','r','_','v','e','r','s','i','o','n','_',
+  'i','n','t','e','r','n','a','l','[',
+  COMPILER_VERSION_INTERNAL,']','\0'};
+#elif defined(COMPILER_VERSION_INTERNAL_STR)
+char const* info_version_internal = "INFO" ":" "compiler_version_internal[" COMPILER_VERSION_INTERNAL_STR "]";
+#endif
+
+/* Construct a string literal encoding the version number components. */
+#ifdef SIMULATE_VERSION_MAJOR
+char const info_simulate_version[] = {
+  'I', 'N', 'F', 'O', ':',
+  's','i','m','u','l','a','t','e','_','v','e','r','s','i','o','n','[',
+  SIMULATE_VERSION_MAJOR,
+# ifdef SIMULATE_VERSION_MINOR
+  '.', SIMULATE_VERSION_MINOR,
+#  ifdef SIMULATE_VERSION_PATCH
+   '.', SIMULATE_VERSION_PATCH,
+#   ifdef SIMULATE_VERSION_TWEAK
+    '.', SIMULATE_VERSION_TWEAK,
+#   endif
+#  endif
+# endif
+  ']','\0'};
+#endif
+
+/* Construct the string literal in pieces to prevent the source from
+   getting matched.  Store it in a pointer rather than an array
+   because some compilers will just produce instructions to fill the
+   array rather than assigning a pointer to a static array.  */
+char const* info_platform = "INFO" ":" "platform[" PLATFORM_ID "]";
+char const* info_arch = "INFO" ":" "arch[" ARCHITECTURE_ID "]";
+
+
+
+#if !defined(__STDC__) && !defined(__clang__)
+# if defined(_MSC_VER) || defined(__ibmxl__) || defined(__IBMC__)
+#  define C_VERSION "90"
+# else
+#  define C_VERSION
+# endif
+#elif __STDC_VERSION__ > 201710L
+# define C_VERSION "23"
+#elif __STDC_VERSION__ >= 201710L
+# define C_VERSION "17"
+#elif __STDC_VERSION__ >= 201000L
+# define C_VERSION "11"
+#elif __STDC_VERSION__ >= 199901L
+# define C_VERSION "99"
+#else
+# define C_VERSION "90"
+#endif
+const char* info_language_standard_default =
+  "INFO" ":" "standard_default[" C_VERSION "]";
+
+const char* info_language_extensions_default = "INFO" ":" "extensions_default["
+#if (defined(__clang__) || defined(__GNUC__) || defined(__xlC__) ||           \
+     defined(__TI_COMPILER_VERSION__)) &&                                     \
+  !defined(__STRICT_ANSI__)
+  "ON"
+#else
+  "OFF"
+#endif
+"]";
+
+/*--------------------------------------------------------------------------*/
+
+#ifdef ID_VOID_MAIN
+void main() {}
+#else
+# if defined(__CLASSIC_C__)
+int main(argc, argv) int argc; char *argv[];
+# else
+int main(int argc, char* argv[])
+# endif
+{
+  int require = 0;
+  require += info_compiler[argc];
+  require += info_platform[argc];
+  require += info_arch[argc];
+#ifdef COMPILER_VERSION_MAJOR
+  require += info_version[argc];
+#endif
+#ifdef COMPILER_VERSION_INTERNAL
+  require += info_version_internal[argc];
+#endif
+#ifdef SIMULATE_ID
+  require += info_simulate[argc];
+#endif
+#ifdef SIMULATE_VERSION_MAJOR
+  require += info_simulate_version[argc];
+#endif
+#if defined(__CRAYXT_COMPUTE_LINUX_TARGET)
+  require += info_cray[argc];
+#endif
+  require += info_language_standard_default[argc];
+  require += info_language_extensions_default[argc];
+  (void)argv;
+  return require;
+}
+#endif
+
+
+# ./src/utils/utils.c
+
+#include "utils.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "mongoose/mongoose.h"
+
+void read_db_env(char* url, char* user, char* pass) {
+    FILE* f = fopen(".env", "r");
+    if (!f) {
+        perror("Impossible d'ouvrir .env");
+        exit(1);
+    }
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        char* eq = strchr(line, '=');
+        if (!eq) continue;
+        *eq = '\0';
+        char* val = eq + 1;
+        val[strcspn(val, "\r\n")] = '\0'; // Supprime newline
+
+        if (strcmp(line, "DATABASE_URL") == 0) {
+            strncpy(url, val, 127);
+            url[127] = '\0';
+        } else if (strcmp(line, "DATABASE_USER") == 0) {
+            strncpy(user, val, 63);
+            user[63] = '\0';
+        } else if (strcmp(line, "DATABASE_PASS") == 0) {
+            strncpy(pass, val, 63);
+            pass[63] = '\0';
+        }
+    }
+    fclose(f);
+}
+
+void read_server_env(char* port, char* jwt_secret) {
+    FILE* f = fopen(".env", "r");
+    if (!f) {
+        perror("Impossible d'ouvrir .env");
+        exit(1);
+    }
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        char* eq = strchr(line, '=');
+        if (!eq) continue;
+        *eq = '\0';
+        char* val = eq + 1;
+        val[strcspn(val, "\r\n")] = '\0'; // Supprime newline
+
+        if (strcmp(line, "SERVER_ADDRESS") == 0) {
+            strncpy(port, val, 15);
+            port[15] = '\0';
+        } else if (strcmp(line, "JWT_SECRET") == 0) {
+            strncpy(jwt_secret, val, 127);
+            jwt_secret[127] = '\0';
+        }
+    }
+    fclose(f);
+}
+
+int get_cookie_manual(struct mg_http_message* hm,
+                      const char* name, char* out, size_t sz) {
+    printf("[COOKIE] get_cookie_manual called\n");
+    struct mg_str* hdr = mg_http_get_header(hm, "Cookie");
+    if (!hdr) {
+        printf("[COOKIE] no Cookie header\n");
+        return 0;
+    }
+    printf("[COOKIE] header length = %zu\n", hdr->len);
+
+    size_t len = hdr->len;
+    char buf[len + 1];
+    memcpy(buf, hdr->buf, len);
+    buf[len] = '\0';
+    printf("[COOKIE] header content = \"%s\"\n", buf);
+
+    char* tok = strtok(buf, ";");
+    while (tok) {
+        char* start = tok;
+        while (*start == ' ') start++;
+        printf("[COOKIE] token = \"%s\"\n", start);
+
+        size_t keylen = strlen(name);
+        if (strncmp(start, name, keylen) == 0 && start[keylen] == '=') {
+            const char* val = start + keylen + 1;
+            printf("[COOKIE] found %s = \"%s\"\n", name, val);
+            strncpy(out, val, sz - 1);
+            out[sz - 1] = '\0';
+            return 1;
+        }
+        tok = strtok(NULL, ";");
+    }
+
+    printf("[COOKIE] %s not found\n", name);
+    return 0;
+}
+
+/* get_current_user_id avec parsing manuel */
+int get_current_user_id(struct mg_http_message *hm) {
+		printf("Appel de la fonction : get_current_user_id\n");
+    char jwt_val[32];
+    if (!get_cookie_manual(hm, "plant_shop_c_backend", jwt_val, sizeof(jwt_val)))
+        return 0;
+    int uid = atoi(jwt_val);
+    return uid > 0 ? uid : 0;
+}
+
+
+# ./src/utils/cors.c
+
+#include "cors.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void cors_reply(struct mg_connection *c, int status, const char *extra_headers, const char *fmt, ...) {
+    // En-têtes CORS standards
+    const char *cors_headers =
+        "Access-Control-Allow-Origin: http://localhost:8300\r\n"
+        "Access-Control-Allow-Credentials: true\r\n"
+        "Access-Control-Allow-Methods: GET,POST,PUT,PATCH,DELETE,OPTIONS\r\n"
+        "Access-Control-Allow-Headers: Content-Type,Authorization,Cookie,X-Requested-With\r\n"
+        "Access-Control-Expose-Headers: Set-Cookie\r\n";
+
+    // Construction des headers complets
+    char headers[1024];
+    snprintf(headers, sizeof(headers), "%s%s", cors_headers, extra_headers ? extra_headers : "");
+
+    va_list ap;
+    va_start(ap, fmt);
+
+    // Calculer la taille nécessaire
+    va_list ap_copy;
+    va_copy(ap_copy, ap);
+    int needed = vsnprintf(NULL, 0, fmt, ap_copy) + 1;
+    va_end(ap_copy);
+
+    // Allouer dynamiquement
+    char *body = malloc(needed);
+    if (!body) {
+        va_end(ap);
+        fprintf(stderr, "❌ [CORS] Allocation mémoire échouée pour %d bytes\n", needed);
+        mg_http_reply(c, 500, headers, "{\"error\":\"Memory allocation failed\"}");
+        return;
+    }
+
+    vsnprintf(body, needed, fmt, ap);
+    va_end(ap);
+
+    // 🔍 LOG DÉTAILLÉ
+    fprintf(stderr, "✅ [CORS] %d | Body size: %d bytes | Headers: %s\n",
+            status, needed - 1, extra_headers ? extra_headers : "(none)");
+
+    // Envoi de la réponse
+    mg_http_reply(c, status, headers, "%s", body);
+    free(body);
+}
+
+void cors_reply_json(struct mg_connection *c, int status, const char *json) {
+    fprintf(stderr, "📤 [CORS_JSON] Envoi JSON %d | Taille: %zu bytes\n", status, strlen(json));
+    cors_reply(c, status, "Content-Type: application/json\r\n", "%s", json);
+}
+
+int cors_handle_preflight(struct mg_connection *c, struct mg_http_message *hm) {
+    if (mg_strcmp(hm->method, mg_str("OPTIONS")) == 0) {
+        fprintf(stderr, "🔄 [PREFLIGHT] %.*s\n", (int)hm->uri.len, hm->uri.buf);
+        cors_reply(c, 204, "", "");
+        return 1;
+    }
+    return 0;
+}
+
+
+# ./src/controllers/user_controller.c
+
+#include "user_controller.h"
+#include <cjson/cJSON.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <argon2.h>
+#include "../repository/user_repository.h"
+#include "../utils/utils.h"
+
+extern PGconn* DB;
+
+static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
+    char *text = cJSON_PrintUnformatted(j);
+    mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
+    free(text);
+    if (j) cJSON_Delete(j);
+}
+
+static int is_admin(struct mg_http_message* hm) {
+    int uid = get_current_user_id(hm);
+    if (uid == 0) return 0;
+    return user_repo_is_admin(DB, uid);
+}
+
+static void generate_salt(uint8_t *salt, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        salt[i] = (uint8_t)rand();
+    }
+}
+
+void user_create(struct mg_connection* c, struct mg_http_message *hm) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
+
+    const char *name_str = cJSON_GetStringValue(cJSON_GetObjectItem(j, "name"));
+    const char *email_str = cJSON_GetStringValue(cJSON_GetObjectItem(j, "email"));
+    const char *pwd_str = cJSON_GetStringValue(cJSON_GetObjectItem(j, "password"));
+
+    if (!name_str || !email_str || !pwd_str) {
+        cJSON_Delete(j);
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing fields\"}");
+        return;
+    }
+
+    uint8_t salt[16];
+    generate_salt(salt, sizeof(salt));
+    char encoded_hash[128];
+    if (argon2id_hash_encoded(2, 1 << 16, 1, pwd_str, strlen(pwd_str), salt, sizeof(salt), 32, encoded_hash, sizeof(encoded_hash)) != ARGON2_OK) {
+        cJSON_Delete(j);
+        mg_http_reply(c, 500, "Content-Type: application/json\r\n", "{\"error\":\"Hashing failed\"}");
+        return;
+    }
+
+    User u = {0};
+    snprintf(u.name, sizeof(u.name), "%s", name_str);
+    snprintf(u.email, sizeof(u.email), "%s", email_str);
+    snprintf(u.password_hash, sizeof(u.password_hash), "%s", encoded_hash);
+    u.is_admin = cJSON_IsTrue(cJSON_GetObjectItem(j, "admin"));
+
+    u.id = user_repo_add(DB, &u);
+    cJSON_Delete(j);
+
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddNumberToObject(o, "id", u.id);
+    send_json_reply(c, o, 201);
+}
+
+void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
+
+    User u;
+    if (!user_repo_find(DB, id, &u)) {
+        mg_http_reply(c, 404, "", "");
+        return;
+    }
+
+    cJSON* j = cJSON_CreateObject();
+    cJSON_AddNumberToObject(j, "id", u.id);
+    cJSON_AddStringToObject(j, "name", u.name);
+    cJSON_AddStringToObject(j, "email", u.email);
+    cJSON_AddBoolToObject(j, "admin", u.is_admin);
+
+    send_json_reply(c, j, 200);
+    (void)hm;
+}
+
+void user_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    printf("[USER CONTROLLER] Réception de la requête PATCH /api/users/%d\n", id);
+    printf("[USER CONTROLLER] Corps reçu : \"%.*s\"\n", (int)hm->body.len, hm->body.buf);
+
+    int current_user_id = get_current_user_id(hm);
+    printf("[USER CONTROLLER] ID user courant extrait du cookie : %d\n", current_user_id);
+
+    int current_user_is_admin = user_repo_is_admin(DB, current_user_id);
+    printf("[USER CONTROLLER] Statut admin du user courant : %d\n", current_user_is_admin);
+
+    if (current_user_id != id && !current_user_is_admin) {
+        printf("[USER CONTROLLER] Refus : ni admin ni modification de son propre profil (id cible = %d, id courant = %d)\n", id, current_user_id);
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        printf("[USER CONTROLLER] JSON reçu invalide, abandon.\n");
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
+
+    if (!current_user_is_admin && cJSON_HasObjectItem(j, "admin")) {
+        printf("[USER CONTROLLER] Tentative de modification du champ 'admin' refusée (non admin).\n");
+        cJSON_DeleteItemFromObject(j, "admin");
+    }
+
+    printf("[USER CONTROLLER] Mise à jour du profil utilisateur %d.\n", id);
+    user_repo_patch(DB, id, j);
+    cJSON_Delete(j);
+    printf("[USER CONTROLLER] Modification réussie (id = %d).\n", id);
+    mg_http_reply(c, 200, "", "");
+}
+
+void user_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+    user_repo_del(DB, id);
+    mg_http_reply(c, 200, "", "");
+}
+
+static void admin_users_list_cb(User* u, void* arg) {
+	cJSON* arr = (cJSON*)arg;
+	cJSON* j = cJSON_CreateObject();
+	cJSON_AddNumberToObject(j, "id", u->id);
+	cJSON_AddStringToObject(j, "email", u->email);
+	cJSON_AddStringToObject(j, "name", u->name);
+	cJSON_AddBoolToObject(j, "admin", u->is_admin);
+	cJSON_AddItemToArray(arr, j);
+}
+
+void admin_users_list(struct mg_connection* c, struct mg_http_message *hm) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+    cJSON* arr = cJSON_CreateArray();
+    user_repo_each(DB, admin_users_list_cb, arr);
+    send_json_reply(c, arr, 200);
+}
+
+
+# ./src/controllers/order_controller.c
+
+#include "order_controller.h"
+#include <stdint.h>
+#include <cjson/cJSON.h>
+#include <string.h>
+#include <stdlib.h>
+#include "../repository/order_repository.h"
+#include "../repository/user_repository.h"
+#include "mongoose/mongoose.h"
+#include <stdio.h>
+#include "../utils/utils.h"
+
+extern PGconn* DB;
+
+static int is_admin(struct mg_http_message* hm);
+
+void patch_order_status(struct mg_connection* c, struct mg_http_message* hm, int order_id) {
+	if (!is_admin(hm)) {
+			mg_http_reply(c, 403, "Content-Type: application/json\r\n", "{\"error\":\"Accès interdit\"}\n");
+			return;
+	}
+	cJSON* json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+	if (!json) {
+		mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}\n");
+		return;
+	}
+	const char* new_status = cJSON_GetStringValue(cJSON_GetObjectItem(json, "status"));
+	if (!new_status) {
+		cJSON_Delete(json);
+		mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing status\"}\n");
+		return;
+	}
+	if (!order_repo_update_status(DB, order_id, new_status)) {
+		cJSON_Delete(json);
+		mg_http_reply(c, 500, "Content-Type: application/json\r\n", "{\"error\":\"Update failed\"}\n");
+		return;
+	}
+	cJSON_Delete(json);
+	mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{\"status\":\"%s\"}\n", new_status);
+}
+
+static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
+    char *text = cJSON_PrintUnformatted(j);
+    mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
+    free(text);
+    if (j) cJSON_Delete(j);
+}
+
+static int is_admin(struct mg_http_message* hm) {
+    int uid = get_current_user_id(hm);
+    return user_repo_is_admin(DB, uid);
+}
+
+void orders_create(struct mg_connection* c, struct mg_http_message *hm) {
+    int uid = get_current_user_id(hm);
+    if (!uid) {
+        mg_http_reply(c, 401, "", "");
+        return;
+    }
+
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
+
+    cJSON *items = cJSON_GetObjectItem(j, "items");
+    if (!items || !cJSON_IsArray(items)) {
+        cJSON_Delete(j);
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing 'items' array\"}");
+        return;
+    }
+
+    int oid = order_repo_add(DB, uid, items);
+    cJSON_Delete(j);
+    cJSON* o = cJSON_CreateObject();
+    cJSON_AddNumberToObject(o, "id", oid);
+    send_json_reply(c, o, 201);
+}
+
+void orders_list(struct mg_connection* c, struct mg_http_message *hm) {
+    int uid = get_current_user_id(hm);
+    if (!uid) {
+        mg_http_reply(c, 401, "", "");
+        return;
+    }
+    cJSON* arr = order_repo_list(DB, uid);
+    send_json_reply(c, arr, 200);
+}
+
+void orders_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
+	// fprintf(stderr, "[DEBUG][PATCH] appel /api/orders/%d\n", id);
+
+	if (!is_admin(hm)) {
+		// fprintf(stderr, "[DEBUG][PATCH] refus : utilisateur non-admin\n");
+		mg_http_reply(c, 403, "", "");
+		return;
+	}
+
+	cJSON *j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+	if (!j) {
+		// fprintf(stderr, "[DEBUG][PATCH] JSON invalide\n");
+		mg_http_reply(c, 400,
+		              "Content-Type: application/json\r\n",
+		              "{\"error\":\"Invalid JSON\"}");
+		return;
+	}
+
+	order_repo_patch(DB, id, j);
+	cJSON_Delete(j);
+
+	// fprintf(stderr, "[DEBUG][PATCH] ordre %d traité\n", id);
+	mg_http_reply(c, 200, "", "");
+}
+
+void orders_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+    order_repo_del(DB, id);
+    mg_http_reply(c, 200, "", "");
+}
+
+
+# ./src/controllers/auth_controller.c
+
+#include "auth_controller.h"
+#include <cjson/cJSON.h>
+#include <argon2.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include "../repository/user_repository.h"
+#include "../utils/utils.h"
+
+extern PGconn* DB;
+
+static void send_json(struct mg_connection* c, cJSON* j, int code) {
+    char* txt = cJSON_PrintUnformatted(j);
+    mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", txt);
+    free(txt);
+    if (j) cJSON_Delete(j);
+}
+
+static void generate_salt(uint8_t *salt, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        salt[i] = (uint8_t)rand();
+    }
+}
+
+void auth_register(struct mg_connection* c, struct mg_http_message *hm) {
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "", "{\"error\":\"Invalid JSON\"}\n");
+        return;
+    }
+
+    const char *n = cJSON_GetStringValue(cJSON_GetObjectItem(j, "name"));
+    const char *e = cJSON_GetStringValue(cJSON_GetObjectItem(j, "email"));
+    const char *p = cJSON_GetStringValue(cJSON_GetObjectItem(j, "password"));
+
+    if (!n || !e || !p) {
+        cJSON_Delete(j);
+        mg_http_reply(c, 400, "", "{\"error\":\"Missing fields\"}\n");
+        return;
+    }
+
+    uint8_t salt[16];
+    generate_salt(salt, sizeof(salt));
+
+    char encoded_hash[128];
+    if (argon2id_hash_encoded(2, 1 << 16, 1, p, strlen(p), salt, sizeof(salt), 32, encoded_hash, sizeof(encoded_hash)) != ARGON2_OK) {
+        cJSON_Delete(j);
+        mg_http_reply(c, 500, "", "{\"error\":\"Hashing failed\"}\n");
+        return;
+    }
+
+    User u = {.is_admin = 0};
+    snprintf(u.name, sizeof(u.name), "%s", n);
+    snprintf(u.email, sizeof(u.email), "%s", e);
+    snprintf(u.password_hash, sizeof(u.password_hash), "%s", encoded_hash);
+
+    u.id = user_repo_add(DB, &u);
+    cJSON_Delete(j);
+
+    if (u.id == 0) {
+        mg_http_reply(c, 409, "Content-Type: application/json\r\n", "{\"error\":\"Email already exists\"}\n");
+        return;
+    }
+
+    cJSON *out = cJSON_CreateObject();
+    cJSON_AddNumberToObject(out, "id", u.id);
+    send_json(c, out, 201);
+}
+
+void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
+    struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
+    if (cookie_hdr) {
+        printf("[LOGIN] Cookie: \"%.*s\"\n",
+               (int)cookie_hdr->len, cookie_hdr->buf);
+    } else {
+        printf("[LOGIN] No Cookie\n");
+    }
+
+    printf("[LOGIN] Body: \"%.*s\"\n",
+           (int)hm->body.len, hm->body.buf);
+
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        printf("[LOGIN] Invalid JSON\n");
+        mg_http_reply(c, 400,
+                      "Content-Type: application/json\r\n",
+                      "{\"error\":\"Invalid JSON\"}\n");
+        return;
+    }
+
+    const char* e = cJSON_GetStringValue(cJSON_GetObjectItem(j, "email"));
+    const char* p = cJSON_GetStringValue(cJSON_GetObjectItem(j, "password"));
+
+    char email_buf[128]    = {0};
+    char password_buf[128] = {0};
+    if (e) snprintf(email_buf, sizeof(email_buf), "%s", e);
+    if (p) snprintf(password_buf, sizeof(password_buf), "%s", p);
+
+    printf("[LOGIN] Email: '%s', Password: '%s'\n",
+           email_buf, password_buf);
+
+    cJSON_Delete(j);
+
+    if (!e || !p) {
+        printf("[LOGIN] Missing fields\n");
+        mg_http_reply(c, 400,
+                      "Content-Type: application/json\r\n",
+                      "{\"error\":\"Missing fields\"}\n");
+        return;
+    }
+
+    User u;
+    if (!user_repo_find_by_mail(DB, email_buf, &u)) {
+        printf("[LOGIN] User not found\n");
+        mg_http_reply(c, 401,
+                      "Content-Type: application/json\r\n",
+                      "{\"error\":\"Invalid credentials\"}\n");
+        return;
+    }
+    printf("[LOGIN] Found user id=%d\n", u.id);
+
+    int verify_result = argon2id_verify(u.password_hash,
+                                        password_buf,
+                                        strlen(password_buf));
+    printf("[LOGIN] Password verify result: %d\n", verify_result);
+    if (verify_result != ARGON2_OK) {
+        printf("[LOGIN] Incorrect password\n");
+        mg_http_reply(c, 401,
+                      "Content-Type: application/json\r\n",
+                      "{\"error\":\"Invalid credentials\"}\n");
+        return;
+    }
+
+    char cookie[256];
+    snprintf(cookie, sizeof(cookie),
+             "Set-Cookie: plant_shop_c_backend=%d; Path=/; HttpOnly; Max-Age=86400",
+             u.id);
+    printf("[LOGIN] Set-Cookie: %s\n", cookie);
+
+    char headers[512];
+    snprintf(headers, sizeof(headers),
+             "%s\r\nContent-Type: application/json\r\n",
+             cookie);
+
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddStringToObject(o, "email", u.email);
+    char* txt = cJSON_PrintUnformatted(o);
+
+    mg_http_reply(c, 201,
+                  headers,
+                  "%s", txt);
+
+    free(txt);
+    cJSON_Delete(o);
+}
+
+void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
+    char jwt_val_str[32] = {0};
+    if (!get_cookie_manual(hm, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str))) {
+        mg_http_reply(c, 401, "Content-Type: application/json\r\n",
+                      "{\"error\":\"Unauthorized\"}\n");
+        return;
+    }
+
+    int uid = atoi(jwt_val_str);
+    if (uid == 0) {
+        mg_http_reply(c, 401, "Content-Type: application/json\r\n",
+                      "{\"error\":\"Invalid token\"}\n");
+        return;
+    }
+
+    User u;
+    if (!user_repo_find(DB, uid, &u)) {
+        printf("[auth_me] No user with id %d\n", uid);
+        mg_http_reply(c, 401, "Content-Type: application/json\r\n",
+                      "{\"error\":\"User not found\"}\n");
+        return;
+    }
+
+    cJSON* o = cJSON_CreateObject();
+    cJSON_AddStringToObject(o, "email", u.email);
+    cJSON_AddStringToObject(o, "name",  u.name);
+    cJSON_AddNumberToObject(o, "id",    u.id);
+    cJSON_AddBoolToObject(o,   "admin", u.is_admin);
+    send_json(c, o, 200);
+}
+
+void auth_logout(struct mg_connection* c, struct mg_http_message *hm) {
+    mg_http_reply(c, 200, "Set-Cookie: plant_shop_c_backend=; Path=/; HttpOnly; Max-Age=0\r\n", "");
+}
+
+
+# ./src/controllers/order_item_controller.c
+
+#include "order_item_controller.h"
+#include <cjson/cJSON.h>
+#include <string.h>
+#include <stdlib.h>
+#include "../repository/order_item_repository.h"
+#include "../repository/order_repository.h"
+#include "../repository/user_repository.h"
+#include "mongoose/mongoose.h"
+#include <stdint.h>
+#include "../utils/utils.h"
+
+extern PGconn* DB;
+
+static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
+    char *text = cJSON_PrintUnformatted(j);
+    mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
+    free(text);
+    if (j) cJSON_Delete(j);
+}
+
+static int is_admin(struct mg_http_message* hm) {
+    int uid = get_current_user_id(hm);
+    return user_repo_is_admin(DB, uid);
+}
+
+static void order_items_by_order_cb(OrderItem *it, void *ud) {
+    cJSON *arr = (cJSON*)ud;
+    cJSON* j = cJSON_CreateObject();
+    cJSON_AddNumberToObject(j, "id", it->id);
+    cJSON_AddNumberToObject(j, "plantId", it->plant_id);
+    cJSON_AddNumberToObject(j, "quantity", it->qty);
+    cJSON_AddNumberToObject(j, "price", it->price);
+    cJSON_AddItemToArray(arr, j);
+}
+
+void order_items_by_order(struct mg_connection *c, struct mg_http_message *hm, int order_id) {
+    int uid = get_current_user_id(hm);
+    if (!uid) {
+        mg_http_reply(c, 401, "", "");
+        return;
+    }
+    if (!is_admin(hm) && !order_repo_belongs_to(DB, order_id, uid)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+    cJSON *arr = cJSON_CreateArray();
+    order_item_repo_by_order(DB, order_id, order_items_by_order_cb, arr);
+    send_json_reply(c, arr, 200);
+}
+
+void order_item_patch(struct mg_connection *c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+
+    cJSON *upd = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!upd) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
+
+    order_item_repo_patch(DB, id, upd);
+    cJSON_Delete(upd);
+    mg_http_reply(c, 200, "", "");
+}
+
+void order_item_del(struct mg_connection *c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+    order_item_repo_del(DB, id);
+    mg_http_reply(c, 200, "", "");
+}
+
+
+# ./src/controllers/plant_controller.c
+
+#include "plant_controller.h"
+#include <cjson/cJSON.h>
+#include <string.h>
+#include <stdlib.h>
+#include "../repository/plant_repository.h"
+#include "../repository/user_repository.h"
+#include "mongoose/mongoose.h"
+#include <stdint.h>
+#include "../utils/utils.h"
+
+extern PGconn* DB;
+
+static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
+    char *text = cJSON_PrintUnformatted(j);
+    mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
+    free(text);
+    if (j) cJSON_Delete(j);
+}
+
+static int is_admin(struct mg_http_message* hm) {
+    int uid = get_current_user_id(hm);
+    return user_repo_is_admin(DB, uid);
+}
+
+void plant_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    Plant p;
+    if (!plant_repo_find(DB, id, &p)) {
+        mg_http_reply(c, 404, "", "");
+        return;
+    }
+    cJSON *j = cJSON_CreateObject();
+    cJSON_AddNumberToObject(j, "id", p.id);
+    cJSON_AddStringToObject(j, "name", p.name);
+    cJSON_AddStringToObject(j, "description", p.description);
+    cJSON_AddNumberToObject(j, "price", p.price);
+    cJSON_AddNumberToObject(j, "stock", p.stock);
+    send_json_reply(c, j, 200);
+    (void)hm;
+}
+
+static void admin_plants_list_cb(Plant* p, void* a) {
+    cJSON *j = cJSON_CreateObject();
+    cJSON_AddNumberToObject(j, "id", p->id);
+    cJSON_AddStringToObject(j, "name", p->name);
+    cJSON_AddNumberToObject(j, "price", p->price);
+    cJSON_AddNumberToObject(j, "stock", p->stock);
+    cJSON_AddItemToArray((cJSON*)a, j);
+}
+
+void plants_list_public(struct mg_connection* c, struct mg_http_message *hm) {
+    cJSON *arr = cJSON_CreateArray();
+    plant_repo_each(DB, admin_plants_list_cb, arr);
+    send_json_reply(c, arr, 200);
+}
+
+void admin_plants_list(struct mg_connection* c, struct mg_http_message *hm) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+    cJSON *arr = cJSON_CreateArray();
+    plant_repo_each(DB, admin_plants_list_cb, arr);
+    send_json_reply(c, arr, 200);
+}
+
+void admin_plants_add(struct mg_connection* c, struct mg_http_message *hm) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
+
+		Plant p = {0};
+		const char *name = cJSON_GetStringValue(cJSON_GetObjectItem(j, "name"));
+		const char *desc = cJSON_GetStringValue(cJSON_GetObjectItem(j, "description"));
+		if (name) strncpy(p.name, name, sizeof(p.name) - 1);
+		if (desc) strncpy(p.description, desc, sizeof(p.description) - 1);
+		p.price = cJSON_GetObjectItem(j, "price")->valueint;
+		p.stock = cJSON_GetObjectItem(j, "stock")->valueint;
+		p.id = plant_repo_add(DB, &p);
+    cJSON_Delete(j);
+
+    cJSON *o = cJSON_CreateObject();
+    cJSON_AddNumberToObject(o, "id", p.id);
+    send_json_reply(c, o, 201);
+}
+
+void admin_plants_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+
+    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+    if (!j) {
+        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
+        return;
+    }
+
+    plant_repo_patch(DB, id, j);
+    cJSON_Delete(j);
+    mg_http_reply(c, 200, "", "");
+}
+
+void admin_plants_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
+    if (!is_admin(hm)) {
+        mg_http_reply(c, 403, "", "");
+        return;
+    }
+    plant_repo_del(DB, id);
+    mg_http_reply(c, 200, "", "");
+}
+
+
+# ./src/repository/order_item_repository.c
+
+#include "order_item_repository.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+void order_item_repo_add(PGconn *db, const OrderItem *it) {
+    const char *params[4];
+    char buf_order[12], buf_plant[12], buf_qty[12], buf_price[12];
+    sprintf(buf_order, "%d", it->order_id);
+    sprintf(buf_plant, "%d", it->plant_id);
+    sprintf(buf_qty, "%d", it->qty);
+    sprintf(buf_price, "%d", it->price);
+    params[0] = buf_order;
+    params[1] = buf_plant;
+    params[2] = buf_qty;
+    params[3] = buf_price;
+    PGresult *r = PQexecParams(
+        db,
+        "INSERT INTO order_items(order_id,plant_id,quantity,price) VALUES($1,$2,$3,$4)",
+        4, NULL, params, NULL, NULL, 0);
+    if (PQresultStatus(r) != PGRES_COMMAND_OK) {
+        // fprintf(stderr, "order_item_repo_add: %s\n", PQerrorMessage(db));
+    }
+    PQclear(r);
+}
+
+void order_item_repo_by_order(PGconn *db, int oid, void(*cb)(OrderItem*, void*), void *ud) {
+    char buf[12];
+    sprintf(buf, "%d", oid);
+    const char *p[1] = {buf};
+    PGresult *r = PQexecParams(
+        db,
+        "SELECT id,order_id,plant_id,quantity,price FROM order_items WHERE order_id=$1",
+        1, NULL, p, NULL, NULL, 0);
+    if (PQresultStatus(r) != PGRES_TUPLES_OK) {
+        // fprintf(stderr, "order_item_repo_by_order: %s\n", PQerrorMessage(db));
+        PQclear(r);
+        return;
+    }
+    for (int i = 0; i < PQntuples(r); i++) {
+        OrderItem it = {
+            .id = atoi(PQgetvalue(r, i, 0)),
+            .order_id = atoi(PQgetvalue(r, i, 1)),
+            .plant_id = atoi(PQgetvalue(r, i, 2)),
+            .qty = atoi(PQgetvalue(r, i, 3)),
+            .price = atoi(PQgetvalue(r, i, 4))
+        };
+        cb(&it, ud);
+    }
+    PQclear(r);
+}
+
+void order_item_repo_patch(PGconn* db, int id, cJSON* data) {
+    char id_str[12];
+    sprintf(id_str, "%d", id);
+    cJSON* qty = cJSON_GetObjectItem(data, "quantity");
+    if (qty && cJSON_IsNumber(qty)) {
+        char qty_str[12];
+        sprintf(qty_str, "%d", qty->valueint);
+        const char* params[2] = {qty_str, id_str};
+        PQclear(PQexecParams(db, "UPDATE order_items SET quantity=$1 WHERE id=$2", 2, NULL, params, NULL, NULL, 0));
+    }
+}
+
+void order_item_repo_del(PGconn* db, int id) {
+    char id_str[12];
+    sprintf(id_str, "%d", id);
+    const char* params[1] = {id_str};
+    PQclear(PQexecParams(db, "DELETE FROM order_items WHERE id=$1", 1, NULL, params, NULL, NULL, 0));
+}
+
+
+# ./src/repository/user_repository.c
+
+#include "user_repository.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+static void fill_user(User *u, PGresult *r, int row) {
+    u->id = atoi(PQgetvalue(r, row, 0));
+    strncpy(u->name, PQgetvalue(r, row, 1), sizeof(u->name) - 1);
+    u->name[sizeof(u->name) - 1] = '\0';
+    strncpy(u->email, PQgetvalue(r, row, 2), sizeof(u->email) - 1);
+    u->email[sizeof(u->email) - 1] = '\0';
+    strncpy(u->password_hash, PQgetvalue(r, row, 3), sizeof(u->password_hash) - 1);
+    u->password_hash[sizeof(u->password_hash) - 1] = '\0';
+    u->is_admin = (PQgetvalue(r, row, 4)[0] == 't');
+}
+
+int user_repo_add(PGconn *conn, const User *u) {
+    const char* params[4] = {u->name, u->email, u->password_hash, u->is_admin ? "t" : "f"};
+    PGresult *r = PQexecParams(conn,
+        "INSERT INTO users (name, email, password_hash, is_admin) VALUES ($1, $2, $3, $4) RETURNING id",
+        4, NULL, params, NULL, NULL, 0);
+
+    if (PQresultStatus(r) != PGRES_TUPLES_OK) {
+        // fprintf(stderr, "user_repo_add failed: %s\n", PQerrorMessage(conn));
+        PQclear(r);
+        return 0;
+    }
+    int id = atoi(PQgetvalue(r, 0, 0));
+    PQclear(r);
+    return id;
+}
+
+int user_repo_find(PGconn *conn, int id, User *out) {
+    char id_str[12];
+    sprintf(id_str, "%d", id);
+    const char *params[1] = {id_str};
+    PGresult *r = PQexecParams(conn,
+        "SELECT id, name, email, password_hash, is_admin FROM users WHERE id = $1",
+        1, NULL, params, NULL, NULL, 0);
+
+    int found = PQntuples(r);
+    if (found) {
+        fill_user(out, r, 0);
+    } else {
+    }
+    PQclear(r);
+    return found;
+}
+
+int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
+    printf("[DEBUG][SQL] Recherche email : '%s'\n", email);
+    const char *params[1] = {email};
+    PGresult *r = PQexecParams(conn,
+        "SELECT id, name, email, password_hash, is_admin FROM users WHERE email = $1",
+        1, NULL, params, NULL, NULL, 0);
+
+    int found = PQntuples(r);
+    if (found) {
+        fill_user(out, r, 0);
+        printf("[DEBUG][SQL] Utilisateur trouvé : email='%s' hash='%s'\n",
+            PQgetvalue(r, 0, 2), PQgetvalue(r, 0, 3));
+    } else {
+        printf("[DEBUG][SQL] Aucun utilisateur trouvé\n");
+    }
+    PQclear(r);
+    return found;
+}
+
+int user_repo_is_admin(PGconn *conn, int id) {
+
+    if (id == 0) {
+
+        return 0;
+    }
+    char id_str[12];
+    sprintf(id_str, "%d", id);
+    const char *params[1] = {id_str};
+    PGresult *r = PQexecParams(conn, "SELECT is_admin FROM users WHERE id = $1", 1, NULL, params, NULL, NULL, 0);
+
+    int is_admin = 0;
+    if (PQntuples(r) > 0) {
+        is_admin = (PQgetvalue(r, 0, 0)[0] == 't');
+
+    }
+    PQclear(r);
+    return is_admin;
+}
+
+void user_repo_patch(PGconn *conn, int id, cJSON *patch_data) {
+    char id_str[12];
+    sprintf(id_str, "%d", id);
+
+    cJSON *name = cJSON_GetObjectItem(patch_data, "name");
+    if (name && cJSON_IsString(name)) {
+        const char *params[2] = {name->valuestring, id_str};
+        PQclear(PQexecParams(conn, "UPDATE users SET name = $1 WHERE id = $2", 2, NULL, params, NULL, NULL, 0));
+    }
+
+    cJSON *email = cJSON_GetObjectItem(patch_data, "email");
+    if (email && cJSON_IsString(email)) {
+        const char *params[2] = {email->valuestring, id_str};
+        PQclear(PQexecParams(conn, "UPDATE users SET email = $1 WHERE id = $2", 2, NULL, params, NULL, NULL, 0));
+    }
+
+    cJSON *admin = cJSON_GetObjectItem(patch_data, "admin");
+    if (admin && cJSON_IsBool(admin)) {
+        const char *params[2] = {cJSON_IsTrue(admin) ? "t" : "f", id_str};
+        PQclear(PQexecParams(conn, "UPDATE users SET is_admin = $1 WHERE id = $2", 2, NULL, params, NULL, NULL, 0));
+    }
+}
+
+void user_repo_del(PGconn *conn, int id) {
+    char id_str[12];
+    sprintf(id_str, "%d", id);
+    const char *params[1] = {id_str};
+    PQclear(PQexecParams(conn, "DELETE FROM users WHERE id = $1", 1, NULL, params, NULL, NULL, 0));
+}
+
+void user_repo_each(PGconn *conn, void (*cb)(User*, void*), void *ctx) {
+    PGresult *r = PQexec(conn, "SELECT id, name, email, password_hash, is_admin FROM users");
+    if (PQresultStatus(r) != PGRES_TUPLES_OK) {
+        // fprintf(stderr, "user_repo_each failed: %s\n", PQerrorMessage(conn));
+        PQclear(r);
+        return;
+    }
+    for (int i = 0; i < PQntuples(r); i++) {
+        User u;
+        fill_user(&u, r, i);
+        cb(&u, ctx);
+    }
+    PQclear(r);
+}
+
+
+# ./src/repository/order_repository.c
+
+#include "order_repository.h"
+#include "order_item_repository.h"
+#include "plant_repository.h"
+#include "user_repository.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+int order_repo_update_status(PGconn *conn, int order_id, const char* status) {
+    char id_str[12];
+    sprintf(id_str, "%d", order_id);
+    const char *params[2] = {status, id_str};
+    PGresult *r = PQexecParams(conn, "UPDATE orders SET status=$1 WHERE id=$2", 2, NULL, params, NULL, NULL, 0);
+    if (PQresultStatus(r) != PGRES_COMMAND_OK) {
+        // fprintf(stderr, "order_repo_update_status failed: %s\n", PQerrorMessage(conn));
+        PQclear(r);
+        return 0;
+    }
+    PQclear(r);
+    return 1;
+}
+
+int order_repo_add(PGconn *c, int user_id, cJSON* items_json) {
+    int total = 0;
+    cJSON* item = NULL;
+
+    char uid_str[12], total_str[12];
+    sprintf(uid_str, "%d", user_id);
+    sprintf(total_str, "%d", 0); // Total initial à 0
+    const char *v[3] = {uid_str, total_str, "pending"};
+    PGresult *r = PQexecParams(c,
+        "INSERT INTO orders(user_id,total,status) VALUES($1,$2,$3) RETURNING id",
+        3, NULL, v, NULL, NULL, 0);
+
+    if (PQresultStatus(r) != PGRES_TUPLES_OK) {
+        // fprintf(stderr, "order_repo_add failed: %s\n", PQerrorMessage(c));
+        PQclear(r);
+        return 0;
+    }
+    int order_id = atoi(PQgetvalue(r, 0, 0));
+    PQclear(r);
+
+    cJSON_ArrayForEach(item, items_json) {
+        OrderItem oi = {0};
+        oi.order_id = order_id;
+        oi.plant_id = cJSON_GetObjectItem(item, "plantId")->valueint;
+        oi.qty = cJSON_GetObjectItem(item, "quantity")->valueint;
+        Plant p;
+        if (plant_repo_find(c, oi.plant_id, &p)) {
+            oi.price = p.price;
+            order_item_repo_add(c, &oi);
+            total += oi.price * oi.qty;
+        }
+    }
+
+    char order_id_str[12], new_total_str[12];
+    sprintf(order_id_str, "%d", order_id);
+    sprintf(new_total_str, "%d", total);
+    const char *update_params[2] = {new_total_str, order_id_str};
+    r = PQexecParams(c, "UPDATE orders SET total = $1 WHERE id = $2", 2, NULL, update_params, NULL, NULL, 0);
+    PQclear(r);
+
+    return order_id;
+}
+
+/* ---------- helpers ---------- */
+struct _item_ctx { PGconn *db; cJSON *dst; };
+static void _item_to_json(OrderItem *it, void *ud) {
+	struct _item_ctx *ctx = ud;
+	Plant p = {0};
+	if (!plant_repo_find(ctx->db, it->plant_id, &p)) return;
+
+	cJSON *itm = cJSON_CreateObject();
+	cJSON_AddNumberToObject(itm, "id", it->id);
+	cJSON_AddNumberToObject(itm, "quantity", it->qty);
+	cJSON_AddNumberToObject(itm, "price", it->price);
+
+	cJSON *pl = cJSON_CreateObject();
+	cJSON_AddNumberToObject(pl, "id", p.id);
+	cJSON_AddStringToObject(pl, "name", p.name);
+	cJSON_AddItemToObject(itm, "plant", pl);
+
+	cJSON_AddItemToArray(ctx->dst, itm);
+}
+
+/* ---------- liste des commandes utilisateur ---------- */
+cJSON* order_repo_list(PGconn *c, int uid) {
+	char uid_str[12]; sprintf(uid_str, "%d", uid);
+	const char *params[1] = {uid_str};
+
+	PGresult *r = PQexecParams(
+		c,
+		"SELECT id,total,status FROM orders WHERE user_id=$1 ORDER BY id",
+		1, NULL, params, NULL, NULL, 0);
+
+	cJSON *out = cJSON_CreateArray();
+	for (int i = 0; i < PQntuples(r); i++) {
+		int oid = atoi(PQgetvalue(r, i, 0));
+
+		cJSON *j = cJSON_CreateObject();
+		cJSON_AddNumberToObject(j, "id", oid);
+		cJSON_AddNumberToObject(j, "userId", uid);
+		cJSON_AddNumberToObject(j, "total", atoi(PQgetvalue(r, i, 1)));
+		cJSON_AddStringToObject(j, "status", PQgetvalue(r, i, 2));
+
+		/* items */
+		cJSON *items = cJSON_CreateArray();
+		struct _item_ctx ctx = { .db = c, .dst = items };
+		order_item_repo_by_order(c, oid, _item_to_json, &ctx);
+		cJSON_AddItemToObject(j, "orderItems", items);
+
+		cJSON_AddItemToArray(out, j);
+	}
+	PQclear(r);
+	return out;
+}
+
+void order_repo_patch(PGconn *c, int id, cJSON *j) {
+	char sid[12];
+	sprintf(sid, "%d", id);
+
+	cJSON *status = cJSON_GetObjectItem(j, "status");
+	if (!status || !cJSON_IsString(status)) {
+		// fprintf(stderr, "[DEBUG][ORDER_REPO] ordre %d : champ « status » absent ou invalide\n", id);
+		return;
+	}
+
+	const char *v[2] = {status->valuestring, sid};
+	PGresult *r = PQexecParams(c,
+	    "UPDATE orders SET status=$1 WHERE id=$2",
+	    2, NULL, v, NULL, NULL, 0);
+
+	if (PQresultStatus(r) != PGRES_COMMAND_OK) {
+		// fprintf(stderr, "[ERROR][ORDER_REPO] update ordre %d -> « %s » : %s\n",
+		        // id, status->valuestring, PQerrorMessage(c));
+	} else {
+		// fprintf(stderr, "[DEBUG][ORDER_REPO] ordre %d mis à jour -> « %s »\n",
+		        // id, status->valuestring);
+	}
+	PQclear(r);
+}
+
+void order_repo_del(PGconn *c, int id) {
+    char sid[12];
+    sprintf(sid, "%d", id);
+    const char *v[1] = {sid};
+    PQclear(PQexecParams(c, "DELETE FROM orders WHERE id=$1", 1, NULL, v, NULL, NULL, 0));
+}
+
+int order_repo_belongs_to(PGconn *c, int order_id, int user_id) {
+    char oid_str[12], uid_str[12];
+    sprintf(oid_str, "%d", order_id);
+    sprintf(uid_str, "%d", user_id);
+    const char *v[2] = {oid_str, uid_str};
+    PGresult *r = PQexecParams(c, "SELECT 1 FROM orders WHERE id=$1 AND user_id=$2", 2, NULL, v, NULL, NULL, 0);
+    int found = PQntuples(r);
+    PQclear(r);
+    return found;
+}
+
+
+# ./src/repository/plant_repository.c
+
+#include "plant_repository.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
+static void fill_plant(Plant *p, PGresult *r, int row) {
+	p->id = atoi(PQgetvalue(r, row, 0));
+	strncpy(p->name, PQgetvalue(r, row, 1), sizeof(p->name) - 1);
+	p->name[sizeof(p->name) - 1] = '\0';
+	strncpy(p->description, PQgetvalue(r, row, 2), sizeof(p->description) - 1);
+	p->description[sizeof(p->description) - 1] = '\0';
+	p->price = atoi(PQgetvalue(r, row, 3));
+	p->stock = atoi(PQgetvalue(r, row, 4));
+}
+
+int plant_repo_add(PGconn *c, const Plant *p) {
+	char price_str[12], stock_str[12];
+	sprintf(price_str, "%.2f", (double)p->price);
+	sprintf(stock_str, "%d", p->stock);
+	const char *desc = p->description ? p->description : "";
+	const char *v[4] = {p->name, desc, price_str, stock_str};
+
+	PGresult *r = PQexecParams(
+			c,
+			"INSERT INTO plants(name,description,price,stock) VALUES($1,$2,$3,$4) RETURNING id",
+			4, NULL, v, NULL, NULL, 0);
+
+	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
+		// fprintf(stderr, "plant_repo_add failed: %s\n", PQerrorMessage(c));
+		PQclear(r);
+		return 0;
+	}
+	int id = atoi(PQgetvalue(r, 0, 0));
+	PQclear(r);
+	return id;
+}
+
+int plant_repo_find(PGconn *c, int id, Plant *p) {
+	char sid[12];
+	sprintf(sid, "%d", id);
+	const char *v[1] = {sid};
+
+	PGresult *r = PQexecParams(
+		c,
+		"SELECT id,name,description,price,stock FROM plants WHERE id=$1",
+		1, NULL, v, NULL, NULL, 0);
+
+	int found = PQntuples(r);
+	if (found) fill_plant(p, r, 0);
+	PQclear(r);
+	return found;
+}
+
+void plant_repo_patch(PGconn *c, int id, cJSON *j) {
+    char sid[12];
+    sprintf(sid, "%d", id);
+
+    cJSON *name_json = cJSON_GetObjectItem(j, "name");
+    if (name_json && cJSON_IsString(name_json)) {
+        const char *p[2] = {name_json->valuestring, sid};
+        PGresult *res = PQexecParams(
+            c, "UPDATE plants SET name=$1 WHERE id=$2",
+            2, NULL, p, NULL, NULL, 0);
+        PQclear(res);
+    }
+
+    cJSON *desc_json = cJSON_GetObjectItem(j, "description");
+    if (desc_json && cJSON_IsString(desc_json)) {
+        const char *p[2] = {desc_json->valuestring, sid};
+        PGresult *res = PQexecParams(
+            c, "UPDATE plants SET description=$1 WHERE id=$2",
+            2, NULL, p, NULL, NULL, 0);
+        PQclear(res);
+    }
+
+    cJSON *price_json = cJSON_GetObjectItem(j, "price");
+    if (price_json && cJSON_IsNumber(price_json)) {
+        char price_str[12];
+        sprintf(price_str, "%.2f", (double)price_json->valuedouble);
+        const char *p[2] = {price_str, sid};
+        PGresult *res = PQexecParams(
+            c, "UPDATE plants SET price=$1 WHERE id=$2",
+            2, NULL, p, NULL, NULL, 0);
+        PQclear(res);
+    }
+
+    cJSON *stock_json = cJSON_GetObjectItem(j, "stock");
+    if (stock_json && cJSON_IsNumber(stock_json)) {
+        char stock_str[12];
+        sprintf(stock_str, "%d", stock_json->valueint);
+        const char *p[2] = {stock_str, sid};
+        PGresult *res = PQexecParams(
+            c, "UPDATE plants SET stock=$1 WHERE id=$2",
+            2, NULL, p, NULL, NULL, 0);
+        PQclear(res);
+    }
+}
+
+void plant_repo_del(PGconn *c, int id) {
+	char sid[12];
+	sprintf(sid, "%d", id);
+	const char *v[1] = {sid};
+
+	PGresult *res = PQexecParams(
+		c, "DELETE FROM plants WHERE id=$1",
+		1, NULL, v, NULL, NULL, 0);
+	PQclear(res);
+}
+
+void plant_repo_each(PGconn *c, void (*cb)(Plant*, void*), void *ctx) {
+	PGresult *r = PQexec(c, "SELECT id,name,description,price,stock FROM plants");
+	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
+		// fprintf(stderr, "plant_repo_each failed: %s\n", PQerrorMessage(c));
+		PQclear(r);
+		return;
+	}
+
+	int rows = PQntuples(r);
+	for (int i = 0; i < rows; i++) {
+		Plant p;
+		fill_plant(&p, r, i);
+		cb(&p, ctx);
+	}
+	PQclear(r);
+}
+
+
+# ./src/main.c
+
+#include <libpq-fe.h>
+#include "mongoose/mongoose.h"
+#include "routes.h"
+#include "utils/utils.h"
+#include <stdbool.h>
+
+PGconn *DB = NULL;
+char JWT_SECRET[128] = {0};
+
+// Mongoose event handler function
+static void fn(struct mg_connection *c, int ev, void *ev_data) {
+	if (ev == MG_EV_HTTP_MSG) {
+		struct mg_http_message *hm = (struct mg_http_message *) ev_data;
+		route_request(c, hm);
+	}
+}
+
+// Database connection
+static void db_connect(void) {
+    char db_url[128], db_user[64], db_pass[64];
+    read_db_env(db_url, db_user, db_pass);
+
+    char conn_str[512];
+    snprintf(conn_str, sizeof(conn_str), "dbname=%s user=%s password=%s", db_url, db_user, db_pass);
+
+    DB = PQconnectdb(conn_str);
+    if (PQstatus(DB) != CONNECTION_OK) {
+        printf("❌ Connexion à la base de données échouée : %s\n", PQerrorMessage(DB));
+        PQfinish(DB);
+        exit(1);
+    }
+    printf("✅ Connexion à la base de données '%s' réussie\n", db_url);
+}
+
+int main(void) {
+    struct mg_mgr mgr;
+    char port[16];
+    char url[32];
+
+    mg_log_set(MG_LL_NONE);
+
+    db_connect();
+    read_server_env(port, JWT_SECRET);
+    snprintf(url, sizeof(url), "http://0.0.0.0:%s", port);
+
+    mg_mgr_init(&mgr);
+    printf("🚀 Démarrage de Mongoose v%s sur %s\n", MG_VERSION, url);
+
+    struct mg_connection *lc = mg_http_listen(&mgr, url, fn, NULL);
+    if (lc == NULL) {
+        printf("❌ Port occupé ou droits insuffisants : %s\n", url);
+        PQfinish(DB);
+        return 1;
+    }
+
+    for (;;) {
+        mg_mgr_poll(&mgr, 1000);
+    }
+
+    mg_mgr_free(&mgr);
+    PQfinish(DB);
+    return 0;
+}
+
+
+# ./src/auth/jwt.c
+
+#include "jwt.h"
+#include "mongoose/mongoose.h"
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
+#include <openssl/hmac.h>
+#include <openssl/evp.h>
+#include <openssl/bio.h>
+#include <openssl/buffer.h>
+#include <cjson/cJSON.h>
+
+// ========================================
+// CLÉ SECRÈTE DEPUIS .ENV
+// ========================================
+extern char JWT_SECRET[128];
+
+// Fonction helper : Base64 URL encode
+static char* base64url_encode(const unsigned char* input, int length) {
+    BIO *bio, *b64;
+    BUF_MEM *buffer_ptr;
+
+    b64 = BIO_new(BIO_f_base64());
+    bio = BIO_new(BIO_s_mem());
+    bio = BIO_push(b64, bio);
+
+    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+    BIO_write(bio, input, length);
+    BIO_flush(bio);
+    BIO_get_mem_ptr(bio, &buffer_ptr);
+
+    char* output = malloc(buffer_ptr->length + 1);
+    memcpy(output, buffer_ptr->data, buffer_ptr->length);
+    output[buffer_ptr->length] = '\0';
+
+    BIO_free_all(bio);
+
+    // Convertir Base64 standard en Base64URL
+    for (size_t i = 0; output[i]; i++) {
+        if (output[i] == '+') output[i] = '-';
+        if (output[i] == '/') output[i] = '_';
+        if (output[i] == '=') { output[i] = '\0'; break; }
+    }
+
+    return output;
+}
+
+// Fonction helper : Base64 URL decode
+static unsigned char* base64url_decode(const char* input, int* out_len) {
+    // Convertir Base64URL en Base64 standard
+    size_t input_len = strlen(input);
+    char* b64 = malloc(input_len + 4);
+    strcpy(b64, input);
+
+    for (size_t i = 0; b64[i]; i++) {
+        if (b64[i] == '-') b64[i] = '+';
+        if (b64[i] == '_') b64[i] = '/';
+    }
+
+    // Ajouter padding '='
+    while (strlen(b64) % 4 != 0) {
+        strcat(b64, "=");
+    }
+
+    BIO *bio, *b64io;
+
+    b64io = BIO_new(BIO_f_base64());
+    bio = BIO_new_mem_buf(b64, -1);
+    bio = BIO_push(b64io, bio);
+
+    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
+
+    unsigned char* output = malloc(input_len);
+    *out_len = BIO_read(bio, output, input_len);
+
+    BIO_free_all(bio);
+    free(b64);
+
+    return output;
+}
+
+// Génère un token JWT
+bool jwt_generate_token(int user_id, const char* email, char* token_out, size_t token_size) {
+    // Vérification de la clé secrète
+    if (strlen(JWT_SECRET) == 0) {
+        // fprintf(stderr, "❌ [JWT] JWT_SECRET non initialisé !\n");
+        return false;
+    }
+
+    // Header
+    cJSON* header = cJSON_CreateObject();
+    cJSON_AddStringToObject(header, "alg", "HS256");
+    cJSON_AddStringToObject(header, "typ", "JWT");
+    char* header_str = cJSON_PrintUnformatted(header);
+    char* header_b64 = base64url_encode((unsigned char*)header_str, strlen(header_str));
+
+    // Payload
+    cJSON* payload = cJSON_CreateObject();
+    cJSON_AddNumberToObject(payload, "user_id", user_id);
+    cJSON_AddStringToObject(payload, "email", email);
+    cJSON_AddNumberToObject(payload, "exp", time(NULL) + 86400); // 24h
+    char* payload_str = cJSON_PrintUnformatted(payload);
+    char* payload_b64 = base64url_encode((unsigned char*)payload_str, strlen(payload_str));
+
+    // Message à signer : header.payload
+    char message[1024];
+    snprintf(message, sizeof(message), "%s.%s", header_b64, payload_b64);
+
+    // Signature HMAC-SHA256
+    unsigned char signature[EVP_MAX_MD_SIZE];
+    unsigned int sig_len;
+
+    HMAC(EVP_sha256(), JWT_SECRET, strlen(JWT_SECRET),
+         (unsigned char*)message, strlen(message),
+         signature, &sig_len);
+
+    char* signature_b64 = base64url_encode(signature, sig_len);
+
+    // Token final : header.payload.signature
+    snprintf(token_out, token_size, "%s.%s.%s", header_b64, payload_b64, signature_b64);
+
+    // Debug
+    // fprintf(stderr, "✅ [JWT] Token généré pour user_id=%d | Clé: %.20s...\n",
+            user_id, JWT_SECRET);
+
+    // Nettoyage
+    free(header_str);
+    free(payload_str);
+    free(header_b64);
+    free(payload_b64);
+    free(signature_b64);
+    cJSON_Delete(header);
+    cJSON_Delete(payload);
+
+    return true;
+}
+
+// Vérifie et décode un token JWT
+bool jwt_verify_token(const char* token, int* user_id_out, char* email_out, size_t email_size) {
+    // Vérification de la clé secrète
+    if (strlen(JWT_SECRET) == 0) {
+        // fprintf(stderr, "❌ [JWT] JWT_SECRET non initialisé !\n");
+        return false;
+    }
+
+    // Séparer les 3 parties
+    char token_copy[512];
+    strncpy(token_copy, token, sizeof(token_copy) - 1);
+
+    char* header_b64 = strtok(token_copy, ".");
+    char* payload_b64 = strtok(NULL, ".");
+    char* signature_b64 = strtok(NULL, ".");
+
+    if (!header_b64 || !payload_b64 || !signature_b64) {
+        // fprintf(stderr, "❌ [JWT] Format invalide\n");
+        return false;
+    }
+
+    // Recalculer la signature
+    char message[1024];
+    snprintf(message, sizeof(message), "%s.%s", header_b64, payload_b64);
+
+    unsigned char expected_sig[EVP_MAX_MD_SIZE];
+    unsigned int sig_len;
+
+    HMAC(EVP_sha256(), JWT_SECRET, strlen(JWT_SECRET),
+         (unsigned char*)message, strlen(message),
+         expected_sig, &sig_len);
+
+    char* expected_sig_b64 = base64url_encode(expected_sig, sig_len);
+
+    // Comparer les signatures
+    bool sig_valid = (strcmp(signature_b64, expected_sig_b64) == 0);
+    free(expected_sig_b64);
+
+    if (!sig_valid) {
+        // fprintf(stderr, "❌ [JWT] Signature invalide\n");
+        return false;
+    }
+
+    // Décoder le payload
+    int payload_len;
+    unsigned char* payload_json = base64url_decode(payload_b64, &payload_len);
+
+    cJSON* payload = cJSON_ParseWithLength((char*)payload_json, payload_len);
+    free(payload_json);
+
+    if (!payload) {
+        // fprintf(stderr, "❌ [JWT] Payload JSON invalide\n");
+        return false;
+    }
+
+    // Vérifier l'expiration
+    cJSON* exp_item = cJSON_GetObjectItem(payload, "exp");
+    if (exp_item && cJSON_IsNumber(exp_item)) {
+        time_t exp = (time_t)exp_item->valuedouble;
+        if (time(NULL) > exp) {
+            // fprintf(stderr, "❌ [JWT] Token expiré\n");
+            cJSON_Delete(payload);
+            return false;
+        }
+    }
+
+    // Extraire les données
+    cJSON* user_id_item = cJSON_GetObjectItem(payload, "user_id");
+    cJSON* email_item = cJSON_GetObjectItem(payload, "email");
+
+    if (user_id_item && cJSON_IsNumber(user_id_item)) {
+        *user_id_out = (int)user_id_item->valuedouble;
+    }
+
+    if (email_item && cJSON_IsString(email_item)) {
+        strncpy(email_out, email_item->valuestring, email_size - 1);
+        email_out[email_size - 1] = '\0';
+    }
+
+    // fprintf(stderr, "✅ [JWT] Token valide pour user_id=%d\n", *user_id_out);
+
+    cJSON_Delete(payload);
+    return true;
+}
+
+int extract_user_id_from_cookie(struct mg_http_message* hm) {
+    struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
+    if (!cookie_hdr) return 0;
+    char jwt[512];
+    if (mg_http_get_var(cookie_hdr, "plant_shop_c_backend", jwt, sizeof jwt) <= 0) return 0;
+    int uid = 0; char email[128];
+    if (!jwt_verify_token(jwt, &uid, email, sizeof email)) return 0;
+    return uid;
+}
+
+
+# ./routes.c
+
+#include <stdio.h>
+#include <string.h>
+#include "mongoose/mongoose.h"
+#include "routes.h"
+#include "src/controllers/auth_controller.h"
+#include "src/controllers/plant_controller.h"
+#include "src/controllers/user_controller.h"
+#include "src/controllers/order_controller.h"
+#include "src/controllers/order_item_controller.h"
+#include "src/utils/cors.h"
+
+/* -------- trace utilitaire -------- */
+static void log_route(struct mg_http_message *hm, const char *h) {
+	fprintf(stderr, "[ROUTE] %.*s %.*s → %s\n",
+	        (int) hm->method.len, hm->method.buf,
+	        (int) hm->uri.len,    hm->uri.buf,
+	        h);
+}
+
+/* -------- /api/ping -------- */
+static void api_ping(struct mg_connection *c, struct mg_http_message *hm) {
+	// log_route(hm, "api_ping");
+	cors_reply(c, 200, "", "");
+}
+
+/* -------- routeur principal -------- */
+void route_request(struct mg_connection *c, struct mg_http_message *hm) {
+  if (cors_handle_preflight(c, hm)) return;
+	int id = 0;                               /* buffer id */
+
+	/* ----- Auth ----- */
+	if (mg_http_match_uri(hm, "/api/auth/login")) {
+		// log_route(hm, "auth_login"),  auth_login(c, hm);
+	} else if (mg_http_match_uri(hm, "/api/auth/register")) {
+		// log_route(hm, "auth_register"), auth_register(c, hm);
+	} else if (mg_http_match_uri(hm, "/api/auth/me")) {
+		// log_route(hm, "auth_me"), auth_me(c, hm);
+	} else if (mg_http_match_uri(hm, "/api/auth/logout")) {
+		if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
+			// log_route(hm, "auth_logout"), auth_logout(c, hm);
+		} else {
+			cors_reply(c, 405, "Allow: POST\r\n", "");
+		}
+	}
+
+	/* ----- Plants ----- */
+	else if (mg_http_match_uri(hm, "/api/plants")) {
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			// log_route(hm, "plants_list_public"), plants_list_public(c, hm);
+		} else {
+			cors_reply(c, 405, "Allow: GET\r\n", "");
+		}
+	} else if (sscanf(hm->uri.buf, "/api/plants/%d", &id) == 1) {
+		// log_route(hm, "plant_get"), plant_get(c, hm, id);
+	} else if (mg_http_match_uri(hm, "/api/admin/plants")) {
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			// log_route(hm, "admin_plants_list"), admin_plants_list(c, hm);
+		} else if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
+			// log_route(hm, "admin_plants_add"),  admin_plants_add(c, hm);
+		}
+	} else if (sscanf(hm->uri.buf, "/api/admin/plants/%d", &id) == 1) {
+		if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
+			// log_route(hm, "admin_plants_patch"), admin_plants_patch(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
+			// log_route(hm, "admin_plants_del"),  admin_plants_del(c, hm, id);
+		}
+	}
+
+	/* ----- Users ----- */
+	else if (mg_http_match_uri(hm, "/api/users")) {
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			// log_route(hm, "admin_users_list");
+			admin_users_list(c, hm);        /* gestion GET /api/users */
+		} else if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
+			// log_route(hm, "user_create");
+			user_create(c, hm);
+		}
+	} else if (sscanf(hm->uri.buf, "/api/users/%d", &id) == 1) {
+		printf("[Route] /api/users/%d, en cours de modification d'un user : (id = %d)\n", id, id);
+
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			// log_route(hm, "user_get");
+			user_get(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
+			// log_route(hm, "user_patch");
+			user_patch(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
+			// log_route(hm, "user_del");
+			user_del(c, hm, id);
+		}
+	}
+
+	/* ----- Admin users ----- */
+	else if (mg_http_match_uri(hm, "/api/admin/users")) {
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			// log_route(hm, "admin_users_list");
+			admin_users_list(c, hm);
+		}
+	}
+
+	/* ----- Alias admin sur /api/admin/users/:id ----- */
+	else if (sscanf(hm->uri.buf, "/api/admin/users/%d", &id) == 1) {
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			// log_route(hm, "admin_user_get");
+			user_get(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
+			// log_route(hm, "admin_user_patch");
+			user_patch(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
+			// log_route(hm, "admin_user_del");
+			user_del(c, hm, id);
+		} else {
+			cors_reply(c, 405, "Allow: GET,PATCH,DELETE\r\n", "");
+		}
+	}
+
+	/* ----- Orders (items avant id, id avant liste) ----- */
+	else if (mg_http_match_uri(hm, "/api/orders/*/items")) {    /* /orders/:id/items */
+		if (sscanf(hm->uri.buf, "/api/orders/%d/items", &id) == 1) {
+			// log_route(hm, "order_items_by_order"), order_items_by_order(c, hm, id);
+		}
+	} else if (sscanf(hm->uri.buf, "/api/orders/%d", &id) == 1) { /* /orders/:id */
+		if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
+			// log_route(hm, "orders_patch"), orders_patch(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
+			// log_route(hm, "orders_del"), orders_del(c, hm, id);
+		}
+	} else if (mg_http_match_uri(hm, "/api/orders")) {          /* /orders */
+		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
+			// log_route(hm, "orders_list"), orders_list(c, hm);
+		} else if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
+			// log_route(hm, "orders_create"), orders_create(c, hm);
+		}
+	}
+
+	/* ----- Order-items individuels ----- */
+	else if (sscanf(hm->uri.buf, "/api/order-items/%d", &id) == 1) {
+		if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
+			// log_route(hm, "order_item_patch"), order_item_patch(c, hm, id);
+		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
+			// log_route(hm, "order_item_del"),  order_item_del(c, hm, id);
+		}
+	}
+
+	/* ----- Ping et 404 ----- */
+	else if (mg_http_match_uri(hm, "/api/ping")) {
+		api_ping(c, hm);
+	} else {
+		// log_route(hm, "404"), cors_reply(c, 404, "Content-Type: text/plain\r\n", "Not Found\n");
+	}
+}
+
+
+# ./db/seed.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <libpq-fe.h>
+#include <argon2.h>
+#include "seed_data.h"
+
+#define NB_ADMINS 3
+#define NB_USERS 20
+#define NB_PLANTS 50
+#define MAX_ORDERS_PER_USER 7
+#define MAX_ITEMS_PER_ORDER 5
+
+/* ---------- Utils ---------- */
+static int rnd(int min, int max) {
+    if (min > max) return min;
+    return min + rand() % (max - min + 1);
+}
+static const char* pick(const char* const arr[], int len) { return arr[rnd(0, len - 1)]; }
+
+// Génère un sel aléatoire. Pour une vraie app, utiliser une source plus forte.
+static void generate_salt(uint8_t *salt, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        salt[i] = rand();
+    }
+}
+
+/** Renvoie une chaîne hachée Argon2id encodée */
+static char* hash_argon2(const char* pwd) {
+    static char encoded_hash[128];
+    uint8_t salt[16];
+    generate_salt(salt, sizeof(salt));
+
+    size_t hashlen = 32;
+    if (argon2id_hash_encoded(2, 1 << 16, 1,
+                              pwd, strlen(pwd),
+                              salt, sizeof(salt),
+                              hashlen,
+                              encoded_hash, sizeof(encoded_hash)) != ARGON2_OK) {
+        fprintf(stderr, "Erreur de hachage Argon2\n");
+        exit(1);
+    }
+    return encoded_hash;
+}
+
+/** Charge .env */
+static void read_env(char* url, char* user, char* pass) {
+    FILE* f = fopen(".env", "r");
+    if (!f) { perror(".env"); exit(1); }
+    char line[256];
+    while (fgets(line, sizeof line, f)) {
+        char* eq = strchr(line, '=');
+        if (!eq) continue;
+        *eq = '\0';
+        char* val = eq + 1;
+        val[strcspn(val, "\r\n")] = '\0';
+        if (!strcmp(line, "DATABASE_URL")) strcpy(url, val);
+        else if (!strcmp(line, "DATABASE_USER")) strcpy(user, val);
+        else if (!strcmp(line, "DATABASE_PASS")) strcpy(pass, val);
+    }
+    fclose(f);
+}
+
+/* ---------- SQL helpers ---------- */
+static void exec(PGconn* db, const char* q) {
+    PGresult* r = PQexec(db, q);
+    if (PQresultStatus(r) != PGRES_COMMAND_OK) {
+        fprintf(stderr, "Exec failed: %s\nQuery: %s\n", PQerrorMessage(db), q);
+    }
+    PQclear(r);
+}
+
+static int exec_returning_id(PGconn* db, const char* query, int nParams, const char* const* paramValues) {
+    PGresult* r = PQexecParams(db, query, nParams, NULL, paramValues, NULL, NULL, 0);
+    if (PQresultStatus(r) != PGRES_TUPLES_OK || PQntuples(r) == 0) {
+        fprintf(stderr, "Exec returning ID failed: %s\nQuery: %s\n", PQerrorMessage(db), query);
+        PQclear(r);
+        return -1;
+    }
+    int id = atoi(PQgetvalue(r, 0, 0));
+    PQclear(r);
+    return id;
+}
+
+static int insert_user(PGconn* db, const char* name, const char* email, const char* pwd_hash, int is_admin) {
+    const char* p[4] = {name, email, pwd_hash, is_admin ? "t" : "f"};
+    return exec_returning_id(db, "INSERT INTO users(name,email,password_hash,is_admin) VALUES($1,$2,$3,$4) RETURNING id", 4, p);
+}
+
+static int insert_plant(PGconn* db, const char* name, const char* desc, int price, int stock) {
+    char pr[12], st[12];
+    sprintf(pr, "%d.00", price); // Envoi comme NUMERIC
+    sprintf(st, "%d", stock);
+    const char* p[4] = {name, desc, pr, st};
+    return exec_returning_id(db, "INSERT INTO plants(name,description,price,stock) VALUES($1,$2,$3,$4) RETURNING id", 4, p);
+}
+
+static int insert_order(PGconn* db, int user_id) {
+    char uid_str[12];
+    sprintf(uid_str, "%d", user_id);
+    const char* p[2] = {uid_str, "0.00"};
+    return exec_returning_id(db, "INSERT INTO orders(user_id, total, status) VALUES($1, $2, 'pending') RETURNING id", 2, p);
+}
+
+static void insert_order_item(PGconn* db, int order_id, int plant_id, int qty, int price) {
+    char oid_str[12], pid_str[12], qty_str[12], price_str[12];
+    sprintf(oid_str, "%d", order_id);
+    sprintf(pid_str, "%d", plant_id);
+    sprintf(qty_str, "%d", qty);
+    sprintf(price_str, "%d.00", price);
+    const char* p[4] = {oid_str, pid_str, qty_str, price_str};
+    PGresult* r = PQexecParams(db, "INSERT INTO order_items(order_id, plant_id, quantity, price) VALUES ($1,$2,$3,$4)", 4, NULL, p, NULL, NULL, 0);
+    PQclear(r);
+}
+
+static void update_order_total(PGconn* db, int order_id, int total) {
+    char oid_str[12], total_str[12];
+    sprintf(oid_str, "%d", order_id);
+    sprintf(total_str, "%d.00", total);
+    const char* p[2] = {total_str, oid_str};
+    PGresult* r = PQexecParams(db, "UPDATE orders SET total=$1 WHERE id=$2", 2, NULL, p, NULL, NULL, 0);
+    PQclear(r);
+}
+
+/* ---------- Main ---------- */
+int main(void) {
+    srand((unsigned)time(NULL));
+
+    char url[128] = "", user[64] = "", pass[64] = "";
+    read_env(url, user, pass);
+    const char* keys[] = {"dbname", "user", "password", NULL};
+    const char* vals[] = {url, user, pass, NULL};
+    PGconn* db = PQconnectdbParams(keys, vals, 0);
+    if (PQstatus(db) != CONNECTION_OK) {
+        fprintf(stderr, "DB connection error: %s\n", PQerrorMessage(db));
+        return 1;
+    }
+    printf("✅ Connexion à la base de données réussie.\n");
+
+    printf("🧹 Nettoyage des tables...\n");
+    exec(db, "TRUNCATE order_items,orders,plants,users RESTART IDENTITY CASCADE");
+
+    FILE* txt = fopen("users.txt", "w");
+    fprintf(txt, "Administrateurs :\n\n");
+
+    /* ---------- Administrateurs ---------- */
+    printf("👑 Création des administrateurs...\n");
+    for (int i = 0; i < NB_ADMINS; i++) {
+        const char* first = pick(FIRST, sizeof(FIRST) / sizeof(char*));
+        const char* last  = pick(LAST,  sizeof(LAST)  / sizeof(char*));
+        char name[64], email[64];
+        sprintf(name,  "%s %s", first, last);
+        sprintf(email, "admin%d@planteshop.com", i + 1);
+
+        insert_user(db, name, email, hash_argon2("password"), 1);
+        fprintf(txt, "%s password\n", email);
+    }
+
+    fprintf(txt, "\nUtilisateurs :\n\n");
+
+    /* ---------- Utilisateurs ---------- */
+    printf("👥 Création des utilisateurs...\n");
+    int user_ids[NB_USERS];
+    for (int i = 0; i < NB_USERS; i++) {
+        const char* first = pick(FIRST, sizeof(FIRST) / sizeof(char*));
+        const char* last  = pick(LAST,  sizeof(LAST)  / sizeof(char*));
+        char email[64], pwd[16], name[64];
+        sprintf(email, "%s_%s%d@%s", first, last, rnd(20, 99), pick(EMAIL_DOMAINS, 3));
+        sprintf(pwd, "pw%d", rnd(100000000, 999999999));
+        sprintf(name, "%s %s", first, last);
+        user_ids[i] = insert_user(db, name, email, hash_argon2(pwd), 0);
+        fprintf(txt, "%s %s\n", email, pwd);
+    }
+
+    /* ---------- Plantes ---------- */
+    printf("🌱 Création des plantes...\n");
+    int plant_ids[NB_PLANTS], plant_prices[NB_PLANTS], plant_stocks[NB_PLANTS];
+    for (int i = 0; i < NB_PLANTS; i++) {
+        plant_prices[i] = rnd(5, 50);
+        plant_stocks[i] = rnd(10, 50);
+        plant_ids[i] = insert_plant(db, PLANT_NAMES[i], "Une belle plante à découvrir.", plant_prices[i], plant_stocks[i]);
+    }
+
+    /* ---------- Commandes ---------- */
+    printf("🛒 Création des commandes et articles...\n");
+    int total_orders = 0;
+    for (int i = 0; i < NB_USERS; i++) {
+        int num_orders = rnd(1, MAX_ORDERS_PER_USER);
+        for (int j = 0; j < num_orders; j++) {
+            int order_id = insert_order(db, user_ids[i]);
+            if (order_id == -1) continue;
+            total_orders++;
+
+            int order_total = 0;
+            int num_items = rnd(1, MAX_ITEMS_PER_ORDER);
+            for (int k = 0; k < num_items; k++) {
+                int plant_idx = rnd(0, NB_PLANTS - 1);
+                if (plant_stocks[plant_idx] > 0) {
+                    int qty = rnd(1, 3);
+                    qty = (qty > plant_stocks[plant_idx]) ? plant_stocks[plant_idx] : qty;
+
+                    insert_order_item(db, order_id, plant_ids[plant_idx], qty, plant_prices[plant_idx]);
+                    order_total += plant_prices[plant_idx] * qty;
+                    plant_stocks[plant_idx] -= qty;
+                }
+            }
+            if (order_total > 0) {
+                update_order_total(db, order_id, order_total);
+            }
+        }
+    }
+    printf("✅ %d commandes créées.\n", total_orders);
+
+    fclose(txt);
+    PQfinish(db);
+    puts("🎉 Seed terminée !");
+    return 0;
+}
+
+
+# ./routes.h
+
+#ifndef ROUTES_H
+#define ROUTES_H
+
+#include "mongoose/mongoose.h"
+
+/** Teste hm->uri sur un motif glob simple. */
+static inline bool mg_http_match_uri(const struct mg_http_message *hm,
+									 const char *pattern) {
+	return mg_match(hm->uri, mg_str(pattern), NULL);
+}
+
+void route_request(struct mg_connection *c, struct mg_http_message *hm);
+
+#endif // ROUTES_H
+
+
+# ./src/utils/utils.h
+
+#ifndef UTILS_H
+#define UTILS_H
+
+#include <stddef.h>
+#include "../mongoose/mongoose.h"
+
+void read_db_env(char* url, char* user, char* pass);
+void read_server_env(char* port, char* jwt_secret);
+int get_cookie_manual(struct mg_http_message* hm, const char* name, char* out, size_t sz);
+int get_current_user_id(struct mg_http_message *hm);
+
+#endif
+
+
+# ./src/utils/cors.h
+
+#ifndef CORS_H
+#define CORS_H
+
+#include "../mongoose/mongoose.h"
+#include <stdarg.h>
+
+// Envoie une réponse HTTP avec headers CORS
+void cors_reply(struct mg_connection *c, int status, const char *extra_headers, const char *fmt, ...);
+
+// Envoie une réponse JSON avec headers CORS
+void cors_reply_json(struct mg_connection *c, int status, const char *json);
+
+// Gère les requêtes OPTIONS (preflight)
+// Retourne 1 si c'est un preflight (déjà traité), 0 sinon
+int cors_handle_preflight(struct mg_connection *c, struct mg_http_message *hm);
+
+#endif
+
+
+# ./src/controllers/auth_controller.h
+
+#ifndef CTRL_AUTH_H
+#define CTRL_AUTH_H
+
+#include "mongoose/mongoose.h"
+
+void auth_login(struct mg_connection *c, struct mg_http_message *hm);
+void auth_register(struct mg_connection *c, struct mg_http_message *hm);
+void auth_me(struct mg_connection *c, struct mg_http_message *hm);
+void auth_logout(struct mg_connection *c, struct mg_http_message *hm);
+
+#endif
+
+
+# ./src/controllers/user_controller.h
+
+#ifndef CTRL_USER_H
+#define CTRL_USER_H
+
+#include "mongoose/mongoose.h"
+
+void user_create(struct mg_connection *c, struct mg_http_message *hm);
+void user_get(struct mg_connection *c, struct mg_http_message *hm, int id);
+void user_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
+void user_del(struct mg_connection *c, struct mg_http_message *hm, int id);
+void admin_users_list(struct mg_connection *c, struct mg_http_message *hm);
+
+#endif
+
+
+# ./src/controllers/order_controller.h
+
+#ifndef CTRL_ORDER_H
+#define CTRL_ORDER_H
+
+#include "mongoose/mongoose.h"
+
+void orders_list(struct mg_connection *c, struct mg_http_message *hm);
+void orders_create(struct mg_connection *c, struct mg_http_message *hm);
+void orders_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
+void orders_del(struct mg_connection *c, struct mg_http_message *hm, int id);
+
+#endif
+
+
+# ./src/controllers/plant_controller.h
+
+#ifndef CTRL_PLANT_H
+#define CTRL_PLANT_H
+
+#include "mongoose/mongoose.h"
+
+void plant_get(struct mg_connection *c, struct mg_http_message *hm, int id);
+void admin_plants_list(struct mg_connection *c, struct mg_http_message *hm);
+void admin_plants_add(struct mg_connection *c, struct mg_http_message *hm);
+void admin_plants_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
+void admin_plants_del(struct mg_connection *c, struct mg_http_message *hm, int id);
+void plants_list_public(struct mg_connection *c, struct mg_http_message *hm);
+
+#endif
+
+
+# ./src/controllers/order_item_controller.h
+
+#ifndef CTRL_ORDER_ITEM_H
+#define CTRL_ORDER_ITEM_H
+
+#include "mongoose/mongoose.h"
+
+void order_items_by_order(struct mg_connection *c, struct mg_http_message *hm, int order_id);
+void order_item_patch(struct mg_connection *c, struct mg_http_message *hm, int id);
+void order_item_del(struct mg_connection *c, struct mg_http_message *hm, int id);
+
+#endif
+
+
+# ./src/repository/order_repository.h
+
+#ifndef REPO_ORDER_H
+#define REPO_ORDER_H
+
+#include <libpq-fe.h>
+#include <cjson/cJSON.h>
+#include "../models/order.h"
+
+int  order_repo_add(PGconn*, int user_id, cJSON* items);
+cJSON* order_repo_list(PGconn*, int user_id);
+void order_repo_patch(PGconn*, int id, cJSON* data);
+void order_repo_del(PGconn*, int id);
+int  order_repo_belongs_to(PGconn*, int order_id, int user_id);
+int  order_repo_is_admin(PGconn *db, int user_id);
+int order_repo_update_status(PGconn *conn, int order_id, const char* status);
+
+#endif
+
+
+# ./src/repository/user_repository.h
+
+#ifndef REPO_USER_H
+#define REPO_USER_H
+
+#include <libpq-fe.h>
+#include <cjson/cJSON.h>
+#include "../models/user.h"
+
+int  user_repo_add(PGconn *conn, const User *u);
+int  user_repo_find(PGconn *conn, int id, User *out);
+int  user_repo_find_by_mail(PGconn *conn, const char *email, User *out);
+void user_repo_patch(PGconn *conn, int id, cJSON *patch_data);
+void user_repo_del(PGconn *conn, int id);
+void user_repo_each(PGconn *conn, void (*cb)(User*, void*), void *ctx);
+int  user_repo_is_admin(PGconn *conn, int id);
+
+#endif
+
+
+# ./src/repository/order_item_repository.h
+
+#ifndef REPO_ORDER_ITEM_H
+#define REPO_ORDER_ITEM_H
+
+#include <libpq-fe.h>
+#include <cjson/cJSON.h>
+#include "../models/order_item.h"
+
+void order_item_repo_add(PGconn*, const OrderItem*);
+void order_item_repo_by_order(PGconn*, int, void(*)(OrderItem*, void*), void*);
+void order_item_repo_patch(PGconn*, int id, cJSON* data);
+void order_item_repo_del(PGconn*, int id);
+
+#endif
+
+
+# ./src/repository/plant_repository.h
+
+#ifndef REPO_PLANT_H
+#define REPO_PLANT_H
+
+#include <libpq-fe.h>
+#include <cjson/cJSON.h>
+#include "../models/plant.h"
+
+int  plant_repo_add(PGconn*, const Plant*);
+int  plant_repo_find(PGconn*, int, Plant*);
+void plant_repo_patch(PGconn*, int, cJSON*);
+void plant_repo_del(PGconn*, int);
+void plant_repo_each(PGconn*, void(*)(Plant*, void*), void*);
+
+#endif
+
+
+# ./src/models/plant.h
+
+#ifndef MODEL_PLANT_H
+#define MODEL_PLANT_H
+/** """ Table plants
+	@id    clé primaire
+	@name  nom plante
+	@desc  description courte
+	@price prix entier € (aligné tests)
+	@stock stock disponible """ */
+typedef struct {
+	int  id;
+	char name[64];
+	char description[128];
+	int  price;   /* euros */
+	int  stock;
+} Plant;
+#endif
+
+
+# ./src/models/order_item.h
+
+#ifndef MODEL_ORDER_ITEM_H
+#define MODEL_ORDER_ITEM_H
+/** """ Table order_items
+	@id       clé primaire
+	@order_id FK orders
+	@plant_id FK plants
+	@qty      quantité
+	@price    prix unitaire € """ */
+typedef struct {
+	int id;
+	int order_id;
+	int plant_id;
+	int qty;
+	int price;           /* euros */
+} OrderItem;
+#endif
+
+
+# ./src/models/order.h
+
+#ifndef MODEL_ORDER_H
+#define MODEL_ORDER_H
+/** """ Table orders
+	@id      clé primaire
+	@user_id FK users
+	@total   somme en € (entier)
+	@status  confirmed/pending/shipped/delivered """ */
+typedef struct {
+	int  id;
+	int  user_id;
+	int  total;          /* euros */
+	char status[12];
+} Order;
+#endif
+
+
+# ./src/models/user.h
+
+#ifndef MODEL_USER_H
+#define MODEL_USER_H
+/** """ Table users
+	@id           clé primaire
+	@name         nom complet
+	@email        email unique
+	@password_hash hash Argon2
+	@is_admin     0/1 """ */
+typedef struct {
+	int  id;
+	char name[64];
+	char email[64];
+	char password_hash[128];
+	int  is_admin;
+} User;
+#endif
+
+
+# ./src/auth/jwt.h
+
+#ifndef JWT_H
+#define JWT_H
+
+#include <stdbool.h>
+#include <stddef.h>
+
+struct mg_http_message;
+
+bool jwt_generate_token(int user_id, const char* email,
+                        char* token_out, size_t token_size);
+
+bool jwt_verify_token(const char* token,
+                      int* user_id_out,
+                      char* email_out,
+                      size_t email_size);
+
+int  extract_user_id_from_cookie(struct mg_http_message* hm);
+
+#endif  /* JWT_H */
+
+
+# ./db/seed_data.h
+
+#ifndef SEED_DATA_H
+#define SEED_DATA_H
+
+static const char* PLANT_NAMES[] = {
+    "Rose","Tulipe","Lavande","Orchidée","Basilic","Menthe","Pivoine","Tournesol",
+    "Cactus (Echinopsis)","Bambou","Camomille (Matricaria recutita)","Sauge (Salvia officinalis)",
+    "Romarin (Rosmarinus officinalis)","Thym (Thymus vulgaris)","Laurier-rose (Nerium oleander)",
+    "Aloe vera","Jasmin (Jasminum officinale)","Hortensia (Hydrangea macrophylla)",
+    "Marguerite (Leucanthemum vulgare)","Géranium (Pelargonium graveolens)",
+    "Fuchsia (Fuchsia magellanica)","Anémone (Anemone coronaria)","Azalée (Rhododendron simsii)",
+    "Chrysanthème (Chrysanthemum morifolium)","Digitale pourpre (Digitalis purpurea)",
+    "Glaïeul (Gladiolus hortulanus)","Lys (Lilium candidum)","Violette (Viola odorata)",
+    "Muguet (Convallaria majalis)","Iris (Iris germanica)","Lavandin (Lavandula intermedia)",
+    "Érable du Japon (Acer palmatum)","Citronnelle (Cymbopogon citratus)","Pin parasol (Pinus pinea)",
+    "Cyprès (Cupressus sempervirens)","Olivier (Olea europaea)","Papyrus (Cyperus papyrus)",
+    "Figuier (Ficus carica)","Eucalyptus (Eucalyptus globulus)","Acacia (Acacia dealbata)",
+    "Bégonia (Begonia semperflorens)","Calathea (Calathea ornata)","Dieffenbachia (Dieffenbachia seguine)",
+    "Ficus elastica","Sansevieria (Sansevieria trifasciata)","Philodendron (Philodendron scandens)",
+    "Yucca (Yucca elephantipes)","Zamioculcas zamiifolia","Monstera deliciosa",
+    "Pothos (Epipremnum aureum)" // 50 noms
+};
+
+static const char* FIRST[] = {
+    "Jean","Marie","Luc","Sophie","Pierre","Camille","Thomas","Julie","Louis","Élise", "Nicolas","Chloé"
+};
+
+static const char* LAST[] = {
+    "Dupont","Durand","Martin","Bernard","Petit","Robert","Richard","Garcia","Leroy","Moreau"
+};
+
+static const char* EMAIL_DOMAINS[] = {"gmail.com", "yahoo.fr", "hotmail.com"};
+
+#endif // SEED_DATA_H
+
+

@@ -2,6 +2,7 @@
 import { Route } from '@angular/router';
 import { AuthGuard } from './auth/auth.guard';
 import { AdminGuard } from './auth/admin.guard';
+import { SelfProfileGuard } from './auth/self-profile.guard';
 
 export const appRoutes: Route[] = [
   // 🌿 Produits
@@ -64,7 +65,7 @@ export const appRoutes: Route[] = [
       import('./users/user-profile-edit/user-profile-edit.component').then(
         (m) => m.UserProfileEditComponent
       ),
-    canActivate: [AdminGuard],
+    canActivate: [SelfProfileGuard],
   },
 
   // 📦 Commandes

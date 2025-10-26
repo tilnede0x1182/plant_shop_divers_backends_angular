@@ -1,0 +1,34 @@
+Admin, marche
+
+[ROUTE] GET /api/auth/me → auth_me
+🔔 [auth_me] Appel avec données reçues
+✅ [auth_me] Cookie trouvé
+✅ [auth_me] jwt extrait : 1
+✅ [auth_me] uid obtenu : 1
+🔎 [user_repo_find] Recherche de l'utilisateur id=1
+✅ [user_repo_find] Utilisateur trouvé (id=1)
+✅ [auth_me] Utilisateur trouvé, accès autorisé (id=1)
+🔓 [auth_me] Renvoi du profil utilisateur (id=1)
+[Route] /api/users/1, en cours de modification d'un user : (id = 1)
+[ROUTE] GET /api/users/1 → user_get
+🟦 user_get : requête reçue pour id = 1
+🔎 [user_repo_find] Recherche de l'utilisateur id=1
+✅ [user_repo_find] Utilisateur trouvé (id=1)
+✅ user_get : utilisateur id=1 trouvé, nom=Élise Martin, email=admin1@planteshop.com, admin=1
+🚀 user_get : envoi de la réponse JSON pour id=1
+=> ici on a accès à la page de modification du profile (user edit)
+
+User -> bug
+
+[ROUTE] GET /api/auth/me → auth_me
+[ROUTE] GET /api/auth/me → auth_me
+🔔 [auth_me] Appel avec données reçues
+✅ [auth_me] Cookie trouvé
+✅ [auth_me] jwt extrait : 24
+✅ [auth_me] uid obtenu : 24
+🔎 [user_repo_find] Recherche de l'utilisateur id=24
+✅ [user_repo_find] Utilisateur trouvé (id=24)
+✅ [auth_me] Utilisateur trouvé, accès autorisé (id=24)
+🔓 [auth_me] Renvoi du profil utilisateur (id=24)
+là -> accède à la page de connection à la place (alors qu'on était déjà connecté) -> comprtement normal en cas d'accès à une page 
+"interdite pour notre profil", donc anormal dans notre cas

@@ -82,7 +82,7 @@ static unsigned char* base64url_decode(const char* input, int* out_len) {
 bool jwt_generate_token(int user_id, const char* email, char* token_out, size_t token_size) {
     // Vérification de la clé secrète
     if (strlen(JWT_SECRET) == 0) {
-        fprintf(stderr, "❌ [JWT] JWT_SECRET non initialisé !\n");
+        // fprintf(stderr, "❌ [JWT] JWT_SECRET non initialisé !\n");
         return false;
     }
 
@@ -119,7 +119,7 @@ bool jwt_generate_token(int user_id, const char* email, char* token_out, size_t 
     snprintf(token_out, token_size, "%s.%s.%s", header_b64, payload_b64, signature_b64);
 
     // Debug
-    fprintf(stderr, "✅ [JWT] Token généré pour user_id=%d | Clé: %.20s...\n",
+    // fprintf(stderr, "✅ [JWT] Token généré pour user_id=%d | Clé: %.20s...\n",
             user_id, JWT_SECRET);
 
     // Nettoyage
@@ -138,7 +138,7 @@ bool jwt_generate_token(int user_id, const char* email, char* token_out, size_t 
 bool jwt_verify_token(const char* token, int* user_id_out, char* email_out, size_t email_size) {
     // Vérification de la clé secrète
     if (strlen(JWT_SECRET) == 0) {
-        fprintf(stderr, "❌ [JWT] JWT_SECRET non initialisé !\n");
+        // fprintf(stderr, "❌ [JWT] JWT_SECRET non initialisé !\n");
         return false;
     }
 
@@ -151,7 +151,7 @@ bool jwt_verify_token(const char* token, int* user_id_out, char* email_out, size
     char* signature_b64 = strtok(NULL, ".");
 
     if (!header_b64 || !payload_b64 || !signature_b64) {
-        fprintf(stderr, "❌ [JWT] Format invalide\n");
+        // fprintf(stderr, "❌ [JWT] Format invalide\n");
         return false;
     }
 
@@ -173,7 +173,7 @@ bool jwt_verify_token(const char* token, int* user_id_out, char* email_out, size
     free(expected_sig_b64);
 
     if (!sig_valid) {
-        fprintf(stderr, "❌ [JWT] Signature invalide\n");
+        // fprintf(stderr, "❌ [JWT] Signature invalide\n");
         return false;
     }
 
@@ -185,7 +185,7 @@ bool jwt_verify_token(const char* token, int* user_id_out, char* email_out, size
     free(payload_json);
 
     if (!payload) {
-        fprintf(stderr, "❌ [JWT] Payload JSON invalide\n");
+        // fprintf(stderr, "❌ [JWT] Payload JSON invalide\n");
         return false;
     }
 
@@ -194,7 +194,7 @@ bool jwt_verify_token(const char* token, int* user_id_out, char* email_out, size
     if (exp_item && cJSON_IsNumber(exp_item)) {
         time_t exp = (time_t)exp_item->valuedouble;
         if (time(NULL) > exp) {
-            fprintf(stderr, "❌ [JWT] Token expiré\n");
+            // fprintf(stderr, "❌ [JWT] Token expiré\n");
             cJSON_Delete(payload);
             return false;
         }
@@ -213,7 +213,7 @@ bool jwt_verify_token(const char* token, int* user_id_out, char* email_out, size
         email_out[email_size - 1] = '\0';
     }
 
-    fprintf(stderr, "✅ [JWT] Token valide pour user_id=%d\n", *user_id_out);
+    // fprintf(stderr, "✅ [JWT] Token valide pour user_id=%d\n", *user_id_out);
 
     cJSON_Delete(payload);
     return true;

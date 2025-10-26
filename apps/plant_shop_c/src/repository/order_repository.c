@@ -12,7 +12,7 @@ int order_repo_update_status(PGconn *conn, int order_id, const char* status) {
     const char *params[2] = {status, id_str};
     PGresult *r = PQexecParams(conn, "UPDATE orders SET status=$1 WHERE id=$2", 2, NULL, params, NULL, NULL, 0);
     if (PQresultStatus(r) != PGRES_COMMAND_OK) {
-        fprintf(stderr, "order_repo_update_status failed: %s\n", PQerrorMessage(conn));
+        // fprintf(stderr, "order_repo_update_status failed: %s\n", PQerrorMessage(conn));
         PQclear(r);
         return 0;
     }
@@ -33,7 +33,7 @@ int order_repo_add(PGconn *c, int user_id, cJSON* items_json) {
         3, NULL, v, NULL, NULL, 0);
 
     if (PQresultStatus(r) != PGRES_TUPLES_OK) {
-        fprintf(stderr, "order_repo_add failed: %s\n", PQerrorMessage(c));
+        // fprintf(stderr, "order_repo_add failed: %s\n", PQerrorMessage(c));
         PQclear(r);
         return 0;
     }
@@ -121,7 +121,7 @@ void order_repo_patch(PGconn *c, int id, cJSON *j) {
 
 	cJSON *status = cJSON_GetObjectItem(j, "status");
 	if (!status || !cJSON_IsString(status)) {
-		fprintf(stderr, "[DEBUG][ORDER_REPO] ordre %d : champ « status » absent ou invalide\n", id);
+		// fprintf(stderr, "[DEBUG][ORDER_REPO] ordre %d : champ « status » absent ou invalide\n", id);
 		return;
 	}
 
@@ -131,11 +131,11 @@ void order_repo_patch(PGconn *c, int id, cJSON *j) {
 	    2, NULL, v, NULL, NULL, 0);
 
 	if (PQresultStatus(r) != PGRES_COMMAND_OK) {
-		fprintf(stderr, "[ERROR][ORDER_REPO] update ordre %d -> « %s » : %s\n",
-		        id, status->valuestring, PQerrorMessage(c));
+		// fprintf(stderr, "[ERROR][ORDER_REPO] update ordre %d -> « %s » : %s\n",
+		        // id, status->valuestring, PQerrorMessage(c));
 	} else {
-		fprintf(stderr, "[DEBUG][ORDER_REPO] ordre %d mis à jour -> « %s »\n",
-		        id, status->valuestring);
+		// fprintf(stderr, "[DEBUG][ORDER_REPO] ordre %d mis à jour -> « %s »\n",
+		        // id, status->valuestring);
 	}
 	PQclear(r);
 }

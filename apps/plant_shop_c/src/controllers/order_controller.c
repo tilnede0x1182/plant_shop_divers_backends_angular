@@ -88,17 +88,17 @@ void orders_list(struct mg_connection* c, struct mg_http_message *hm) {
 }
 
 void orders_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
-	fprintf(stderr, "[DEBUG][PATCH] appel /api/orders/%d\n", id);
+	// fprintf(stderr, "[DEBUG][PATCH] appel /api/orders/%d\n", id);
 
 	if (!is_admin(hm)) {
-		fprintf(stderr, "[DEBUG][PATCH] refus : utilisateur non-admin\n");
+		// fprintf(stderr, "[DEBUG][PATCH] refus : utilisateur non-admin\n");
 		mg_http_reply(c, 403, "", "");
 		return;
 	}
 
 	cJSON *j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
 	if (!j) {
-		fprintf(stderr, "[DEBUG][PATCH] JSON invalide\n");
+		// fprintf(stderr, "[DEBUG][PATCH] JSON invalide\n");
 		mg_http_reply(c, 400,
 		              "Content-Type: application/json\r\n",
 		              "{\"error\":\"Invalid JSON\"}");
@@ -108,7 +108,7 @@ void orders_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
 	order_repo_patch(DB, id, j);
 	cJSON_Delete(j);
 
-	fprintf(stderr, "[DEBUG][PATCH] ordre %d traité\n", id);
+	// fprintf(stderr, "[DEBUG][PATCH] ordre %d traité\n", id);
 	mg_http_reply(c, 200, "", "");
 }
 

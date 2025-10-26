@@ -19,7 +19,7 @@ void order_item_repo_add(PGconn *db, const OrderItem *it) {
         "INSERT INTO order_items(order_id,plant_id,quantity,price) VALUES($1,$2,$3,$4)",
         4, NULL, params, NULL, NULL, 0);
     if (PQresultStatus(r) != PGRES_COMMAND_OK) {
-        fprintf(stderr, "order_item_repo_add: %s\n", PQerrorMessage(db));
+        // fprintf(stderr, "order_item_repo_add: %s\n", PQerrorMessage(db));
     }
     PQclear(r);
 }
@@ -33,7 +33,7 @@ void order_item_repo_by_order(PGconn *db, int oid, void(*cb)(OrderItem*, void*),
         "SELECT id,order_id,plant_id,quantity,price FROM order_items WHERE order_id=$1",
         1, NULL, p, NULL, NULL, 0);
     if (PQresultStatus(r) != PGRES_TUPLES_OK) {
-        fprintf(stderr, "order_item_repo_by_order: %s\n", PQerrorMessage(db));
+        // fprintf(stderr, "order_item_repo_by_order: %s\n", PQerrorMessage(db));
         PQclear(r);
         return;
     }

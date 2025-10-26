@@ -21,7 +21,7 @@ int user_repo_add(PGconn *conn, const User *u) {
         4, NULL, params, NULL, NULL, 0);
 
     if (PQresultStatus(r) != PGRES_TUPLES_OK) {
-        fprintf(stderr, "user_repo_add failed: %s\n", PQerrorMessage(conn));
+        // fprintf(stderr, "user_repo_add failed: %s\n", PQerrorMessage(conn));
         PQclear(r);
         return 0;
     }
@@ -48,7 +48,7 @@ int user_repo_find(PGconn *conn, int id, User *out) {
 }
 
 int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
-    printf("[DEBUG][SQL] Recherche email : '%s'\n", email);
+    // printf("[DEBUG][SQL] Recherche email : '%s'\n", email);
     const char *params[1] = {email};
     PGresult *r = PQexecParams(conn,
         "SELECT id, name, email, password_hash, is_admin FROM users WHERE email = $1",
@@ -57,10 +57,10 @@ int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
     int found = PQntuples(r);
     if (found) {
         fill_user(out, r, 0);
-        printf("[DEBUG][SQL] Utilisateur trouvé : email='%s' hash='%s'\n",
-            PQgetvalue(r, 0, 2), PQgetvalue(r, 0, 3));
+        // printf("[DEBUG][SQL] Utilisateur trouvé : email='%s' hash='%s'\n",
+            // PQgetvalue(r, 0, 2), PQgetvalue(r, 0, 3));
     } else {
-        printf("[DEBUG][SQL] Aucun utilisateur trouvé\n");
+        // printf("[DEBUG][SQL] Aucun utilisateur trouvé\n");
     }
     PQclear(r);
     return found;
@@ -119,7 +119,7 @@ void user_repo_del(PGconn *conn, int id) {
 void user_repo_each(PGconn *conn, void (*cb)(User*, void*), void *ctx) {
     PGresult *r = PQexec(conn, "SELECT id, name, email, password_hash, is_admin FROM users");
     if (PQresultStatus(r) != PGRES_TUPLES_OK) {
-        fprintf(stderr, "user_repo_each failed: %s\n", PQerrorMessage(conn));
+        // fprintf(stderr, "user_repo_each failed: %s\n", PQerrorMessage(conn));
         PQclear(r);
         return;
     }

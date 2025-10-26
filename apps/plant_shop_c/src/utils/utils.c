@@ -59,30 +59,30 @@ void read_server_env(char* port, char* jwt_secret) {
 
 int get_cookie_manual(struct mg_http_message* hm,
                       const char* name, char* out, size_t sz) {
-    printf("[COOKIE] get_cookie_manual called\n");
+    // printf("[COOKIE] get_cookie_manual called\n");
     struct mg_str* hdr = mg_http_get_header(hm, "Cookie");
     if (!hdr) {
-        printf("[COOKIE] no Cookie header\n");
+        // printf("[COOKIE] no Cookie header\n");
         return 0;
     }
-    printf("[COOKIE] header length = %zu\n", hdr->len);
+    // printf("[COOKIE] header length = %zu\n", hdr->len);
 
     size_t len = hdr->len;
     char buf[len + 1];
     memcpy(buf, hdr->buf, len);
     buf[len] = '\0';
-    printf("[COOKIE] header content = \"%s\"\n", buf);
+    // printf("[COOKIE] header content = \"%s\"\n", buf);
 
     char* tok = strtok(buf, ";");
     while (tok) {
         char* start = tok;
         while (*start == ' ') start++;
-        printf("[COOKIE] token = \"%s\"\n", start);
+        // printf("[COOKIE] token = \"%s\"\n", start);
 
         size_t keylen = strlen(name);
         if (strncmp(start, name, keylen) == 0 && start[keylen] == '=') {
             const char* val = start + keylen + 1;
-            printf("[COOKIE] found %s = \"%s\"\n", name, val);
+            // printf("[COOKIE] found %s = \"%s\"\n", name, val);
             strncpy(out, val, sz - 1);
             out[sz - 1] = '\0';
             return 1;
@@ -90,13 +90,13 @@ int get_cookie_manual(struct mg_http_message* hm,
         tok = strtok(NULL, ";");
     }
 
-    printf("[COOKIE] %s not found\n", name);
+    // printf("[COOKIE] %s not found\n", name);
     return 0;
 }
 
 /* get_current_user_id avec parsing manuel */
 int get_current_user_id(struct mg_http_message *hm) {
-		printf("Appel de la fonction : get_current_user_id\n");
+		// printf("Appel de la fonction : get_current_user_id\n");
     char jwt_val[32];
     if (!get_cookie_manual(hm, "plant_shop_c_backend", jwt_val, sizeof(jwt_val)))
         return 0;

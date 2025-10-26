@@ -29,7 +29,7 @@ void cors_reply(struct mg_connection *c, int status, const char *extra_headers, 
     char *body = malloc(needed);
     if (!body) {
         va_end(ap);
-        fprintf(stderr, "❌ [CORS] Allocation mémoire échouée pour %d bytes\n", needed);
+        // fprintf(stderr, "❌ [CORS] Allocation mémoire échouée pour %d bytes\n", needed);
         mg_http_reply(c, 500, headers, "{\"error\":\"Memory allocation failed\"}");
         return;
     }
@@ -38,8 +38,8 @@ void cors_reply(struct mg_connection *c, int status, const char *extra_headers, 
     va_end(ap);
 
     // 🔍 LOG DÉTAILLÉ
-    fprintf(stderr, "✅ [CORS] %d | Body size: %d bytes | Headers: %s\n",
-            status, needed - 1, extra_headers ? extra_headers : "(none)");
+    // fprintf(stderr, "✅ [CORS] %d | Body size: %d bytes | Headers: %s\n",
+            // status, needed - 1, extra_headers ? extra_headers : "(none)");
 
     // Envoi de la réponse
     mg_http_reply(c, status, headers, "%s", body);
@@ -47,13 +47,13 @@ void cors_reply(struct mg_connection *c, int status, const char *extra_headers, 
 }
 
 void cors_reply_json(struct mg_connection *c, int status, const char *json) {
-    fprintf(stderr, "📤 [CORS_JSON] Envoi JSON %d | Taille: %zu bytes\n", status, strlen(json));
+    // fprintf(stderr, "📤 [CORS_JSON] Envoi JSON %d | Taille: %zu bytes\n", status, strlen(json));
     cors_reply(c, status, "Content-Type: application/json\r\n", "%s", json);
 }
 
 int cors_handle_preflight(struct mg_connection *c, struct mg_http_message *hm) {
     if (mg_strcmp(hm->method, mg_str("OPTIONS")) == 0) {
-        fprintf(stderr, "🔄 [PREFLIGHT] %.*s\n", (int)hm->uri.len, hm->uri.buf);
+        // fprintf(stderr, "🔄 [PREFLIGHT] %.*s\n", (int)hm->uri.len, hm->uri.buf);
         cors_reply(c, 204, "", "");
         return 1;
     }

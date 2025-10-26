@@ -92,37 +92,37 @@ void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
 }
 
 void user_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
-    printf("[USER CONTROLLER] Réception de la requête PATCH /api/users/%d\n", id);
-    printf("[USER CONTROLLER] Corps reçu : \"%.*s\"\n", (int)hm->body.len, hm->body.buf);
+    // printf("[USER CONTROLLER] Réception de la requête PATCH /api/users/%d\n", id);
+    // printf("[USER CONTROLLER] Corps reçu : \"%.*s\"\n", (int)hm->body.len, hm->body.buf);
 
     int current_user_id = get_current_user_id(hm);
-    printf("[USER CONTROLLER] ID user courant extrait du cookie : %d\n", current_user_id);
+    // printf("[USER CONTROLLER] ID user courant extrait du cookie : %d\n", current_user_id);
 
     int current_user_is_admin = user_repo_is_admin(DB, current_user_id);
-    printf("[USER CONTROLLER] Statut admin du user courant : %d\n", current_user_is_admin);
+    // printf("[USER CONTROLLER] Statut admin du user courant : %d\n", current_user_is_admin);
 
     if (current_user_id != id && !current_user_is_admin) {
-        printf("[USER CONTROLLER] Refus : ni admin ni modification de son propre profil (id cible = %d, id courant = %d)\n", id, current_user_id);
+        // printf("[USER CONTROLLER] Refus : ni admin ni modification de son propre profil (id cible = %d, id courant = %d)\n", id, current_user_id);
         mg_http_reply(c, 403, "", "");
         return;
     }
 
     cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
     if (!j) {
-        printf("[USER CONTROLLER] JSON reçu invalide, abandon.\n");
+        // printf("[USER CONTROLLER] JSON reçu invalide, abandon.\n");
         mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
         return;
     }
 
     if (!current_user_is_admin && cJSON_HasObjectItem(j, "admin")) {
-        printf("[USER CONTROLLER] Tentative de modification du champ 'admin' refusée (non admin).\n");
+        // printf("[USER CONTROLLER] Tentative de modification du champ 'admin' refusée (non admin).\n");
         cJSON_DeleteItemFromObject(j, "admin");
     }
 
-    printf("[USER CONTROLLER] Mise à jour du profil utilisateur %d.\n", id);
+    // printf("[USER CONTROLLER] Mise à jour du profil utilisateur %d.\n", id);
     user_repo_patch(DB, id, j);
     cJSON_Delete(j);
-    printf("[USER CONTROLLER] Modification réussie (id = %d).\n", id);
+    // printf("[USER CONTROLLER] Modification réussie (id = %d).\n", id);
     mg_http_reply(c, 200, "", "");
 }
 

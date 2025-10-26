@@ -71,18 +71,18 @@ void auth_register(struct mg_connection* c, struct mg_http_message *hm) {
 void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
     struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
     if (cookie_hdr) {
-        printf("[LOGIN] Cookie: \"%.*s\"\n",
-               (int)cookie_hdr->len, cookie_hdr->buf);
+        // printf("[LOGIN] Cookie: \"%.*s\"\n",
+              //  (int)cookie_hdr->len, cookie_hdr->buf);
     } else {
-        printf("[LOGIN] No Cookie\n");
+        // printf("[LOGIN] No Cookie\n");
     }
 
-    printf("[LOGIN] Body: \"%.*s\"\n",
-           (int)hm->body.len, hm->body.buf);
+    // printf("[LOGIN] Body: \"%.*s\"\n",
+          //  (int)hm->body.len, hm->body.buf);
 
     cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
     if (!j) {
-        printf("[LOGIN] Invalid JSON\n");
+        // printf("[LOGIN] Invalid JSON\n");
         mg_http_reply(c, 400,
                       "Content-Type: application/json\r\n",
                       "{\"error\":\"Invalid JSON\"}\n");
@@ -97,13 +97,13 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
     if (e) snprintf(email_buf, sizeof(email_buf), "%s", e);
     if (p) snprintf(password_buf, sizeof(password_buf), "%s", p);
 
-    printf("[LOGIN] Email: '%s', Password: '%s'\n",
-           email_buf, password_buf);
+    // printf("[LOGIN] Email: '%s', Password: '%s'\n",
+          //  email_buf, password_buf);
 
     cJSON_Delete(j);
 
     if (!e || !p) {
-        printf("[LOGIN] Missing fields\n");
+        // printf("[LOGIN] Missing fields\n");
         mg_http_reply(c, 400,
                       "Content-Type: application/json\r\n",
                       "{\"error\":\"Missing fields\"}\n");
@@ -112,20 +112,20 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
 
     User u;
     if (!user_repo_find_by_mail(DB, email_buf, &u)) {
-        printf("[LOGIN] User not found\n");
+        // printf("[LOGIN] User not found\n");
         mg_http_reply(c, 401,
                       "Content-Type: application/json\r\n",
                       "{\"error\":\"Invalid credentials\"}\n");
         return;
     }
-    printf("[LOGIN] Found user id=%d\n", u.id);
+    // printf("[LOGIN] Found user id=%d\n", u.id);
 
     int verify_result = argon2id_verify(u.password_hash,
                                         password_buf,
                                         strlen(password_buf));
-    printf("[LOGIN] Password verify result: %d\n", verify_result);
+    // printf("[LOGIN] Password verify result: %d\n", verify_result);
     if (verify_result != ARGON2_OK) {
-        printf("[LOGIN] Incorrect password\n");
+        // printf("[LOGIN] Incorrect password\n");
         mg_http_reply(c, 401,
                       "Content-Type: application/json\r\n",
                       "{\"error\":\"Invalid credentials\"}\n");
@@ -136,7 +136,7 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
     snprintf(cookie, sizeof(cookie),
              "Set-Cookie: plant_shop_c_backend=%d; Path=/; HttpOnly; Max-Age=86400",
              u.id);
-    printf("[LOGIN] Set-Cookie: %s\n", cookie);
+    // printf("[LOGIN] Set-Cookie: %s\n", cookie);
 
     char headers[512];
     snprintf(headers, sizeof(headers),
@@ -172,7 +172,7 @@ void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
 
     User u;
     if (!user_repo_find(DB, uid, &u)) {
-        printf("[auth_me] No user with id %d\n", uid);
+        // printf("[auth_me] No user with id %d\n", uid);
         mg_http_reply(c, 401, "Content-Type: application/json\r\n",
                       "{\"error\":\"User not found\"}\n");
         return;

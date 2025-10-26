@@ -26,7 +26,7 @@ int plant_repo_add(PGconn *c, const Plant *p) {
 			4, NULL, v, NULL, NULL, 0);
 
 	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
-		fprintf(stderr, "plant_repo_add failed: %s\n", PQerrorMessage(c));
+		// fprintf(stderr, "plant_repo_add failed: %s\n", PQerrorMessage(c));
 		PQclear(r);
 		return 0;
 	}
@@ -110,7 +110,7 @@ void plant_repo_del(PGconn *c, int id) {
 void plant_repo_each(PGconn *c, void (*cb)(Plant*, void*), void *ctx) {
 	PGresult *r = PQexec(c, "SELECT id,name,description,price,stock FROM plants");
 	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
-		fprintf(stderr, "plant_repo_each failed: %s\n", PQerrorMessage(c));
+		// fprintf(stderr, "plant_repo_each failed: %s\n", PQerrorMessage(c));
 		PQclear(r);
 		return;
 	}

@@ -31,8 +31,6 @@ int user_repo_add(PGconn *conn, const User *u) {
 }
 
 int user_repo_find(PGconn *conn, int id, User *out) {
-    printf("🔎 [user_repo_find] Recherche de l'utilisateur id=%d\n", id);
-
     char id_str[12];
     sprintf(id_str, "%d", id);
     const char *params[1] = {id_str};
@@ -42,10 +40,8 @@ int user_repo_find(PGconn *conn, int id, User *out) {
 
     int found = PQntuples(r);
     if (found) {
-        printf("✅ [user_repo_find] Utilisateur trouvé (id=%d)\n", id);
         fill_user(out, r, 0);
     } else {
-        printf("❌ [user_repo_find] Aucun utilisateur trouvé pour id=%d\n", id);
     }
     PQclear(r);
     return found;
@@ -71,10 +67,9 @@ int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
 }
 
 int user_repo_is_admin(PGconn *conn, int id) {
-    printf("🔎 [user_repo_is_admin] Vérification statut admin pour id=%d\n", id);
 
     if (id == 0) {
-        printf("❌ [user_repo_is_admin] id=0, refusé comme admin\n");
+
         return 0;
     }
     char id_str[12];
@@ -85,13 +80,7 @@ int user_repo_is_admin(PGconn *conn, int id) {
     int is_admin = 0;
     if (PQntuples(r) > 0) {
         is_admin = (PQgetvalue(r, 0, 0)[0] == 't');
-        if (is_admin) {
-            printf("✅ [user_repo_is_admin] L'utilisateur id=%d est admin\n", id);
-        } else {
-            printf("🔸 [user_repo_is_admin] L'utilisateur id=%d n'est pas admin\n", id);
-        }
-    } else {
-        printf("❌ [user_repo_is_admin] Aucun utilisateur trouvé pour id=%d\n", id);
+
     }
     PQclear(r);
     return is_admin;

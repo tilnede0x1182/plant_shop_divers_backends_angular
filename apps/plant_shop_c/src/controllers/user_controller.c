@@ -18,25 +18,19 @@ static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
 static int get_current_user_id(struct mg_http_message* hm) {
     struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
     if (!cookie_hdr) {
-        printf("❌ get_current_user_id : aucun header Cookie reçu.\n");
         return 0;
     }
-    printf("🔎 get_current_user_id : header Cookie reçu : '%.*s'\n", (int)cookie_hdr->len, cookie_hdr->buf);
 
     char jwt_val_str[32];
     int jwt_found = mg_http_get_var(cookie_hdr, "jwt", jwt_val_str, sizeof(jwt_val_str));
     if (jwt_found <= 0) {
-        printf("❌ get_current_user_id : cookie 'jwt' absent ou invalide.\n");
         return 0;
     }
-    printf("🔎 get_current_user_id : valeur brute du jwt : '%s'\n", jwt_val_str);
 
     int uid = atoi(jwt_val_str);
     if (uid <= 0) {
-        printf("❌ get_current_user_id : uid extrait <= 0 (%d), cookie corrompu ou absent.\n", uid);
         return 0;
     }
-    printf("✅ get_current_user_id : id utilisateur extrait : %d\n", uid);
     return uid;
 }
 
@@ -98,15 +92,12 @@ void user_create(struct mg_connection* c, struct mg_http_message *hm) {
 }
 
 void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
-    printf("🟦 user_get : requête reçue pour id = %d\n", id);
 
     User u;
     if (!user_repo_find(DB, id, &u)) {
-        printf("❌ user_get : utilisateur id=%d non trouvé\n", id);
         mg_http_reply(c, 404, "", "");
         return;
     }
-    printf("✅ user_get : utilisateur id=%d trouvé, nom=%s, email=%s, admin=%d\n", u.id, u.name, u.email, u.is_admin);
 
     cJSON* j = cJSON_CreateObject();
     cJSON_AddNumberToObject(j, "id", u.id);
@@ -114,7 +105,6 @@ void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
     cJSON_AddStringToObject(j, "email", u.email);
     cJSON_AddBoolToObject(j, "admin", u.is_admin);
 
-    printf("🚀 user_get : envoi de la réponse JSON pour id=%d\n", u.id);
     send_json_reply(c, j, 200);
     (void)hm;
 }

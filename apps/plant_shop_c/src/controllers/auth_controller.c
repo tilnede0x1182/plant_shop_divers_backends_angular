@@ -127,31 +127,24 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
 
 void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
     // Log : réception des données (début)
-    printf("🔔 [auth_me] Appel avec données reçues\n");
 
     struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
     if (!cookie_hdr) {
-        printf("❌ [auth_me] Aucun cookie transmis\n");
         mg_http_reply(c, 401, "", "{\"error\":\"Unauthorized\"}\n");
         return;
     }
-    printf("✅ [auth_me] Cookie trouvé\n");
 
     char jwt_val_str[32];
     if (mg_http_get_var(cookie_hdr, "jwt", jwt_val_str, sizeof(jwt_val_str)) <= 0) {
-        printf("❌ [auth_me] Cookie 'jwt' absent ou illisible\n");
         mg_http_reply(c, 401, "", "{\"error\":\"Unauthorized\"}\n");
         return;
     }
-    printf("✅ [auth_me] jwt extrait : %s\n", jwt_val_str);
 
     int uid = atoi(jwt_val_str);
     if (uid == 0) {
-        printf("❌ [auth_me] jeton jwt invalide (uid=0)\n");
         mg_http_reply(c, 401, "", "{\"error\":\"Invalid token\"}\n");
         return;
     }
-    printf("✅ [auth_me] uid obtenu : %d\n", uid);
 
     User u;
     if (!user_repo_find(DB, uid, &u)) {
@@ -159,14 +152,12 @@ void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
         mg_http_reply(c, 401, "", "{\"error\":\"User not found\"}\n");
         return;
     }
-    printf("✅ [auth_me] Utilisateur trouvé, accès autorisé (id=%d)\n", u.id);
 
     cJSON* o = cJSON_CreateObject();
     cJSON_AddStringToObject(o, "email", u.email);
     cJSON_AddStringToObject(o, "name", u.name);
     cJSON_AddNumberToObject(o, "id", u.id);
     cJSON_AddBoolToObject(o, "admin", u.is_admin);
-    printf("🔓 [auth_me] Renvoi du profil utilisateur (id=%d)\n", u.id);
     send_json(c, o, 200);
 }
 

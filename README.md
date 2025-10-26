@@ -92,8 +92,3 @@ prisma/    → Modèles + seed
 tests/     → Scripts de test des routes backend
 diagnose-ora.js
 ```
-
-
-
-
-* **Java (Vanilla)** : serveur HTTP minimaliste en Java 21, basé sur `HttpServer` standard, architecture MVC explicite

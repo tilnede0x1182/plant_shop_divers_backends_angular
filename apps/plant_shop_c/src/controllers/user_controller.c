@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <argon2.h>
 #include "../repository/user_repository.h"
+#include "../utils/utils.h"
 
 extern PGconn* DB;
 
@@ -15,24 +16,24 @@ static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
     if (j) cJSON_Delete(j);
 }
 
-static int get_current_user_id(struct mg_http_message* hm) {
-    struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
-    if (!cookie_hdr) {
-        return 0;
-    }
+// static int get_current_user_id(struct mg_http_message* hm) {
+//     struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
+//     if (!cookie_hdr) {
+//         return 0;
+//     }
 
-    char jwt_val_str[32];
-    int jwt_found = mg_http_get_var(cookie_hdr, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str));
-    if (jwt_found <= 0) {
-        return 0;
-    }
+//     char jwt_val_str[32];
+//     int jwt_found = mg_http_get_var(cookie_hdr, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str));
+//     if (jwt_found <= 0) {
+//         return 0;
+//     }
 
-    int uid = atoi(jwt_val_str);
-    if (uid <= 0) {
-        return 0;
-    }
-    return uid;
-}
+//     int uid = atoi(jwt_val_str);
+//     if (uid <= 0) {
+//         return 0;
+//     }
+//     return uid;
+// }
 
 static int is_admin(struct mg_http_message* hm) {
     int uid = get_current_user_id(hm);

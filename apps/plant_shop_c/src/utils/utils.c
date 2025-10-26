@@ -55,3 +55,33 @@ void read_server_env(char* port, char* jwt_secret) {
     }
     fclose(f);
 }
+
+/* Extraction manuelle du cookie plant_shop_c_backend */
+int get_cookie_manual(struct mg_http_message* hm,
+                             const char* name, char* out, size_t sz) {
+  struct mg_str* hdr = mg_http_get_header(hm, "Cookie");
+  if (!hdr) return 0;
+  char buf[hdr->len+1];
+  memcpy(buf, hdr->buf, hdr->len);
+  buf[hdr->len] = '\0';
+  char* tok = strtok(buf, ";");
+  while (tok) {
+    while (*tok==' ') tok++;
+    if (strncmp(tok, name, strlen(name))==0 && tok[strlen(name)]=='=') {
+      strncpy(out, tok+strlen(name)+1, sz-1);
+      out[sz-1] = '\0';
+      return 1;
+    }
+    tok = strtok(NULL, ";");
+  }
+  return 0;
+}
+
+/* get_current_user_id avec parsing manuel */
+int get_current_user_id(struct mg_http_message *hm) {
+    char jwt_val[32];
+    if (!get_cookie_manual(hm, "plant_shop_c_backend", jwt_val, sizeof(jwt_val)))
+        return 0;
+    int uid = atoi(jwt_val);
+    return uid > 0 ? uid : 0;
+}

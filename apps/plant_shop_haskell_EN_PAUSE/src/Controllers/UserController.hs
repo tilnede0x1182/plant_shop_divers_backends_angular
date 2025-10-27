@@ -36,7 +36,7 @@ routes conn = do
 
   -- GET /api/users/:id
   get "/api/users/:id" $ do
-    targetId <- param "id"
+    targetId <- captureParam "id"
     user <- requireUser -- Récupère l'utilisateur authentifié
     -- Un admin peut voir n'importe qui, un utilisateur ne peut voir que lui-même.
     if userIsAdmin user || userId user == targetId
@@ -49,7 +49,7 @@ routes conn = do
 
   -- PATCH /api/users/:id
   patch "/api/users/:id" $ do
-    targetId <- param "id"
+    targetId <- captureParam "id"
     currentUser <- requireUser
     payload <- jsonData :: ActionM UpdateUserPayload
 
@@ -69,16 +69,27 @@ routes conn = do
   -- DELETE /api/admin/users/:id (Admin)
   delete "/api/admin/users/:id" $ do
     requireAdmin
-    targetId <- param "id"
-    rowsAffected <- liftIO $ execute conn "DELETE FROM users WHERE id = ?" (Only (targetId :: Int))
-    if rowsAffected > 0
-      then status status200
-      else R.notFound "Utilisateur non trouvé"
+    targetId <- captureParam "id"
+    deleteUser targetId
+
+  -- DELETE /api/users/:id (Admin ou suppression propre)
+  delete "/api/users/:id" $ do
+    targetId <- captureParam "id"
+    currentUser <- requireUser
+    if userIsAdmin currentUser || userId currentUser == targetId
+      then deleteUser targetId
+      else R.forbidden "Accès interdit"
 
   where
     listUsers = do
       users <- liftIO $ query_ conn "SELECT * FROM users ORDER BY is_admin DESC, name ASC"
       R.ok (map toPublicUser (users :: [User]))
+
+    deleteUser targetId = do
+      rowsAffected <- liftIO $ execute conn "DELETE FROM users WHERE id = ?" (Only (targetId :: Int))
+      if rowsAffected > 0
+        then status status200
+        else R.notFound "Utilisateur non trouvé"
 
 applyUserPatch :: User -> UpdateUserPayload -> Bool -> User
 applyUserPatch user payload isAdminCaller =

@@ -41,7 +41,7 @@ routes conn = do
 
   -- GET /api/plants/:id (Public)
   get "/api/plants/:id" $ do
-    plantId <- param "id"
+    plantId <- captureParam "id"
     plants <- liftIO $ query conn (plantSelectBase <> " WHERE id = ?") (Only (plantId :: Int))
     case plants of
       [plant] -> R.ok (plant :: Plant)
@@ -66,7 +66,7 @@ routes conn = do
   -- PATCH /api/admin/plants/:id (Admin)
   patch "/api/admin/plants/:id" $ do
     requireAdmin
-    plantId <- param "id"
+    plantId <- captureParam "id"
     payload <- jsonData :: ActionM Value -- Utilise Value pour gérer les champs partiels
 
     -- Récupérer la plante existante
@@ -82,7 +82,7 @@ routes conn = do
   -- DELETE /api/admin/plants/:id (Admin)
   delete "/api/admin/plants/:id" $ do
     requireAdmin
-    plantId <- param "id"
+    plantId <- captureParam "id"
     rowsAffected <- liftIO $ execute conn "DELETE FROM plants WHERE id = ?" (Only (plantId :: Int))
     if rowsAffected > 0
       then status status200 -- Le test e2e attend 200, pas 204

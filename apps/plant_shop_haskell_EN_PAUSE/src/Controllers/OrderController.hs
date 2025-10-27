@@ -4,36 +4,45 @@
 
 module Controllers.OrderController (routes) where
 
-import           Control.Exception      (SomeException, try)
-import           Control.Monad.IO.Class     (liftIO)
-import qualified Data.Aeson                 as Aeson
-import           Data.Maybe                 (fromMaybe)
+import           Control.Exception                 (SomeException, try)
+import           Control.Monad.IO.Class            (liftIO)
 import           Database.PostgreSQL.Simple
-import           Database.PostgreSQL.Simple.FromRow (FromRow)
-import           Network.HTTP.Types.Status (status200)
+import           Network.HTTP.Types.Status         (status200)
 import           Web.Scotty
-import           Models.User                 (User(..))
-import qualified Utils.Response             as R
-import qualified Models.Order as O
-import qualified Models.OrderItem as OI
-import qualified Models.Plant as P
+import           Models.User                      (User (..))
+import qualified Utils.Response                  as R
+import qualified Models.Order                     as O
+import qualified Models.OrderItem                 as OI
 import           Models.Order
 import           Models.OrderItem
 import           Models.Plant
-import           Middleware.Auth        (requireUser, requireAdmin)
+import           Middleware.Auth                  (requireAdmin, requireUser)
+
+orderSelectBase :: Query
+orderSelectBase =
+  "SELECT id, user_id, total::float8 AS total, status, created_at FROM orders"
+
+orderSelectAdmin :: Query
+orderSelectAdmin = orderSelectBase <> " ORDER BY created_at DESC"
+
+orderSelectByUser :: Query
+orderSelectByUser = orderSelectBase <> " WHERE user_id = ? ORDER BY created_at DESC"
+
+orderSelectById :: Query
+orderSelectById = orderSelectBase <> " WHERE id = ?"
+
+orderItemsSelectByOrder :: Query
+orderItemsSelectByOrder =
+  "SELECT id, order_id, plant_id, quantity, price::float8 AS price FROM order_items WHERE order_id = ?"
 
 routes :: Connection -> ScottyM ()
 routes conn = do
   -- GET /api/orders
   get "/api/orders" $ do
     user <- requireUser
-    let queryStr = if userIsAdmin user
-          then "SELECT * FROM orders ORDER BY created_at DESC"
-          else "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC"
-
     orders <- if userIsAdmin user
-      then liftIO $ query_ conn queryStr
-      else liftIO $ query conn queryStr (Only $ userId user)
+      then liftIO $ query_ conn orderSelectAdmin
+      else liftIO $ query conn orderSelectByUser (Only $ userId user)
 
     fullOrders <- liftIO $ mapM (fetchFullOrder conn) (orders :: [Order])
     R.ok fullOrders
@@ -44,7 +53,7 @@ routes conn = do
     payload <- jsonData :: ActionM CreateOrderPayload
 
     -- Utilisation de 'try' sur l'action IO, puis gestion du résultat dans ActionM
-    orderIdResult <- liftIO $ Control.Exception.try @SomeException $
+    orderIdResult <- liftIO $ try @SomeException $
       withTransaction conn $ do
         -- 1. Créer la commande avec un total de 0 pour obtenir un ID
         [Only orderId] <- query conn "INSERT INTO orders (user_id, total, status) VALUES (?, 0, 'pending') RETURNING id" (Only $ userId user)
@@ -60,27 +69,33 @@ routes conn = do
     case orderIdResult of
       Left e -> R.badRequest (show e) -- L'exception est maintenant gérée et renvoie un 400
       Right orderIdVal -> do
-        [newOrder] <- liftIO $ query conn "SELECT * FROM orders WHERE id = ?" (Only (orderIdVal :: Int))
-        fullOrder <- liftIO $ fetchFullOrder conn newOrder
-        R.created fullOrder
+        orders <- liftIO $ query conn orderSelectById (Only (orderIdVal :: Int))
+        case orders of
+          [newOrder] -> do
+            fullOrder <- liftIO $ fetchFullOrder conn newOrder
+            R.created fullOrder
+          _ -> R.serverError "Impossible de charger la commande après création."
 
   -- PATCH /api/orders/:id (Admin)
   patch "/api/orders/:id" $ do
     requireAdmin
-    orderId <- param "id"
+    orderId <- captureParam "id"
     payload <- jsonData :: ActionM UpdateOrderStatusPayload
     rowsAffected <- liftIO $ execute conn "UPDATE orders SET status = ? WHERE id = ?" (updateOrderStatus payload, orderId :: Int)
     if rowsAffected > 0
       then do
-        [updatedOrder] <- liftIO $ query conn "SELECT * FROM orders WHERE id = ?" (Only orderId)
-        fullOrder <- liftIO $ fetchFullOrder conn updatedOrder
-        R.ok fullOrder
+        orders <- liftIO $ query conn orderSelectById (Only orderId)
+        case orders of
+          [updatedOrder] -> do
+            fullOrder <- liftIO $ fetchFullOrder conn updatedOrder
+            R.ok fullOrder
+          _ -> R.serverError "Impossible de charger la commande après mise à jour."
       else R.notFound "Commande non trouvée"
 
   -- DELETE /api/orders/:id (Admin)
   delete "/api/orders/:id" $ do
     requireAdmin
-    orderId <- param "id"
+    orderId <- captureParam "id"
     -- La suppression en cascade est gérée par la DB (ON DELETE CASCADE)
     rowsAffected <- liftIO $ execute conn "DELETE FROM orders WHERE id = ?" (Only (orderId :: Int))
     if rowsAffected > 0
@@ -115,7 +130,7 @@ processItem conn orderId item = do
 -- | Récupère une commande et tous ses détails pour la sérialisation JSON
 fetchFullOrder :: Connection -> Order -> IO FullOrder
 fetchFullOrder conn order = do
-  items <- liftIO $ query conn "SELECT * FROM order_items WHERE order_id = ?" (Only $ orderId order)
+  items <- liftIO $ query conn orderItemsSelectByOrder (Only $ orderId order)
   fullItems <- mapM (fetchFullOrderItem conn) (items :: [OrderItem])
   return FullOrder
     { fullOrderId = orderId order

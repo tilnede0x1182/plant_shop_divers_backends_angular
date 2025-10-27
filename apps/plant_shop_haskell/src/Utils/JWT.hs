@@ -10,6 +10,7 @@ import           Data.Time.Clock.POSIX  (utcTimeToPOSIXSeconds)
 import           Models.User            (User (..))
 import           System.Environment     (lookupEnv)
 import           System.IO.Unsafe       (unsafePerformIO)
+import           Configuration.Dotenv   (loadFile, defaultConfig, Config(..))
 import           Web.JWT                ( JWTClaimsSet (..)
                                        , ClaimsMap (ClaimsMap)
                                        , decodeAndVerifySignature
@@ -21,13 +22,25 @@ import           Web.JWT                ( JWTClaimsSet (..)
                                        )
 import qualified Web.JWT                as JWT
 
--- Clé lue depuis l'environnement (.env -> JWT_SECRET), chargée une fois.
+{-|
+Lecture robuste de JWT_SECRET.
+Charge .env locaux si la variable n'est pas déjà présente.
+Priorité : "./.env", puis "../../.env".
+-}
 {-# NOINLINE secretKey #-}
 secretKey :: Text
 secretKey =
-  case unsafePerformIO (lookupEnv "JWT_SECRET") of
-    Just k  -> pack k
-    Nothing -> error "JWT_SECRET non défini dans l'environnement"
+	let loadEnvIfMissing = do
+		mk <- lookupEnv "JWT_SECRET"
+		case mk of
+			Just _  -> pure ()
+			Nothing -> do
+				_ <- loadFile defaultConfig { configPath = ["./.env"],   configOverride = False }
+				_ <- loadFile defaultConfig { configPath = ["../../.env"], configOverride = False }
+				pure ()
+		in case unsafePerformIO (loadEnvIfMissing >> lookupEnv "JWT_SECRET") of
+			Just k  -> pack k
+			Nothing -> error "JWT_SECRET non défini (./.env ou ../../.env)"
 
 -- Création d'un JWT HS256 valable 24h, compatible front + tests
 createToken :: User -> IO Text

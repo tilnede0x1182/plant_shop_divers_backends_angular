@@ -18,9 +18,11 @@ import qualified Controllers.OrderController as Order
 
 main :: IO ()
 main = do
-  -- Charger .env manuellement (DATABASE_URL et SERVER_ADDRESS)
-  let dotenvCfg = defaultConfig { configPath = ["../../.env"], configOverride = True }
-  _ <- loadFile dotenvCfg
+  -- Charger .env local d'abord, puis fallback monorepo
+  do
+    _ <- loadFile defaultConfig { configPath = ["./.env"],    configOverride = False }
+    _ <- loadFile defaultConfig { configPath = ["../../.env"], configOverride = False }
+    pure ()
 
   -- Connexion à la base
   connString <- C.loadDbConnectionString

@@ -177,6 +177,7 @@ int main() {
 	try {
 		checkConfigFile();
 		drogon::app().loadConfigFile("config.json");
+		sleep(0.3);
 
 		app().setLogLevel(trantor::Logger::kInfo);
 		if (!isPortAvailable(4100)) {

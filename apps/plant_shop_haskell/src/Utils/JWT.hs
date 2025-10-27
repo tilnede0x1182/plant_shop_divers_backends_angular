@@ -41,7 +41,6 @@ secretKey = do
 createToken :: User -> IO Text
 createToken user = do
   key <- secretKey
-  putStrLn "🧩 [DEBUG] JWT_SECRET chargé :"
   print key
   now <- getCurrentTime
   let expAt  = addUTCTime (24 * 60 * 60) now

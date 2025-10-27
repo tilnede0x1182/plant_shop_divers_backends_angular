@@ -71,6 +71,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **C++ (Drogon)** : serveur HTTP moderne en C++17, basé sur le framework `Drogon` avec ORM intégré, compilation via `CMake`.
 * **Java (Natif)** : serveur HTTP minimaliste en Java 21, utilisant `HttpServer` natif, MVC manuel.
 * **C (Natif)** : serveur HTTP minimaliste en C11, basé sur `mongoose`, MVC manuel, gestion PostgreSQL via `libpq`.
+* **Haskell (Stack)** : serveur HTTP en style fonctionnel avec `Scotty`, architecture MVC claire, ORM léger via `postgresql-simple`, sécurité JWT
 
 ---
 

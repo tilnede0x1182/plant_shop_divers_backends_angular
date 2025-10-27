@@ -141,11 +141,10 @@ public final class Test {
 		}
 
 		String contentType = response.headers().firstValue("Content-Type").orElse("");
-		if (contentType.startsWith("application/json")) {
-			String txt = response.body();
-			return txt.trim().isEmpty() ? new JSONObject() : new JSONObject(txt);
+		String txt = response.body().trim();
+		if (contentType.startsWith("application/json") || txt.startsWith("{")) {
+				return txt.isEmpty() ? new JSONObject() : new JSONObject(txt);
 		}
-		// Pour les réponses non-JSON (ex: 204 No Content), retourner un objet vide
 		return new JSONObject();
 	}
 
@@ -484,10 +483,7 @@ seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
 	java -cp $(CLASSPATH) db.Seed
 
-seed-dev:
-	make clean
-	compile-seed
-	seed
+seed-dev: clean compile-seed seed
 
 ## ────────────────
 # DB
@@ -518,10 +514,7 @@ tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
 	java -cp $(CLASSPATH) Tests.Test
 
-seed-dev:
-	make clean
-	compile-seed
-	seed
+seed-dev: clean compile-seed seed
 
 build-dev: clean compile_run
 
@@ -2277,7 +2270,8 @@ public final class Seed {
 
 		List<Integer> adminIds = new ArrayList<>();
 		List<Integer> userIds  = new ArrayList<>();
-		List<String>  credsOut = new ArrayList<>();   // pour users.txt
+		List<String>  credsOut = new ArrayList<>();
+		credsOut.add("Administrateurs :\n");
 
 		// Admins
 		System.out.println("👑 Création des administrateurs…");
@@ -2291,9 +2285,12 @@ public final class Seed {
 			insUser.setBoolean(4,true);
 			insUser.executeUpdate();
 			try(ResultSet rs=insUser.getGeneratedKeys()){ rs.next(); adminIds.add(rs.getInt(1)); }
-			credsOut.add(email+";"+pwd);
+			credsOut.add(email+" "+pwd);
 		}
 		System.out.println("✅ "+adminIds.size()+" admins.");
+
+		credsOut.add("");
+		credsOut.add("Utilisateurs :\n");
 
 		// Users
 		System.out.println("👥 Création des utilisateurs…");
@@ -2308,7 +2305,7 @@ public final class Seed {
 			insUser.setBoolean(4,false);
 			insUser.executeUpdate();
 			try(ResultSet rs=insUser.getGeneratedKeys()){ rs.next(); userIds.add(rs.getInt(1)); }
-			credsOut.add(email+";"+pwd);
+			credsOut.add(email+" "+pwd);
 		}
 		System.out.println("✅ "+userIds.size()+" utilisateurs.");
 
@@ -2405,6 +2402,7 @@ public final class Seed {
 # Tree du dossier
 
 .
+├── backend_java.txt
 ├── bin
 │   ├── controller
 │   │   ├── AuthController.class
@@ -2417,11 +2415,6 @@ public final class Seed {
 │   ├── db
 │   │   ├── Seed$1PlantInfo.class
 │   │   └── Seed.class
-│   ├── dto
-│   │   ├── OrderDTO.class
-│   │   ├── OrderItemDTO.class
-│   │   ├── PlantDTO.class
-│   │   └── UserDTO.class
 │   ├── Main.class
 │   ├── model
 │   │   ├── Order.class
@@ -2478,4 +2471,4 @@ public final class Seed {
 │   └── Test.java
 └── users.txt
 
-17 directories, 56 files
+16 directories, 53 files

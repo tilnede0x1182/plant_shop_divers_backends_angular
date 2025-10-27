@@ -3,13 +3,14 @@
 
 module Models.Order where
 
-import           Data.Aeson
-import           Data.Aeson.Casing (aesonDrop, camelCase)
-import           Data.Text         (Text)
-import           Data.Time         (UTCTime)
-import           GHC.Generics      (Generic)
-import           Models.OrderItem  (FullOrderItem)
-import           Database.PostgreSQL.Simple.FromRow (FromRow(..), field)
+import           Data.Aeson                     (FromJSON (..), ToJSON (..),
+                                                 genericParseJSON, object, (.=))
+import           Data.Aeson.Casing              (aesonDrop, camelCase)
+import           Data.Text                      (Text)
+import           Data.Time                      (UTCTime)
+import           GHC.Generics                   (Generic)
+import           Models.OrderItem               (FullOrderItem)
+import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 
 -- | Modèle de base pour une commande, tel que stocké en DB.
 data Order = Order
@@ -31,14 +32,16 @@ data FullOrder = FullOrder
   , fullOrderItems     :: [FullOrderItem]
   } deriving (Show, Generic)
 
-orderOptions :: Options
-orderOptions = aesonDrop 5 camelCase -- FIX: Le préfixe est "order" (5 lettres)
-
-fullOrderOptions :: Options
-fullOrderOptions = aesonDrop 9 camelCase -- FIX: Le préfixe est "fullOrder" (9 lettres)
-
 instance ToJSON FullOrder where
-  toJSON = genericToJSON fullOrderOptions
+  toJSON fullOrder =
+    object
+      [ "id"         .= fullOrderId fullOrder
+      , "userId"     .= fullOrderUserId fullOrder
+      , "total"      .= fullOrderTotal fullOrder
+      , "status"     .= fullOrderStatus fullOrder
+      , "createdAt"  .= fullOrderCreatedAt fullOrder
+      , "orderItems" .= fullOrderItems fullOrder
+      ]
 
 -- | DTO pour la création d'une commande.
 data CreateOrderPayload = CreateOrderPayload

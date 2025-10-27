@@ -97,7 +97,7 @@ processItem conn orderId item = do
       qty = O.orderItemQuantity item
 
   -- Récupérer la plante et vérifier le stock
-  mPlant <- listToMaybe <$> query conn "SELECT * FROM plants WHERE id = ?" (Only pId)
+  mPlant <- listToMaybe <$> query conn plantSelectSql (Only pId)
   case mPlant of
     Nothing -> error ("Plante non trouvée: " ++ show pId)
     Just plant -> do
@@ -128,7 +128,7 @@ fetchFullOrder conn order = do
 
 fetchFullOrderItem :: Connection -> OrderItem -> IO FullOrderItem
 fetchFullOrderItem conn item = do
-  [plant] <- liftIO $ query conn "SELECT * FROM plants WHERE id = ?" (Only $ OI.orderItemPlantId item)
+  [plant] <- liftIO $ query conn plantSelectSql (Only $ OI.orderItemPlantId item)
   return FullOrderItem
     { fullOrderItemId = orderItemId item
     , fullOrderItemOrderId = orderItemOrderId item
@@ -141,3 +141,7 @@ fetchFullOrderItem conn item = do
 listToMaybe :: [a] -> Maybe a
 listToMaybe []    = Nothing
 listToMaybe (x:_) = Just x
+
+plantSelectSql :: Query
+plantSelectSql =
+  "SELECT id, name, description, price::float8 AS price, stock, created_at FROM plants WHERE id = ?"

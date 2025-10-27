@@ -3,13 +3,14 @@
 
 module Models.User where
 
-import           Data.Aeson
-import           Data.Aeson.Casing (aesonDrop, camelCase)
-import           Data.Text         (Text)
-import           Data.Time         (UTCTime)
-import           GHC.Generics      (Generic)
+import           Control.Applicative            ((<|>))
+import           Data.Aeson                     (FromJSON (..), ToJSON (..),
+                                                 object, (.=), withObject, (.:),
+                                                 (.:?))
+import           Data.Text                      (Text)
+import           Data.Time                      (UTCTime)
+import           GHC.Generics                   (Generic)
 import           Database.PostgreSQL.Simple.FromRow
-import           Data.Maybe        (fromMaybe)
 
 -- | Représentation complète de l'utilisateur, incluant le hash du mot de passe.
 data User = User
@@ -46,12 +47,14 @@ toPublicUser user = PublicUser
   , publicUserIsAdmin = userIsAdmin user
   }
 
--- | Options Aeson pour conversion camelCase.
-userOptions :: Options
-userOptions = aesonDrop 10 camelCase
-
 instance ToJSON PublicUser where
-  toJSON = genericToJSON userOptions
+  toJSON user =
+    object
+      [ "id"    .= publicUserId user
+      , "name"  .= publicUserName user
+      , "email" .= publicUserEmail user
+      , "admin" .= publicUserIsAdmin user
+      ]
 
 -- | DTO pour la création d’un utilisateur.
 data CreateUserPayload = CreateUserPayload
@@ -62,7 +65,12 @@ data CreateUserPayload = CreateUserPayload
   } deriving (Show, Generic)
 
 instance FromJSON CreateUserPayload where
-  parseJSON = genericParseJSON (aesonDrop 6 camelCase)
+  parseJSON = withObject "CreateUserPayload" $ \obj ->
+    CreateUserPayload
+      <$> obj .: "name"
+      <*> obj .: "email"
+      <*> obj .: "password"
+      <*> (obj .:? "admin" <|> obj .:? "isAdmin")
 
 -- | DTO pour la mise à jour d’un utilisateur.
 data UpdateUserPayload = UpdateUserPayload
@@ -72,4 +80,8 @@ data UpdateUserPayload = UpdateUserPayload
   } deriving (Show, Generic)
 
 instance FromJSON UpdateUserPayload where
-  parseJSON = genericParseJSON (aesonDrop 6 camelCase)
+  parseJSON = withObject "UpdateUserPayload" $ \obj ->
+    UpdateUserPayload
+      <$> obj .:? "name"
+      <*> obj .:? "email"
+      <*> (obj .:? "admin" <|> obj .:? "isAdmin")

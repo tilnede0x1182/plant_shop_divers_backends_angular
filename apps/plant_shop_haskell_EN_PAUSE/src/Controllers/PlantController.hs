@@ -3,47 +3,46 @@
 
 module Controllers.PlantController (routes) where
 
+import           Control.Monad          (join)
 import           Control.Monad.IO.Class (liftIO)
-import           Data.Aeson             (Value (..), Object, FromJSON, object, (.=), (.:?), withObject)
+import           Data.Aeson             (Value (..))
+import           Data.Aeson.Types       (FromJSON, Object, parseMaybe, (.:?))
 import           Data.Aeson.Key         (fromText)
-import           Data.Aeson.Types       (parseMaybe)
-import qualified Data.Text              as T
 import           Data.Maybe             (fromMaybe)
-import           Network.HTTP.Types.Status (status200)
 import           Database.PostgreSQL.Simple
+import           Network.HTTP.Types.Status (status200)
+import qualified Data.Text              as T
 import           Web.Scotty
-import           Middleware.Auth        (requireAdmin, requireUser)
-import           Models.Plant
-import           Models.User            (User (..))
+
+import           Middleware.Auth        (requireAdmin)
+import           Models.Plant           (CreatePlantPayload (..), Plant (..))
 import qualified Utils.Response         as R
-import           Data.Text (Text)
-import           Data.Aeson (Result(..))
-import           Models.Order
-import					 Models.OrderItem
-import 					 Models.Plant
-import qualified Data.ByteString.Lazy          as BL
-import           Data.ByteString.Builder       (toLazyByteString)
-import           Data.Aeson.Key (Key, fromText)
-import           Control.Monad (join)
+
+plantSelectBase :: Query
+plantSelectBase =
+  "SELECT id, name, description, price::float8 AS price, stock, created_at FROM plants"
+
+selectPlantRows :: Query
+selectPlantRows = plantSelectBase <> " ORDER BY name ASC"
 
 routes :: Connection -> ScottyM ()
 routes conn = do
   -- GET /api/plants (Public)
   get "/api/plants" $ do
-    plants <- liftIO $ query_ conn "SELECT * FROM plants ORDER BY name ASC"
+    plants <- liftIO $ query_ conn selectPlantRows
     R.ok (plants :: [Plant])
 
   -- GET /api/admin/plants (Admin)
   get "/api/admin/plants" $ do
     requireAdmin
     -- La route admin retourne toutes les plantes, y compris celles hors stock
-    plants <- liftIO $ query_ conn "SELECT * FROM plants ORDER BY name ASC"
+    plants <- liftIO $ query_ conn selectPlantRows
     R.ok (plants :: [Plant])
 
   -- GET /api/plants/:id (Public)
   get "/api/plants/:id" $ do
     plantId <- param "id"
-    plants <- liftIO $ query conn "SELECT * FROM plants WHERE id = ?" (Only (plantId :: Int))
+    plants <- liftIO $ query conn (plantSelectBase <> " WHERE id = ?") (Only (plantId :: Int))
     case plants of
       [plant] -> R.ok (plant :: Plant)
       _       -> R.notFound "Plante non trouvée"
@@ -51,11 +50,15 @@ routes conn = do
   -- POST /api/admin/plants (Admin)
   post "/api/admin/plants" $ do
     requireAdmin
-    payload <- jsonData :: ActionM Plant
-    -- L'ID et createdAt sont ignorés car gérés par la DB
+    payload <- jsonData :: ActionM CreatePlantPayload
+    let newStock = fromMaybe 0 (createPlantStock payload)
     [Only newId] <- liftIO $ query conn "INSERT INTO plants (name, description, price, stock) VALUES (?, ?, ?, ?) RETURNING id"
-      (plantName payload, plantDescription payload, plantPrice payload, plantStock payload)
-    newPlants <- liftIO $ query conn "SELECT * FROM plants WHERE id = ?" (Only (newId :: Int))
+      ( createPlantName payload
+      , createPlantDescription payload
+      , createPlantPrice payload
+      , newStock
+      )
+    newPlants <- liftIO $ query conn (plantSelectBase <> " WHERE id = ?") (Only (newId :: Int))
     case newPlants of
         [newPlant] -> R.created (newPlant :: Plant)
         _ -> R.serverError "Impossible de récupérer la plante après création."
@@ -67,7 +70,7 @@ routes conn = do
     payload <- jsonData :: ActionM Value -- Utilise Value pour gérer les champs partiels
 
     -- Récupérer la plante existante
-    existingPlants <- liftIO $ query conn "SELECT * FROM plants WHERE id = ?" (Only (plantId :: Int))
+    existingPlants <- liftIO $ query conn (plantSelectBase <> " WHERE id = ?") (Only (plantId :: Int))
     case existingPlants of
       [] -> R.notFound "Plante non trouvée"
       [existingPlant] -> do

@@ -1,0 +1,27 @@
+name: plant-shop-haskell
+version: 0.1.0
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - scotty
+  - postgresql-simple
+  - wai-cors
+  - jwt
+  - bcrypt
+  - text
+  - random
+  - containers
+  - bytestring
+  - scientific
+  - directory
+  - http-types
+  - network
+  - time
+  - transformers
+  - unliftio
+  - wreq
+
+executables:
+  plant-shop-haskell:
+    main: Main.hs
+    source-dirs: app

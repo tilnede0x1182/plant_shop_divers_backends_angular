@@ -1,0 +1,19 @@
+# Stack build artifacts
+.stack-work/
+
+# Binary executables
+plant-shop-haskell
+*.exe
+*.out
+
+# Intermediate files
+*.hi
+*.o
+
+# Local configuration
+.env
+
+# Temporary directories or outputs
+tmp/
+users.txt
+projet.txt

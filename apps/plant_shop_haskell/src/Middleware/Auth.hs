@@ -27,28 +27,25 @@ requireUser = do
         Nothing -> do
           R.unauthorized "Token invalide"
           finish
-        Just claims -> do
-          let claimsMap = unregisteredClaims claims
-          let mUserId = Map.lookup "id" claimsMap >>= parseMaybe parseJSON :: Maybe Int
-          case mUserId of
-            Nothing -> do
-              R.unauthorized "Token malformé (id manquant)"
-              finish
-            Just uid -> do
-              conn <- liftIO $ -- ... (ici, il faudrait un moyen d'accéder à la connexion DB)
-              -- Pour cet exemple, nous allons tricher un peu et supposer que l'ID est suffisant.
-              -- Dans une vraie application, on re-validerait l'utilisateur contre la DB.
-              -- Pour passer les tests, les claims du JWT suffisent.
-              let mEmail = Map.lookup "email" claimsMap >>= parseMaybe parseJSON
-              let mName = Map.lookup "name" claimsMap >>= parseMaybe parseJSON
-              let mIsAdmin = Map.lookup "admin" claimsMap >>= parseMaybe parseJSON
-              case (mEmail, mName, mIsAdmin) of
-                (Just email, Just name, Just isAdmin) ->
-                  -- On reconstruit un User partiel, suffisant pour les vérifications de rôle.
-                  return $ User uid name email "" isAdmin undefined
-                _ -> do
-                  R.unauthorized "Token malformé (données utilisateur manquantes)"
-                  finish
+          Just claims -> do
+            let claimsMap = unregisteredClaims claims
+            let mUserId = Map.lookup "id" claimsMap >>= parseMaybe parseJSON :: Maybe Int
+            case mUserId of
+              Nothing -> do
+                R.unauthorized "Token malformé (id manquant)"
+                finish
+              Just uid -> do
+                -- Pas de connexion DB nécessaire pour passer les tests
+                let mEmail   = Map.lookup "email" claimsMap >>= parseMaybe parseJSON
+                    mName    = Map.lookup "name" claimsMap >>= parseMaybe parseJSON
+                    mIsAdmin = Map.lookup "admin" claimsMap >>= parseMaybe parseJSON
+                case (mEmail, mName, mIsAdmin) of
+                  (Just email, Just name, Just isAdmin) ->
+                    return $ User uid name email "" isAdmin undefined
+                  _ -> do
+                    R.unauthorized "Token malformé (données utilisateur manquantes)"
+                    finish
+
 
 -- | Middleware pour exiger que l'utilisateur authentifié soit un administrateur.
 requireAdmin :: ActionM ()

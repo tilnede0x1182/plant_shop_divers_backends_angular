@@ -20,8 +20,10 @@ dependencies:
   - transformers
   - unliftio
   - wreq
+  - wai-extra
+  - aeson-casing
 
 executables:
   plant-shop-haskell:
     main: Main.hs
-    source-dirs: app
+    hs-source-dirs: src

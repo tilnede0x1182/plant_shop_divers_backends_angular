@@ -170,6 +170,29 @@ compile-test-backend-c:
 	make -C apps/plant_shop_c compile-test
 
 # ======================================================
+# 🌵 Backend Haskell (Stack + PostgreSQL)
+# ======================================================
+
+run-backend-haskell:
+	@make -C apps/plant_shop_haskell run
+
+compile-backend-haskell:
+	@make -C apps/plant_shop_haskell build
+
+seed-backend-haskell:
+	@make -C apps/plant_shop_haskell seed
+
+compile-run-backend-haskell: compile-backend-haskell run-backend-haskell
+
+prod-backend-haskell:
+	@make -C apps/plant_shop_haskell build-dev
+
+test-backend-haskell:
+	@make -C apps/plant_shop_haskell tests
+
+compile-test-backend-haskell: compile-backend-haskell test-backend-haskell
+
+# ======================================================
 # 🎨 Frontend Angular
 # ======================================================
 
@@ -215,4 +238,4 @@ tests: test-routes
 # 🛠️ Utilitaire
 # ======================================================
 tree:
-	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser" -I "bin" -I "build"
+	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser" -I "bin" -I "build" -I ".stack-work"

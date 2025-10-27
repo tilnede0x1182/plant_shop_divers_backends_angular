@@ -3,8 +3,10 @@
 
 module Models.Order where
 
+import           Control.Applicative            ((<|>))
 import           Data.Aeson                     (FromJSON (..), ToJSON (..),
-                                                 genericParseJSON, object, (.=))
+                                                 genericParseJSON, object, (.=),
+                                                 withObject, (.:?))
 import           Data.Aeson.Casing              (aesonDrop, camelCase)
 import           Data.Text                      (Text)
 import           Data.Time                      (UTCTime)
@@ -65,7 +67,9 @@ newtype UpdateOrderStatusPayload = UpdateOrderStatusPayload
   } deriving (Show, Generic)
 
 instance FromJSON UpdateOrderStatusPayload where
-  parseJSON = genericParseJSON (aesonDrop 6 camelCase)
+  parseJSON = withObject "UpdateOrderStatusPayload" $ \obj -> do
+    status <- obj .:? "status" <|> obj .:? "orderStatus"
+    maybe (fail "Champ 'status' manquant") (pure . UpdateOrderStatusPayload) status
 
 instance FromRow Order where
   fromRow = Order <$> field <*> field <*> field <*> field <*> field

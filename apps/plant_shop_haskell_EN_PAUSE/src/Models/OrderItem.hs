@@ -15,7 +15,7 @@ data OrderItem = OrderItem
   , orderItemOrderId   :: Int
   , orderItemPlantId   :: Int
   , orderItemQuantity  :: Int
-  , orderItemPrice     :: Double -- Prix au moment de la commande
+  , orderItemPrice     :: Int -- Prix au moment de la commande
   } deriving (Show, Generic)
 
 -- | Modèle complet incluant les détails de la plante.
@@ -23,7 +23,7 @@ data FullOrderItem = FullOrderItem
   { fullOrderItemId        :: Int
   , fullOrderItemOrderId   :: Int
   , fullOrderItemQuantity  :: Int
-  , fullOrderItemPrice     :: Double
+  , fullOrderItemPrice     :: Int
   , fullOrderItemPlant     :: Plant -- Objet Plant imbriqué
   } deriving (Show, Generic)
 

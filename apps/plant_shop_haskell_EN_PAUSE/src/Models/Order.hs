@@ -18,7 +18,7 @@ import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 data Order = Order
   { orderId        :: Int
   , orderUserId    :: Int
-  , orderTotal     :: Double
+  , orderTotal     :: Int
   , orderStatus    :: Text
   , orderCreatedAt :: UTCTime
   } deriving (Show, Generic)
@@ -28,7 +28,7 @@ data Order = Order
 data FullOrder = FullOrder
   { fullOrderId        :: Int
   , fullOrderUserId    :: Int
-  , fullOrderTotal     :: Double
+  , fullOrderTotal     :: Int
   , fullOrderStatus    :: Text
   , fullOrderCreatedAt :: UTCTime
   , fullOrderItems     :: [FullOrderItem]

@@ -15,7 +15,6 @@ import           Data.Char (toUpper, toLower)
 import           Data.List (foldl')
 import qualified Data.Map as Map
 import           Data.Maybe (fromMaybe)
-import           Data.Scientific (fromFloatDigits)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.IO as TIO
@@ -57,7 +56,7 @@ readEnv = do
 -- | Informations sur une plante, utilisées pour la création des commandes
 data PlantInfo = PlantInfo
   { plantId    :: Int
-  , plantPrice :: Double
+  , plantPrice :: Int
   , plantStock :: Int
   } deriving (Show)
 
@@ -255,10 +254,10 @@ createPlants conn =
                         then baseName <> " " <> T.pack (show (i `div` length plantNames + 1))
                         else baseName
         description <- loremSentence
-        price <- randomRIO (5.0, 50.0) :: IO Double
+        price <- randomRIO (5, 50) :: IO Int
         stock <- randomRIO (5, 30) :: IO Int
         [Only plantId] <- query conn "INSERT INTO plants(name,description,price,stock) VALUES (?,?,?,?) RETURNING id"
-                                (plantName, description, fromFloatDigits price, stock)
+                                (plantName, description, price, stock)
         return PlantInfo { plantId = plantId, plantPrice = price, plantStock = stock }
 
 -- | Crée les commandes pour tous les utilisateurs
@@ -287,15 +286,15 @@ createSingleOrder conn userId (totalOrders, currentPlants) _ = do
         (userId, T.unpack status)
 
     -- Crée 2 articles de commande
-    (finalTotal, finalPlants) <- foldM (createOrderItem conn orderId) (0.0, currentPlants) [1..2]
+    (finalTotal, finalPlants) <- foldM (createOrderItem conn orderId) (0, currentPlants) [1..2]
 
     -- Met à jour le total de la commande
-    _ <- execute conn "UPDATE orders SET total = ? WHERE id = ?" (fromFloatDigits finalTotal, orderId)
+    _ <- execute conn "UPDATE orders SET total = ? WHERE id = ?" (finalTotal, orderId)
 
     return (totalOrders + 1, finalPlants)
 
 -- | Crée un seul article de commande
-createOrderItem :: Connection -> Int -> (Double, [PlantInfo]) -> Int -> IO (Double, [PlantInfo])
+createOrderItem :: Connection -> Int -> (Int, [PlantInfo]) -> Int -> IO (Int, [PlantInfo])
 createOrderItem conn orderId (currentTotal, currentPlants) _ = do
     let availablePlants = filter (\p -> plantStock p > 0) currentPlants
     if null availablePlants
@@ -308,12 +307,12 @@ createOrderItem conn orderId (currentTotal, currentPlants) _ = do
 
         -- Insère l'article de commande
         _ <- execute conn "INSERT INTO order_items(order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)"
-                   (orderId, plantId plant, quantity, fromFloatDigits (plantPrice plant))
+                   (orderId, plantId plant, quantity, plantPrice plant)
 
         -- Met à jour le stock dans la base de données
         _ <- execute conn "UPDATE plants SET stock = stock - ? WHERE id = ?" (quantity, plantId plant)
 
-        let itemTotal = plantPrice plant * fromIntegral quantity
+        let itemTotal = plantPrice plant * quantity
         let newTotal = currentTotal + itemTotal
         -- Met à jour l'état du stock dans notre liste en mémoire
         let newPlants = updatePlantStock (plantId plant) quantity currentPlants

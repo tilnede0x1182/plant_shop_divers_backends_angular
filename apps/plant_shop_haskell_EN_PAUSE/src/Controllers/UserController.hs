@@ -53,18 +53,16 @@ routes conn = do
     currentUser <- requireUser
     payload <- jsonData :: ActionM UpdateUserPayload
 
-    targetUsers <- liftIO $ query conn "SELECT * FROM users WHERE id = ?" (Only (targetId :: Int))
-    case targetUsers of
-      [] -> R.notFound "Utilisateur non trouvé"
-      [targetUser] -> do
-        -- Vérifier les permissions
-        if not (userIsAdmin currentUser) && userId currentUser /= targetId
-        then R.forbidden "Vous ne pouvez pas modifier cet utilisateur."
-        else do
-          let updatedUser = applyUserPatch targetUser payload (userIsAdmin currentUser)
-          _ <- liftIO $ execute conn "UPDATE users SET name = ?, email = ?, is_admin = ? WHERE id = ?"
-                (name updatedUser, userEmail updatedUser, userIsAdmin updatedUser, targetId)
-          R.ok (toPublicUser updatedUser)
+    if not (userIsAdmin currentUser) && userId currentUser /= targetId
+      then R.forbidden "Vous ne pouvez pas modifier cet utilisateur."
+      else updateUserRecord targetId (userIsAdmin currentUser) payload
+
+  -- PATCH /api/admin/users/:id (Admin)
+  patch "/api/admin/users/:id" $ do
+    requireAdmin
+    targetId <- captureParam "id"
+    payload <- jsonData :: ActionM UpdateUserPayload
+    updateUserRecord targetId True payload
 
   -- DELETE /api/admin/users/:id (Admin)
   delete "/api/admin/users/:id" $ do
@@ -84,6 +82,16 @@ routes conn = do
     listUsers = do
       users <- liftIO $ query_ conn "SELECT * FROM users ORDER BY is_admin DESC, name ASC"
       R.ok (map toPublicUser (users :: [User]))
+
+    updateUserRecord targetId allowRoleChange payload = do
+      targetUsers <- liftIO $ query conn "SELECT * FROM users WHERE id = ?" (Only (targetId :: Int))
+      case targetUsers of
+        [] -> R.notFound "Utilisateur non trouvé"
+        [targetUser] -> do
+          let updatedUser = applyUserPatch targetUser payload allowRoleChange
+          _ <- liftIO $ execute conn "UPDATE users SET name = ?, email = ?, is_admin = ? WHERE id = ?"
+                (name updatedUser, userEmail updatedUser, userIsAdmin updatedUser, targetId)
+          R.ok (toPublicUser updatedUser)
 
     deleteUser targetId = do
       rowsAffected <- liftIO $ execute conn "DELETE FROM users WHERE id = ?" (Only (targetId :: Int))

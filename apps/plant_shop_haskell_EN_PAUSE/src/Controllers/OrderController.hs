@@ -20,7 +20,7 @@ import           Middleware.Auth                  (requireAdmin, requireUser)
 
 orderSelectBase :: Query
 orderSelectBase =
-  "SELECT id, user_id, total::float8 AS total, status, created_at FROM orders"
+  "SELECT id, user_id, total::int AS total, status, created_at FROM orders"
 
 orderSelectAdmin :: Query
 orderSelectAdmin = orderSelectBase <> " ORDER BY created_at DESC"
@@ -33,7 +33,7 @@ orderSelectById = orderSelectBase <> " WHERE id = ?"
 
 orderItemsSelectByOrder :: Query
 orderItemsSelectByOrder =
-  "SELECT id, order_id, plant_id, quantity, price::float8 AS price FROM order_items WHERE order_id = ?"
+  "SELECT id, order_id, plant_id, quantity, price::int AS price FROM order_items WHERE order_id = ?"
 
 routes :: Connection -> ScottyM ()
 routes conn = do
@@ -103,10 +103,10 @@ routes conn = do
       else R.notFound "Commande non trouvée"
 
 -- Logique de traitement des articles, maintenant transactionnelle et correcte
-processOrderItems :: Connection -> Int -> [CreateOrderItemPayload] -> IO Double
+processOrderItems :: Connection -> Int -> [CreateOrderItemPayload] -> IO Int
 processOrderItems conn orderId items = sum <$> mapM (processItem conn orderId) items
 
-processItem :: Connection -> Int -> CreateOrderItemPayload -> IO Double
+processItem :: Connection -> Int -> CreateOrderItemPayload -> IO Int
 processItem conn orderId item = do
   let pId = O.orderItemPlantId item
       qty = O.orderItemQuantity item
@@ -125,7 +125,7 @@ processItem conn orderId item = do
           let itemPrice = plantPrice plant
           execute conn "INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)"
             (orderId, pId, qty, itemPrice)
-          return (itemPrice * fromIntegral qty)
+          pure (itemPrice * qty)
 
 -- | Récupère une commande et tous ses détails pour la sérialisation JSON
 fetchFullOrder :: Connection -> Order -> IO FullOrder
@@ -159,4 +159,4 @@ listToMaybe (x:_) = Just x
 
 plantSelectSql :: Query
 plantSelectSql =
-  "SELECT id, name, description, price::float8 AS price, stock, created_at FROM plants WHERE id = ?"
+  "SELECT id, name, description, price::int AS price, stock, created_at FROM plants WHERE id = ?"

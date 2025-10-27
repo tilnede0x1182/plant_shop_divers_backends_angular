@@ -20,7 +20,7 @@ import qualified Utils.Response         as R
 
 plantSelectBase :: Query
 plantSelectBase =
-  "SELECT id, name, description, price::float8 AS price, stock, created_at FROM plants"
+  "SELECT id, name, description, price::int AS price, stock, created_at FROM plants"
 
 selectPlantRows :: Query
 selectPlantRows = plantSelectBase <> " ORDER BY name ASC"
@@ -52,10 +52,11 @@ routes conn = do
     requireAdmin
     payload <- jsonData :: ActionM CreatePlantPayload
     let newStock = fromMaybe 0 (createPlantStock payload)
+        newPrice = createPlantPrice payload
     [Only newId] <- liftIO $ query conn "INSERT INTO plants (name, description, price, stock) VALUES (?, ?, ?, ?) RETURNING id"
       ( createPlantName payload
       , createPlantDescription payload
-      , createPlantPrice payload
+      , newPrice
       , newStock
       )
     newPlants <- liftIO $ query conn (plantSelectBase <> " WHERE id = ?") (Only (newId :: Int))

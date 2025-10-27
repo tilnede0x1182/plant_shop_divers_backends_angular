@@ -14,7 +14,7 @@ data Plant = Plant
   { plantId          :: Int
   , plantName        :: Text
   , plantDescription :: Maybe Text
-  , plantPrice       :: Double
+  , plantPrice       :: Int
   , plantStock       :: Int
   , plantCreatedAt   :: UTCTime
   } deriving (Show, Generic)
@@ -35,7 +35,7 @@ instance FromRow Plant where
 data CreatePlantPayload = CreatePlantPayload
   { createPlantName        :: Text
   , createPlantDescription :: Maybe Text
-  , createPlantPrice       :: Double
+  , createPlantPrice       :: Int
   , createPlantStock       :: Maybe Int
   } deriving (Show, Generic)
 

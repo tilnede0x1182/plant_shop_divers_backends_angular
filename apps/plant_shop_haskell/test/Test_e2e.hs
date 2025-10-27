@@ -18,7 +18,9 @@ import           Data.Aeson              (FromJSON, ToJSON, Value (..), object,
                                           (.=))
 import qualified Data.Aeson.Key          as Key
 import qualified Data.Aeson.KeyMap       as KeyMap
-import qualified Data.Aeson.Types        as Aeson
+import qualified Data.Aeson              as Aeson
+import           Data.Aeson              (Value(..))
+import qualified Data.Vector             as V
 import qualified Data.ByteString.Char8   as BC
 import qualified Data.ByteString.Lazy    as BL
 import           Data.IORef              (IORef, atomicModifyIORef', newIORef,
@@ -30,7 +32,7 @@ import           Data.Text               (Text)
 import qualified Data.Text               as T
 import qualified Data.Text.Encoding      as TE
 import           Data.Time               (defaultTimeLocale, formatTime,
-                                          getCurrentTime)
+                                          getCurrentTime, diffUTCTime)
 import           Network.HTTP.Client     (HttpException)
 import           Network.HTTP.Types.Header (hContentType, hCookie)
 import           Network.HTTP.Types.Status (statusCode)
@@ -72,7 +74,8 @@ loadEnv path = liftIO $ do
             _                -> Nothing
       pure $ Map.fromList [p | Just p <- map parseLine ls]
   where
-    trim = filter (`notElem` " \t\r\n")
+    trim :: String -> String
+    trim = filter (`notElem` (" \t\r\n" :: String))
 
 -- Configuration globale chargée une seule fois.
 -- Note: 'unsafePerformIO' est généralement à éviter, mais acceptable ici pour
@@ -179,7 +182,8 @@ call st cfg method path expectedStatus body who = do
   -- Gestion de l'échec
   unless statusOK $ do
     let responseBody = resp ^. Wreq.responseBody
-    fail $ printf "API %s %s -> %d (attendu %d)\n%s" method path status expectedStatus (BL.unpack responseBody)
+    fail $ printf "API %s %s -> %d (attendu %d)\n%s"
+        method path status expectedStatus (BC.unpack $ BL.toStrict responseBody)
 
   -- Parse le corps de la réponse en JSON
   let respBody = resp ^. Wreq.responseBody
@@ -228,7 +232,7 @@ getInt v k = do
 
 -- Extrait un tableau JSON.
 getArray :: Value -> IO [Value]
-getArray (Array a) = pure $ Aeson.toList a
+getArray (Array a) = pure $ V.toList a
 getArray _         = fail "La valeur n'est pas un tableau JSON."
 
 -- Vérifie l'égalité d'une valeur dans un objet JSON.
@@ -238,8 +242,8 @@ assert_eq obj key expected = do
   let expectedVal = Aeson.toJSON expected
   let ok = actualVal == expectedVal
   -- L'encodage en JSON assure un affichage correct (ex: strings avec des guillemets)
-  let actualStr = BC.unpack $ Aeson.encode actualVal
-  let expectedStr = BC.unpack $ Aeson.encode expected
+  let actualStr   = BC.unpack $ BL.toStrict $ Aeson.encode actualVal
+  let expectedStr = BC.unpack $ BL.toStrict $ Aeson.encode expected
   printf "%s   ↳ %s=%s (attendu %s)\n"
     (if ok then "✅" else "❌" :: String)
     (Key.toString key)
@@ -506,8 +510,6 @@ main = do
     test_auth_me testState cfg
 
     putStrLn "\n🎉 Tous les tests ont réussi!"
-    exitWith ExitSuccess
-
     ) `catch` (\e -> do
       hPutStrLn stderr $ "\n❌ Tests interrompus: " ++ show (e :: SomeException)
       exitWith (ExitFailure 1)

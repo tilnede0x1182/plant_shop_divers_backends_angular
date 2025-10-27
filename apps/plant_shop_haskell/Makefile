@@ -50,4 +50,4 @@ db-reset: db-drop db-create seed
 ## ────────────────
 
 tests:
-	$(STACK) runhaskell tests/Test_e2e.hs
+	$(STACK) runhaskell test/Test_e2e.hs

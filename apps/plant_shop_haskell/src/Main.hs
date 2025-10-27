@@ -27,13 +27,13 @@ main = do
   -- Connexion à la base
   connString <- C.loadDbConnectionString
   conn <- connectPostgreSQL connString
-  putStrLn "🚀 Connexion à la base de données réussie."
+  putStrLn "🔧Connexion à la base de données réussie."
 
   -- Lecture du port
   maybePortStr <- lookupEnv "SERVER_ADDRESS"
   let port = maybe 4100 id (maybePortStr >>= readMaybe)
 
-  putStrLn $ "🔧 Démarrage du serveur sur le port " ++ show port ++ "..."
+  putStrLn $ "🚀  Démarrage du serveur sur le port " ++ show port ++ "..."
 
   -- Gestion d'erreur si port occupé
   result <- try (scotty port $ app conn) :: IO (Either IOException ())

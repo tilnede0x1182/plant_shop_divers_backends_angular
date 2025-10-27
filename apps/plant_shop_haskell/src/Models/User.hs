@@ -13,33 +13,37 @@ import           Data.Maybe        (fromMaybe)
 
 -- | Représentation complète de l'utilisateur, incluant le hash du mot de passe.
 data User = User
-  { userId           :: Int
-  , userName         :: Text
-  , userEmail        :: Text
+  { userId          :: Int
+  , userName        :: Text
+  , userEmail       :: Text
   , userPasswordHash :: Text
-  , userIsAdmin      :: Bool
-  , userCreatedAt    :: UTCTime
-  } deriving (Show, Generic)
+  , userIsAdmin     :: Bool
+  }
 
 instance FromRow User where
-  fromRow = User <$> field <*> field <*> field <*> field <*> field <*> field
+  fromRow = do
+    uid      <- field  -- id
+    email    <- field  -- email
+    name     <- field  -- name
+    pwdHash  <- field  -- password_hash
+    isAdmin  <- field  -- is_admin
+    _created <- field :: RowParser UTCTime  -- created_at (ignoré)
+    return (User uid name email pwdHash isAdmin)
 
 -- | Représentation publique envoyée par l’API.
 data PublicUser = PublicUser
-  { publicUserId        :: Int
-  , publicUserName      :: Text
-  , publicUserEmail     :: Text
-  , publicUserIsAdmin   :: Bool
-  , publicUserCreatedAt :: UTCTime
+  { publicUserId      :: Int
+  , publicUserName    :: Text
+  , publicUserEmail   :: Text
+  , publicUserIsAdmin :: Bool
   } deriving (Show, Generic)
 
 toPublicUser :: User -> PublicUser
 toPublicUser user = PublicUser
-  { publicUserId        = userId user
-  , publicUserName      = userName user
-  , publicUserEmail     = userEmail user
-  , publicUserIsAdmin   = userIsAdmin user
-  , publicUserCreatedAt = userCreatedAt user
+  { publicUserId      = userId user
+  , publicUserName    = userName user
+  , publicUserEmail   = userEmail user
+  , publicUserIsAdmin = userIsAdmin user
   }
 
 -- | Options Aeson pour conversion camelCase.

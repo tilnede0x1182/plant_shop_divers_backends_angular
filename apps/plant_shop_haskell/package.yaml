@@ -7,7 +7,6 @@ dependencies:
   - postgresql-simple
   - wai-cors
   - jwt
-  - bcrypt
   - text
   - random
   - containers
@@ -24,6 +23,8 @@ dependencies:
   - aeson-casing
   - cookie
   - dotenv
+  - cryptonite
+  - memory
 
 executables:
   plant-shop-haskell:

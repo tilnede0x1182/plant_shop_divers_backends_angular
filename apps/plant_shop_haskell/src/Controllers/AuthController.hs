@@ -52,10 +52,15 @@ routes conn = do
         mPassword = Map.lookup "password" payload
     case (mEmail, mPassword) of
       (Just email, Just password) -> do
+        -- Log minimal pour debug : mot de passe reçu en clair
+        liftIO $ putStrLn ("🧩 [DEBUG] Mot de passe reçu (brut) : " ++ password)
         users <- liftIO $
           query conn "SELECT * FROM users WHERE email = ?" (Only email)
+        liftIO $ putStrLn ("🧩 [DEBUG] Utilisateurs trouvés : " ++ show (length (users :: [User])))
         case users of
-          [user] ->
+          [user] -> do
+            liftIO $ putStrLn ("🧩 [DEBUG] Email trouvé : " ++ T.unpack (userEmail user))
+            liftIO $ putStrLn ("🧩 [DEBUG] Hash stocké : " ++ T.unpack (userPasswordHash user))
             if validatePassword (T.pack password) (userPasswordHash user)
               then do
                 token <- liftIO $ createToken user
@@ -69,7 +74,9 @@ routes conn = do
                   (TL.fromStrict (TE.decodeUtf8 (BL.toStrict (toLazyByteString (renderSetCookie sc)))))
                 R.created (toPublicUser user)
               else R.unauthorized "Email ou mot de passe incorrect."
-          _ -> R.unauthorized "Email ou mot de passe incorrect."
+          _ -> do
+            liftIO $ putStrLn "🧩 [DEBUG] Aucun utilisateur trouvé."
+            R.unauthorized "Email ou mot de passe incorrect."
       _ -> R.badRequest "Les champs 'email' et 'password' sont requis."
 
   -- POST /api/auth/logout
@@ -102,7 +109,6 @@ routes conn = do
                 , userEmail        = fromMaybe "" mEmail
                 , userPasswordHash = ""
                 , userIsAdmin      = fromMaybe False mAdmin
-                , userCreatedAt    = UTCTime (ModifiedJulianDay 0) 0
                 }
         R.ok (toPublicUser user)
       Nothing -> R.unauthorized "Non authentifié"

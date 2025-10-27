@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
@@ -6,8 +7,10 @@ module Main where
 import           Control.Exception (bracket)
 import           Control.Monad (forM, forM_, replicateM, foldM)
 import           Control.Monad.IO.Class (liftIO)
-import qualified Crypto.BCrypt as Bcrypt
-import qualified Data.ByteString.Char8 as BS
+
+import qualified Data.ByteArray.Encoding as BAE
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import           Data.Char (toUpper, toLower)
 import           Data.List (foldl')
 import qualified Data.Map as Map
@@ -19,7 +22,9 @@ import qualified Data.Text.IO as TIO
 import           Database.PostgreSQL.Simple
 import           Database.PostgreSQL.Simple.Types (Only(..))
 import           System.IO (hFlush, stdout)
-import           System.Random (randomRIO)
+import           System.Random (randomRIO, randomIO)
+import qualified "cryptonite" Crypto.KDF.Argon2 as Argon2
+import qualified "cryptonite" Crypto.Error as CE
 
 -- | Configuration de la base de données lue depuis .env
 data DbConfig = DbConfig
@@ -32,14 +37,13 @@ data DbConfig = DbConfig
 readEnv :: IO DbConfig
 readEnv = do
     content <- readFile ".env"
-    let lines' = lines content
-        envMap = foldl' parseLine Map.empty lines'
+    let ls = lines content
+        envMap = foldl' parseLine Map.empty ls
     return DbConfig
-        { dbUrl  = BS.pack $ fromMaybe "" $ Map.lookup "DATABASE_URL" envMap
-        , dbUser = BS.pack $ fromMaybe "" $ Map.lookup "DATABASE_USER" envMap
-        , dbPass = BS.pack $ fromMaybe "" $ Map.lookup "DATABASE_PASS" envMap
+        { dbUrl  = BSC.pack $ fromMaybe "" $ Map.lookup "DATABASE_URL" envMap
+        , dbUser = BSC.pack $ fromMaybe "" $ Map.lookup "DATABASE_USER" envMap
+        , dbPass = BSC.pack $ fromMaybe "" $ Map.lookup "DATABASE_PASS" envMap
         }
-
   where
     parseLine acc line =
         case break (== '=') line of
@@ -48,6 +52,7 @@ readEnv = do
 
     trim :: String -> String
     trim = filter (`notElem` (" \r\n" :: String))
+
 
 -- | Informations sur une plante, utilisées pour la création des commandes
 data PlantInfo = PlantInfo
@@ -121,14 +126,23 @@ pick xs = (xs !!) <$> randomRIO (0, length xs - 1)
 randPwd :: IO T.Text
 randPwd = T.pack . ("pw" ++) . show <$> (randomRIO (100000000, 999999999) :: IO Int)
 
--- | Hache un mot de passe avec bcrypt
+-- | Hache un mot de passe avec Argon2id
 hashPwd :: T.Text -> IO T.Text
 hashPwd pwd = do
-    let bsPwd = TE.encodeUtf8 pwd
-    maybeHashed <- Bcrypt.hashPasswordUsingPolicy Bcrypt.fastBcryptHashingPolicy bsPwd
-    case maybeHashed of
-        Just hashed -> return (TE.decodeUtf8 hashed)
-        Nothing     -> fail "Erreur lors du hachage du mot de passe"
+    salt <- BS.pack <$> replicateM 16 randomIO
+    let opts = Argon2.defaultOptions
+            { Argon2.iterations = 2
+            , Argon2.memory     = 65536
+            , Argon2.parallelism = 1
+            , Argon2.variant    = Argon2.Argon2id
+            }
+        pwdBs = TE.encodeUtf8 pwd
+        CE.CryptoPassed hash' = Argon2.hash opts pwdBs salt 32
+        hash :: BS.ByteString
+        hash = hash'
+        s64  = BAE.convertToBase BAE.Base64 salt
+        h64  = BAE.convertToBase BAE.Base64 hash
+    pure (TE.decodeUtf8 (s64 <> ":" <> h64))
 
 -- | Génère une phrase "lorem ipsum"
 loremSentence :: IO T.Text
@@ -154,8 +168,8 @@ main = do
     let connInfo = defaultConnectInfo
             { connectHost     = "localhost"
             , connectPort     = 5432
-            , connectUser     = BS.unpack (dbUser cfg)
-            , connectPassword = BS.unpack (dbPass cfg)
+            , connectUser     = BSC.unpack (dbUser cfg)
+            , connectPassword = BSC.unpack (dbPass cfg)
             , connectDatabase = "plant_shop_haskell"
             }
 
@@ -207,7 +221,7 @@ createAdmins conn = do
         let email = "admin" <> T.pack (show i) <> "@planteshop.com"
         let pwd = "password"
         hashed <- hashPwd pwd
-        -- Insertion et récupération de l'ID
+        -- Insertion et récupératihashPwdon de l'ID
         [Only userId] <- query conn "INSERT INTO users(name,email,password_hash,is_admin) VALUES (?,?,?,?) RETURNING id"
                                (name, email, hashed, True)
         return (userId, email <> " " <> pwd)

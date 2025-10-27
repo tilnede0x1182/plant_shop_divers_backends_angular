@@ -32,14 +32,15 @@ executable plant-shop-haskell
       aeson
     , aeson-casing
     , base >=4.7 && <5
-    , bcrypt
     , bytestring
     , containers
     , cookie
+    , cryptonite
     , directory
     , dotenv
     , http-types
     , jwt
+    , memory
     , network
     , postgresql-simple
     , random

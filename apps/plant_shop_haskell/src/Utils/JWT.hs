@@ -28,23 +28,21 @@ Charge .env locaux si la variable n'est pas déjà présente.
 Priorité : "./.env", puis "../../.env".
 -}
 {-# NOINLINE secretKey #-}
-secretKey :: Text
-secretKey =
-	let loadEnvIfMissing = do
-		mk <- lookupEnv "JWT_SECRET"
-		case mk of
-			Just _  -> pure ()
-			Nothing -> do
-				_ <- loadFile defaultConfig { configPath = ["./.env"],   configOverride = False }
-				_ <- loadFile defaultConfig { configPath = ["../../.env"], configOverride = False }
-				pure ()
-		in case unsafePerformIO (loadEnvIfMissing >> lookupEnv "JWT_SECRET") of
-			Just k  -> pack k
-			Nothing -> error "JWT_SECRET non défini (./.env ou ../../.env)"
+secretKey :: IO Text
+secretKey = do
+  _ <- loadFile defaultConfig { configPath = ["./.env"], configOverride = False }
+  _ <- loadFile defaultConfig { configPath = ["../../.env"], configOverride = False }
+  val <- lookupEnv "JWT_SECRET"
+  case val of
+    Just k  -> pure (pack k)
+    Nothing -> fail "JWT_SECRET non défini dans .env"
 
 -- Création d'un JWT HS256 valable 24h, compatible front + tests
 createToken :: User -> IO Text
 createToken user = do
+  key <- secretKey
+  putStrLn "🧩 [DEBUG] JWT_SECRET chargé :"
+  print key
   now <- getCurrentTime
   let expAt  = addUTCTime (24 * 60 * 60) now
       claims = mempty
@@ -58,11 +56,11 @@ createToken user = do
             , ("admin", toJSON (userIsAdmin user))
             ])
         }
-  -- encodeSigned choisit HS256 automatiquement pour une clé HMAC, header = mempty
-  pure $ encodeSigned (hmacSecret secretKey) mempty claims
+  pure $ encodeSigned (hmacSecret key) mempty claims
 
 -- Vérification + extraction des claims
 getClaimsFromToken :: Text -> Maybe JWTClaimsSet
 getClaimsFromToken tok = do
-  jwt <- decodeAndVerifySignature (toVerify (hmacSecret secretKey)) tok
+  let key = unsafePerformIO secretKey
+  jwt <- decodeAndVerifySignature (toVerify (hmacSecret key)) tok
   pure (JWT.claims jwt)

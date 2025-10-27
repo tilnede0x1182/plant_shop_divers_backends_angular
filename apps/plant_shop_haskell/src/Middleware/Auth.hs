@@ -41,7 +41,7 @@ requireUser = do
                   mIsAdmin = Map.lookup "admin" claimsMap >>= parseMaybe parseJSON
               case (mEmail, mName, mIsAdmin) of
                 (Just email, Just name, Just isAdmin) ->
-                  return $ User uid name email "" isAdmin undefined
+                  return $ User uid name email "" isAdmin
                 _ -> do
                   R.unauthorized "Token malformé (données utilisateur manquantes)"
                   finish

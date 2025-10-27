@@ -105,7 +105,7 @@ routes conn = do
             user =
               User
                 { userId           = fromMaybe 0 mId
-                , userName         = fromMaybe "" mName
+                , name         = fromMaybe "" mName
                 , userEmail        = fromMaybe "" mEmail
                 , userPasswordHash = ""
                 , userIsAdmin      = fromMaybe False mAdmin

@@ -52,7 +52,7 @@ createToken user = do
         , unregisteredClaims = ClaimsMap (Map.fromList
             [ ("id",    toJSON (userId user))
             , ("email", toJSON (userEmail user))
-            , ("name",  toJSON (userName user))
+            , ("name",  toJSON (name user))
             , ("admin", toJSON (userIsAdmin user))
             ])
         }

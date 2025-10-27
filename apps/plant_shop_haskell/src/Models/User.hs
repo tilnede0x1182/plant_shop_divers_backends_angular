@@ -14,7 +14,7 @@ import           Data.Maybe        (fromMaybe)
 -- | Représentation complète de l'utilisateur, incluant le hash du mot de passe.
 data User = User
   { userId          :: Int
-  , userName        :: Text
+  , name        :: Text
   , userEmail       :: Text
   , userPasswordHash :: Text
   , userIsAdmin     :: Bool
@@ -41,7 +41,7 @@ data PublicUser = PublicUser
 toPublicUser :: User -> PublicUser
 toPublicUser user = PublicUser
   { publicUserId      = userId user
-  , publicUserName    = userName user
+  , publicUserName    = name user
   , publicUserEmail   = userEmail user
   , publicUserIsAdmin = userIsAdmin user
   }

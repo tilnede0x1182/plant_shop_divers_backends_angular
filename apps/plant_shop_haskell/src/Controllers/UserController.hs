@@ -63,7 +63,7 @@ routes conn = do
         else do
           let updatedUser = applyUserPatch targetUser payload (userIsAdmin currentUser)
           _ <- liftIO $ execute conn "UPDATE users SET name = ?, email = ?, is_admin = ? WHERE id = ?"
-                (userName updatedUser, userEmail updatedUser, userIsAdmin updatedUser, targetId)
+                (name updatedUser, userEmail updatedUser, userIsAdmin updatedUser, targetId)
           R.ok (toPublicUser updatedUser)
 
   -- DELETE /api/admin/users/:id (Admin)
@@ -83,7 +83,7 @@ routes conn = do
 applyUserPatch :: User -> UpdateUserPayload -> Bool -> User
 applyUserPatch user payload isAdminCaller =
   user {
-    userName = fromMaybe (userName user) (updateUserName payload),
+    name = fromMaybe (name user) (updateUserName payload),
     userEmail = fromMaybe (userEmail user) (updateUserEmail payload),
     -- Seul un admin peut changer le statut admin
     userIsAdmin = if isAdminCaller then fromMaybe (userIsAdmin user) (updateUserIsAdmin payload) else userIsAdmin user

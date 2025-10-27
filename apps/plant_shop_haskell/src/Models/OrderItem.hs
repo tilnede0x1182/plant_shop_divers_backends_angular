@@ -7,6 +7,7 @@ import           Data.Aeson
 import           Data.Aeson.Casing (aesonDrop, camelCase)
 import           GHC.Generics      (Generic)
 import           Models.Plant      (Plant)
+import           Database.PostgreSQL.Simple.FromRow (FromRow(..), field)
 
 -- | Modèle de base pour un article de commande.
 data OrderItem = OrderItem
@@ -27,10 +28,13 @@ data FullOrderItem = FullOrderItem
   } deriving (Show, Generic)
 
 orderItemOptions :: Options
-orderItemOptions = defaultOptions { fieldLabelModifier = camelCase . aesonDrop 9 }
+orderItemOptions = aesonDrop 9 camelCase
 
 fullOrderItemOptions :: Options
-fullOrderItemOptions = defaultOptions { fieldLabelModifier = camelCase . aesonDrop 4 }
+fullOrderItemOptions = aesonDrop 4 camelCase
 
 instance ToJSON FullOrderItem where
   toJSON = genericToJSON fullOrderItemOptions
+
+instance FromRow OrderItem where
+  fromRow = OrderItem <$> field <*> field <*> field <*> field <*> field

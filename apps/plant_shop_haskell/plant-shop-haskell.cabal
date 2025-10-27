@@ -35,7 +35,9 @@ executable plant-shop-haskell
     , bcrypt
     , bytestring
     , containers
+    , cookie
     , directory
+    , dotenv
     , http-types
     , jwt
     , network

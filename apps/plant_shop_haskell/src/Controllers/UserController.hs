@@ -14,6 +14,7 @@ import           Middleware.Auth        (requireAdmin, requireUser)
 import           Models.User
 import qualified Utils.Response         as R
 import           Utils.Password         (hashPassword)
+import           Network.HTTP.Types.Status (status200)
 
 routes :: Connection -> ScottyM ()
 routes conn = do

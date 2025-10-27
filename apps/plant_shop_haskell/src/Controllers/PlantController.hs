@@ -4,14 +4,27 @@
 module Controllers.PlantController (routes) where
 
 import           Control.Monad.IO.Class (liftIO)
-import           Data.Aeson             (Value (..), object, (.=))
+import           Data.Aeson             (Value (..), Object, FromJSON, object, (.=), (.:?), withObject)
+import           Data.Aeson.Key         (fromText)
+import           Data.Aeson.Types       (parseMaybe)
+import qualified Data.Text              as T
+import           Data.Maybe             (fromMaybe)
+import           Network.HTTP.Types.Status (status200)
 import           Database.PostgreSQL.Simple
 import           Web.Scotty
-
 import           Middleware.Auth        (requireAdmin, requireUser)
 import           Models.Plant
 import           Models.User            (User (..))
 import qualified Utils.Response         as R
+import           Data.Text (Text)
+import           Data.Aeson (Result(..))
+import           Models.Order
+import					 Models.OrderItem
+import 					 Models.Plant
+import qualified Data.ByteString.Lazy          as BL
+import           Data.ByteString.Builder       (toLazyByteString)
+import           Data.Aeson.Key (Key, fromText)
+import           Control.Monad (join)
 
 routes :: Connection -> ScottyM ()
 routes conn = do
@@ -72,15 +85,18 @@ routes conn = do
       then status status200 -- Le test e2e attend 200, pas 204
       else R.notFound "Plante non trouvée"
 
+objLookup :: FromJSON a => T.Text -> Object -> Maybe a
+objLookup key o = join $ parseMaybe (.:? fromText key) o
+
 -- | Applique les modifications d'un JSON partiel à une plante existante.
 applyPatch :: Plant -> Value -> Plant
 applyPatch plant (Object obj) =
-  plant {
-    plantName = fromMaybe (plantName plant) (obj .:? "name" >>= fromJSON' :: Maybe Text),
-    plantDescription = fromMaybe (plantDescription plant) (obj .:? "description" >>= fromJSON' :: Maybe (Maybe Text)),
-    plantPrice = fromMaybe (plantPrice plant) (obj .:? "price" >>= fromJSON' :: Maybe Double),
-    plantStock = fromMaybe (plantStock plant) (obj .:? "stock" >>= fromJSON' :: Maybe Int)
-  }
-  where
-    fromJSON' v = case fromJSON v of Success a -> Just a; _ -> Nothing
-applyPatch plant _ = plant -- Ne fait rien si le payload n'est pas un objet
+  let newName        = fromMaybe (plantName plant) (objLookup "name" obj)
+      newDescription = fromMaybe (plantDescription plant) (objLookup "description" obj)
+      newPrice       = fromMaybe (plantPrice plant) (objLookup "price" obj)
+      newStock       = fromMaybe (plantStock plant) (objLookup "stock" obj)
+  in plant { plantName = newName
+           , plantDescription = newDescription
+           , plantPrice = newPrice
+           , plantStock = newStock }
+applyPatch plant _ = plant

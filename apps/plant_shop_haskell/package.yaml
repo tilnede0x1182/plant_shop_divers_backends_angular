@@ -22,6 +22,8 @@ dependencies:
   - wreq
   - wai-extra
   - aeson-casing
+  - cookie
+  - dotenv
 
 executables:
   plant-shop-haskell:

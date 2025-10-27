@@ -9,6 +9,7 @@ import           Data.Text         (Text)
 import           Data.Time         (UTCTime)
 import           GHC.Generics      (Generic)
 import           Models.OrderItem  (FullOrderItem)
+import           Database.PostgreSQL.Simple.FromRow (FromRow(..), field)
 
 -- | Modèle de base pour une commande, tel que stocké en DB.
 data Order = Order
@@ -31,10 +32,10 @@ data FullOrder = FullOrder
   } deriving (Show, Generic)
 
 orderOptions :: Options
-orderOptions = defaultOptions { fieldLabelModifier = camelCase . aesonDrop 4 }
+orderOptions = aesonDrop 4 camelCase
 
 fullOrderOptions :: Options
-fullOrderOptions = defaultOptions { fieldLabelModifier = camelCase . aesonDrop 4 }
+fullOrderOptions = aesonDrop 4 camelCase
 
 instance ToJSON FullOrder where
   toJSON = genericToJSON fullOrderOptions
@@ -50,10 +51,10 @@ data CreateOrderItemPayload = CreateOrderItemPayload
   } deriving (Show, Generic)
 
 instance FromJSON CreateOrderItemPayload where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelCase . aesonDrop 9 }
+  parseJSON = genericParseJSON (aesonDrop 9 camelCase)
 
 instance FromJSON CreateOrderPayload where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelCase . aesonDrop 11 }
+  parseJSON = genericParseJSON (aesonDrop 11 camelCase)
 
 -- | DTO pour la mise à jour du statut d'une commande.
 newtype UpdateOrderStatusPayload = UpdateOrderStatusPayload
@@ -61,4 +62,7 @@ newtype UpdateOrderStatusPayload = UpdateOrderStatusPayload
   } deriving (Show, Generic)
 
 instance FromJSON UpdateOrderStatusPayload where
-  parseJSON = genericParseJSON defaultOptions { fieldLabelModifier = camelCase . aesonDrop 6 }
+  parseJSON = genericParseJSON (aesonDrop 6 camelCase)
+
+instance FromRow Order where
+  fromRow = Order <$> field <*> field <*> field <*> field <*> field

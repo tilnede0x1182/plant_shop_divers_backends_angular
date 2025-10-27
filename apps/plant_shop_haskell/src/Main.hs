@@ -5,6 +5,10 @@ import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import           Network.Wai.Middleware.Cors          (simpleCors)
 import           Database.PostgreSQL.Simple           (connectPostgreSQL, Connection)
 import           Control.Monad.IO.Class               (liftIO)
+import           System.Environment                   (lookupEnv)
+import           Text.Read                             (readMaybe)
+import           Control.Exception                     (try, IOException)
+import           Configuration.Dotenv                  (Config (..), loadFile, defaultConfig)
 
 import qualified Config.Config as C
 import qualified Controllers.AuthController as Auth
@@ -14,22 +18,34 @@ import qualified Controllers.OrderController as Order
 
 main :: IO ()
 main = do
-  -- Charger la configuration et se connecter à la base de données
+  -- Charger .env manuellement (DATABASE_URL et SERVER_ADDRESS)
+  let dotenvCfg = defaultConfig { configPath = ["../../.env"], configOverride = True }
+  _ <- loadFile dotenvCfg
+
+  -- Connexion à la base
   connString <- C.loadDbConnectionString
   conn <- connectPostgreSQL connString
   putStrLn "🚀 Connexion à la base de données réussie."
 
-  -- Démarrer le serveur Scotty
-  scotty 4100 $ do
-    -- Middlewares
-    middleware logStdoutDev -- Pour le logging des requêtes
-    middleware simpleCors   -- Pour la politique CORS (très permissif pour le dev)
+  -- Lecture du port
+  maybePortStr <- lookupEnv "SERVER_ADDRESS"
+  let port = maybe 4100 id (maybePortStr >>= readMaybe)
 
-    -- Montage des routes de chaque contrôleur
-    Auth.routes conn
-    Plant.routes conn
-    User.routes conn
-    Order.routes conn
+  putStrLn $ "🔧 Démarrage du serveur sur le port " ++ show port ++ "..."
 
-    -- Route par défaut pour les chemins non trouvés
-    notFound $ json ("error" :: String, "Route non trouvée" :: String)
+  -- Gestion d'erreur si port occupé
+  result <- try (scotty port $ app conn) :: IO (Either IOException ())
+  case result of
+    Left _  -> putStrLn $ "❌ Erreur : le port " ++ show port ++ " est déjà utilisé."
+    Right _ -> return ()
+
+-- Application Scotty
+app :: Connection -> ScottyM ()
+app conn = do
+  middleware logStdoutDev
+  middleware simpleCors
+  Auth.routes conn
+  Plant.routes conn
+  User.routes conn
+  Order.routes conn
+  notFound $ json ("error" :: String, "Route non trouvée" :: String)

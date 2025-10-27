@@ -2,44 +2,54 @@
 
 module Utils.JWT (createToken, getClaimsFromToken) where
 
-import           Control.Monad.IO.Class (liftIO)
-import           Data.Aeson             (ToJSON (..), object, (.=))
+import           Data.Aeson             (ToJSON (..))
 import qualified Data.Map               as Map
 import           Data.Text              (Text, pack)
 import           Data.Time.Clock        (addUTCTime, getCurrentTime)
-import           Web.JWT                (JWTClaimsSet (..), NumericDate (..),
-                                         StringOrURI, decodeAndVerifySignature,
-                                         encodeSigned, hmacSecret, jwtAlg,
-                                         numericDate)
-
+import           Data.Time.Clock.POSIX  (utcTimeToPOSIXSeconds)
 import           Models.User            (User (..))
+import           System.Environment     (lookupEnv)
+import           System.IO.Unsafe       (unsafePerformIO)
+import           Web.JWT                ( JWTClaimsSet (..)
+                                       , ClaimsMap (ClaimsMap)
+                                       , decodeAndVerifySignature
+                                       , encodeSigned
+                                       , hmacSecret
+                                       , numericDate
+                                       , toVerify
+                                       , tokenIssuer
+                                       )
+import qualified Web.JWT                as JWT
 
--- Clé secrète. En production, elle devrait provenir d'une variable d'environnement.
+-- Clé lue depuis l'environnement (.env -> JWT_SECRET), chargée une fois.
+{-# NOINLINE secretKey #-}
 secretKey :: Text
-secretKey = "your-dev-secret-key"
+secretKey =
+  case unsafePerformIO (lookupEnv "JWT_SECRET") of
+    Just k  -> pack k
+    Nothing -> error "JWT_SECRET non défini dans l'environnement"
 
--- | Crée un token JWT pour un utilisateur.
+-- Création d'un JWT HS256 valable 24h, compatible front + tests
 createToken :: User -> IO Text
 createToken user = do
-  now <- liftIO getCurrentTime
-  let claims = mempty -- Commence avec un ensemble de revendications vide
-        { iss = stringOrURI "plant-shop-haskell"
-        , iat = numericDate now
-        , exp = numericDate (addUTCTime (24 * 60 * 60) now) -- Expire dans 24h
-        , unregisteredClaims = Map.fromList
-            [ ("id", toJSON (userId user))
+  now <- getCurrentTime
+  let expAt  = addUTCTime (24 * 60 * 60) now
+      claims = mempty
+        { iss = tokenIssuer "plant-shop-haskell"
+        , iat = numericDate (utcTimeToPOSIXSeconds now)
+        , JWT.exp = numericDate (utcTimeToPOSIXSeconds expAt)
+        , unregisteredClaims = ClaimsMap (Map.fromList
+            [ ("id",    toJSON (userId user))
             , ("email", toJSON (userEmail user))
-            , ("name", toJSON (userName user))
+            , ("name",  toJSON (userName user))
             , ("admin", toJSON (userIsAdmin user))
-            ]
+            ])
         }
-  return $ encodeSigned (hmacSecret secretKey) mempty claims
+  -- encodeSigned choisit HS256 automatiquement pour une clé HMAC, header = mempty
+  pure $ encodeSigned (hmacSecret secretKey) mempty claims
 
--- | Extrait les revendications (claims) d'un token.
+-- Vérification + extraction des claims
 getClaimsFromToken :: Text -> Maybe JWTClaimsSet
-getClaimsFromToken token =
-  decodeAndVerifySignature (hmacSecret secretKey) token
-
--- | Helper pour convertir une String en StringOrURI.
-stringOrURI :: String -> Maybe StringOrURI
-stringOrURI = Just . pack
+getClaimsFromToken tok = do
+  jwt <- decodeAndVerifySignature (toVerify (hmacSecret secretKey)) tok
+  pure (JWT.claims jwt)

@@ -3,19 +3,23 @@
 
 module Controllers.OrderController (routes) where
 
-import           Control.Exception          (throw)
+import           Control.Exception      (throwIO)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.Aeson                 as Aeson
 import           Data.Maybe                 (fromMaybe)
 import           Database.PostgreSQL.Simple
+import           Database.PostgreSQL.Simple.FromRow (FromRow)
+import           Network.HTTP.Types.Status (status200)
 import           Web.Scotty
-
-import           Middleware.Auth            (requireAdmin, requireUser)
+import           Models.User                 (User(..))
+import qualified Utils.Response             as R
+import qualified Models.Order as O
+import qualified Models.OrderItem as OI
+import qualified Models.Plant as P
 import           Models.Order
 import           Models.OrderItem
 import           Models.Plant
-import           Models.User                (User (..))
-import qualified Utils.Response             as R
+import           Middleware.Auth        (requireUser, requireAdmin)
 
 routes :: Connection -> ScottyM ()
 routes conn = do
@@ -42,7 +46,7 @@ routes conn = do
     -- Utilisation d'une transaction pour garantir l'atomicité
     result <- liftIO $ withTransaction conn $ do
       -- 1. Créer la commande avec un total de 0 pour obtenir un ID
-      [Only orderId] <- query conn "INSERT INTO orders (user_id, total, status) VALUES (?, 0, 'pending') RETURNING id" (userId user)
+      [Only orderId] <- query conn "INSERT INTO orders (user_id, total, status) VALUES (?, 0, 'pending') RETURNING id" (Only $ userId user)
 
       -- 2. Traiter chaque article
       totalPrice <- processOrderItems conn (createOrderItems payload)
@@ -86,20 +90,20 @@ processOrderItems conn items = sum <$> mapM processItem items
   where
     processItem :: CreateOrderItemPayload -> IO Double
     processItem item = do
-      let pId = orderItemPlantId item
-      let qty = orderItemQuantity item
+      let pId = O.orderItemPlantId item
+      let qty = O.orderItemQuantity item
 
       -- Récupérer la plante et vérifier le stock
       [plant] <- query conn "SELECT * FROM plants WHERE id = ?" (Only pId) :: IO [Plant]
       if plantStock plant < qty
-        then throw $ userError ("Stock insuffisant pour la plante " ++ show pId)
+        then throwIO (userError ("Stock insuffisant pour la plante " ++ show pId))
         else do
           -- Mettre à jour le stock
           execute conn "UPDATE plants SET stock = stock - ? WHERE id = ?" (qty, pId)
           -- Créer l'article de commande
           let itemPrice = plantPrice plant
           execute conn "INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)"
-            (0, pId, qty, itemPrice) -- order_id sera mis à jour plus tard si nécessaire, mais ici on ne le lie pas directement
+            (0 :: Int, pId :: Int, qty :: Int, itemPrice :: Double) -- order_id sera mis à jour plus tard si nécessaire, mais ici on ne le lie pas directement
           return (itemPrice * fromIntegral qty)
 
 -- | Récupère une commande et tous ses détails pour la sérialisation JSON
@@ -118,11 +122,11 @@ fetchFullOrder conn order = do
 
 fetchFullOrderItem :: Connection -> OrderItem -> IO FullOrderItem
 fetchFullOrderItem conn item = do
-  [plant] <- liftIO $ query conn "SELECT * FROM plants WHERE id = ?" (Only $ orderItemPlantId item)
+  [plant] <- liftIO $ query conn "SELECT * FROM plants WHERE id = ?" (Only $ OI.orderItemPlantId item)
   return FullOrderItem
     { fullOrderItemId = orderItemId item
     , fullOrderItemOrderId = orderItemOrderId item
-    , fullOrderItemQuantity = orderItemQuantity item
+    , fullOrderItemQuantity = OI.orderItemQuantity item
     , fullOrderItemPrice = orderItemPrice item
     , fullOrderItemPlant = plant
     }

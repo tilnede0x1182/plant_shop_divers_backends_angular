@@ -32,10 +32,10 @@ data FullOrder = FullOrder
   } deriving (Show, Generic)
 
 orderOptions :: Options
-orderOptions = aesonDrop 4 camelCase
+orderOptions = aesonDrop 5 camelCase -- FIX: Le préfixe est "order" (5 lettres)
 
 fullOrderOptions :: Options
-fullOrderOptions = aesonDrop 4 camelCase
+fullOrderOptions = aesonDrop 9 camelCase -- FIX: Le préfixe est "fullOrder" (9 lettres)
 
 instance ToJSON FullOrder where
   toJSON = genericToJSON fullOrderOptions

@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TypeApplications  #-}
 
 module Controllers.OrderController (routes) where
 
-import           Control.Exception      (throwIO)
+import           Control.Exception      (SomeException, try)
 import           Control.Monad.IO.Class     (liftIO)
 import qualified Data.Aeson                 as Aeson
 import           Data.Maybe                 (fromMaybe)
@@ -26,7 +27,6 @@ routes conn = do
   -- GET /api/orders
   get "/api/orders" $ do
     user <- requireUser
-    -- Un admin voit tout, un utilisateur ne voit que ses commandes
     let queryStr = if userIsAdmin user
           then "SELECT * FROM orders ORDER BY created_at DESC"
           else "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC"
@@ -43,23 +43,26 @@ routes conn = do
     user <- requireUser
     payload <- jsonData :: ActionM CreateOrderPayload
 
-    -- Utilisation d'une transaction pour garantir l'atomicité
-    result <- liftIO $ withTransaction conn $ do
-      -- 1. Créer la commande avec un total de 0 pour obtenir un ID
-      [Only orderId] <- query conn "INSERT INTO orders (user_id, total, status) VALUES (?, 0, 'pending') RETURNING id" (Only $ userId user)
+    -- Utilisation de 'try' sur l'action IO, puis gestion du résultat dans ActionM
+    orderIdResult <- liftIO $ Control.Exception.try @SomeException $
+      withTransaction conn $ do
+        -- 1. Créer la commande avec un total de 0 pour obtenir un ID
+        [Only orderId] <- query conn "INSERT INTO orders (user_id, total, status) VALUES (?, 0, 'pending') RETURNING id" (Only $ userId user)
 
-      -- 2. Traiter chaque article
-      totalPrice <- processOrderItems conn (createOrderItems payload)
+        -- 2. Traiter chaque article et calculer le total
+        totalPrice <- processOrderItems conn orderId (createOrderItems payload)
 
-      -- 3. Mettre à jour le total de la commande
-      execute conn "UPDATE orders SET total = ? WHERE id = ?" (totalPrice, orderId :: Int)
+        -- 3. Mettre à jour le total de la commande
+        execute conn "UPDATE orders SET total = ? WHERE id = ?" (totalPrice, orderId :: Int)
 
-      return orderId
+        return orderId
 
-    -- Récupérer la commande complète pour la réponse
-    [newOrder] <- liftIO $ query conn "SELECT * FROM orders WHERE id = ?" (Only (result :: Int))
-    fullOrder <- liftIO $ fetchFullOrder conn newOrder
-    R.created fullOrder
+    case orderIdResult of
+      Left e -> R.badRequest (show e) -- L'exception est maintenant gérée et renvoie un 400
+      Right orderIdVal -> do
+        [newOrder] <- liftIO $ query conn "SELECT * FROM orders WHERE id = ?" (Only (orderIdVal :: Int))
+        fullOrder <- liftIO $ fetchFullOrder conn newOrder
+        R.created fullOrder
 
   -- PATCH /api/orders/:id (Admin)
   patch "/api/orders/:id" $ do
@@ -84,26 +87,29 @@ routes conn = do
       then status status200
       else R.notFound "Commande non trouvée"
 
--- | Logique de traitement des articles d'une commande dans une transaction
-processOrderItems :: Connection -> [CreateOrderItemPayload] -> IO Double
-processOrderItems conn items = sum <$> mapM processItem items
-  where
-    processItem :: CreateOrderItemPayload -> IO Double
-    processItem item = do
-      let pId = O.orderItemPlantId item
-      let qty = O.orderItemQuantity item
+-- Logique de traitement des articles, maintenant transactionnelle et correcte
+processOrderItems :: Connection -> Int -> [CreateOrderItemPayload] -> IO Double
+processOrderItems conn orderId items = sum <$> mapM (processItem conn orderId) items
 
-      -- Récupérer la plante et vérifier le stock
-      [plant] <- query conn "SELECT * FROM plants WHERE id = ?" (Only pId) :: IO [Plant]
+processItem :: Connection -> Int -> CreateOrderItemPayload -> IO Double
+processItem conn orderId item = do
+  let pId = O.orderItemPlantId item
+      qty = O.orderItemQuantity item
+
+  -- Récupérer la plante et vérifier le stock
+  mPlant <- listToMaybe <$> query conn "SELECT * FROM plants WHERE id = ?" (Only pId)
+  case mPlant of
+    Nothing -> error ("Plante non trouvée: " ++ show pId)
+    Just plant -> do
       if plantStock plant < qty
-        then throwIO (userError ("Stock insuffisant pour la plante " ++ show pId))
+        then error ("Stock insuffisant pour la plante " ++ show pId)
         else do
           -- Mettre à jour le stock
           execute conn "UPDATE plants SET stock = stock - ? WHERE id = ?" (qty, pId)
           -- Créer l'article de commande
           let itemPrice = plantPrice plant
           execute conn "INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)"
-            (0 :: Int, pId :: Int, qty :: Int, itemPrice :: Double) -- order_id sera mis à jour plus tard si nécessaire, mais ici on ne le lie pas directement
+            (orderId, pId, qty, itemPrice)
           return (itemPrice * fromIntegral qty)
 
 -- | Récupère une commande et tous ses détails pour la sérialisation JSON
@@ -130,3 +136,8 @@ fetchFullOrderItem conn item = do
     , fullOrderItemPrice = orderItemPrice item
     , fullOrderItemPlant = plant
     }
+
+-- Helper pour extraire une valeur Maybe d'une liste (plus sûr que `head`)
+listToMaybe :: [a] -> Maybe a
+listToMaybe []    = Nothing
+listToMaybe (x:_) = Just x

@@ -12,9 +12,10 @@ def init_orders_controller(db_connection):
     order_repo = OrderRepository(db_connection)
     item_repo = OrderItemRepository(db_connection)
 
-    @orders_bp.route('/', methods=['GET'])
+    @orders_bp.route('/orders', methods=['GET'])
     @auth_required
     def list_orders():
+        """Retourne les commandes liées à l'utilisateur courant."""
         user_id = g.user['id']
         orders = order_repo.find_all_for_user(user_id)
 
@@ -27,11 +28,12 @@ def init_orders_controller(db_connection):
 
         return json_response(result)
 
-    @orders_bp.route('/', methods=['POST'])
+    @orders_bp.route('/orders', methods=['POST'])
     @auth_required
     def create_order():
+        """Crée une commande pour l'utilisateur connecté."""
         user_id = g.user['id']
-        data = request.get_json()
+        data = request.get_json() or {}
         items = data.get('items')
         if not items:
             return json_response({"error": "La commande doit contenir des articles"}, 400)
@@ -44,10 +46,11 @@ def init_orders_controller(db_connection):
         except Exception as e:
             return json_response({"error": "Erreur interne du serveur"}, 500)
 
-    @orders_bp.route('/<int:order_id>', methods=['PATCH'])
+    @orders_bp.route('/orders/<int:order_id>', methods=['PATCH'])
     @admin_required
     def update_order_status(order_id):
-        data = request.get_json()
+        """Met à jour le statut d'une commande (admin)."""
+        data = request.get_json() or {}
         status = data.get('status')
         if not status:
             return json_response({"error": "Le statut est requis"}, 400)
@@ -58,9 +61,10 @@ def init_orders_controller(db_connection):
 
         return json_response(updated_order.__dict__)
 
-    @orders_bp.route('/<int:order_id>', methods=['DELETE'])
+    @orders_bp.route('/orders/<int:order_id>', methods=['DELETE'])
     @admin_required
     def delete_order(order_id):
+        """Supprime une commande ainsi que ses items (admin)."""
         # La suppression en cascade est gérée par la DB
         order_repo.delete(order_id)
         return empty_response(200)

@@ -17,7 +17,7 @@ CORS(app, supports_credentials=True, origins=[
 
 # Connexion à la base de données
 try:
-    db_connection = psycopg2.connect(config.DATABASE_URL)
+    db_connection = psycopg2.connect(dsn=config.DATABASE_URL)
     print("🔌 Connexion à la base de données réussie.")
 except psycopg2.OperationalError as e:
     print(f"❌ Erreur de connexion à la base de données : {e}")

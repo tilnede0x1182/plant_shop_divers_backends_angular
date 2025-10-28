@@ -60,4 +60,4 @@ tests:
 # ───────────────────────────────
 
 tree:
-	tree -I "venv"
+	tree -I "venv" -I "__pycache__"

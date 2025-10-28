@@ -18,6 +18,6 @@ def register_routes(app, db_connection):
     # Enregistrement des Blueprints sur l'application Flask
     # Le préfixe /api est géré globalement dans app.py
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(plants_bp, url_prefix='/') # Gère /plants et /admin/plants
-    app.register_blueprint(users_bp, url_prefix='/') # Gère /users et /admin/users
-    app.register_blueprint(orders_bp, url_prefix='/orders')
+    app.register_blueprint(plants_bp, url_prefix='') # Gère /plants et /admin/plants
+    app.register_blueprint(users_bp, url_prefix='') # Gère /users et /admin/users
+    app.register_blueprint(orders_bp, url_prefix='')

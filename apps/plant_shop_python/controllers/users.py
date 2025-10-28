@@ -7,6 +7,16 @@ from repositories.users import UserRepository
 
 users_bp = Blueprint('users', __name__)
 
+def _serialize_user(user):
+    """Retourne un utilisateur sans hash ni champs internes."""
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "admin": bool(user.is_admin),
+        "createdAt": user.created_at
+    }
+
 def init_users_controller(db_connection):
     repo = UserRepository(db_connection)
 
@@ -15,12 +25,7 @@ def init_users_controller(db_connection):
     def list_users():
         """Récupère tous les utilisateurs (admin uniquement)."""
         users = repo.list()
-        sanitized = []
-        for user in users:
-            data = user.__dict__.copy()
-            data.pop('password_hash', None)
-            sanitized.append(data)
-        return json_response(sanitized)
+        return json_response([_serialize_user(user) for user in users])
 
     @users_bp.route('/users', methods=['POST'])
     @admin_required
@@ -31,9 +36,7 @@ def init_users_controller(db_connection):
             data = data.copy()
             data['password'] = hash_password(data['password'])
         created = repo.create(data)
-        payload = created.__dict__.copy()
-        payload.pop('password_hash', None)
-        return json_response(payload, 201)
+        return json_response(_serialize_user(created), 201)
 
     @users_bp.route('/users/<int:user_id>', methods=['GET'])
     @auth_required
@@ -47,9 +50,7 @@ def init_users_controller(db_connection):
         if not user:
             return json_response({"error": "Utilisateur non trouvé"}, 404)
 
-        user_data = user.__dict__.copy()
-        user_data.pop('password_hash', None)
-        return json_response(user_data)
+        return json_response(_serialize_user(user))
 
     @users_bp.route('/users/<int:user_id>', methods=['PATCH'])
     @auth_required
@@ -65,9 +66,7 @@ def init_users_controller(db_connection):
             del data['admin']
 
         updated_user = repo.update(user_id, data)
-        payload = updated_user.__dict__.copy()
-        payload.pop('password_hash', None)
-        return json_response(payload)
+        return json_response(_serialize_user(updated_user))
 
     @users_bp.route('/users/<int:user_id>', methods=['DELETE'])
     @admin_required
@@ -81,12 +80,7 @@ def init_users_controller(db_connection):
     @admin_required
     def admin_list_users():
         """Alias admin pour compatibilité legacy."""
-        sanitized = []
-        for user in repo.list():
-            data = user.__dict__.copy()
-            data.pop('password_hash', None)
-            sanitized.append(data)
-        return json_response(sanitized)
+        return json_response([_serialize_user(user) for user in repo.list()])
 
     @users_bp.route('/admin/users/<int:user_id>', methods=['DELETE'])
     @admin_required

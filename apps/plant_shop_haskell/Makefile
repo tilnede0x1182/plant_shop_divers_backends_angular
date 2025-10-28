@@ -16,6 +16,8 @@ build:
 run:
 	$(STACK) run
 
+prod: run
+
 build-run: build run
 
 clean:

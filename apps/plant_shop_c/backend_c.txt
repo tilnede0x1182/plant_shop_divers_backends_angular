@@ -1,5 +1,6 @@
 # Arborescence du projet (.)
 .
+├── backend_c.txt
 ├── build
 │   ├── CMakeCache.txt
 │   ├── CMakeFiles
@@ -21,7 +22,6 @@
 │   │   ├── seed_c.dir
 │   │   │   ├── build.make
 │   │   │   ├── cmake_clean.cmake
-│   │   │   ├── compiler_depend.internal
 │   │   │   ├── compiler_depend.make
 │   │   │   ├── compiler_depend.ts
 │   │   │   ├── db
@@ -86,7 +86,6 @@
 │   │   └── test_e2e_c.dir
 │   │       ├── build.make
 │   │       ├── cmake_clean.cmake
-│   │       ├── compiler_depend.internal
 │   │       ├── compiler_depend.make
 │   │       ├── compiler_depend.ts
 │   │       ├── DependInfo.cmake
@@ -113,9 +112,6 @@
 ├── routes.c
 ├── routes.h
 ├── src
-│   ├── auth
-│   │   ├── jwt.c
-│   │   └── jwt.h
 │   ├── controllers
 │   │   ├── auth_controller.c
 │   │   ├── auth_controller.h
@@ -154,7 +150,7 @@
 │   └── test_e2e.c
 └── users.txt
 
-28 directories, 126 files
+27 directories, 123 files
 
 
 # ./Makefile
@@ -1773,30 +1769,30 @@ void read_server_env(char* port, char* jwt_secret) {
 
 int get_cookie_manual(struct mg_http_message* hm,
                       const char* name, char* out, size_t sz) {
-    printf("[COOKIE] get_cookie_manual called\n");
+    // printf("[COOKIE] get_cookie_manual called\n");
     struct mg_str* hdr = mg_http_get_header(hm, "Cookie");
     if (!hdr) {
-        printf("[COOKIE] no Cookie header\n");
+        // printf("[COOKIE] no Cookie header\n");
         return 0;
     }
-    printf("[COOKIE] header length = %zu\n", hdr->len);
+    // printf("[COOKIE] header length = %zu\n", hdr->len);
 
     size_t len = hdr->len;
     char buf[len + 1];
     memcpy(buf, hdr->buf, len);
     buf[len] = '\0';
-    printf("[COOKIE] header content = \"%s\"\n", buf);
+    // printf("[COOKIE] header content = \"%s\"\n", buf);
 
     char* tok = strtok(buf, ";");
     while (tok) {
         char* start = tok;
         while (*start == ' ') start++;
-        printf("[COOKIE] token = \"%s\"\n", start);
+        // printf("[COOKIE] token = \"%s\"\n", start);
 
         size_t keylen = strlen(name);
         if (strncmp(start, name, keylen) == 0 && start[keylen] == '=') {
             const char* val = start + keylen + 1;
-            printf("[COOKIE] found %s = \"%s\"\n", name, val);
+            // printf("[COOKIE] found %s = \"%s\"\n", name, val);
             strncpy(out, val, sz - 1);
             out[sz - 1] = '\0';
             return 1;
@@ -1804,13 +1800,13 @@ int get_cookie_manual(struct mg_http_message* hm,
         tok = strtok(NULL, ";");
     }
 
-    printf("[COOKIE] %s not found\n", name);
+    // printf("[COOKIE] %s not found\n", name);
     return 0;
 }
 
 /* get_current_user_id avec parsing manuel */
 int get_current_user_id(struct mg_http_message *hm) {
-		printf("Appel de la fonction : get_current_user_id\n");
+		// printf("Appel de la fonction : get_current_user_id\n");
     char jwt_val[32];
     if (!get_cookie_manual(hm, "plant_shop_c_backend", jwt_val, sizeof(jwt_val)))
         return 0;
@@ -1852,7 +1848,7 @@ void cors_reply(struct mg_connection *c, int status, const char *extra_headers, 
     char *body = malloc(needed);
     if (!body) {
         va_end(ap);
-        fprintf(stderr, "❌ [CORS] Allocation mémoire échouée pour %d bytes\n", needed);
+        // fprintf(stderr, "❌ [CORS] Allocation mémoire échouée pour %d bytes\n", needed);
         mg_http_reply(c, 500, headers, "{\"error\":\"Memory allocation failed\"}");
         return;
     }
@@ -1861,8 +1857,8 @@ void cors_reply(struct mg_connection *c, int status, const char *extra_headers, 
     va_end(ap);
 
     // 🔍 LOG DÉTAILLÉ
-    fprintf(stderr, "✅ [CORS] %d | Body size: %d bytes | Headers: %s\n",
-            status, needed - 1, extra_headers ? extra_headers : "(none)");
+    // fprintf(stderr, "✅ [CORS] %d | Body size: %d bytes | Headers: %s\n",
+            // status, needed - 1, extra_headers ? extra_headers : "(none)");
 
     // Envoi de la réponse
     mg_http_reply(c, status, headers, "%s", body);
@@ -1870,13 +1866,13 @@ void cors_reply(struct mg_connection *c, int status, const char *extra_headers, 
 }
 
 void cors_reply_json(struct mg_connection *c, int status, const char *json) {
-    fprintf(stderr, "📤 [CORS_JSON] Envoi JSON %d | Taille: %zu bytes\n", status, strlen(json));
+    // fprintf(stderr, "📤 [CORS_JSON] Envoi JSON %d | Taille: %zu bytes\n", status, strlen(json));
     cors_reply(c, status, "Content-Type: application/json\r\n", "%s", json);
 }
 
 int cors_handle_preflight(struct mg_connection *c, struct mg_http_message *hm) {
     if (mg_strcmp(hm->method, mg_str("OPTIONS")) == 0) {
-        fprintf(stderr, "🔄 [PREFLIGHT] %.*s\n", (int)hm->uri.len, hm->uri.buf);
+        // fprintf(stderr, "🔄 [PREFLIGHT] %.*s\n", (int)hm->uri.len, hm->uri.buf);
         cors_reply(c, 204, "", "");
         return 1;
     }
@@ -1980,37 +1976,37 @@ void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
 }
 
 void user_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
-    printf("[USER CONTROLLER] Réception de la requête PATCH /api/users/%d\n", id);
-    printf("[USER CONTROLLER] Corps reçu : \"%.*s\"\n", (int)hm->body.len, hm->body.buf);
+    // printf("[USER CONTROLLER] Réception de la requête PATCH /api/users/%d\n", id);
+    // printf("[USER CONTROLLER] Corps reçu : \"%.*s\"\n", (int)hm->body.len, hm->body.buf);
 
     int current_user_id = get_current_user_id(hm);
-    printf("[USER CONTROLLER] ID user courant extrait du cookie : %d\n", current_user_id);
+    // printf("[USER CONTROLLER] ID user courant extrait du cookie : %d\n", current_user_id);
 
     int current_user_is_admin = user_repo_is_admin(DB, current_user_id);
-    printf("[USER CONTROLLER] Statut admin du user courant : %d\n", current_user_is_admin);
+    // printf("[USER CONTROLLER] Statut admin du user courant : %d\n", current_user_is_admin);
 
     if (current_user_id != id && !current_user_is_admin) {
-        printf("[USER CONTROLLER] Refus : ni admin ni modification de son propre profil (id cible = %d, id courant = %d)\n", id, current_user_id);
+        // printf("[USER CONTROLLER] Refus : ni admin ni modification de son propre profil (id cible = %d, id courant = %d)\n", id, current_user_id);
         mg_http_reply(c, 403, "", "");
         return;
     }
 
     cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
     if (!j) {
-        printf("[USER CONTROLLER] JSON reçu invalide, abandon.\n");
+        // printf("[USER CONTROLLER] JSON reçu invalide, abandon.\n");
         mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
         return;
     }
 
     if (!current_user_is_admin && cJSON_HasObjectItem(j, "admin")) {
-        printf("[USER CONTROLLER] Tentative de modification du champ 'admin' refusée (non admin).\n");
+        // printf("[USER CONTROLLER] Tentative de modification du champ 'admin' refusée (non admin).\n");
         cJSON_DeleteItemFromObject(j, "admin");
     }
 
-    printf("[USER CONTROLLER] Mise à jour du profil utilisateur %d.\n", id);
+    // printf("[USER CONTROLLER] Mise à jour du profil utilisateur %d.\n", id);
     user_repo_patch(DB, id, j);
     cJSON_Delete(j);
-    printf("[USER CONTROLLER] Modification réussie (id = %d).\n", id);
+    // printf("[USER CONTROLLER] Modification réussie (id = %d).\n", id);
     mg_http_reply(c, 200, "", "");
 }
 
@@ -2245,18 +2241,18 @@ void auth_register(struct mg_connection* c, struct mg_http_message *hm) {
 void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
     struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
     if (cookie_hdr) {
-        printf("[LOGIN] Cookie: \"%.*s\"\n",
-               (int)cookie_hdr->len, cookie_hdr->buf);
+        // printf("[LOGIN] Cookie: \"%.*s\"\n",
+              //  (int)cookie_hdr->len, cookie_hdr->buf);
     } else {
-        printf("[LOGIN] No Cookie\n");
+        // printf("[LOGIN] No Cookie\n");
     }
 
-    printf("[LOGIN] Body: \"%.*s\"\n",
-           (int)hm->body.len, hm->body.buf);
+    // printf("[LOGIN] Body: \"%.*s\"\n",
+          //  (int)hm->body.len, hm->body.buf);
 
     cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
     if (!j) {
-        printf("[LOGIN] Invalid JSON\n");
+        // printf("[LOGIN] Invalid JSON\n");
         mg_http_reply(c, 400,
                       "Content-Type: application/json\r\n",
                       "{\"error\":\"Invalid JSON\"}\n");
@@ -2271,13 +2267,13 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
     if (e) snprintf(email_buf, sizeof(email_buf), "%s", e);
     if (p) snprintf(password_buf, sizeof(password_buf), "%s", p);
 
-    printf("[LOGIN] Email: '%s', Password: '%s'\n",
-           email_buf, password_buf);
+    // printf("[LOGIN] Email: '%s', Password: '%s'\n",
+          //  email_buf, password_buf);
 
     cJSON_Delete(j);
 
     if (!e || !p) {
-        printf("[LOGIN] Missing fields\n");
+        // printf("[LOGIN] Missing fields\n");
         mg_http_reply(c, 400,
                       "Content-Type: application/json\r\n",
                       "{\"error\":\"Missing fields\"}\n");
@@ -2286,20 +2282,20 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
 
     User u;
     if (!user_repo_find_by_mail(DB, email_buf, &u)) {
-        printf("[LOGIN] User not found\n");
+        // printf("[LOGIN] User not found\n");
         mg_http_reply(c, 401,
                       "Content-Type: application/json\r\n",
                       "{\"error\":\"Invalid credentials\"}\n");
         return;
     }
-    printf("[LOGIN] Found user id=%d\n", u.id);
+    // printf("[LOGIN] Found user id=%d\n", u.id);
 
     int verify_result = argon2id_verify(u.password_hash,
                                         password_buf,
                                         strlen(password_buf));
-    printf("[LOGIN] Password verify result: %d\n", verify_result);
+    // printf("[LOGIN] Password verify result: %d\n", verify_result);
     if (verify_result != ARGON2_OK) {
-        printf("[LOGIN] Incorrect password\n");
+        // printf("[LOGIN] Incorrect password\n");
         mg_http_reply(c, 401,
                       "Content-Type: application/json\r\n",
                       "{\"error\":\"Invalid credentials\"}\n");
@@ -2310,7 +2306,7 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
     snprintf(cookie, sizeof(cookie),
              "Set-Cookie: plant_shop_c_backend=%d; Path=/; HttpOnly; Max-Age=86400",
              u.id);
-    printf("[LOGIN] Set-Cookie: %s\n", cookie);
+    // printf("[LOGIN] Set-Cookie: %s\n", cookie);
 
     char headers[512];
     snprintf(headers, sizeof(headers),
@@ -2346,7 +2342,7 @@ void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
 
     User u;
     if (!user_repo_find(DB, uid, &u)) {
-        printf("[auth_me] No user with id %d\n", uid);
+        // printf("[auth_me] No user with id %d\n", uid);
         mg_http_reply(c, 401, "Content-Type: application/json\r\n",
                       "{\"error\":\"User not found\"}\n");
         return;
@@ -2691,7 +2687,7 @@ int user_repo_find(PGconn *conn, int id, User *out) {
 }
 
 int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
-    printf("[DEBUG][SQL] Recherche email : '%s'\n", email);
+    // printf("[DEBUG][SQL] Recherche email : '%s'\n", email);
     const char *params[1] = {email};
     PGresult *r = PQexecParams(conn,
         "SELECT id, name, email, password_hash, is_admin FROM users WHERE email = $1",
@@ -2700,10 +2696,10 @@ int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
     int found = PQntuples(r);
     if (found) {
         fill_user(out, r, 0);
-        printf("[DEBUG][SQL] Utilisateur trouvé : email='%s' hash='%s'\n",
-            PQgetvalue(r, 0, 2), PQgetvalue(r, 0, 3));
+        // printf("[DEBUG][SQL] Utilisateur trouvé : email='%s' hash='%s'\n",
+            // PQgetvalue(r, 0, 2), PQgetvalue(r, 0, 3));
     } else {
-        printf("[DEBUG][SQL] Aucun utilisateur trouvé\n");
+        // printf("[DEBUG][SQL] Aucun utilisateur trouvé\n");
     }
     PQclear(r);
     return found;
@@ -2857,30 +2853,46 @@ static void _item_to_json(OrderItem *it, void *ud) {
 	cJSON *pl = cJSON_CreateObject();
 	cJSON_AddNumberToObject(pl, "id", p.id);
 	cJSON_AddStringToObject(pl, "name", p.name);
+	cJSON_AddNumberToObject(pl, "price", p.price);
 	cJSON_AddItemToObject(itm, "plant", pl);
 
 	cJSON_AddItemToArray(ctx->dst, itm);
 }
 
-/* ---------- liste des commandes utilisateur ---------- */
+/* ---------- liste des commandes utilisateur ----------
+   Affichage : ORDER BY id DESC (plus récentes en premier)
+   Numérotation : row_number() OVER (ORDER BY id ASC) AS number
+   => la colonne 'number' vaut 1 pour la plus ancienne, N pour la plus récente.
+*/
 cJSON* order_repo_list(PGconn *c, int uid) {
 	char uid_str[12]; sprintf(uid_str, "%d", uid);
 	const char *params[1] = {uid_str};
 
 	PGresult *r = PQexecParams(
 		c,
-		"SELECT id,total,status FROM orders WHERE user_id=$1 ORDER BY id",
+		"SELECT id,total,status, row_number() OVER (ORDER BY id ASC) AS number "
+		"FROM orders WHERE user_id=$1 ORDER BY id DESC",
 		1, NULL, params, NULL, NULL, 0);
+
+	/* protection basique en cas d'erreur SQL */
+	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
+		PQclear(r);
+		return cJSON_CreateArray();
+	}
 
 	cJSON *out = cJSON_CreateArray();
 	for (int i = 0; i < PQntuples(r); i++) {
 		int oid = atoi(PQgetvalue(r, i, 0));
+		int total = atoi(PQgetvalue(r, i, 1));
+		const char *status = PQgetvalue(r, i, 2);
+		int number = atoi(PQgetvalue(r, i, 3)); /* 1 = plus ancienne */
 
 		cJSON *j = cJSON_CreateObject();
 		cJSON_AddNumberToObject(j, "id", oid);
 		cJSON_AddNumberToObject(j, "userId", uid);
-		cJSON_AddNumberToObject(j, "total", atoi(PQgetvalue(r, i, 1)));
-		cJSON_AddStringToObject(j, "status", PQgetvalue(r, i, 2));
+		cJSON_AddNumberToObject(j, "totalPrice", total);
+		cJSON_AddStringToObject(j, "status", status);
+		cJSON_AddNumberToObject(j, "number", number); /* nouvelle propriété */
 
 		/* items */
 		cJSON *items = cJSON_CreateArray();
@@ -3134,240 +3146,6 @@ int main(void) {
 }
 
 
-# ./src/auth/jwt.c
-
-#include "jwt.h"
-#include "mongoose/mongoose.h"
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <openssl/hmac.h>
-#include <openssl/evp.h>
-#include <openssl/bio.h>
-#include <openssl/buffer.h>
-#include <cjson/cJSON.h>
-
-// ========================================
-// CLÉ SECRÈTE DEPUIS .ENV
-// ========================================
-extern char JWT_SECRET[128];
-
-// Fonction helper : Base64 URL encode
-static char* base64url_encode(const unsigned char* input, int length) {
-    BIO *bio, *b64;
-    BUF_MEM *buffer_ptr;
-
-    b64 = BIO_new(BIO_f_base64());
-    bio = BIO_new(BIO_s_mem());
-    bio = BIO_push(b64, bio);
-
-    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
-    BIO_write(bio, input, length);
-    BIO_flush(bio);
-    BIO_get_mem_ptr(bio, &buffer_ptr);
-
-    char* output = malloc(buffer_ptr->length + 1);
-    memcpy(output, buffer_ptr->data, buffer_ptr->length);
-    output[buffer_ptr->length] = '\0';
-
-    BIO_free_all(bio);
-
-    // Convertir Base64 standard en Base64URL
-    for (size_t i = 0; output[i]; i++) {
-        if (output[i] == '+') output[i] = '-';
-        if (output[i] == '/') output[i] = '_';
-        if (output[i] == '=') { output[i] = '\0'; break; }
-    }
-
-    return output;
-}
-
-// Fonction helper : Base64 URL decode
-static unsigned char* base64url_decode(const char* input, int* out_len) {
-    // Convertir Base64URL en Base64 standard
-    size_t input_len = strlen(input);
-    char* b64 = malloc(input_len + 4);
-    strcpy(b64, input);
-
-    for (size_t i = 0; b64[i]; i++) {
-        if (b64[i] == '-') b64[i] = '+';
-        if (b64[i] == '_') b64[i] = '/';
-    }
-
-    // Ajouter padding '='
-    while (strlen(b64) % 4 != 0) {
-        strcat(b64, "=");
-    }
-
-    BIO *bio, *b64io;
-
-    b64io = BIO_new(BIO_f_base64());
-    bio = BIO_new_mem_buf(b64, -1);
-    bio = BIO_push(b64io, bio);
-
-    BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
-
-    unsigned char* output = malloc(input_len);
-    *out_len = BIO_read(bio, output, input_len);
-
-    BIO_free_all(bio);
-    free(b64);
-
-    return output;
-}
-
-// Génère un token JWT
-bool jwt_generate_token(int user_id, const char* email, char* token_out, size_t token_size) {
-    // Vérification de la clé secrète
-    if (strlen(JWT_SECRET) == 0) {
-        // fprintf(stderr, "❌ [JWT] JWT_SECRET non initialisé !\n");
-        return false;
-    }
-
-    // Header
-    cJSON* header = cJSON_CreateObject();
-    cJSON_AddStringToObject(header, "alg", "HS256");
-    cJSON_AddStringToObject(header, "typ", "JWT");
-    char* header_str = cJSON_PrintUnformatted(header);
-    char* header_b64 = base64url_encode((unsigned char*)header_str, strlen(header_str));
-
-    // Payload
-    cJSON* payload = cJSON_CreateObject();
-    cJSON_AddNumberToObject(payload, "user_id", user_id);
-    cJSON_AddStringToObject(payload, "email", email);
-    cJSON_AddNumberToObject(payload, "exp", time(NULL) + 86400); // 24h
-    char* payload_str = cJSON_PrintUnformatted(payload);
-    char* payload_b64 = base64url_encode((unsigned char*)payload_str, strlen(payload_str));
-
-    // Message à signer : header.payload
-    char message[1024];
-    snprintf(message, sizeof(message), "%s.%s", header_b64, payload_b64);
-
-    // Signature HMAC-SHA256
-    unsigned char signature[EVP_MAX_MD_SIZE];
-    unsigned int sig_len;
-
-    HMAC(EVP_sha256(), JWT_SECRET, strlen(JWT_SECRET),
-         (unsigned char*)message, strlen(message),
-         signature, &sig_len);
-
-    char* signature_b64 = base64url_encode(signature, sig_len);
-
-    // Token final : header.payload.signature
-    snprintf(token_out, token_size, "%s.%s.%s", header_b64, payload_b64, signature_b64);
-
-    // Debug
-    // fprintf(stderr, "✅ [JWT] Token généré pour user_id=%d | Clé: %.20s...\n",
-            user_id, JWT_SECRET);
-
-    // Nettoyage
-    free(header_str);
-    free(payload_str);
-    free(header_b64);
-    free(payload_b64);
-    free(signature_b64);
-    cJSON_Delete(header);
-    cJSON_Delete(payload);
-
-    return true;
-}
-
-// Vérifie et décode un token JWT
-bool jwt_verify_token(const char* token, int* user_id_out, char* email_out, size_t email_size) {
-    // Vérification de la clé secrète
-    if (strlen(JWT_SECRET) == 0) {
-        // fprintf(stderr, "❌ [JWT] JWT_SECRET non initialisé !\n");
-        return false;
-    }
-
-    // Séparer les 3 parties
-    char token_copy[512];
-    strncpy(token_copy, token, sizeof(token_copy) - 1);
-
-    char* header_b64 = strtok(token_copy, ".");
-    char* payload_b64 = strtok(NULL, ".");
-    char* signature_b64 = strtok(NULL, ".");
-
-    if (!header_b64 || !payload_b64 || !signature_b64) {
-        // fprintf(stderr, "❌ [JWT] Format invalide\n");
-        return false;
-    }
-
-    // Recalculer la signature
-    char message[1024];
-    snprintf(message, sizeof(message), "%s.%s", header_b64, payload_b64);
-
-    unsigned char expected_sig[EVP_MAX_MD_SIZE];
-    unsigned int sig_len;
-
-    HMAC(EVP_sha256(), JWT_SECRET, strlen(JWT_SECRET),
-         (unsigned char*)message, strlen(message),
-         expected_sig, &sig_len);
-
-    char* expected_sig_b64 = base64url_encode(expected_sig, sig_len);
-
-    // Comparer les signatures
-    bool sig_valid = (strcmp(signature_b64, expected_sig_b64) == 0);
-    free(expected_sig_b64);
-
-    if (!sig_valid) {
-        // fprintf(stderr, "❌ [JWT] Signature invalide\n");
-        return false;
-    }
-
-    // Décoder le payload
-    int payload_len;
-    unsigned char* payload_json = base64url_decode(payload_b64, &payload_len);
-
-    cJSON* payload = cJSON_ParseWithLength((char*)payload_json, payload_len);
-    free(payload_json);
-
-    if (!payload) {
-        // fprintf(stderr, "❌ [JWT] Payload JSON invalide\n");
-        return false;
-    }
-
-    // Vérifier l'expiration
-    cJSON* exp_item = cJSON_GetObjectItem(payload, "exp");
-    if (exp_item && cJSON_IsNumber(exp_item)) {
-        time_t exp = (time_t)exp_item->valuedouble;
-        if (time(NULL) > exp) {
-            // fprintf(stderr, "❌ [JWT] Token expiré\n");
-            cJSON_Delete(payload);
-            return false;
-        }
-    }
-
-    // Extraire les données
-    cJSON* user_id_item = cJSON_GetObjectItem(payload, "user_id");
-    cJSON* email_item = cJSON_GetObjectItem(payload, "email");
-
-    if (user_id_item && cJSON_IsNumber(user_id_item)) {
-        *user_id_out = (int)user_id_item->valuedouble;
-    }
-
-    if (email_item && cJSON_IsString(email_item)) {
-        strncpy(email_out, email_item->valuestring, email_size - 1);
-        email_out[email_size - 1] = '\0';
-    }
-
-    // fprintf(stderr, "✅ [JWT] Token valide pour user_id=%d\n", *user_id_out);
-
-    cJSON_Delete(payload);
-    return true;
-}
-
-int extract_user_id_from_cookie(struct mg_http_message* hm) {
-    struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
-    if (!cookie_hdr) return 0;
-    char jwt[512];
-    if (mg_http_get_var(cookie_hdr, "plant_shop_c_backend", jwt, sizeof jwt) <= 0) return 0;
-    int uid = 0; char email[128];
-    if (!jwt_verify_token(jwt, &uid, email, sizeof email)) return 0;
-    return uid;
-}
-
-
 # ./routes.c
 
 #include <stdio.h>
@@ -3383,15 +3161,15 @@ int extract_user_id_from_cookie(struct mg_http_message* hm) {
 
 /* -------- trace utilitaire -------- */
 static void log_route(struct mg_http_message *hm, const char *h) {
-	fprintf(stderr, "[ROUTE] %.*s %.*s → %s\n",
-	        (int) hm->method.len, hm->method.buf,
-	        (int) hm->uri.len,    hm->uri.buf,
-	        h);
+	// fprintf(stderr, "[ROUTE] %.*s %.*s → %s\n",
+	//         (int) hm->method.len, hm->method.buf,
+	//         (int) hm->uri.len,    hm->uri.buf,
+	//         h);
 }
 
 /* -------- /api/ping -------- */
 static void api_ping(struct mg_connection *c, struct mg_http_message *hm) {
-	// log_route(hm, "api_ping");
+	log_route(hm, "api_ping");
 	cors_reply(c, 200, "", "");
 }
 
@@ -3402,14 +3180,14 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 
 	/* ----- Auth ----- */
 	if (mg_http_match_uri(hm, "/api/auth/login")) {
-		// log_route(hm, "auth_login"),  auth_login(c, hm);
+		log_route(hm, "auth_login"),  auth_login(c, hm);
 	} else if (mg_http_match_uri(hm, "/api/auth/register")) {
-		// log_route(hm, "auth_register"), auth_register(c, hm);
+		log_route(hm, "auth_register"), auth_register(c, hm);
 	} else if (mg_http_match_uri(hm, "/api/auth/me")) {
-		// log_route(hm, "auth_me"), auth_me(c, hm);
+		log_route(hm, "auth_me"), auth_me(c, hm);
 	} else if (mg_http_match_uri(hm, "/api/auth/logout")) {
 		if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
-			// log_route(hm, "auth_logout"), auth_logout(c, hm);
+			log_route(hm, "auth_logout"), auth_logout(c, hm);
 		} else {
 			cors_reply(c, 405, "Allow: POST\r\n", "");
 		}
@@ -3418,46 +3196,46 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 	/* ----- Plants ----- */
 	else if (mg_http_match_uri(hm, "/api/plants")) {
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
-			// log_route(hm, "plants_list_public"), plants_list_public(c, hm);
+			log_route(hm, "plants_list_public"), plants_list_public(c, hm);
 		} else {
 			cors_reply(c, 405, "Allow: GET\r\n", "");
 		}
 	} else if (sscanf(hm->uri.buf, "/api/plants/%d", &id) == 1) {
-		// log_route(hm, "plant_get"), plant_get(c, hm, id);
+		log_route(hm, "plant_get"), plant_get(c, hm, id);
 	} else if (mg_http_match_uri(hm, "/api/admin/plants")) {
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
-			// log_route(hm, "admin_plants_list"), admin_plants_list(c, hm);
+			log_route(hm, "admin_plants_list"), admin_plants_list(c, hm);
 		} else if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
-			// log_route(hm, "admin_plants_add"),  admin_plants_add(c, hm);
+			log_route(hm, "admin_plants_add"),  admin_plants_add(c, hm);
 		}
 	} else if (sscanf(hm->uri.buf, "/api/admin/plants/%d", &id) == 1) {
 		if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
-			// log_route(hm, "admin_plants_patch"), admin_plants_patch(c, hm, id);
+			log_route(hm, "admin_plants_patch"), admin_plants_patch(c, hm, id);
 		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
-			// log_route(hm, "admin_plants_del"),  admin_plants_del(c, hm, id);
+			log_route(hm, "admin_plants_del"),  admin_plants_del(c, hm, id);
 		}
 	}
 
 	/* ----- Users ----- */
 	else if (mg_http_match_uri(hm, "/api/users")) {
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
-			// log_route(hm, "admin_users_list");
+			log_route(hm, "admin_users_list");
 			admin_users_list(c, hm);        /* gestion GET /api/users */
 		} else if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
-			// log_route(hm, "user_create");
+			log_route(hm, "user_create");
 			user_create(c, hm);
 		}
 	} else if (sscanf(hm->uri.buf, "/api/users/%d", &id) == 1) {
-		printf("[Route] /api/users/%d, en cours de modification d'un user : (id = %d)\n", id, id);
+		// printf("[Route] /api/users/%d, en cours de modification d'un user : (id = %d)\n", id, id);
 
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
-			// log_route(hm, "user_get");
+			log_route(hm, "user_get");
 			user_get(c, hm, id);
 		} else if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
-			// log_route(hm, "user_patch");
+			log_route(hm, "user_patch");
 			user_patch(c, hm, id);
 		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
-			// log_route(hm, "user_del");
+			log_route(hm, "user_del");
 			user_del(c, hm, id);
 		}
 	}
@@ -3465,7 +3243,7 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 	/* ----- Admin users ----- */
 	else if (mg_http_match_uri(hm, "/api/admin/users")) {
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
-			// log_route(hm, "admin_users_list");
+			log_route(hm, "admin_users_list");
 			admin_users_list(c, hm);
 		}
 	}
@@ -3473,13 +3251,13 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 	/* ----- Alias admin sur /api/admin/users/:id ----- */
 	else if (sscanf(hm->uri.buf, "/api/admin/users/%d", &id) == 1) {
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
-			// log_route(hm, "admin_user_get");
+			log_route(hm, "admin_user_get");
 			user_get(c, hm, id);
 		} else if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
-			// log_route(hm, "admin_user_patch");
+			log_route(hm, "admin_user_patch");
 			user_patch(c, hm, id);
 		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
-			// log_route(hm, "admin_user_del");
+			log_route(hm, "admin_user_del");
 			user_del(c, hm, id);
 		} else {
 			cors_reply(c, 405, "Allow: GET,PATCH,DELETE\r\n", "");
@@ -3489,28 +3267,28 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 	/* ----- Orders (items avant id, id avant liste) ----- */
 	else if (mg_http_match_uri(hm, "/api/orders/*/items")) {    /* /orders/:id/items */
 		if (sscanf(hm->uri.buf, "/api/orders/%d/items", &id) == 1) {
-			// log_route(hm, "order_items_by_order"), order_items_by_order(c, hm, id);
+			log_route(hm, "order_items_by_order"), order_items_by_order(c, hm, id);
 		}
 	} else if (sscanf(hm->uri.buf, "/api/orders/%d", &id) == 1) { /* /orders/:id */
 		if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
-			// log_route(hm, "orders_patch"), orders_patch(c, hm, id);
+			log_route(hm, "orders_patch"), orders_patch(c, hm, id);
 		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
-			// log_route(hm, "orders_del"), orders_del(c, hm, id);
+			log_route(hm, "orders_del"), orders_del(c, hm, id);
 		}
 	} else if (mg_http_match_uri(hm, "/api/orders")) {          /* /orders */
 		if (mg_strcmp(hm->method, mg_str("GET")) == 0) {
-			// log_route(hm, "orders_list"), orders_list(c, hm);
+			log_route(hm, "orders_list"), orders_list(c, hm);
 		} else if (mg_strcmp(hm->method, mg_str("POST")) == 0) {
-			// log_route(hm, "orders_create"), orders_create(c, hm);
+			log_route(hm, "orders_create"), orders_create(c, hm);
 		}
 	}
 
 	/* ----- Order-items individuels ----- */
 	else if (sscanf(hm->uri.buf, "/api/order-items/%d", &id) == 1) {
 		if (mg_strcmp(hm->method, mg_str("PATCH")) == 0) {
-			// log_route(hm, "order_item_patch"), order_item_patch(c, hm, id);
+			log_route(hm, "order_item_patch"), order_item_patch(c, hm, id);
 		} else if (mg_strcmp(hm->method, mg_str("DELETE")) == 0) {
-			// log_route(hm, "order_item_del"),  order_item_del(c, hm, id);
+			log_route(hm, "order_item_del"),  order_item_del(c, hm, id);
 		}
 	}
 
@@ -3518,7 +3296,7 @@ void route_request(struct mg_connection *c, struct mg_http_message *hm) {
 	else if (mg_http_match_uri(hm, "/api/ping")) {
 		api_ping(c, hm);
 	} else {
-		// log_route(hm, "404"), cors_reply(c, 404, "Content-Type: text/plain\r\n", "Not Found\n");
+		log_route(hm, "404"), cors_reply(c, 404, "Content-Type: text/plain\r\n", "Not Found\n");
 	}
 }
 
@@ -4029,29 +3807,6 @@ typedef struct {
 	int  is_admin;
 } User;
 #endif
-
-
-# ./src/auth/jwt.h
-
-#ifndef JWT_H
-#define JWT_H
-
-#include <stdbool.h>
-#include <stddef.h>
-
-struct mg_http_message;
-
-bool jwt_generate_token(int user_id, const char* email,
-                        char* token_out, size_t token_size);
-
-bool jwt_verify_token(const char* token,
-                      int* user_id_out,
-                      char* email_out,
-                      size_t email_size);
-
-int  extract_user_id_from_cookie(struct mg_http_message* hm);
-
-#endif  /* JWT_H */
 
 
 # ./db/seed_data.h

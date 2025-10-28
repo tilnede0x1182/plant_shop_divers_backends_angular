@@ -255,7 +255,6 @@ pub async fn get_order(
 	Ok(Json(order_with_items))
 }
 
-
 #[handler]
 pub async fn update_order(
     Data(pool): Data<&PgPool>,

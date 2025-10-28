@@ -17,6 +17,8 @@ run:
 
 compile_run: compile run
 
+prod: run
+
 clean:
 	rm -rf bin
 

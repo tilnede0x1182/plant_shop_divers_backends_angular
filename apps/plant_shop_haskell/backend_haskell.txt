@@ -1,5 +1,6 @@
 # Arborescence du projet (.)
 .
+├── backend_haskell.txt
 ├── Makefile
 ├── package.yaml
 ├── plant-shop-haskell.cabal
@@ -34,7 +35,7 @@
 │   └── Test_e2e.hs
 └── users.txt
 
-9 directories, 25 files
+9 directories, 26 files
 
 
 # ./Makefile
@@ -1252,9 +1253,8 @@ routes conn = do
   -- GET /api/orders
   get "/api/orders" $ do
     user <- requireUser
-    orders <- if userIsAdmin user
-      then liftIO $ query_ conn orderSelectAdmin
-      else liftIO $ query conn orderSelectByUser (Only $ userId user)
+    -- Montrer uniquement les commandes appartenant à l'utilisateur courant.
+    orders <- liftIO $ query conn orderSelectByUser (Only $ userId user)
 
     fullOrders <- liftIO $ mapM (fetchFullOrder conn) (orders :: [Order])
     R.ok fullOrders
@@ -2418,3 +2418,5 @@ executables:
   plant-shop-haskell:
     main: Main.hs
     hs-source-dirs: src
+
+

@@ -43,6 +43,7 @@ pub struct OrderWithItems {
     pub created_at: DateTime<Utc>,
     #[serde(rename = "orderItems")]
     pub items: Vec<OrderItemWithPlant>,
+		pub number: Option<i64>,
 }
 
 #[derive(Deserialize)]

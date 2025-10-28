@@ -112,6 +112,7 @@ pub async fn create_order(
 				}
 				items_vec
 			},
+			number: None,
 	};
 	Ok((StatusCode::CREATED, Json(response)))
 }
@@ -135,9 +136,22 @@ pub async fn list_orders(
 		row.id
 	};
 
+	// on récupère les commandes pour affichage triées par date décroissante (récentes d'abord)
+	// et on calcule la numérotation chronologique (1 = plus ancienne) via ROW_NUMBER()
 	let orders = sqlx::query!(
-		"SELECT id,user_id, total, status, created_at FROM orders WHERE user_id = $1",
-		user_id
+			r#"
+			SELECT
+					id,
+					user_id,
+					total,
+					status,
+					created_at,
+					ROW_NUMBER() OVER (ORDER BY created_at ASC) AS number
+			FROM orders
+			WHERE user_id = $1
+			ORDER BY created_at DESC
+			"#,
+			user_id
 	)
 	.fetch_all(pool)
 	.await
@@ -181,6 +195,7 @@ pub async fn list_orders(
 			status: order.status.clone(),
 			created_at: order.created_at,
 			items,
+      number: order.number,
 		};
 		results.push(order_data);
 	}
@@ -235,6 +250,7 @@ pub async fn get_order(
 		status: order.status,
 		created_at: order.created_at,
 		items,
+		number: None,
 	};
 	Ok(Json(order_with_items))
 }

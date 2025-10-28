@@ -89,4 +89,12 @@ def init_users_controller(db_connection):
         repo.delete(user_id)
         return empty_response(200)
 
+    @users_bp.route('/admin/users/<int:user_id>', methods=['PATCH'])
+    @admin_required
+    def admin_update_user(user_id):
+        """Permet aux admins de modifier un utilisateur."""
+        data = request.get_json() or {}
+        updated_user = repo.update(user_id, data)
+        return json_response(_serialize_user(updated_user))
+
     return users_bp

@@ -84,24 +84,71 @@ static void _item_to_json(OrderItem *it, void *ud) {
 }
 
 /* ---------- liste des commandes utilisateur ---------- */
+// cJSON* order_repo_list(PGconn *c, int uid) {
+// 	char uid_str[12]; sprintf(uid_str, "%d", uid);
+// 	const char *params[1] = {uid_str};
+
+// 	PGresult *r = PQexecParams(
+// 		c,
+// 		"SELECT id,total,status FROM orders WHERE user_id=$1 ORDER BY id",
+// 		1, NULL, params, NULL, NULL, 0);
+
+// 	cJSON *out = cJSON_CreateArray();
+// 	for (int i = 0; i < PQntuples(r); i++) {
+// 		int oid = atoi(PQgetvalue(r, i, 0));
+
+// 		cJSON *j = cJSON_CreateObject();
+// 		cJSON_AddNumberToObject(j, "id", oid);
+// 		cJSON_AddNumberToObject(j, "userId", uid);
+// 		cJSON_AddNumberToObject(j, "total", atoi(PQgetvalue(r, i, 1)));
+// 		cJSON_AddStringToObject(j, "status", PQgetvalue(r, i, 2));
+
+// 		/* items */
+// 		cJSON *items = cJSON_CreateArray();
+// 		struct _item_ctx ctx = { .db = c, .dst = items };
+// 		order_item_repo_by_order(c, oid, _item_to_json, &ctx);
+// 		cJSON_AddItemToObject(j, "orderItems", items);
+
+// 		cJSON_AddItemToArray(out, j);
+// 	}
+// 	PQclear(r);
+// 	return out;
+// }
+
+/* ---------- liste des commandes utilisateur ----------
+   Affichage : ORDER BY id DESC (plus récentes en premier)
+   Numérotation : row_number() OVER (ORDER BY id ASC) AS number
+   => la colonne 'number' vaut 1 pour la plus ancienne, N pour la plus récente.
+*/
 cJSON* order_repo_list(PGconn *c, int uid) {
 	char uid_str[12]; sprintf(uid_str, "%d", uid);
 	const char *params[1] = {uid_str};
 
 	PGresult *r = PQexecParams(
 		c,
-		"SELECT id,total,status FROM orders WHERE user_id=$1 ORDER BY id",
+		"SELECT id,total,status, row_number() OVER (ORDER BY id ASC) AS number "
+		"FROM orders WHERE user_id=$1 ORDER BY id DESC",
 		1, NULL, params, NULL, NULL, 0);
+
+	/* protection basique en cas d'erreur SQL */
+	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
+		PQclear(r);
+		return cJSON_CreateArray();
+	}
 
 	cJSON *out = cJSON_CreateArray();
 	for (int i = 0; i < PQntuples(r); i++) {
 		int oid = atoi(PQgetvalue(r, i, 0));
+		int total = atoi(PQgetvalue(r, i, 1));
+		const char *status = PQgetvalue(r, i, 2);
+		int number = atoi(PQgetvalue(r, i, 3)); /* 1 = plus ancienne */
 
 		cJSON *j = cJSON_CreateObject();
 		cJSON_AddNumberToObject(j, "id", oid);
 		cJSON_AddNumberToObject(j, "userId", uid);
-		cJSON_AddNumberToObject(j, "total", atoi(PQgetvalue(r, i, 1)));
-		cJSON_AddStringToObject(j, "status", PQgetvalue(r, i, 2));
+		cJSON_AddNumberToObject(j, "total", total);
+		cJSON_AddStringToObject(j, "status", status);
+		cJSON_AddNumberToObject(j, "number", number); /* nouvelle propriété */
 
 		/* items */
 		cJSON *items = cJSON_CreateArray();

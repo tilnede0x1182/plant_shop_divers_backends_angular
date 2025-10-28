@@ -12,6 +12,7 @@ using namespace drogon;
 
 /** """ Vérifie si le port d’écoute HTTP est disponible avant le lancement du serveur """ */
 bool isPortAvailable(unsigned short port) {
+	sleep(0.5);
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) return false;
 	sockaddr_in addr{};
@@ -177,7 +178,6 @@ int main() {
 	try {
 		checkConfigFile();
 		drogon::app().loadConfigFile("config.json");
-		sleep(0.5);
 
 		app().setLogLevel(trantor::Logger::kInfo);
 		if (!isPortAvailable(4100)) {

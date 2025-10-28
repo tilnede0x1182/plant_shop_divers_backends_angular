@@ -39,8 +39,9 @@ def index():
 
 # Point d'entrée pour l'exécution du serveur
 if __name__ == '__main__':
+    from waitress import serve
     try:
-        app.run(host='0.0.0.0', port=config.SERVER_PORT, debug=True)
+        serve(app, host='0.0.0.0', port=config.SERVER_PORT)
     except OSError as e:
         if "Address already in use" in str(e):
             print(f"❌ Le port {config.SERVER_PORT} est déjà utilisé. Fermez le processus ou changez le port.")

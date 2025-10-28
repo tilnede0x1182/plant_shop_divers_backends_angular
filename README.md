@@ -68,9 +68,10 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **Go (GORM)** : backend en Go structuré, sans framework web tiers, API REST implémentée manuellement avec `net/http`, GORM et JWT cookie sécurisé.
 * **Rust (Poem + SQLx)** : backend Rust moderne, basé sur le framework `poem` pour les routes HTTP et `sqlx` pour la base de données.
 * **Rust (Poem + SeaORM)** : backend Rust moderne, basé sur le framework `poem` pour les routes HTTP et `SeaORM` pour la gestion de la base de données.`
+* **C (Natif)** : serveur HTTP minimaliste en C11, basé sur `mongoose`, MVC manuel, gestion PostgreSQL via `libpq`.
 * **C++ (Drogon)** : serveur HTTP moderne en C++17, basé sur le framework `Drogon` avec ORM intégré, compilation via `CMake`.
 * **Java (Natif)** : serveur HTTP minimaliste en Java 21, utilisant `HttpServer` natif, MVC manuel.
-* **C (Natif)** : serveur HTTP minimaliste en C11, basé sur `mongoose`, MVC manuel, gestion PostgreSQL via `libpq`.
+* **Python (Flask)** : backend minimaliste REST avec `Flask`, connexion PostgreSQL via `psycopg2`.
 * **Haskell (Stack)** : serveur HTTP en style fonctionnel avec `Scotty`, architecture MVC claire, ORM léger via `postgresql-simple`, sécurité JWT
 
 ---
@@ -84,8 +85,10 @@ apps/
  ├─ plant_shop_manifest_ABANDON    → Backend Manifest (abandonné)
  ├─ plant_shop_go                  → Backend Golang avec GORM
  ├─ plant_shop_cpp                 → Backend en C++
- ├─ plant_shop_java                → Backend en Java
  ├─ plant_shop_c                   → Backend en C
+ ├─ plant_shop_java                → Backend en Java
+ ├─ plant_shop_python              → Backend en Python
+ ├─ plant_shop_haskell             → Backend en Haskell
  └─ plant_shop_rust
      ├─ plant_shop_rust_sqlx       → Backend Rust avec SQLx
      └─ plant_shop_rust_see_orm    → Backend Rust avec SeaORM

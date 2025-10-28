@@ -193,6 +193,29 @@ test-backend-haskell:
 compile-test-backend-haskell: compile-backend-haskell test-backend-haskell
 
 # ======================================================
+# 🐍💻 Backend Python (Flask)
+# ======================================================
+
+run-backend-python:
+	make -C apps/plant_shop_python run
+
+compile-backend-python:
+	@echo "Aucune compilation nécessaire pour Python"
+
+seed-backend-python:
+	make -C apps/plant_shop_python seed
+
+compile-run-backend-python: compile-backend-python run-backend-python
+
+prod-backend-python:
+	make -C apps/plant_shop_python prod
+
+test-backend-python:
+	make -C apps/plant_shop_python tests
+
+compile-test-backend-python: compile-backend-python test-backend-python
+
+# ======================================================
 # 🎨 Frontend Angular
 # ======================================================
 

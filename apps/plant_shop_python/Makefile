@@ -8,7 +8,7 @@ run:
 compile_run: run
 
 prod:
-	gunicorn -w 4 -b 0.0.0.0:4100 app:app
+	gunicorn -w 1 -b 0.0.0.0:4100 app:app
 
 clean:
 	find backend_py -type f -name "*.pyc" -delete

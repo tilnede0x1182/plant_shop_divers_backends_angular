@@ -8,6 +8,8 @@
 #include "../models/Plants.h"
 #include "../models/Orders.h"
 #include "../models/OrderItems.h"
+#include <unordered_map>
+
 using namespace drogon_model::plant_shop_cpp;
 
 using namespace drogon;
@@ -75,6 +77,44 @@ void OrderController::createOrder(const HttpRequestPtr& req,
 }
 
 /* ---- Liste commandes utilisateur ---- */
+// void OrderController::listOrders(const HttpRequestPtr& req,
+// 	std::function<void(const HttpResponsePtr&)>&& cb) {
+// 	try {
+// 		auto user = AuthController::canActDecodeJWT(req);
+// 		if (!user) return cb(err(401, "Non connecté"));
+
+// 		auto db = app().getDbClient();
+// 		Mapper<Orders> mo(db);
+// 		Mapper<OrderItems> mi(db);
+// 		Mapper<Plants> mp(db);
+
+// 		auto orders = mo.findBy(Criteria(Orders::Cols::_user_id, user->getValueOfId()));
+// 		Json::Value arr(Json::arrayValue);
+
+// 		for (auto &o : orders) {
+// 			auto jsonOrder = o.toJson();
+// 			auto items = mi.findBy(Criteria(OrderItems::Cols::_order_id, o.getValueOfId()));
+// 			Json::Value jItems(Json::arrayValue);
+
+// 			for (auto &it : items) {
+// 				auto jItem = it.toJson();
+// 				auto plant = mp.findByPrimaryKey(it.getValueOfPlantId());
+// 				jItem["plant"] = plant.toJson();
+// 				jItems.append(jItem);
+// 			}
+// 			jsonOrder["orderItems"] = jItems;
+// 			arr.append(jsonOrder);
+// 		}
+
+// 		auto r = HttpResponse::newHttpJsonResponse(arr);
+// 		r->setStatusCode(k200OK);
+// 		cb(r);
+// 	} catch (...) {
+// 		cb(err(500, "Erreur serveur"));
+// 	}
+// }
+
+/* ---- Liste commandes utilisateur ---- */
 void OrderController::listOrders(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb) {
 	try {
@@ -86,14 +126,42 @@ void OrderController::listOrders(const HttpRequestPtr& req,
 		Mapper<OrderItems> mi(db);
 		Mapper<Plants> mp(db);
 
+		// récupère toutes les commandes de l'utilisateur
 		auto orders = mo.findBy(Criteria(Orders::Cols::_user_id, user->getValueOfId()));
-		Json::Value arr(Json::arrayValue);
+		if (orders.empty()) {
+			auto emptyR = HttpResponse::newHttpJsonResponse(Json::Value(Json::arrayValue));
+			emptyR->setStatusCode(k200OK);
+			return cb(emptyR);
+		}
 
-		for (auto &o : orders) {
+		// 1) numérotation chronologique (ancienne -> 1 ... récente -> N)
+		auto ordersChron = orders; // copie
+		std::sort(ordersChron.begin(), ordersChron.end(),
+		          [](const Orders &a, const Orders &b) {
+			          return a.getValueOfCreatedAt() < b.getValueOfCreatedAt();
+		          });
+		std::unordered_map<int32_t, int> chronoIdx;
+		int idx = 1;
+		for (auto &o : ordersChron) {
+			chronoIdx[o.getValueOfId()] = idx++;
+		}
+
+		// 2) affichage : récentes d'abord (descendant)
+		auto ordersDesc = orders; // copie
+		std::sort(ordersDesc.begin(), ordersDesc.end(),
+		          [](const Orders &a, const Orders &b) {
+			          return b.getValueOfCreatedAt() < a.getValueOfCreatedAt();
+		          });
+
+		Json::Value arr(Json::arrayValue);
+		for (auto &o : ordersDesc) {
 			auto jsonOrder = o.toJson();
+			// injecte la numérotation chronologique (1 = plus ancienne)
+			jsonOrder["chronological_number"] = chronoIdx[o.getValueOfId()];
+
+			// items
 			auto items = mi.findBy(Criteria(OrderItems::Cols::_order_id, o.getValueOfId()));
 			Json::Value jItems(Json::arrayValue);
-
 			for (auto &it : items) {
 				auto jItem = it.toJson();
 				auto plant = mp.findByPrimaryKey(it.getValueOfPlantId());

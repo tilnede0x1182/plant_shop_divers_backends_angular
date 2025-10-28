@@ -40,9 +40,8 @@ routes conn = do
   -- GET /api/orders
   get "/api/orders" $ do
     user <- requireUser
-    orders <- if userIsAdmin user
-      then liftIO $ query_ conn orderSelectAdmin
-      else liftIO $ query conn orderSelectByUser (Only $ userId user)
+    -- Montrer uniquement les commandes appartenant à l'utilisateur courant.
+    orders <- liftIO $ query conn orderSelectByUser (Only $ userId user)
 
     fullOrders <- liftIO $ mapM (fetchFullOrder conn) (orders :: [Order])
     R.ok fullOrders

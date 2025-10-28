@@ -8,6 +8,35 @@ from repositories.order_items import OrderItemRepository
 
 orders_bp = Blueprint('orders', __name__)
 
+def _serialize_item(item):
+    """Prépare un OrderItem pour le JSON (avec la plante)."""
+    payload = {
+        "id": item.id,
+        "orderId": item.order_id,
+        "plantId": item.plant_id,
+        "quantity": item.quantity,
+        "price": item.price
+    }
+    if getattr(item, 'plant', None):
+        payload["plant"] = {
+            "id": item.plant.id,
+            "name": item.plant.name,
+            "price": item.plant.price
+        }
+    return payload
+
+def _serialize_order(order):
+    """Convertit une commande et ses items en dictionnaire."""
+    items = getattr(order, 'items', []) or []
+    return {
+        "id": order.id,
+        "userId": order.user_id,
+        "total": order.total,
+        "status": order.status,
+        "createdAt": order.created_at,
+        "orderItems": [_serialize_item(item) for item in items]
+    }
+
 def init_orders_controller(db_connection):
     order_repo = OrderRepository(db_connection)
     item_repo = OrderItemRepository(db_connection)
@@ -20,13 +49,11 @@ def init_orders_controller(db_connection):
         orders = order_repo.find_all_for_user(user_id)
 
         # Enrichir chaque commande avec ses items
-        result = []
+        serialized = []
         for order in orders:
-            items = item_repo.find_all_for_order(order.id)
-            order.items = items
-            result.append(order.__dict__)
-
-        return json_response(result)
+            order.items = item_repo.find_all_for_order(order.id)
+            serialized.append(_serialize_order(order))
+        return json_response(serialized)
 
     @orders_bp.route('/orders', methods=['POST'])
     @auth_required
@@ -40,7 +67,8 @@ def init_orders_controller(db_connection):
 
         try:
             new_order = order_repo.create_with_items(user_id, items)
-            return json_response(new_order.__dict__, 201)
+            new_order.items = item_repo.find_all_for_order(new_order.id)
+            return json_response(_serialize_order(new_order), 201)
         except ValueError as e:
             return json_response({"error": str(e)}, 400)
         except Exception as e:
@@ -59,7 +87,8 @@ def init_orders_controller(db_connection):
         if not updated_order:
             return json_response({"error": "Commande non trouvée"}, 404)
 
-        return json_response(updated_order.__dict__)
+        updated_order.items = item_repo.find_all_for_order(order_id)
+        return json_response(_serialize_order(updated_order))
 
     @orders_bp.route('/orders/<int:order_id>', methods=['DELETE'])
     @admin_required

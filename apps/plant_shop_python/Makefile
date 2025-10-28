@@ -3,7 +3,7 @@
 # ────────────────
 
 run:
-	python3 -m backend_py.app
+	python3 app.py
 
 compile_run: run
 

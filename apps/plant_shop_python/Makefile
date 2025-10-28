@@ -5,16 +5,12 @@
 run:
 	python3 app.py
 
-compile_run: run
-
 prod:
 	gunicorn -w 1 -b 0.0.0.0:4100 app:app
 
 clean:
 	find backend_py -type f -name "*.pyc" -delete
 	find backend_py -type d -name "__pycache__" -exec rm -rf {} +
-
-build-dev: clean compile_run
 
 # ────────────────
 # Requirements
@@ -29,8 +25,6 @@ install:
 
 seed:
 	python3 db/seed.py
-
-seed-dev: clean seed
 
 # ────────────────
 # DB

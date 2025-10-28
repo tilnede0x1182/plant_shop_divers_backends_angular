@@ -2,10 +2,13 @@
 # Server
 # ────────────────
 
-run:
-	python3 app.py
+run-venv:
+	bash -i -c "source venv/bin/activate && exec bash"
 
-prod:
+run:
+		venv/bin/python app.py
+
+prod: run-venv
 	gunicorn -w 1 -b 0.0.0.0:4100 app:app
 
 clean:
@@ -17,14 +20,14 @@ clean:
 # ────────────────
 
 install:
-	pip install -r requirements.txt
+	venv/bin/pip install -r requirements.txt
 
 # ────────────────
 # Seed
 # ────────────────
 
 seed:
-	python3 db/seed.py
+	venv/bin/python db/seed.py
 
 # ────────────────
 # DB
@@ -48,7 +51,7 @@ db-reset: db-drop db-create db-migrate db-seed
 # ────────────────
 
 tests:
-	python3 test/test_e2e.py
+	venv/bin/python test/test_e2e.py
 
 # ───────────────────────────────
 #   Utilitaires

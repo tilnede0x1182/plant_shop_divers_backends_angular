@@ -16,6 +16,13 @@ clean:
 build-dev: clean compile_run
 
 # ────────────────
+# Requirements
+# ────────────────
+
+install:
+	pip install -r requirements.txt
+
+# ────────────────
 # Seed
 # ────────────────
 
@@ -46,4 +53,11 @@ db-reset: db-drop db-create db-migrate db-seed
 # ────────────────
 
 tests:
-	python3 -m backend_py.tests.test_e2e
+	python3 test/test_e2e.py
+
+# ───────────────────────────────
+#   Utilitaires
+# ───────────────────────────────
+
+tree:
+	tree -I "venv"

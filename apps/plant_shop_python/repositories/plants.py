@@ -46,3 +46,11 @@ class PlantRepository(BaseRepository):
             )
             self.db.commit()
         return self.find(plant_id)
+
+    def list(self):
+        """Liste toutes les plantes triées par nom croissant."""
+        with self.db.cursor() as cursor:
+            cursor.execute(f"SELECT * FROM {self.table_name} ORDER BY name ASC")
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            return [self._map_from_row(row, columns) for row in rows]

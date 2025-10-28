@@ -238,4 +238,4 @@ tests: test-routes
 # 🛠️ Utilitaire
 # ======================================================
 tree:
-	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser" -I "bin" -I "build" -I ".stack-work"
+	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser" -I "bin" -I "build" -I ".stack-work" -I "venv" -I "__pycache__"

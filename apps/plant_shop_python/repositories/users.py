@@ -55,7 +55,10 @@ class UserRepository(BaseRepository):
         fields = []
         values = []
         for key, value in user_data.items():
-            if key in ['name', 'email', 'is_admin']: # Champs modifiables
+            if key == 'admin':
+                fields.append("is_admin = %s")
+                values.append(value)
+            elif key in ['name', 'email', 'is_admin']:
                 fields.append(f"{key} = %s")
                 values.append(value)
 

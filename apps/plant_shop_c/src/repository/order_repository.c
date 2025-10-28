@@ -78,42 +78,11 @@ static void _item_to_json(OrderItem *it, void *ud) {
 	cJSON *pl = cJSON_CreateObject();
 	cJSON_AddNumberToObject(pl, "id", p.id);
 	cJSON_AddStringToObject(pl, "name", p.name);
+	cJSON_AddNumberToObject(pl, "price", p.price);
 	cJSON_AddItemToObject(itm, "plant", pl);
 
 	cJSON_AddItemToArray(ctx->dst, itm);
 }
-
-/* ---------- liste des commandes utilisateur ---------- */
-// cJSON* order_repo_list(PGconn *c, int uid) {
-// 	char uid_str[12]; sprintf(uid_str, "%d", uid);
-// 	const char *params[1] = {uid_str};
-
-// 	PGresult *r = PQexecParams(
-// 		c,
-// 		"SELECT id,total,status FROM orders WHERE user_id=$1 ORDER BY id",
-// 		1, NULL, params, NULL, NULL, 0);
-
-// 	cJSON *out = cJSON_CreateArray();
-// 	for (int i = 0; i < PQntuples(r); i++) {
-// 		int oid = atoi(PQgetvalue(r, i, 0));
-
-// 		cJSON *j = cJSON_CreateObject();
-// 		cJSON_AddNumberToObject(j, "id", oid);
-// 		cJSON_AddNumberToObject(j, "userId", uid);
-// 		cJSON_AddNumberToObject(j, "total", atoi(PQgetvalue(r, i, 1)));
-// 		cJSON_AddStringToObject(j, "status", PQgetvalue(r, i, 2));
-
-// 		/* items */
-// 		cJSON *items = cJSON_CreateArray();
-// 		struct _item_ctx ctx = { .db = c, .dst = items };
-// 		order_item_repo_by_order(c, oid, _item_to_json, &ctx);
-// 		cJSON_AddItemToObject(j, "orderItems", items);
-
-// 		cJSON_AddItemToArray(out, j);
-// 	}
-// 	PQclear(r);
-// 	return out;
-// }
 
 /* ---------- liste des commandes utilisateur ----------
    Affichage : ORDER BY id DESC (plus récentes en premier)
@@ -146,7 +115,7 @@ cJSON* order_repo_list(PGconn *c, int uid) {
 		cJSON *j = cJSON_CreateObject();
 		cJSON_AddNumberToObject(j, "id", oid);
 		cJSON_AddNumberToObject(j, "userId", uid);
-		cJSON_AddNumberToObject(j, "total", total);
+		cJSON_AddNumberToObject(j, "totalPrice", total);
 		cJSON_AddStringToObject(j, "status", status);
 		cJSON_AddNumberToObject(j, "number", number); /* nouvelle propriété */
 

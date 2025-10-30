@@ -12,15 +12,18 @@ using namespace drogon;
 
 /** """ Vérifie si le port d’écoute HTTP est disponible avant le lancement du serveur """ */
 bool isPortAvailable(unsigned short port) {
-	sleep(0.5);
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0) return false;
-	sockaddr_in addr{};
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	addr.sin_port = htons(port);
-	bool ok = (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == 0);
-	close(sockfd);
+	// Problème de déctection de faux positif de port occupés.
+	// -> mise en commentaire temporaire
+
+	// sleep(0.7);
+	// int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	// if (sockfd < 0) return false;
+	// sockaddr_in addr{};
+	// addr.sin_family = AF_INET;
+	// addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	// addr.sin_port = htons(port);
+	// bool ok = (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == 0);
+	// close(sockfd);
 	return ok;
 }
 /** """ Vérifie la présence du fichier config.json """ */

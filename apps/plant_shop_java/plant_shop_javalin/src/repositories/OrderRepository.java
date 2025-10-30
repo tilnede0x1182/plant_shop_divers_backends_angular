@@ -1,7 +1,9 @@
 package repository;
 
-import java.sql.*;
 import java.math.BigDecimal;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import model.Order;
 
 public final class OrderRepository extends BaseRepository<Order> {
@@ -59,5 +61,19 @@ public final class OrderRepository extends BaseRepository<Order> {
             ps.setInt(2, id);
             ps.executeUpdate();
         }
+    }
+
+    public List<Order> listByUser(int userId) throws SQLException {
+        List<Order> results = new ArrayList<>();
+        String sql = "SELECT * FROM orders WHERE user_id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    results.add(mapFromResultSet(rs));
+                }
+            }
+        }
+        return results;
     }
 }

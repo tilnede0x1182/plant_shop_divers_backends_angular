@@ -2,6 +2,8 @@
 package controller;
 
 import io.javalin.http.Context;
+import io.javalin.http.Cookie;
+import io.javalin.http.SameSite;
 import io.javalin.http.HttpStatus;
 import java.sql.Connection;
 import java.util.Map;
@@ -10,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import model.User;
 import org.json.JSONObject;
 import repository.UserRepository;
+import util.ApiMapper;
 import util.PasswordUtil;
 
 public final class AuthController {
@@ -32,14 +35,15 @@ public final class AuthController {
         String password = body.getString("password");
 
         if (userRepo.findByEmailWithPassword(email) != null) {
-            ctx.status(HttpStatus.CONFLICT).json("{\"error\":\"Cet email est déjà utilisé.\"}");
+            ctx.status(HttpStatus.CONFLICT).json(Map.of("error", "Cet email est déjà utilisé."));
             return;
         }
 
         String hash = PasswordUtil.hashPassword(password);
         User newUser = new User(name, email, hash, false);
-        userRepo.create(newUser);
-        ctx.status(HttpStatus.CREATED).json("{\"message\":\"Utilisateur créé\"}");
+        int newId = userRepo.create(newUser);
+        User created = userRepo.find(newId);
+        ctx.status(HttpStatus.CREATED).json(ApiMapper.toUser(created));
     }
 
     public void login(Context ctx) throws Exception {
@@ -49,14 +53,22 @@ public final class AuthController {
 
         User user = userRepo.findByEmailWithPassword(email);
         if (user == null || !PasswordUtil.checkPassword(password, user.passwordHash)) {
-            ctx.status(HttpStatus.UNAUTHORIZED).json("{\"error\":\"Identifiants invalides\"}");
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Identifiants invalides"));
             return;
         }
 
         String sessionId = UUID.randomUUID().toString();
         sessions.put(sessionId, user.id);
-        ctx.cookie("session_id", sessionId, 3600); // Expire dans 1 heure
-        ctx.status(HttpStatus.CREATED).json(user);
+        Cookie cookie = new Cookie("session_id", sessionId);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(3600);
+        cookie.setSecure(false);
+        cookie.setSameSite(SameSite.LAX);
+        ctx.cookie(cookie);
+
+        User sanitized = new User(user.id, user.name, user.email, null, user.isAdmin, user.createdAt);
+        ctx.status(HttpStatus.CREATED).json(ApiMapper.toUser(sanitized));
     }
 
     public void logout(Context ctx) {
@@ -64,12 +76,23 @@ public final class AuthController {
         if (sessionId != null) {
             sessions.remove(sessionId);
         }
-        ctx.removeCookie("session_id");
+
+        Cookie cookie = new Cookie("session_id", "");
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setSameSite(SameSite.LAX);
+        ctx.cookie(cookie);
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
     public void me(Context ctx) {
         User user = ctx.attribute("user");
-        ctx.json(user);
+        if (user == null) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
+            return;
+        }
+        ctx.json(ApiMapper.toUser(user));
     }
 }

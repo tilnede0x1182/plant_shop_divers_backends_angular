@@ -6,8 +6,10 @@ import io.javalin.http.HttpStatus;
 import io.javalin.http.NotFoundResponse;
 import java.math.BigDecimal;
 import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.Plant;
@@ -17,6 +19,7 @@ import org.json.JSONObject;
 import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
+import util.ApiMapper;
 
 public final class OrderController {
 
@@ -34,24 +37,42 @@ public final class OrderController {
 
     public void list(Context ctx) throws Exception {
         User currentUser = ctx.attribute("user");
-        List<Order> orders = repo.list();
-        orders.sort((o1, o2) -> o2.createdAt.compareTo(o1.createdAt));
-
-        JSONArray result = new JSONArray();
-        for (Order order : orders) {
-            if (order.userId == currentUser.id) {
-                result.put(toJson(order));
-            }
+        if (currentUser == null) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
+            return;
         }
-        ctx.json(result.toString());
+
+        List<Order> orders = repo.listByUser(currentUser.id);
+        orders.sort(orderComparator());
+
+        List<Map<String, Object>> payload = new ArrayList<>(orders.size());
+        for (Order order : orders) {
+            List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(order.id), plantRepo::find);
+            payload.add(ApiMapper.toOrder(order, items));
+        }
+        ctx.json(payload);
     }
 
     public void create(Context ctx) throws Exception {
         User currentUser = ctx.attribute("user");
-        JSONObject body = new JSONObject(ctx.body());
-        JSONArray itemsJson = body.getJSONArray("items");
+        if (currentUser == null) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
+            return;
+        }
 
-        db.setAutoCommit(false); // Début de la transaction
+        JSONObject body = new JSONObject(ctx.body());
+        if (!body.has("items")) {
+            ctx.status(HttpStatus.BAD_REQUEST).json(Map.of("error", "Le corps doit contenir un tableau items"));
+            return;
+        }
+
+        JSONArray itemsJson = body.getJSONArray("items");
+        if (itemsJson.length() == 0) {
+            ctx.status(HttpStatus.BAD_REQUEST).json(Map.of("error", "La commande doit contenir au moins un item"));
+            return;
+        }
+
+        db.setAutoCommit(false);
         try {
             Order newOrder = new Order(currentUser.id, BigDecimal.ZERO, "pending");
             int orderId = repo.create(newOrder);
@@ -61,31 +82,20 @@ public final class OrderController {
                 total = total.add(createOrderItem(orderId, itemsJson.getJSONObject(i)));
             }
             repo.updateTotal(orderId, total);
-            db.commit(); // Fin de la transaction
+            db.commit();
 
             Order finalOrder = repo.find(orderId);
-            ctx.status(HttpStatus.CREATED).json(toJson(finalOrder));
+            List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(orderId), plantRepo::find);
+            ctx.status(HttpStatus.CREATED).json(ApiMapper.toOrder(finalOrder, items));
+        } catch (IllegalArgumentException ex) {
+            db.rollback();
+            ctx.status(HttpStatus.BAD_REQUEST).json(Map.of("error", ex.getMessage()));
         } catch (Exception e) {
-            db.rollback(); // Annuler en cas d'erreur
+            db.rollback();
             throw e;
         } finally {
             db.setAutoCommit(true);
         }
-    }
-
-    private BigDecimal createOrderItem(int orderId, JSONObject itemJson) throws SQLException {
-        int plantId = itemJson.getInt("plantId");
-        int quantity = itemJson.getInt("quantity");
-        Plant plant = plantRepo.find(plantId);
-
-        if (plant == null || plant.stock < quantity) {
-            throw new SQLException("Stock insuffisant pour la plante " + plantId);
-        }
-
-        plantRepo.updateStock(plant.id, plant.stock - quantity);
-        OrderItem item = new OrderItem(orderId, plantId, quantity, plant.price);
-        itemRepo.create(item);
-        return plant.price.multiply(new BigDecimal(quantity));
     }
 
     public void patch(Context ctx) throws Exception {
@@ -97,46 +107,49 @@ public final class OrderController {
         if (body.has("status")) {
             repo.updateStatus(id, body.getString("status"));
         }
-        ctx.json(toJson(repo.find(id)));
+
+        Order updated = repo.find(id);
+        List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(id), plantRepo::find);
+        ctx.json(ApiMapper.toOrder(updated, items));
     }
 
     public void destroy(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         itemRepo.deleteByOrder(id);
         repo.delete(id);
-        ctx.status(HttpStatus.OK);
+        ctx.status(HttpStatus.OK).json(Map.of("deleted", true));
     }
 
-    private JSONObject toJson(Order o) throws SQLException {
-        JSONObject json = new JSONObject();
-        json.put("id", o.id);
-        json.put("userId", o.userId);
-        json.put("totalPrice", o.total); // Le test attend `totalPrice`
-        json.put("status", o.status);
-        json.put("createdAt", o.createdAt.toInstant().toString());
-
-        JSONArray itemsArray = new JSONArray();
-        for (OrderItem it : itemRepo.listByOrder(o.id)) {
-            itemsArray.put(itemToJson(it));
+    private BigDecimal createOrderItem(int orderId, JSONObject itemJson) throws Exception {
+        if (!itemJson.has("plantId") || !itemJson.has("quantity")) {
+            throw new IllegalArgumentException("Chaque item doit contenir plantId et quantity");
         }
-        json.put("orderItems", itemsArray);
-        return json;
+        int plantId = itemJson.getInt("plantId");
+        int quantity = itemJson.getInt("quantity");
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("quantity doit être supérieur à 0");
+        }
+
+        Plant plant = plantRepo.find(plantId);
+        if (plant == null) {
+            throw new IllegalArgumentException("Plante " + plantId + " introuvable");
+        }
+        if (plant.stock < quantity) {
+            throw new IllegalArgumentException("Stock insuffisant pour la plante " + plantId);
+        }
+
+        plantRepo.updateStock(plant.id, plant.stock - quantity);
+        OrderItem item = new OrderItem(orderId, plantId, quantity, plant.price);
+        itemRepo.create(item);
+        return plant.price.multiply(BigDecimal.valueOf(quantity));
     }
 
-    private JSONObject itemToJson(OrderItem it) throws SQLException {
-        JSONObject itemJson = new JSONObject();
-        itemJson.put("id", it.id);
-        itemJson.put("plantId", it.plantId);
-        itemJson.put("quantity", it.quantity);
-
-        Plant p = plantRepo.find(it.plantId);
-        if (p != null) {
-            JSONObject plantJson = new JSONObject();
-            plantJson.put("id", p.id);
-            plantJson.put("name", p.name);
-            plantJson.put("price", p.price);
-            itemJson.put("plant", plantJson);
-        }
-        return itemJson;
+    private Comparator<Order> orderComparator() {
+        return (left, right) -> {
+            if (left.createdAt == null || right.createdAt == null) {
+                return Integer.compare(right.id, left.id);
+            }
+            return right.createdAt.compareTo(left.createdAt);
+        };
     }
 }

@@ -4,23 +4,17 @@ package controller;
 import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
-import io.javalin.http.UnauthorizedResponse;
 import io.javalin.http.ForbiddenResponse;
-import io.javalin.security.RouteRole;
+import io.javalin.http.UnauthorizedResponse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
-import java.util.Set;
 import model.User;
 import repository.UserRepository;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public final class ApplicationController {
-
-    public enum Roles implements RouteRole {
-        ANYONE, USER, ADMIN
-    }
 
     private final AuthController authController;
     private final PlantController plantController;
@@ -44,61 +38,70 @@ public final class ApplicationController {
             path("/api", () -> {
                 // Routes d'authentification
                 path("/auth", () -> {
-                    post("/register", authController::register, Roles.ANYONE);
-                    post("/login", authController::login, Roles.ANYONE);
-                    post("/logout", authController::logout, Roles.USER);
-                    get("/me", authController::me, Roles.USER);
+                    post("/register", authController::register);
+                    post("/login", authController::login);
+                    post("/logout", requireUser(authController::logout));
+                    get("/me", requireUser(authController::me));
                 });
 
                 // Routes publiques pour les plantes
                 path("/plants", () -> {
-                    get(plantController::listPublic, Roles.ANYONE);
-                    get("/{id}", plantController::show, Roles.ANYONE);
+                    get(plantController::listPublic);
+                    get("/{id}", plantController::show);
                 });
 
                 // Routes admin pour les plantes
                 path("/admin/plants", () -> {
-                    get(plantController::listAdmin, Roles.ADMIN);
-                    post(plantController::create, Roles.ADMIN);
-                    patch("/{id}", plantController::update, Roles.ADMIN);
-                    delete("/{id}", plantController::destroy, Roles.ADMIN);
+                    get(requireAdmin(plantController::listAdmin));
+                    post(requireAdmin(plantController::create));
+                    patch("/{id}", requireAdmin(plantController::update));
+                    delete("/{id}", requireAdmin(plantController::destroy));
                 });
 
                 // Routes pour les utilisateurs
                 path("/users", () -> {
-                    get(userController::list, Roles.ADMIN);
-                    post(userController::create, Roles.ADMIN);
-                    get("/{id}", userController::show, Roles.USER);
-                    patch("/{id}", userController::update, Roles.USER);
-                    delete("/{id}", userController::destroy, Roles.ADMIN);
+                    get(requireAdmin(userController::list));
+                    post(requireAdmin(userController::create));
+                    get("/{id}", requireUser(userController::show));
+                    patch("/{id}", requireUser(userController::update));
+                    delete("/{id}", requireAdmin(userController::destroy));
                 });
 
                 // Routes admin pour les utilisateurs
                 path("/admin/users", () -> {
-                    get(userController::list, Roles.ADMIN);
-                    delete("/{id}", userController::destroy, Roles.ADMIN);
+                    get(requireAdmin(userController::list));
+                    delete("/{id}", requireAdmin(userController::destroy));
                 });
 
                 // Routes pour les commandes
                 path("/orders", () -> {
-                    get(orderController::list, Roles.USER);
-                    post(orderController::create, Roles.USER);
-                    patch("/{id}", orderController::patch, Roles.ADMIN);
-                    delete("/{id}", orderController::destroy, Roles.ADMIN);
+                    get(requireUser(orderController::list));
+                    post(requireUser(orderController::create));
+                    patch("/{id}", requireAdmin(orderController::patch));
+                    delete("/{id}", requireAdmin(orderController::destroy));
                 });
             });
         };
     }
 
-    /**
-     * Gestionnaire d'accès pour toutes les routes sécurisées.
-     */
-    public void accessManager(Handler handler, Context ctx, Set<RouteRole> permittedRoles) throws Exception {
-        if (permittedRoles.contains(Roles.ANYONE)) {
-            handler.handle(ctx);
-            return;
-        }
+    private Handler requireUser(Handler handler) {
+        return ctx -> handleWithUser(ctx, handler, false);
+    }
 
+    private Handler requireAdmin(Handler handler) {
+        return ctx -> handleWithUser(ctx, handler, true);
+    }
+
+    private void handleWithUser(Context ctx, Handler handler, boolean adminOnly) throws Exception {
+        User user = authenticate(ctx);
+        if (adminOnly && !user.isAdmin) {
+            throw new ForbiddenResponse("Accès refusé");
+        }
+        ctx.attribute("user", user);
+        handler.handle(ctx);
+    }
+
+    private User authenticate(Context ctx) throws Exception {
         String sessionId = ctx.cookie("session_id");
         if (sessionId == null) {
             throw new UnauthorizedResponse("Non authentifié");
@@ -115,20 +118,9 @@ public final class ApplicationController {
             if (user == null) {
                 throw new UnauthorizedResponse("Utilisateur introuvable");
             }
-            ctx.attribute("user", user);
-
-            if (permittedRoles.contains(Roles.ADMIN) && !user.isAdmin) {
-                throw new ForbiddenResponse("Accès refusé");
-            }
-
-            handler.handle(ctx);
+            return user;
         } catch (SQLException e) {
             throw new Exception("Erreur base de données lors de l'authentification", e);
         }
     }
-
-		/* Enregistre le groupe de routes exposé par ce contrôleur sur l'instance Javalin */
-		public void register(io.javalin.Javalin app) {
-			app.routes(() -> getRoutes());
-		}
 }

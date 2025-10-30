@@ -8,8 +8,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.Set;
 import controller.ApplicationController;
-import static io.javalin.apibuilder.ApiBuilder.*;
 
 /**
  * Point d'entrée de l'application Javalin.
@@ -22,6 +22,10 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 public final class Main {
     private static Connection db = null;
     private static Javalin app = null;
+    private static final Set<String> ALLOWED_ORIGINS = Set.of(
+        "http://localhost:4200",
+        "http://127.0.0.1:4200"
+    );
 
     private static Map<String, String> env() throws IOException {
         Map<String, String> m = new HashMap<>();
@@ -72,13 +76,39 @@ public final class Main {
             // Contrôleur principal qui gère les routes et l'accès
             ApplicationController applicationController = new ApplicationController(db);
 
-						app = Javalin.create(config -> {
-								config.jsonMapper(new JavalinJsonMapper());
-								config.http.defaultContentType = "application/json; charset=utf-8";
-								config.bundledPlugins.enableCors(cors -> cors.addRule(it -> it.anyHost()));
-								config.router.apiBuilder(applicationController.getRoutes());
-						});
-						applicationController.register(app);
+            app = Javalin.create(config -> {
+                config.jsonMapper(new JavalinJsonMapper());
+                config.http.defaultContentType = "application/json; charset=utf-8";
+                config.router.apiBuilder(applicationController.getRoutes());
+            });
+
+            app.before(ctx -> {
+                String origin = ctx.header("Origin");
+                if (isAllowedOrigin(origin)) {
+                    ctx.header("Access-Control-Allow-Origin", origin);
+                    ctx.header("Access-Control-Allow-Credentials", "true");
+                    ctx.header("Vary", "Origin");
+                }
+            });
+
+            app.options("/*", ctx -> {
+                String origin = ctx.header("Origin");
+                if (isAllowedOrigin(origin)) {
+                    ctx.header("Access-Control-Allow-Origin", origin);
+                    ctx.header("Access-Control-Allow-Credentials", "true");
+                    ctx.header("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
+                    String requestHeaders = ctx.header("Access-Control-Request-Headers");
+                    if (requestHeaders != null && !requestHeaders.isBlank()) {
+                        ctx.header("Access-Control-Allow-Headers", requestHeaders);
+                    } else {
+                        ctx.header("Access-Control-Allow-Headers", "Content-Type");
+                    }
+                    ctx.header("Vary", "Origin");
+                } else {
+                    ctx.header("Access-Control-Allow-Headers", "Content-Type");
+                }
+                ctx.status(204);
+            });
 
             // Démarrage du serveur
             app.start(port);
@@ -103,5 +133,9 @@ public final class Main {
                 System.out.println("Serveur Javalin arrêté.");
             }
         }));
+    }
+
+    private static boolean isAllowedOrigin(String origin) {
+        return origin != null && ALLOWED_ORIGINS.contains(origin);
     }
 }

@@ -70,13 +70,20 @@ public final class UserRepository extends BaseRepository<User> {
     }
 
     public void update(User u) throws SQLException {
-        // Cette mise à jour ne modifie pas le mot de passe.
-        String sql = "UPDATE users SET name=?, email=?, is_admin=? WHERE id=?";
+        boolean updatePassword = u.passwordHash != null;
+        String sql = updatePassword
+            ? "UPDATE users SET name=?, email=?, is_admin=?, password_hash=? WHERE id=?"
+            : "UPDATE users SET name=?, email=?, is_admin=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setString(1, u.name);
             ps.setString(2, u.email);
             ps.setBoolean(3, u.isAdmin);
-            ps.setInt(4, u.id);
+            if (updatePassword) {
+                ps.setString(4, u.passwordHash);
+                ps.setInt(5, u.id);
+            } else {
+                ps.setInt(4, u.id);
+            }
             ps.executeUpdate();
         }
     }

@@ -126,24 +126,24 @@ compile-test-backend-cpp:
 # ======================================================
 
 run-backend-java:
-	make -C apps/plant_shop_java run
+	make -C apps/plant_shop_java/plant_shop_java run
 
 compile-backend-java:
-	make -C apps/plant_shop_java compile
+	make -C apps/plant_shop_java/plant_shop_java compile
 
 seed-backend-java:
-	make -C apps/plant_shop_java seed
+	make -C apps/plant_shop_java/plant_shop_java seed
 
 compile-run-backend-java: compile-backend-java run-backend-java
 
 prod-backend-java:
-	make -C apps/plant_shop_java prod
+	make -C apps/plant_shop_java/plant_shop_java prod
 
 test-backend-java:
-	make -C apps/plant_shop_java tests
+	make -C apps/plant_shop_java/plant_shop_java tests
 
 compile-test-backend-java:
-	make -C apps/plant_shop_java compile-test
+	make -C apps/plant_shop_java/plant_shop_java compile-test
 
 # ======================================================
 # 🛠️ Backend C (HTTPServer + PostgreSQL)

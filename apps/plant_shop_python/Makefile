@@ -2,9 +2,6 @@
 # Server
 # ────────────────
 
-run-venv:
-	bash -i -c "source venv/bin/activate && exec bash"
-
 run:
 		venv/bin/python app.py
 

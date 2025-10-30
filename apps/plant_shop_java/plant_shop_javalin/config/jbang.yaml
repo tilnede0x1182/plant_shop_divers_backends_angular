@@ -1,0 +1,12 @@
+# jbang.yaml
+name: plant_shop_javalin
+dependencies:
+  - io.javalin:javalin:6.1.3
+  - org.eclipse.jetty:jetty-server:12.0.11
+  - org.eclipse.jetty:jetty-util:12.0.11
+  - org.eclipse.jetty:jetty-io:12.0.11
+  - org.json:json:20210307
+  - org.mindrot:jbcrypt:0.4
+  - org.postgresql:postgresql:42.7.8
+  - org.slf4j:slf4j-api:2.0.9
+  - org.slf4j:slf4j-simple:2.0.9

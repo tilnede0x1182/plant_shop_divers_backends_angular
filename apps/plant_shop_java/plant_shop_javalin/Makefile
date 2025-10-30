@@ -1,17 +1,18 @@
-CLASSPATH=bin:lib/postgresql-42.7.8.jar
-CLASSPATH := bin:$(shell echo lib/*.jar | tr ' ' ':')
+# CLASSPATH est dynamiquement construit à partir des .jar dans /lib
+CLASSPATH := bin:$(shell find lib -name "*.jar" | tr '\n' ':')
 DB_NAME=plant_shop_javalin
 
 ## ────────────────
 # Dépendances
 ## ────────────────
 
+# Ne pas toucher à cette section, elle gère le téléchargement des libs.
 compile-install-libs:
 	mkdir -p bin
 	javac -d bin config/InstallLibs.java
 
-install-libs: compile-libs
-	java -cp bin InstallLibs
+install-libs: compile-install-libs
+	java -cp bin config/InstallLibs
 
 ## ────────────────
 # Server
@@ -19,7 +20,7 @@ install-libs: compile-libs
 
 compile:
 	mkdir -p bin
-	find src -type f -name "*.java" ! -name "Seed.java" ! -name "Test.java" | \
+	find src -type f -name "*.java" ! -path "*/db/Seed.java" ! -path "*/test/Test.java" | \
 	xargs javac -cp $(CLASSPATH) -d bin
 
 run:
@@ -60,7 +61,7 @@ db-migrate:
 	sudo -u postgres psql -d $(DB_NAME) -f src/db/schema.sql
 
 db-drop:
-	sudo -u postgres psql -c "DROP DATABASE $(DB_NAME);"
+	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
 
 db-seed: seed
 
@@ -72,7 +73,7 @@ db-reset: db-drop db-create db-migrate db-seed
 
 compile-test:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin Tests/Test.java
+	javac -cp $(CLASSPATH) -d bin test/Test.java
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi

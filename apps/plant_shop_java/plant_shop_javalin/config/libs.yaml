@@ -1,4 +1,3 @@
-# jbang.yaml
 name: plant_shop_javalin
 dependencies:
   - io.javalin:javalin:6.1.3

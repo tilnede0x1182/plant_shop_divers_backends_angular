@@ -71,6 +71,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **C (Natif)** : serveur HTTP minimaliste en C11, basé sur `mongoose`, MVC manuel, gestion PostgreSQL via `libpq`.
 * **C++ (Drogon)** : serveur HTTP moderne en C++17, basé sur le framework `Drogon` avec ORM intégré, compilation via `CMake`.
 * **Java (Natif)** : serveur HTTP minimaliste en Java 21, utilisant `HttpServer` natif, MVC manuel.
+* **Java (Javalin)** : backend Java léger, utilisant le framework `Javalin` pour les routes HTTP.
 * **Python (Flask)** : backend minimaliste REST avec `Flask`, connexion PostgreSQL via `psycopg2`.
 * **Haskell (Stack)** : serveur HTTP en style fonctionnel avec `Scotty`, architecture MVC claire, ORM léger via `postgresql-simple`, sécurité JWT
 
@@ -80,18 +81,21 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 
 ```
 apps/
- ├─ plant-shop-angular-universal   → Frontend Angular
- ├─ plant_shop_nest                → Backend NestJS
- ├─ plant_shop_manifest_ABANDON    → Backend Manifest (abandonné)
- ├─ plant_shop_go                  → Backend Golang avec GORM
- ├─ plant_shop_cpp                 → Backend en C++
- ├─ plant_shop_c                   → Backend en C
- ├─ plant_shop_java                → Backend en Java
- ├─ plant_shop_python              → Backend en Python
- ├─ plant_shop_haskell             → Backend en Haskell
+ ├─ plant-shop-angular-universal      → Frontend Angular
+ ├─ plant_shop_nest                   → Backend NestJS
+ ├─ plant_shop_manifest_ABANDON       → Backend Manifest (abandonné)
+ ├─ plant_shop_go                     → Backend Golang avec GORM
+ ├─ plant_shop_cpp                    → Backend en C++
+ ├─ plant_shop_c                      → Backend en C
+ ├─ plant_shop_java
+ |    ├── plant_shop_java             → Backend en Java avec HTTP
+ |    ├── plant_shop_javalin          → Backend en Java avec Javalin
+ |    └── plant_shop_java_micronaut   → Backend en Java avec Micronaut
+ ├─ plant_shop_python                 → Backend en Python
+ ├─ plant_shop_haskell                → Backend en Haskell
  └─ plant_shop_rust
-     ├─ plant_shop_rust_sqlx       → Backend Rust avec SQLx
-     └─ plant_shop_rust_see_orm    → Backend Rust avec SeaORM
+     ├─ plant_shop_rust_sqlx          → Backend Rust avec SQLx
+     └─ plant_shop_rust_see_orm       → Backend Rust avec SeaORM
 prisma/    → Modèles + seed
 tests/     → Scripts de test des routes backend
 diagnose-ora.js

@@ -98,7 +98,7 @@ prod-backend-rust-see-orm:
 	make -C apps/plant_shop_rust/plant_shop_rust_see_orm prod
 
 # ======================================================
-# 🚀 Backend C++ (Drogon + PostgreSQL)
+# 🚀 Backend C++ (Drogon)
 # ======================================================
 
 run-backend-cpp:
@@ -122,7 +122,7 @@ compile-test-backend-cpp:
 	make -C apps/plant_shop_cpp compile-test
 
 # ======================================================
-# ☕ Backend Java (HTTPServer + PostgreSQL)
+# ☕ Backend Java (HTTPServer)
 # ======================================================
 
 run-backend-java:
@@ -146,7 +146,31 @@ compile-test-backend-java:
 	make -C apps/plant_shop_java/plant_shop_java compile-test
 
 # ======================================================
-# 🛠️ Backend C (HTTPServer + PostgreSQL)
+# ☕ Backend Javalin
+# ======================================================
+
+run-backend-javalin:
+	make -C apps/plant_shop_java/plant_shop_javalin run
+
+compile-backend-javalin:
+	make -C apps/plant_shop_java/plant_shop_javalin compile
+
+seed-backend-javalin:
+	make -C apps/plant_shop_java/plant_shop_javalin seed
+
+compile-run-backend-javalin: compile-backend-javalin run-backend-javalin
+
+prod-backend-javalin:
+	make -C apps/plant_shop_java/plant_shop_javalin prod
+
+test-backend-javalin:
+	make -C apps/plant_shop_java/plant_shop_javalin tests
+
+compile-test-backend-javalin:
+	make -C apps/plant_shop_java/plant_shop_javalin compile-test
+
+# ======================================================
+# 🛠️ Backend C (HTTPServer)
 # ======================================================
 
 run-backend-c:
@@ -170,7 +194,7 @@ compile-test-backend-c:
 	make -C apps/plant_shop_c compile-test
 
 # ======================================================
-# 🌵 Backend Haskell (Stack + PostgreSQL)
+# 🌵 Backend Haskell (Stack)
 # ======================================================
 
 run-backend-haskell:

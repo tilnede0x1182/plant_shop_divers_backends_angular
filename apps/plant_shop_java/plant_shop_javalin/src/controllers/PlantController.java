@@ -5,10 +5,12 @@ import io.javalin.http.Context;
 import io.javalin.http.HttpStatus;
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import model.Plant;
 import org.json.JSONObject;
 import repository.PlantRepository;
@@ -17,6 +19,11 @@ import util.ApiMapper;
 public final class PlantController {
 
     private final PlantRepository repo;
+    private static final Collator COLLATOR;
+    static {
+        COLLATOR = Collator.getInstance(Locale.ROOT);
+        COLLATOR.setStrength(Collator.PRIMARY);
+    }
 
     public PlantController(Connection db) {
         this.repo = new PlantRepository(db);
@@ -24,13 +31,13 @@ public final class PlantController {
 
     public void listPublic(Context ctx) throws Exception {
         List<Plant> plants = repo.list();
-        plants.sort(Comparator.comparing(this::sortableName));
+        plants.sort(this::comparePlants);
         ctx.json(mapPlants(plants));
     }
 
     public void listAdmin(Context ctx) throws Exception {
         List<Plant> plants = repo.list();
-        plants.sort(Comparator.comparing(this::sortableName));
+        plants.sort(this::comparePlants);
         ctx.json(mapPlants(plants));
     }
 
@@ -102,7 +109,17 @@ public final class PlantController {
         return mapped;
     }
 
-    private String sortableName(Plant plant) {
-        return plant.name == null ? "" : plant.name.toLowerCase();
+    private int comparePlants(Plant left, Plant right) {
+        String ln = normalizeName(left.name);
+        String rn = normalizeName(right.name);
+        int compared = COLLATOR.compare(ln, rn);
+        if (compared != 0) {
+            return compared;
+        }
+        return Integer.compare(left.id, right.id);
+    }
+
+    private String normalizeName(String name) {
+        return name == null ? "" : name.trim();
     }
 }

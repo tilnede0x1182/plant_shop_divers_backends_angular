@@ -3,7 +3,9 @@ import io.javalin.json.JsonMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.lang.reflect.Type;
+import java.lang.reflect.Array;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Implémentation d'un JsonMapper pour Javalin utilisant la librairie org.json.
@@ -25,17 +27,49 @@ public final class JavalinJsonMapper implements JsonMapper {
 
     @Override
     public String toJsonString(Object obj, Type type) {
-        if (obj instanceof Collection || obj.getClass().isArray()) {
-            return new JSONArray(obj).toString();
+        Object normalized = wrap(obj);
+        if (normalized instanceof JSONObject jsonObject) {
+            return jsonObject.toString();
         }
-        if (obj instanceof String) {
-            // Éviter la double-quotation des chaînes JSON déjà formatées
-            String str = (String) obj;
-            if ((str.startsWith("{") && str.endsWith("}")) || (str.startsWith("[") && str.endsWith("]"))) {
-                return str;
+        if (normalized instanceof JSONArray jsonArray) {
+            return jsonArray.toString();
+        }
+        return String.valueOf(normalized);
+    }
+
+    private Object wrap(Object value) {
+        if (value == null) {
+            return JSONObject.NULL;
+        }
+        if (value instanceof JSONObject || value instanceof JSONArray) {
+            return value;
+        }
+        if (value instanceof Map<?, ?> map) {
+            JSONObject json = new JSONObject();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                String key = String.valueOf(entry.getKey());
+                json.put(key, wrap(entry.getValue()));
             }
+            return json;
         }
-        // Utilise le constructeur de JSONObject qui inspecte les getters de l'objet.
-        return new JSONObject(obj).toString();
+        if (value instanceof Collection<?> collection) {
+            JSONArray array = new JSONArray();
+            for (Object element : collection) {
+                array.put(wrap(element));
+            }
+            return array;
+        }
+        if (value.getClass().isArray()) {
+            JSONArray array = new JSONArray();
+            int length = Array.getLength(value);
+            for (int i = 0; i < length; i++) {
+                array.put(wrap(Array.get(value, i)));
+            }
+            return array;
+        }
+        if (value instanceof Number || value instanceof Boolean || value instanceof String) {
+            return value;
+        }
+        return new JSONObject(value);
     }
 }

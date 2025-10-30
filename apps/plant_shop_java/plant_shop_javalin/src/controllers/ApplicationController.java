@@ -70,6 +70,8 @@ public final class ApplicationController {
                 // Routes admin pour les utilisateurs
                 path("/admin/users", () -> {
                     get(requireAdmin(userController::list));
+                    get("/{id}", requireAdmin(userController::show));
+                    patch("/{id}", requireAdmin(userController::update));
                     delete("/{id}", requireAdmin(userController::destroy));
                 });
 

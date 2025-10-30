@@ -6,8 +6,10 @@ import java.util.Map;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.HashMap;
 import controller.ApplicationController;
+import static io.javalin.apibuilder.ApiBuilder.*;
 
 /**
  * Point d'entrée de l'application Javalin.
@@ -23,7 +25,7 @@ public final class Main {
 
     private static Map<String, String> env() throws IOException {
         Map<String, String> m = new HashMap<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(".env"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
             String l;
             while ((l = br.readLine()) != null) {
                 int i = l.indexOf('=');
@@ -35,6 +37,15 @@ public final class Main {
             System.err.println("Attention: Fichier .env non trouvé. Utilisation des valeurs par défaut.");
         }
         return m;
+    }
+
+    private static boolean isPortAvailable(int port) {
+        try (ServerSocket socket = new ServerSocket(port)) {
+            socket.setReuseAddress(true);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public static void main(String[] args) {
@@ -50,24 +61,24 @@ public final class Main {
                 throw new IllegalStateException("Les variables DATABASE_USER et DATABASE_PASS sont manquantes dans le fichier .env");
             }
 
+            if (!isPortAvailable(port)) {
+                System.err.println("❌ Le port " + port + " est déjà utilisé. Impossible de démarrer le serveur.");
+                System.exit(1);
+            }
+
             // Connexion JDBC
             db = DriverManager.getConnection(dbUrl, dbUser, dbPass);
 
             // Contrôleur principal qui gère les routes et l'accès
             ApplicationController applicationController = new ApplicationController(db);
 
-            app = Javalin.create(config -> {
-                config.jsonMapper(new JavalinJsonMapper());
-                config.accessManager(applicationController::accessManager);
-                config.http.defaultContentType = "application/json; charset=utf-8";
-                config.cors.add(it -> {
-                    it.anyHost(); // Pour le développement, sinon spécifier les origines
-                    it.allowCredentials = true;
-                });
-            });
-
-            // Définition de toutes les routes de l'API
-            app.routes(applicationController.getRoutes());
+						app = Javalin.create(config -> {
+								config.jsonMapper(new JavalinJsonMapper());
+								config.http.defaultContentType = "application/json; charset=utf-8";
+								config.bundledPlugins.enableCors(cors -> cors.addRule(it -> it.anyHost()));
+								config.router.apiBuilder(applicationController.getRoutes());
+						});
+						applicationController.register(app);
 
             // Démarrage du serveur
             app.start(port);

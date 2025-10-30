@@ -126,4 +126,9 @@ public final class ApplicationController {
             throw new Exception("Erreur base de données lors de l'authentification", e);
         }
     }
+
+		/* Enregistre le groupe de routes exposé par ce contrôleur sur l'instance Javalin */
+		public void register(io.javalin.Javalin app) {
+			app.routes(() -> getRoutes());
+		}
 }

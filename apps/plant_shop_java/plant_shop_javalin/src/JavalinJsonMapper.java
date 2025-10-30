@@ -4,7 +4,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.lang.reflect.Type;
 import java.util.Collection;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Implémentation d'un JsonMapper pour Javalin utilisant la librairie org.json.
@@ -12,9 +11,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class JavalinJsonMapper implements JsonMapper {
 
-    @NotNull
     @Override
-    public <T> T fromJsonString(@NotNull String json, @NotNull Type targetType) {
+    public <T> T fromJsonString(String json, Type targetType) {
         // La désérialisation est gérée directement dans les contrôleurs avec ctx.bodyAsClass()
         // qui utilise une autre logique interne. Cette méthode est donc moins critique ici.
         // Pour une implémentation complète, il faudrait utiliser une librairie comme Jackson ou Gson.
@@ -25,9 +23,8 @@ public final class JavalinJsonMapper implements JsonMapper {
         return (T) new JSONObject(json);
     }
 
-    @NotNull
     @Override
-    public String toJsonString(@NotNull Object obj, @NotNull Type type) {
+    public String toJsonString(Object obj, Type type) {
         if (obj instanceof Collection || obj.getClass().isArray()) {
             return new JSONArray(obj).toString();
         }

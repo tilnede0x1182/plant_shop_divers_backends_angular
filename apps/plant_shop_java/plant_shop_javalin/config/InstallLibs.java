@@ -1,3 +1,5 @@
+package config;
+
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
@@ -6,7 +8,7 @@ import java.util.regex.*;
 
 public class InstallLibs {
     public static void main(String[] args) throws Exception {
-        Path yaml = Path.of("libs.yaml");
+        Path yaml = Path.of("config/libs.yaml");
         if (!Files.exists(yaml)) {
             System.err.println("Fichier libs.yaml introuvable.");
             return;

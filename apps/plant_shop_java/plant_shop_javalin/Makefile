@@ -11,7 +11,7 @@ compile-install-libs:
 	mkdir -p bin
 	javac -d bin config/InstallLibs.java
 
-install-libs: compile-install-libs
+install: compile-install-libs
 	java -cp bin config/InstallLibs
 
 ## ────────────────
@@ -51,6 +51,20 @@ seed:
 seed-dev: clean compile-seed seed
 
 ## ────────────────
+# Test
+## ────────────────
+
+compile-test:
+	mkdir -p bin
+	javac -cp $(CLASSPATH) -d bin test/Test.java
+
+tests:
+	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
+	java -cp $(CLASSPATH) Tests.Test
+
+test-dev: clean compile-test tests
+
+## ────────────────
 # DB
 ## ────────────────
 
@@ -66,15 +80,3 @@ db-drop:
 db-seed: seed
 
 db-reset: db-drop db-create db-migrate db-seed
-
-## ────────────────
-# Test
-## ────────────────
-
-compile-test:
-	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin test/Test.java
-
-tests:
-	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
-	java -cp $(CLASSPATH) Tests.Test

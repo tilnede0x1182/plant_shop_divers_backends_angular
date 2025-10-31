@@ -9,6 +9,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import io.micronaut.runtime.Micronaut;
 
 public class Application {
 

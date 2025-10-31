@@ -1,10 +1,12 @@
 package model;
 
 import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 @Introspected
+@Serdeable
 public final class Order {
     public int id;
     public int userId;

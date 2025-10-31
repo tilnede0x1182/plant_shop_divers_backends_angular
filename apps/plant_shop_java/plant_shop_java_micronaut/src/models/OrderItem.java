@@ -1,9 +1,11 @@
 package model;
 
 import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
 import java.math.BigDecimal;
 
 @Introspected
+@Serdeable
 public final class OrderItem {
     public int id;
     public int orderId;

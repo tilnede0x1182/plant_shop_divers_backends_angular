@@ -76,6 +76,9 @@ public final class Main {
             // Contrôleur principal qui gère les routes et l'accès
             ApplicationController applicationController = new ApplicationController(db);
 
+						// Définit le niveau de log sur ERROR
+						System.setProperty(org.slf4j.simple.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "ERROR");
+
             app = Javalin.create(config -> {
                 config.jsonMapper(new JavalinJsonMapper());
                 config.http.defaultContentType = "application/json; charset=utf-8";

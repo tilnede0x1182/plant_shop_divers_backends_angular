@@ -1,12 +1,10 @@
-# CLASSPATH est dynamiquement construit à partir des .jar dans /lib
-CLASSPATH := bin:$(shell find lib -name "*.jar" | tr '\n' ':')
-DB_NAME=plant_shop_java_micronaut
 
 ## ────────────────
 # Dépendances
 ## ────────────────
 
-# Ne pas toucher à cette section, elle gère le téléchargement des libs.
+DB_NAME=plant_shop_java_micronaut
+
 compile-install-libs:
 	mkdir -p bin
 	javac -d bin config/InstallLibs.java
@@ -18,37 +16,28 @@ install: compile-install-libs
 # Server
 ## ────────────────
 
+# Variables de base
+CLASSPATH = bin:lib/*
+
 compile:
 	mkdir -p bin
-	find src -type f -name "*.java" ! -path "*/db/Seed.java" ! -path "*/test/Test.java" | \
-	xargs javac -cp $(CLASSPATH) -d bin
+	javac -proc:none -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
+		src/utils/*.java \
+		src/models/*.java \
+		src/repositories/*.java \
+		src/security/*.java \
+		src/controllers/*.java \
+		src/Application.java
 
 run:
-	@if [ ! -f bin/Main.class ]; then make compile; fi
-	java -cp $(CLASSPATH) Main
+	java -cp "$(CLASSPATH)" Application
 
 compile_run: compile run
 
-prod: run
-
 clean:
-	rm -rf bin
+	rm -rf bin/*
 
 build-dev: clean compile_run
-
-## ────────────────
-# Seed
-## ────────────────
-
-compile-seed:
-	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
-
-seed:
-	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
-	java -cp $(CLASSPATH) db.Seed
-
-seed-dev: clean compile-seed seed
 
 ## ────────────────
 # Test

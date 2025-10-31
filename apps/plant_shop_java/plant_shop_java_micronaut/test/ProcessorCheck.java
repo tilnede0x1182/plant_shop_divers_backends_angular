@@ -9,8 +9,12 @@ public final class ProcessorCheck {
 
     public static void main(String[] args) {
         ServiceLoader<TypeElementVisitor> loader = ServiceLoader.load(TypeElementVisitor.class);
-        for (TypeElementVisitor<?, ?> visitor : loader) {
-            System.out.println("Loaded: " + visitor.getClass().getName());
+        try {
+            for (TypeElementVisitor<?, ?> visitor : loader) {
+                System.out.println("Loaded: " + visitor.getClass().getName());
+            }
+        } catch (ServiceConfigurationError e) {
+            e.printStackTrace(System.err);
         }
     }
 }

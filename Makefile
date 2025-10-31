@@ -170,6 +170,30 @@ compile-test-backend-javalin:
 	make -C apps/plant_shop_java/plant_shop_javalin compile-test
 
 # ======================================================
+# ☕ Backend Micronaut
+# ======================================================
+
+run-backend-micronaut:
+	make -C apps/plant_shop_java/plant_shop_java_micronaut run
+
+compile-backend-micronaut:
+	make -C apps/plant_shop_java/plant_shop_java_micronaut compile
+
+seed-backend-micronaut:
+	make -C apps/plant_shop_java/plant_shop_java_micronaut seed
+
+compile-run-backend-micronaut: compile-backend-micronaut run-backend-micronaut
+
+prod-backend-micronaut:
+	make -C apps/plant_shop_java/plant_shop_java_micronaut build-dev
+
+test-backend-micronaut:
+	make -C apps/plant_shop_java/plant_shop_java_micronaut tests
+
+compile-test-backend-micronaut:
+	make -C apps/plant_shop_java/plant_shop_java_micronaut compile-test
+
+# ======================================================
 # 🛠️ Backend C (HTTPServer)
 # ======================================================
 

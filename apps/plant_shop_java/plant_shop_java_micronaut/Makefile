@@ -7,10 +7,12 @@ DB_NAME=plant_shop_java_micronaut
 
 compile-install-libs:
 	mkdir -p bin
-	javac -d bin config/InstallLibs.java
+	javac -d bin config/InstallCoursier.java
 
 install: compile-install-libs
-	java -cp bin config/InstallLibs
+	java -cp bin config.InstallCoursier
+
+install:
 
 ## ────────────────
 # Server

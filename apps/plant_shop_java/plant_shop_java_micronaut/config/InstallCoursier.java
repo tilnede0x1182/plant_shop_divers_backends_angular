@@ -41,7 +41,8 @@ public class InstallCoursier {
                     copyJarImmediate(jar);
                 }
             }
-            System.out.println("✅ Dépendances installées dans ./lib");
+						cleanObsoleteJars(deps);
+						System.out.println("✅ Dépendances installées dans ./lib");
         } catch (Exception e) {
             System.err.println("❌ Échec : " + e.getMessage());
             e.printStackTrace();
@@ -127,4 +128,41 @@ public class InstallCoursier {
                 + ". Sortie:\n" + String.join("\n", out));
         return out;
     }
+
+		/**
+		 * Supprime les .jar obsolètes dans ./lib qui ne sont plus référencés
+		 * par les dépendances actives ni leurs dépendances transitives.
+		 */
+		private static void cleanObsoleteJars(List<String> deps) throws IOException, InterruptedException {
+				System.out.println("🧹 Nettoyage des dépendances obsolètes...");
+				// 1. Obtenir le classpath complet via coursier
+				List<String> lines = new ArrayList<>();
+				lines.addAll(runAndCollect("bash", "-c",
+						"cs fetch -p $(grep -v '^#' " + DEP_FILE + " | grep -v '^$' | tr '\n' ' ')"));
+				String joined = String.join(" ", lines);
+				String[] parts = joined.split(":");
+				// 2. Construire un set des noms de fichiers valides
+				var valid = new java.util.HashSet<String>();
+				for (String s : parts) {
+						if (s.trim().endsWith(".jar")) {
+								valid.add(Paths.get(s.trim()).getFileName().toString());
+						}
+				}
+				// 3. Parcourir ./lib et supprimer ce qui n’est plus valide
+				try (var stream = Files.list(Paths.get(LIB_DIR))) {
+						stream.filter(p -> p.toString().endsWith(".jar"))
+									.forEach(jar -> {
+											String name = jar.getFileName().toString();
+											if (!valid.contains(name)) {
+													try {
+															Files.delete(jar);
+															System.out.println("🗑️  Supprimé : " + name);
+													} catch (IOException e) {
+															System.err.println("⚠️  Impossible de supprimer " + name + " : " + e.getMessage());
+													}
+											}
+									});
+				}
+				System.out.println("✅ Nettoyage terminé.");
+		}
 }

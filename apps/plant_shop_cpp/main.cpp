@@ -24,7 +24,8 @@ bool isPortAvailable(unsigned short port) {
 	// addr.sin_port = htons(port);
 	// bool ok = (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == 0);
 	// close(sockfd);
-	return ok;
+	// return ok;
+	return true;
 }
 /** """ Vérifie la présence du fichier config.json """ */
 void checkConfigFile(const std::string& path = "config.json") {

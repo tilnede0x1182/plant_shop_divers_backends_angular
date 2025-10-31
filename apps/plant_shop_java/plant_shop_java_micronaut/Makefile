@@ -23,14 +23,13 @@ CLASSPATH = bin:lib/*
 
 compile:
 	mkdir -p bin
-	javac -proc:none -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
+	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
 		src/models/*.java \
 		src/repositories/*.java \
 		src/security/*.java \
 		src/controllers/*.java \
 		src/Application.java
-
 run:
 	java -cp "$(CLASSPATH)" Application
 

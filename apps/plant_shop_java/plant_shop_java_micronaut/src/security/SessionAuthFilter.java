@@ -8,77 +8,56 @@ import io.micronaut.http.filter.ServerFilterChain;
 import jakarta.inject.Singleton;
 import java.sql.Connection;
 import java.util.Map;
-import java.util.Set;
+import controller.AuthController;
 import model.User;
 import org.reactivestreams.Publisher;
-import controller.AuthController;
-import repository.UserRepository;
 import reactor.core.publisher.Mono;
+import repository.UserRepository;
 
 @Singleton
 @Filter("/**")
 public class SessionAuthFilter implements HttpServerFilter {
 
+    private static final String SESSION_COOKIE = "session_id";
     private final UserRepository userRepo;
-    private static final Set<String> ALLOWED_ORIGINS = Set.of(
-        "http://localhost:8300",
-        "http://127.0.0.1:8300"
-    );
+    private final CorsConfig cors;
 
-    public SessionAuthFilter(Connection db) {
+    public SessionAuthFilter(Connection db, CorsConfig cors) {
         this.userRepo = new UserRepository(db);
+        this.cors = cors;
     }
 
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
-        // CORS Headers
         String origin = request.getHeaders().get("Origin");
-        if (isAllowedOrigin(origin)) {
-            if ("OPTIONS".equals(request.getMethodName())) {
-                MutableHttpResponse<?> response = io.micronaut.http.HttpResponse.ok();
-                configureCorsHeaders(response, origin, request);
-                return Mono.just(response);
-            }
+        if (cors.isAllowed(origin) && cors.isPreflight(request)) {
+            return Mono.just(cors.preflight(request, origin));
         }
+        return authenticate(request)
+            .flatMap(req -> Mono.from(chain.proceed(req)))
+            .map(response -> cors.apply(response, origin, request));
+    }
 
-        // Session Authentication
+    private Mono<HttpRequest<?>> authenticate(HttpRequest<?> request) {
         return Mono.fromCallable(() -> {
-            request.getCookies().findCookie("session_id").ifPresent(cookie -> {
-                Map<String, Integer> sessions = AuthController.getSessions();
-                Integer userId = sessions.get(cookie.getValue());
-                if (userId != null) {
-                    try {
-                        User user = userRepo.find(userId);
-                        if (user != null) {
-                            request.setAttribute("user", user);
-                        }
-                    } catch (Exception e) {
-                        System.err.println("Erreur DB dans le filtre: " + e.getMessage());
-                    }
-                }
-            });
+            request.getCookies()
+                .findCookie(SESSION_COOKIE)
+                .ifPresent(cookie -> attachUser(request, cookie.getValue()));
             return request;
-        }).flatMap(req -> Mono.from(chain.proceed(req)))
-          .map(response -> {
-              if (isAllowedOrigin(origin)) {
-                  configureCorsHeaders(response, origin, request);
-              }
-              return response;
-          });
+        });
     }
 
-    private boolean isAllowedOrigin(String origin) {
-        return origin != null && ALLOWED_ORIGINS.contains(origin);
-    }
-
-    private void configureCorsHeaders(MutableHttpResponse<?> response, String origin, HttpRequest<?> request) {
-        response.header("Access-Control-Allow-Origin", origin);
-        response.header("Access-Control-Allow-Credentials", "true");
-        response.header("Vary", "Origin");
-        if ("OPTIONS".equals(request.getMethodName())) {
-            response.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
-            String reqHeaders = request.getHeaders().get("Access-Control-Request-Headers");
-            response.header("Access-Control-Allow-Headers", reqHeaders != null ? reqHeaders : "Content-Type, Cookie");
+    private void attachUser(HttpRequest<?> request, String sessionId) {
+        Map<String, Integer> sessions = AuthController.getSessions();
+        Integer userId = sessions.get(sessionId);
+        if (userId == null) return;
+        try {
+            User user = userRepo.find(userId);
+            if (user != null) {
+                request.setAttribute("user", user);
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur DB dans le filtre: " + e.getMessage());
         }
     }
 }

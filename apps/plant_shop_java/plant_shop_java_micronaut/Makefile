@@ -40,6 +40,20 @@ clean:
 build-dev: clean compile_run
 
 ## ────────────────
+# Seed
+## ────────────────
+
+compile-seed:
+	mkdir -p bin
+	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
+
+seed:
+	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
+	java -cp $(CLASSPATH) db.Seed
+
+seed-dev: clean compile-seed seed
+
+## ────────────────
 # Test
 ## ────────────────
 

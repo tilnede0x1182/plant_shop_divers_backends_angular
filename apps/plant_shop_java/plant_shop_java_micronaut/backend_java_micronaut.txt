@@ -1,0 +1,2472 @@
+# test/Test.java
+
+package Tests;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+/**
+ * Test end-to-end Java 21 – aligné sur le scénario C++ complet.
+ * Dépendance : org.json.
+ */
+public final class Test {
+
+	/* -------- .env -------- */
+	private static Map<String, String> env() throws IOException {
+		Map<String, String> m = new HashMap<>();
+		try (BufferedReader br = new BufferedReader(new FileReader(".env"))) {
+			String l;
+			while ((l = br.readLine()) != null) {
+				int i = l.indexOf('=');
+				if (i > 0)
+					m.put(l.substring(0, i).trim(), l.substring(i + 1).trim());
+			}
+		} catch (IOException e) {
+			// Ignorer si .env n'existe pas, les valeurs par défaut seront utilisées
+		}
+		return m;
+	}
+
+	/* -------- Config -------- */
+	private static final Map<String, String> CFG;
+	static {
+		try {
+			CFG = env();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	private static final String PORT = CFG.getOrDefault("SERVER_ADDRESS", "4100");
+	private static final String BASE = "http://localhost:" + PORT + "/api";
+	private static final String ADMIN_EMAIL = "admin1@planteshop.com";
+	private static final String ADMIN_PWD = "password";
+
+	/* -------- Cookies -------- */
+	private final Map<String, String> cookie = new HashMap<>();
+	private final String timestamp;
+
+	public Test() {
+		this.timestamp = ts();
+	}
+
+	/* -------- Utilitaires -------- */
+	private static String ts() {
+		return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+	}
+
+	private static String rand(int n) {
+		String a = "abcdefghijklmnopqrstuvwxyz0123456789";
+		StringBuilder sb = new StringBuilder();
+		Random r = new Random();
+		for (int i = 0; i < n; i++)
+			sb.append(a.charAt(r.nextInt(a.length())));
+		return sb.toString();
+	}
+
+	private static boolean waitForServer(String host, int port, int timeoutMs) {
+		long startTime = System.currentTimeMillis();
+		while (System.currentTimeMillis() - startTime < timeoutMs) {
+			try (Socket socket = new Socket()) {
+				socket.connect(new InetSocketAddress(host, port), 100); // Timeout de connexion de 100ms
+				return true;
+			} catch (IOException e) {
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException ignored) {
+					Thread.currentThread().interrupt();
+					return false;
+				}
+			}
+		}
+		return false;
+	}
+
+	private JSONObject call(String m, String p, int exp, JSONObject body, String who) throws Exception {
+		HttpClient client = HttpClient.newBuilder().build();
+		HttpRequest.Builder builder = HttpRequest.newBuilder()
+				.uri(URI.create(BASE + p))
+				.method(
+						m,
+						body == null
+								? HttpRequest.BodyPublishers.noBody()
+								: HttpRequest.BodyPublishers.ofString(body.toString()))
+				.header("Content-Type", "application/json");
+
+		if (cookie.get(who) != null) {
+			builder.header("Cookie", cookie.get(who));
+		}
+
+		HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+		int code = response.statusCode();
+
+		// Gestion améliorée des cookies, concatène les nouveaux cookies
+		List<String> setCookies = response.headers().allValues("Set-Cookie");
+		if (!setCookies.isEmpty()) {
+			String currentCookies = cookie.getOrDefault(who, "");
+			for (String setCookieHeader : setCookies) {
+				String newCookie = setCookieHeader.split(";", 2)[0];
+				if (currentCookies.isEmpty()) {
+					currentCookies = newCookie;
+				} else {
+					currentCookies += "; " + newCookie;
+				}
+			}
+			cookie.put(who, currentCookies);
+		}
+
+		System.out.printf("%s %-7s %s [%d]%n", code == exp ? "✅" : "❌", m, p, code);
+
+		if (code != exp) {
+			throw new RuntimeException("API " + m + " " + p + " -> " + code + " (attendu " + exp + ")\n" + response.body());
+		}
+
+		String contentType = response.headers().firstValue("Content-Type").orElse("");
+		String txt = response.body().trim();
+		if (contentType.startsWith("application/json") || txt.startsWith("{")) {
+				return txt.isEmpty() ? new JSONObject() : new JSONObject(txt);
+		}
+		return new JSONObject();
+	}
+
+	private JSONArray callArray(String m, String p, int exp, JSONObject body, String who) throws Exception {
+		// Wrapper pour les réponses qui sont des listes JSON
+		HttpClient client = HttpClient.newBuilder().build();
+		HttpRequest.Builder builder = HttpRequest.newBuilder()
+				.uri(URI.create(BASE + p))
+				.method(m, body == null ? HttpRequest.BodyPublishers.noBody() : HttpRequest.BodyPublishers.ofString(body.toString()))
+				.header("Content-Type", "application/json");
+
+		if (cookie.get(who) != null) builder.header("Cookie", cookie.get(who));
+
+		HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+		int code = response.statusCode();
+
+		System.out.printf("%s %-7s %s [%d]%n", code == exp ? "✅" : "❌", m, p, code);
+
+		if (code != exp) {
+			throw new RuntimeException("API " + m + " " + p + " -> " + code + " (attendu " + exp + ")\n" + response.body());
+		}
+
+		String contentType = response.headers().firstValue("Content-Type").orElse("");
+		if (contentType.startsWith("application/json")) {
+			String txt = response.body();
+			return txt.trim().isEmpty() ? new JSONArray() : new JSONArray(txt);
+		}
+		return new JSONArray();
+	}
+
+
+	/* -------- Auth -------- */
+	private void login(String mail, String pw, String who) throws Exception {
+		JSONObject j = new JSONObject().put("email", mail).put("password", pw);
+		call("POST", "/auth/login", 201, j, who);
+	}
+
+	private void register(String name, String mail, String pw, String who) throws Exception {
+		JSONObject j = new JSONObject().put("name", name).put("email", mail).put("password", pw);
+		call("POST", "/auth/register", 201, j, who);
+	}
+
+	/* -------- Assertions -------- */
+	private static void assert_eq(JSONObject o, String k, Object e) {
+		if (!o.has(k)) {
+			System.out.printf("❌   ↳ Clé '%s' manquante dans l'objet JSON%n", k);
+			throw new RuntimeException("Objet vide – clé " + k + " recherchée");
+		}
+		Object a = o.get(k);
+		boolean ok;
+		if (e instanceof Number && a instanceof Number) {
+			ok = ((Number) e).doubleValue() == ((Number) a).doubleValue();
+		} else {
+			ok = e.equals(a);
+		}
+
+		System.out.printf("%s   ↳ %s=%s%n (attendu %s)%n",
+				ok ? "✅" : "❌",
+				k,
+				new JSONObject().put("v", a).get("v").toString(), // Pour un affichage correct des strings
+				new JSONObject().put("v", e).get("v").toString());
+
+		if (!ok) {
+			throw new RuntimeException("Assertion échouée pour la clé '" + k + "'");
+		}
+	}
+
+	private static void assert_num(JSONObject o, String k) {
+		if (!(o.opt(k) instanceof Number)) {
+			throw new RuntimeException("Clé " + k + " n'est pas numérique ou absente");
+		}
+	}
+
+	/* -------- Modules de Test -------- */
+
+	private void test_plants() throws Exception {
+		System.out.println("\n📌 TEST MODULE: PLANTS (admin)");
+		JSONObject plant_data = new JSONObject()
+				.put("name", "Test Plant")
+				.put("price", 10)
+				.put("stock", 5);
+		JSONObject plant = call("POST", "/admin/plants", 201, plant_data, "admin");
+		assert_num(plant, "id");
+		int id = plant.getInt("id");
+		JSONObject get = call("GET", "/plants/" + id, 200, null, "admin");
+		assert_eq(get, "name", plant_data.get("name"));
+		JSONObject price_update = new JSONObject().put("price", 15);
+		call("PATCH", "/admin/plants/" + id, 200, price_update, "admin");
+		JSONObject check = call("GET", "/plants/" + id, 200, null, "admin");
+		assert_eq(check, "price", 15);
+		System.out.printf("   ↳ name=%s%n", check.getString("name"));
+		call("DELETE", "/admin/plants/" + id, 200, null, "admin");
+	}
+
+	private void test_users() throws Exception {
+		System.out.println("\n📌 TEST MODULE: USERS (admin)");
+		String email = "utilisateur_test_" + this.timestamp + "@example.com";
+		JSONObject user_data = new JSONObject()
+				.put("email", email)
+				.put("name", "Utilisateur de test")
+				.put("password", "pass123");
+		JSONObject user = call("POST", "/users", 201, user_data, "admin");
+		int id = user.getInt("id");
+		JSONObject name_update = new JSONObject().put("name", "Tester Update");
+		call("PATCH", "/users/" + id, 200, name_update, "admin");
+		JSONObject get = call("GET", "/users/" + id, 200, null, "admin");
+		assert_eq(get, "name", "Tester Update");
+		call("DELETE", "/users/" + id, 200, null, "admin");
+	}
+
+	private void test_orders() throws Exception {
+		System.out.println("\n📌 TEST MODULE: ORDERS & ORDER ITEMS");
+		String plantName = "Plante_de_test_" + this.timestamp;
+		JSONObject plant_data = new JSONObject()
+				.put("name", plantName)
+				.put("price", 10)
+				.put("stock", 5);
+		JSONObject plant = call("POST", "/admin/plants", 201, plant_data, "admin");
+		assert_num(plant, "id");
+		int pid = plant.getInt("id");
+
+		JSONObject item = new JSONObject().put("plantId", pid).put("quantity", 2);
+		JSONObject order_data = new JSONObject().put("items", new JSONArray().put(item));
+		JSONObject order = call("POST", "/orders", 201, order_data, "user");
+		assert_num(order, "id");
+		int oid = order.getInt("id");
+
+		JSONObject status_update = new JSONObject().put("status", "shipped");
+		call("PATCH", "/orders/" + oid, 200, status_update, "admin");
+
+		JSONArray list = callArray("GET", "/orders", 200, null, "user");
+		JSONObject found = null;
+		for (int i = 0; i < list.length(); i++) {
+			JSONObject o = list.getJSONObject(i);
+			if (o.getInt("id") == oid) {
+				found = o;
+				break;
+			}
+		}
+		if (found == null) throw new RuntimeException("Commande absente");
+
+		assert_eq(found, "status", "shipped");
+		if (!found.has("orderItems") || found.getJSONArray("orderItems").isEmpty()) {
+			throw new RuntimeException("Items absents dans la commande");
+		}
+		JSONObject nestedPlant = found.getJSONArray("orderItems").getJSONObject(0).getJSONObject("plant");
+		assert_eq(nestedPlant, "name", plantName);
+
+		call("DELETE", "/orders/" + oid, 200, null, "admin");
+		call("DELETE", "/admin/plants/" + pid, 200, null, "admin");
+	}
+
+	private void test_user_profile(String email) throws Exception {
+		System.out.println("\n📌 TEST MODULE: USER PROFILE (user)");
+		JSONArray users = callArray("GET", "/users", 200, null, "admin");
+		JSONObject user_obj = null;
+		for (int i = 0; i < users.length(); i++) {
+			JSONObject u = users.getJSONObject(i);
+			if (u.getString("email").equals(email)) {
+				user_obj = u;
+				break;
+			}
+		}
+		if (user_obj == null) throw new RuntimeException("Utilisateur de test non trouvé");
+		int uid = user_obj.getInt("id");
+
+		JSONObject profile = call("GET", "/users/" + uid, 200, null, "user");
+		assert_eq(profile, "id", uid);
+
+		String new_name = "Utilisateur_de_test_" + this.timestamp;
+		JSONObject name_update = new JSONObject().put("name", new_name);
+		call("PATCH", "/users/" + uid, 200, name_update, "user");
+
+		JSONObject updated = call("GET", "/users/" + uid, 200, null, "user");
+		assert_eq(updated, "name", new_name);
+
+		JSONObject admin_update = new JSONObject().put("admin", true);
+		call("PATCH", "/users/" + uid, 200, admin_update, "user"); // L'API doit ignorer ce champ
+
+		JSONObject check = call("GET", "/users/" + uid, 200, null, "admin");
+		assert_eq(check, "admin", false); // Vérification que l'utilisateur n'est pas devenu admin
+	}
+
+	private void test_auth_roles() throws Exception {
+		System.out.println("\n📌 TEST MODULE: ROLES");
+		JSONObject bad_plant = new JSONObject().put("name", "Bad").put("price", 1).put("stock", 1);
+		call("POST", "/admin/plants", 403, bad_plant, "user");
+
+		JSONObject good_plant = new JSONObject().put("name", "Good").put("price", 1).put("stock", 1);
+		JSONObject plant = call("POST", "/admin/plants", 201, good_plant, "admin");
+		int pid = plant.getInt("id");
+		call("DELETE", "/admin/plants/" + pid, 200, null, "admin");
+
+		call("GET", "/users", 403, null, "user");
+	}
+
+	private void test_admin_plants() throws Exception {
+		System.out.println("\n📌 TEST MODULE: ADMIN PLANTS");
+		JSONArray plantes = callArray("GET", "/admin/plants", 200, null, "admin");
+		System.out.printf("   ↳ %d plantes récupérées%n", plantes.length());
+
+		JSONObject plant_data = new JSONObject()
+				.put("name", "Plante_admin_" + this.timestamp)
+				.put("price", 99)
+				.put("stock", 12);
+		JSONObject p = call("POST", "/admin/plants", 201, plant_data, "admin");
+		int id = p.getInt("id");
+
+		JSONObject price_update = new JSONObject().put("price", 123);
+		call("PATCH", "/admin/plants/" + id, 200, price_update, "admin");
+		call("DELETE", "/admin/plants/" + id, 200, null, "admin");
+	}
+
+	private void test_admin_users() throws Exception {
+		System.out.println("\n📌 TEST MODULE: ADMIN USERS");
+		String email = "admin_temp_" + this.timestamp + "@example.com";
+		String name = "Admin Temporaire " + this.timestamp;
+
+		JSONObject temp_admin_data = new JSONObject()
+				.put("email", email)
+				.put("name", name)
+				.put("password", "password")
+				.put("admin", true);
+		JSONObject temp = call("POST", "/users", 201, temp_admin_data, "admin");
+		int id = temp.getInt("id");
+
+		JSONArray list = callArray("GET", "/admin/users", 200, null, "admin");
+		JSONObject cible = null;
+		for (int i = 0; i < list.length(); i++) {
+			JSONObject u = list.getJSONObject(i);
+			if (u.getString("email").equals(email)) {
+				cible = u;
+				break;
+			}
+		}
+		if (cible == null) throw new RuntimeException("L'admin temporaire n'a pas été trouvé dans la liste !");
+		assert_eq(cible, "name", name);
+
+		String nouveau_nom = "Admin_temp_modifié_" + this.timestamp;
+		JSONObject name_update = new JSONObject().put("name", nouveau_nom);
+		call("PATCH", "/users/" + id, 200, name_update, "admin");
+
+		JSONObject user_get = call("GET", "/users/" + id, 200, null, "admin");
+		assert_eq(user_get, "name", nouveau_nom);
+
+		call("DELETE", "/users/" + id, 200, null, "admin");
+	}
+
+	private void test_auth_me() throws Exception {
+		System.out.println("\n📌 TEST MODULE: AUTH /me");
+		JSONObject me = call("GET", "/auth/me", 200, null, "user");
+		String mail = me.getString("email");
+		String nom = me.getString("name");
+		assert_eq(me, "email", mail);
+		assert_eq(me, "name", nom);
+		System.out.printf("   ↳ Utilisateur connecté: %s (%s)%n", mail, nom);
+	}
+
+	/* -------- Main -------- */
+	public static void main(String[] args) {
+		try {
+			if (!waitForServer("127.0.0.1", Integer.parseInt(PORT), 5000)) {
+				System.err.println("❌ Serveur http://localhost:" + PORT + " injoignable");
+				System.exit(2);
+			}
+
+			Test t = new Test();
+
+			String random_tag = rand(4);
+			String userEmail = "utilisateur_de_test_" + t.timestamp + "_" + random_tag + "@example.com";
+			String userPassword = "pass123";
+
+			System.out.println("🧪 Démarrage des tests: http://localhost:" + PORT + "/api\n");
+
+			// Connexion des utilisateurs de base pour les tests
+			t.login(ADMIN_EMAIL, ADMIN_PWD, "admin");
+			t.register("User", userEmail, userPassword, "user"); // Utilise un nom générique pour l'enregistrement
+			t.login(userEmail, userPassword, "user");
+
+			// Exécution des suites de tests
+			t.test_plants();
+			t.test_users();
+			t.test_orders();
+			t.test_user_profile(userEmail);
+			t.test_auth_roles();
+			t.test_admin_plants();
+			t.test_admin_users();
+			t.test_auth_me();
+
+			System.out.println("\n🎉 Tous les tests ont réussi!");
+			System.exit(0);
+
+		} catch (Exception e) {
+			System.err.println("\n❌ Tests interrompus: " + e.getMessage());
+			// e.printStackTrace(); // Décommenter pour un débogage détaillé
+			System.exit(1);
+		}
+	}
+}
+
+# Makefile
+
+
+## ────────────────
+# Dépendances
+## ────────────────
+
+DB_NAME=plant_shop_java_micronaut
+
+compile-install-libs:
+	mkdir -p bin
+	javac -d bin config/InstallCoursier.java
+
+install: compile-install-libs
+	java -cp bin config.InstallCoursier
+
+install:
+
+## ────────────────
+# Server
+## ────────────────
+
+# Variables de base
+CLASSPATH = bin:lib/*
+
+compile:
+	mkdir -p bin
+	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
+		src/utils/*.java \
+		src/models/*.java \
+		src/repositories/*.java \
+		src/security/*.java \
+		src/controllers/*.java \
+		src/Application.java
+run:
+	java -cp "$(CLASSPATH)" Application
+
+compile_run: compile run
+
+clean:
+	rm -rf bin/*
+
+build-dev: clean compile_run
+
+## ────────────────
+# Seed
+## ────────────────
+
+compile-seed:
+	mkdir -p bin
+	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
+
+seed:
+	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
+	java -cp $(CLASSPATH) db.Seed
+
+seed-dev: clean compile-seed seed
+
+## ────────────────
+# Test
+## ────────────────
+
+compile-test:
+	mkdir -p bin
+	javac -cp $(CLASSPATH) -d bin test/Test.java
+
+tests:
+	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
+	java -cp $(CLASSPATH) Tests.Test
+
+test-dev: clean compile-test tests
+
+## ────────────────
+# DB
+## ────────────────
+
+db-create:
+	sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME);"
+
+db-migrate:
+	sudo -u postgres psql -d $(DB_NAME) -f src/db/schema.sql
+
+db-drop:
+	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
+
+db-seed: seed
+
+db-reset: db-drop db-create db-migrate db-seed
+
+# config/InstallCoursier.java
+
+package config;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Installe (si nécessaire) l'outil Coursier et récupère toutes les dépendances
+ * listées dans config/dependencies.txt vers ./lib.
+ *
+ * Comportement :
+ *  - affiche des messages clairs et emoji.
+ *  - pour chaque dépendance, lance `cs fetch <dep> -p`, attend la fin,
+ *    extrait les chemins vers les .jar, copie immédiatement chaque .jar
+ *    vers ./lib (skip si déjà présent) et affiche une ligne quand la copie
+ *    est terminée.
+ */
+public class InstallCoursier {
+
+    private static final String DEP_FILE = "config/dependencies.txt";
+    private static final String LIB_DIR = "lib";
+    private static final String CS_URL = "https://git.io/coursier-cli";
+
+    public static void main(String[] args) {
+        try {
+            System.out.println("📦 Installation des dépendances via Coursier...");
+            ensureCs();
+            Files.createDirectories(Paths.get(LIB_DIR));
+            List<String> deps = Files.readAllLines(Paths.get(DEP_FILE)).stream().map(String::trim).toList();
+            for (String raw : deps) {
+                if (raw.isEmpty() || raw.startsWith("#")) continue;
+                System.out.println("➡️  Téléchargement : " + raw);
+                List<String> jars = fetchJarPathsFor(raw);
+                if (jars.isEmpty()) {
+                    System.out.println("⚠️  Aucun .jar trouvé pour : " + raw);
+                }
+                for (String jar : jars) {
+                    copyJarImmediate(jar);
+                }
+            }
+						cleanObsoleteJars(deps);
+						System.out.println("✅ Dépendances installées dans ./lib");
+        } catch (Exception e) {
+            System.err.println("❌ Échec : " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    /**
+     * Vérifie la présence de 'cs'. Si absent, tente l'installation système.
+     */
+    private static void ensureCs() throws IOException, InterruptedException {
+        try {
+            runAndCollect("cs", "--version");
+            System.out.println("✔️  Coursier trouvé.");
+            return;
+        } catch (IOException ignored) {
+            System.out.println("➡️  Coursier non trouvé. Installation locale...");
+        }
+        runAndCollect("bash", "-c", "curl -fLo cs " + CS_URL + " && chmod +x cs && sudo mv cs /usr/local/bin/");
+        runAndCollect("cs", "--version");
+        System.out.println("✔️  Coursier installé.");
+    }
+
+    /**
+     * Exécute cs fetch <dep> -p, attend la fin puis extrait tous les tokens
+     * qui se terminent par .jar (séparateurs : whitespace et ':').
+     */
+    private static List<String> fetchJarPathsFor(String dep) throws IOException, InterruptedException {
+        List<String> out = runAndCollect("cs", "fetch", dep, "-p");
+        StringBuilder sb = new StringBuilder();
+        for (String s : out) sb.append(s).append('\n');
+        String all = sb.toString();
+        String[] tokens = all.split("\\s+|:"); // couvre les cas "Downloading ..." et classpath
+        List<String> jars = new ArrayList<>();
+        for (String t : tokens) {
+            String s = t.trim();
+            if (s.isEmpty()) continue;
+            if (s.endsWith(".jar")) {
+                jars.add(s);
+            }
+        }
+        return jars;
+    }
+
+    /**
+     * Copie immédiatement le jar depuis le cache vers ./lib si absent.
+     * Affiche une ligne une fois la copie réalisée ou si le fichier est ignoré.
+     */
+    private static void copyJarImmediate(String jarPath) {
+        try {
+            Path src = Paths.get(jarPath);
+            if (!Files.exists(src)) {
+                System.out.println("⚠️  Chemin introuvable (skip) : " + jarPath);
+                return;
+            }
+            Path dest = Paths.get(LIB_DIR, src.getFileName().toString());
+            if (Files.exists(dest)) {
+                System.out.println("ℹ️  Existe, skip : " + dest.getFileName());
+                return;
+            }
+            Files.copy(src, dest, StandardCopyOption.COPY_ATTRIBUTES);
+            System.out.println("✅ Copié : " + dest.getFileName());
+        } catch (IOException e) {
+            System.err.println("❌ Erreur copie : " + jarPath + " -> " + e.getMessage());
+        }
+    }
+
+    /**
+     * Lance une commande et renvoie sa sortie (stdout+stderr) sous forme de liste de lignes.
+     * Lève IOException si le processus termine avec un code non nul.
+     */
+    private static List<String> runAndCollect(String... cmd) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.redirectErrorStream(true);
+        Process p = pb.start();
+        List<String> out = new ArrayList<>();
+        try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            String line;
+            while ((line = r.readLine()) != null) out.add(line);
+        }
+        int rc = p.waitFor();
+        if (rc != 0) throw new IOException("Commande échouée (" + String.join(" ", cmd) + "), rc=" + rc
+                + ". Sortie:\n" + String.join("\n", out));
+        return out;
+    }
+
+		/**
+		 * Supprime les .jar obsolètes dans ./lib qui ne sont plus référencés
+		 * par les dépendances actives ni leurs dépendances transitives.
+		 */
+		private static void cleanObsoleteJars(List<String> deps) throws IOException, InterruptedException {
+				System.out.println("🧹 Nettoyage des dépendances obsolètes...");
+				// 1. Obtenir le classpath complet via coursier
+				List<String> lines = new ArrayList<>();
+				lines.addAll(runAndCollect("bash", "-c",
+						"cs fetch -p $(grep -v '^#' " + DEP_FILE + " | grep -v '^$' | tr '\n' ' ')"));
+				String joined = String.join(" ", lines);
+				String[] parts = joined.split(":");
+				// 2. Construire un set des noms de fichiers valides
+				var valid = new java.util.HashSet<String>();
+				for (String s : parts) {
+						if (s.trim().endsWith(".jar")) {
+								valid.add(Paths.get(s.trim()).getFileName().toString());
+						}
+				}
+				// 3. Parcourir ./lib et supprimer ce qui n’est plus valide
+				try (var stream = Files.list(Paths.get(LIB_DIR))) {
+						stream.filter(p -> p.toString().endsWith(".jar"))
+									.forEach(jar -> {
+											String name = jar.getFileName().toString();
+											if (!valid.contains(name)) {
+													try {
+															Files.delete(jar);
+															System.out.println("🗑️  Supprimé : " + name);
+													} catch (IOException e) {
+															System.err.println("⚠️  Impossible de supprimer " + name + " : " + e.getMessage());
+													}
+											}
+									});
+				}
+				System.out.println("✅ Nettoyage terminé.");
+		}
+}
+
+# src/utils/DatabaseFactory.java
+
+package util;
+
+import io.micronaut.context.annotation.Factory;
+import jakarta.inject.Singleton;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Provides the JDBC connection bean backed by the .env configuration.
+ */
+@Factory
+public final class DatabaseFactory {
+
+    private static final Path ENV_FILE = Path.of("config/.env");
+
+    @Singleton
+    public Connection connection() throws SQLException, IOException {
+        Map<String, String> env = loadEnv();
+        String url = env.getOrDefault("DATABASE_URL", "jdbc:postgresql://localhost/plant_shop_java_micronaut");
+        String user = env.get("DATABASE_USER");
+        String pass = env.get("DATABASE_PASS");
+        if (user == null || pass == null) {
+            throw new IllegalStateException("DATABASE_USER et DATABASE_PASS doivent être définis dans config/.env");
+        }
+        return DriverManager.getConnection(url, user, pass);
+    }
+
+    private Map<String, String> loadEnv() throws IOException {
+        if (!Files.exists(ENV_FILE)) return Map.of();
+        Map<String, String> values = new HashMap<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(ENV_FILE.toFile()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int idx = line.indexOf('=');
+                if (idx > 0) {
+                    values.put(line.substring(0, idx).trim(), line.substring(idx + 1).trim());
+                }
+            }
+        }
+        return values;
+    }
+}
+
+# src/utils/PasswordUtil.java
+
+package util;
+
+// Import de la librairie jBCrypt.
+// Assurez-vous que le fichier jbcrypt-0.4.jar est dans votre dossier /lib
+// et ajouté au classpath dans le Makefile.
+import org.mindrot.jbcrypt.BCrypt;
+
+/**
+ * Classe utilitaire pour centraliser la gestion des mots de passe.
+ * Elle fournit des méthodes statiques pour hacher les mots de passe
+ * et vérifier leur correspondance avec un hash existant en utilisant l'algorithme BCrypt.
+ * Cette classe n'est pas destinée à être instanciée.
+ */
+public final class PasswordUtil {
+
+    /**
+     * Constructeur privé pour empêcher l'instanciation de cette classe utilitaire.
+     */
+    private PasswordUtil() {}
+
+    /**
+     * Hache un mot de passe en clair en utilisant BCrypt.
+     * Un "sel" (salt) est généré automatiquement par BCrypt.gensalt() et est inclus
+     * dans le hash résultant, ce qui rend chaque hash unique même pour des mots de passe identiques.
+     *
+     * @param plainTextPassword Le mot de passe en clair à hacher.
+     * @return Le hash du mot de passe (incluant le sel), prêt à être stocké en base de données.
+     */
+    public static String hashPassword(String plainTextPassword) {
+        // BCrypt.gensalt() génère un sel avec un coût de travail (work factor) par défaut.
+        // Un coût plus élevé rend le hachage plus lent et plus résistant aux attaques par force brute.
+        return BCrypt.hashpw(plainTextPassword, BCrypt.gensalt());
+    }
+
+    /**
+     * Vérifie si un mot de passe en clair correspond à un hash BCrypt stocké.
+     * La méthode extrait automatiquement le sel du hash pour effectuer la comparaison.
+     *
+     * @param plainTextPassword Le mot de passe en clair fourni par l'utilisateur lors de la connexion.
+     * @param hashedPassword    Le hash stocké en base de données pour cet utilisateur.
+     * @return true si le mot de passe en clair correspond au hash, false sinon.
+     */
+    public static boolean checkPassword(String plainTextPassword, String hashedPassword) {
+        // Gère les cas où le mot de passe ou le hash seraient nuls pour éviter les erreurs.
+        if (plainTextPassword == null || hashedPassword == null) {
+            return false;
+        }
+
+        try {
+            return BCrypt.checkpw(plainTextPassword, hashedPassword);
+        } catch (IllegalArgumentException e) {
+            // Cette exception peut être levée si le hash n'est pas dans un format BCrypt valide.
+            // Il est plus sûr de retourner false dans ce cas.
+            System.err.println("Avertissement : Tentative de vérification d'un hash non-BCrypt.");
+            return false;
+        }
+    }
+}
+
+# src/utils/ApiMapper.java
+
+package util;
+
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import model.Order;
+import model.OrderItem;
+import model.Plant;
+import model.User;
+import repository.PlantRepository;
+
+public final class ApiMapper {
+
+    private ApiMapper() {}
+
+    public static Map<String, Object> toUser(User user) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", user.id);
+        map.put("name", user.name);
+        map.put("email", user.email);
+        map.put("admin", user.isAdmin);
+        map.put("createdAt", toIso(user.createdAt));
+        return map;
+    }
+
+    public static Map<String, Object> toPlant(Plant plant) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", plant.id);
+        map.put("name", plant.name);
+        map.put("description", plant.description);
+        map.put("price", toDecimal(plant.price));
+        map.put("stock", plant.stock);
+        map.put("createdAt", toIso(plant.createdAt));
+        return map;
+    }
+
+    public static Map<String, Object> toOrder(Order order, List<Map<String, Object>> items) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", order.id);
+        map.put("userId", order.userId);
+        map.put("totalPrice", toDecimal(order.total));
+        map.put("status", order.status);
+        map.put("createdAt", toIso(order.createdAt));
+        map.put("orderItems", items);
+        return map;
+    }
+
+    public static Map<String, Object> toOrderItem(OrderItem item, Plant plant) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("id", item.id);
+        map.put("orderId", item.orderId);
+        map.put("plantId", item.plantId);
+        map.put("quantity", item.quantity);
+        map.put("price", toDecimal(item.price));
+        if (plant != null) {
+            map.put("plant", toPlant(plant));
+        }
+        return map;
+    }
+
+    public static List<Map<String, Object>> toOrderItems(List<OrderItem> items, PlantLookup lookup) throws Exception {
+        List<Map<String, Object>> mapped = new ArrayList<>(items.size());
+        for (OrderItem item : items) {
+            mapped.add(toOrderItem(item, lookup.find(item.plantId)));
+        }
+        return mapped;
+    }
+
+    private static Double toDecimal(BigDecimal value) {
+        return value == null ? null : value.doubleValue();
+    }
+
+    private static String toIso(Timestamp timestamp) {
+        return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
+    }
+
+    @FunctionalInterface
+    public interface PlantLookup {
+        Plant find(int id) throws Exception;
+    }
+}
+
+# src/Application.java
+
+import io.micronaut.runtime.Micronaut;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Application {
+
+    public static void main(String[] args) {
+        try {
+            Map<String, String> env = loadEnv();
+
+            // Lecture du port depuis .env (clé SERVER_ADDRESS)
+            int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));
+
+            if (!isPortAvailable(port)) {
+                System.err.println("❌ Le port " + port + " est déjà utilisé. Impossible de démarrer le serveur.");
+                System.exit(1);
+            }
+
+						Micronaut.build(args)
+										.banner(false)
+										.properties(Map.of("micronaut.server.port", String.valueOf(port)))
+										.start();
+
+            System.out.println("🚀 Serveur Micronaut démarré sur http://localhost:" + port);
+
+        } catch (Exception e) {
+            System.err.println("❌ Erreur au démarrage : " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    private static Map<String, String> loadEnv() {
+        Map<String, String> map = new HashMap<>();
+        try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                int i = line.indexOf('=');
+                if (i > 0) {
+                    map.put(line.substring(0, i).trim(), line.substring(i + 1).trim());
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("⚠️  Fichier config/.env introuvable, utilisation des valeurs par défaut.");
+        }
+        return map;
+    }
+
+    private static int parsePort(String value) {
+        try {
+            if (value.contains(":")) {
+                return Integer.parseInt(value.split(":")[1]);
+            }
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            System.err.println("⚠️  Valeur SERVER_ADDRESS invalide, utilisation du port 4100.");
+            return 4100;
+        }
+    }
+
+    private static boolean isPortAvailable(int port) {
+        try (ServerSocket socket = new ServerSocket(port)) {
+            socket.setReuseAddress(true);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+}
+
+# src/controllers/PlantController.java
+
+package controller;
+
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.annotation.*;
+import jakarta.inject.Inject;
+import java.sql.Connection;
+import java.text.Collator;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+import model.Plant;
+import repository.PlantRepository;
+import security.Guards;
+import util.ApiMapper;
+
+@Controller("/api")
+public class PlantController {
+
+    private final PlantRepository repo;
+    private static final Collator COLLATOR;
+    static {
+        COLLATOR = Collator.getInstance(Locale.ROOT);
+        COLLATOR.setStrength(Collator.PRIMARY);
+    }
+
+    @Inject
+    public PlantController(Connection db) {
+        this.repo = new PlantRepository(db);
+    }
+
+    @Get("/plants")
+    public List<?> listPublic() throws Exception {
+        return repo.list().stream()
+            .sorted(this::comparePlants)
+            .map(ApiMapper::toPlant)
+            .collect(Collectors.toList());
+    }
+
+    @Get("/admin/plants")
+    public List<?> listAdmin(HttpRequest<?> request) throws Exception {
+        Guards.requireAdmin(request);
+        return repo.list().stream()
+            .sorted(this::comparePlants)
+            .map(ApiMapper::toPlant)
+            .collect(Collectors.toList());
+    }
+
+    @Get("/plants/{id}")
+    public HttpResponse<?> show(@PathVariable int id) throws Exception {
+        Plant plant = repo.find(id);
+        return plant != null ? HttpResponse.ok(ApiMapper.toPlant(plant)) : HttpResponse.notFound();
+    }
+
+    @Post("/admin/plants")
+    public HttpResponse<?> create(@Body Plant plant, HttpRequest<?> request) throws Exception {
+        Guards.requireAdmin(request);
+        int id = repo.create(plant);
+        Plant created = repo.find(id);
+        return HttpResponse.created(ApiMapper.toPlant(created));
+    }
+
+    @Patch("/admin/plants/{id}")
+    public HttpResponse<?> update(@PathVariable int id, @Body Plant updatedData, HttpRequest<?> request) throws Exception {
+        Guards.requireAdmin(request);
+        Plant existing = repo.find(id);
+        if (existing == null) return HttpResponse.notFound();
+
+        if (updatedData.name != null) existing.name = updatedData.name;
+        if (updatedData.description != null) existing.description = updatedData.description;
+        if (updatedData.price != null) existing.price = updatedData.price;
+        if (updatedData.stock != 0) existing.stock = updatedData.stock;
+
+        repo.update(existing);
+        return HttpResponse.ok(ApiMapper.toPlant(repo.find(id)));
+    }
+
+    @Delete("/admin/plants/{id}")
+    public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
+        Guards.requireAdmin(request);
+        repo.delete(id);
+        return HttpResponse.ok();
+    }
+
+    private int comparePlants(Plant a, Plant b) {
+        return COLLATOR.compare(a.name, b.name);
+    }
+}
+
+# src/controllers/OrderController.java
+
+package controller;
+
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.annotation.*;
+import jakarta.inject.Inject;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import model.Order;
+import model.OrderItem;
+import model.Plant;
+import model.User;
+import repository.OrderItemRepository;
+import repository.OrderRepository;
+import repository.PlantRepository;
+import security.Guards;
+import util.ApiMapper;
+
+@Controller("/api/orders")
+public class OrderController {
+
+    private final OrderRepository repo;
+    private final OrderItemRepository itemRepo;
+    private final PlantRepository plantRepo;
+    private final Connection db;
+
+    @Inject
+    public OrderController(Connection db) {
+        this.db = db;
+        this.repo = new OrderRepository(db);
+        this.itemRepo = new OrderItemRepository(db);
+        this.plantRepo = new PlantRepository(db);
+    }
+
+    @Get
+    public List<?> list(HttpRequest<?> request) throws Exception {
+        User currentUser = Guards.requireUser(request);
+        List<Order> orders = currentUser.isAdmin ? repo.list() : repo.listByUser(currentUser.id);
+        orders.sort(Comparator.comparing(o -> o.createdAt, Comparator.reverseOrder()));
+
+        List<Map<String, Object>> payload = new ArrayList<>();
+        for (Order order : orders) {
+            List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(order.id), plantRepo::find);
+            payload.add(ApiMapper.toOrder(order, items));
+        }
+        return payload;
+    }
+
+    @Post
+    public HttpResponse<?> create(@Body Map<String, List<Map<String, Integer>>> body, HttpRequest<?> request) throws Exception {
+        User currentUser = Guards.requireUser(request);
+        List<Map<String, Integer>> itemsJson = body.get("items");
+        if (itemsJson == null || itemsJson.isEmpty()) {
+            return HttpResponse.badRequest(Map.of("error", "items requis"));
+        }
+
+        db.setAutoCommit(false);
+        try {
+            Order newOrder = new Order(currentUser.id, BigDecimal.ZERO, "pending");
+            int orderId = repo.create(newOrder);
+            BigDecimal total = BigDecimal.ZERO;
+
+            for (Map<String, Integer> it : itemsJson) {
+                total = total.add(createOrderItem(orderId, it));
+            }
+            repo.updateTotal(orderId, total);
+            db.commit();
+
+            Order finalOrder = repo.find(orderId);
+            List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(orderId), plantRepo::find);
+            return HttpResponse.created(ApiMapper.toOrder(finalOrder, items));
+        } catch (IllegalArgumentException ex) {
+            db.rollback();
+            return HttpResponse.badRequest(Map.of("error", ex.getMessage()));
+        } catch (Exception e) {
+            db.rollback();
+            throw e;
+        } finally {
+            db.setAutoCommit(true);
+        }
+    }
+
+    @Patch("/{id}")
+    public HttpResponse<?> patch(@PathVariable int id, @Body Map<String, String> body, HttpRequest<?> request) throws Exception {
+        Guards.requireAdmin(request);
+        if (repo.find(id) == null) return HttpResponse.notFound();
+        if (body.containsKey("status")) {
+            repo.updateStatus(id, body.get("status"));
+        }
+        Order updated = repo.find(id);
+        List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(id), plantRepo::find);
+        return HttpResponse.ok(ApiMapper.toOrder(updated, items));
+    }
+
+    @Delete("/{id}")
+    public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
+        Guards.requireAdmin(request);
+        itemRepo.deleteByOrder(id);
+        repo.delete(id);
+        return HttpResponse.ok();
+    }
+
+    private BigDecimal createOrderItem(int orderId, Map<String, Integer> itemMap) throws Exception {
+        int plantId = itemMap.get("plantId");
+        int quantity = itemMap.get("quantity");
+        Plant plant = plantRepo.find(plantId);
+        if (plant == null) throw new IllegalArgumentException("Plante " + plantId + " introuvable");
+        if (plant.stock < quantity) throw new IllegalArgumentException("Stock insuffisant pour " + plant.name);
+
+        plantRepo.updateStock(plant.id, plant.stock - quantity);
+        OrderItem item = new OrderItem(orderId, plantId, quantity, plant.price);
+        itemRepo.create(item);
+        return plant.price.multiply(BigDecimal.valueOf(quantity));
+    }
+}
+
+# src/controllers/UserController.java
+
+package controller;
+
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.annotation.*;
+import jakarta.inject.Inject;
+import java.sql.Connection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+import model.User;
+import repository.UserRepository;
+import security.Guards;
+import util.ApiMapper;
+import util.PasswordUtil;
+
+@Controller("/api")
+public class UserController {
+
+	private final UserRepository repo;
+
+	@Inject
+	public UserController(Connection db) {
+		this.repo = new UserRepository(db);
+	}
+
+	@Get("/admin/users")
+	public List<?> listAdmin(HttpRequest<?> request) throws Exception {
+		return listImpl(request);
+	}
+
+	@Get("/users")
+	public List<?> listAlias(HttpRequest<?> request) throws Exception {
+		return listImpl(request);
+	}
+
+	@Get("/users/{id}")
+	public HttpResponse<?> show(@PathVariable int id, HttpRequest<?> request) throws Exception {
+		User currentUser = Guards.requireUser(request);
+		if (currentUser.id != id && !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
+		User user = repo.find(id);
+		return user != null ? HttpResponse.ok(ApiMapper.toUser(user)) : HttpResponse.notFound();
+	}
+
+	@Post("/users")
+	public HttpResponse<?> create(@Body User userData, HttpRequest<?> request) throws Exception {
+		Guards.requireAdmin(request);
+		if (repo.findByEmailWithPassword(userData.email) != null) return HttpResponse.status(HttpStatus.CONFLICT);
+		userData.passwordHash = PasswordUtil.hashPassword(userData.passwordHash);
+		int newId = repo.create(userData);
+		return HttpResponse.created(ApiMapper.toUser(repo.find(newId)));
+	}
+
+	@Patch("/users/{id}")
+	public HttpResponse<?> updateUser(@PathVariable int id, @Body User updatedData, HttpRequest<?> request) throws Exception {
+		return updateImpl(id, updatedData, request);
+	}
+
+	@Patch("/admin/users/{id}")
+	public HttpResponse<?> updateAdminAlias(@PathVariable int id, @Body User updatedData, HttpRequest<?> request) throws Exception {
+		return updateImpl(id, updatedData, request);
+	}
+
+	@Delete("/users/{id}")
+	public HttpResponse<?> destroyUser(@PathVariable int id, HttpRequest<?> request) throws Exception {
+		return destroyImpl(id, request);
+	}
+
+	@Delete("/admin/users/{id}")
+	public HttpResponse<?> destroyAdminAlias(@PathVariable int id, HttpRequest<?> request) throws Exception {
+		return destroyImpl(id, request);
+	}
+
+	private List<?> listImpl(HttpRequest<?> request) throws Exception {
+		Guards.requireAdmin(request);
+		return repo.list().stream()
+			.sorted(userComparator())
+			.map(ApiMapper::toUser)
+			.collect(Collectors.toList());
+	}
+
+	private HttpResponse<?> updateImpl(int id, User updatedData, HttpRequest<?> request) throws Exception {
+		User currentUser = Guards.requireUser(request);
+		if (currentUser.id != id && !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
+		User existing = repo.find(id);
+		if (existing == null) return HttpResponse.notFound();
+		if (updatedData.name != null) existing.name = updatedData.name;
+		if (updatedData.email != null) existing.email = updatedData.email;
+		if (currentUser.isAdmin && updatedData.isAdmin != existing.isAdmin) existing.isAdmin = updatedData.isAdmin;
+		repo.update(existing);
+		return HttpResponse.ok(ApiMapper.toUser(repo.find(id)));
+	}
+
+	private HttpResponse<?> destroyImpl(int id, HttpRequest<?> request) throws Exception {
+		Guards.requireAdmin(request);
+		repo.delete(id);
+		return HttpResponse.ok();
+	}
+
+	private Comparator<User> userComparator() {
+		return Comparator.comparing((User u) -> !u.isAdmin)
+			.thenComparing(u -> u.name, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
+	}
+}
+
+# src/controllers/AuthController.java
+
+package controller;
+
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.MutableHttpResponse;
+import io.micronaut.http.annotation.*;
+import io.micronaut.http.cookie.Cookie;
+import jakarta.inject.Inject;
+import java.sql.Connection;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import model.User;
+import repository.UserRepository;
+import util.ApiMapper;
+import util.PasswordUtil;
+import io.micronaut.http.HttpRequest;
+
+@Controller("/api/auth")
+public class AuthController {
+
+    private final UserRepository userRepo;
+    private static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
+
+    @Inject
+    public AuthController(Connection db) {
+        this.userRepo = new UserRepository(db);
+    }
+
+    public static Map<String, Integer> getSessions() {
+        return sessions;
+    }
+
+    @Post("/register")
+    public HttpResponse<?> register(@Body Map<String, String> body) throws Exception {
+        String name = body.get("name");
+        String email = body.get("email");
+        String password = body.get("password");
+
+        if (userRepo.findByEmailWithPassword(email) != null) {
+            return HttpResponse.status(HttpStatus.CONFLICT).body(Map.of("error", "Cet email est déjà utilisé."));
+        }
+
+        User newUser = new User(name, email, PasswordUtil.hashPassword(password), false);
+        int newId = userRepo.create(newUser);
+        User created = userRepo.find(newId);
+        return HttpResponse.created(ApiMapper.toUser(created));
+    }
+
+    @Post("/login")
+    public MutableHttpResponse<?> login(@Body Map<String, String> body) throws Exception {
+        User user = userRepo.findByEmailWithPassword(body.get("email"));
+        if (user == null || !PasswordUtil.checkPassword(body.get("password"), user.passwordHash)) {
+            return HttpResponse.unauthorized().body(Map.of("error", "Identifiants invalides"));
+        }
+
+        String sessionId = UUID.randomUUID().toString();
+        sessions.put(sessionId, user.id);
+
+        Cookie cookie = Cookie.of("session_id", sessionId)
+            .path("/")
+            .httpOnly(true)
+            .maxAge(3600);
+
+        return HttpResponse.status(HttpStatus.CREATED)
+            .cookie(cookie)
+            .body(ApiMapper.toUser(user));
+    }
+
+    @Post("/logout")
+    public HttpResponse<?> logout(@CookieValue("session_id") String sessionId) {
+        if (sessionId != null) {
+            sessions.remove(sessionId);
+        }
+        Cookie expiredCookie = Cookie.of("session_id", "").path("/").maxAge(0);
+        return HttpResponse.noContent().cookie(expiredCookie);
+    }
+
+    @Get("/me")
+    public HttpResponse<?> me(HttpRequest<?> request) {
+        User user = request.getAttribute("user", User.class).orElse(null);
+        if (user == null) {
+            return HttpResponse.unauthorized();
+        }
+        return HttpResponse.ok(ApiMapper.toUser(user));
+    }
+}
+
+# src/security/RequestLoggingFilter.java
+
+package security;
+
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.MutableHttpResponse;
+import io.micronaut.http.annotation.Filter;
+import io.micronaut.http.filter.HttpServerFilter;
+import io.micronaut.http.filter.ServerFilterChain;
+import jakarta.inject.Singleton;
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
+
+/**
+ * Log each HTTP request and its response status for easier debugging.
+ */
+@Singleton
+@Filter("/**")
+public final class RequestLoggingFilter implements HttpServerFilter {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RequestLoggingFilter.class);
+
+    @Override
+    public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
+        long start = System.currentTimeMillis();
+        LOG.info("→ {} {}", request.getMethodName(), request.getPath());
+        return Mono.from(chain.proceed(request))
+            .map(response -> {
+                long duration = System.currentTimeMillis() - start;
+                LOG.info("← {} {} ({} ms)", request.getMethodName(), response.getStatus(), duration);
+                return response;
+            });
+    }
+}
+
+# src/security/SessionAuthFilter.java
+
+package security;
+
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.MutableHttpResponse;
+import io.micronaut.http.annotation.Filter;
+import io.micronaut.http.filter.HttpServerFilter;
+import io.micronaut.http.filter.ServerFilterChain;
+import jakarta.inject.Singleton;
+import java.sql.Connection;
+import java.util.Map;
+import controller.AuthController;
+import model.User;
+import org.reactivestreams.Publisher;
+import reactor.core.publisher.Mono;
+import repository.UserRepository;
+
+@Singleton
+@Filter("/**")
+public class SessionAuthFilter implements HttpServerFilter {
+
+    private static final String SESSION_COOKIE = "session_id";
+    private final UserRepository userRepo;
+    private final CorsConfig cors;
+
+    public SessionAuthFilter(Connection db, CorsConfig cors) {
+        this.userRepo = new UserRepository(db);
+        this.cors = cors;
+    }
+
+    @Override
+    public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
+        String origin = request.getHeaders().get("Origin");
+        if (cors.isAllowed(origin) && cors.isPreflight(request)) {
+            return Mono.just(cors.preflight(request, origin));
+        }
+        return authenticate(request)
+            .flatMap(req -> Mono.from(chain.proceed(req)))
+            .map(response -> cors.apply(response, origin, request));
+    }
+
+    private Mono<HttpRequest<?>> authenticate(HttpRequest<?> request) {
+        return Mono.fromCallable(() -> {
+            request.getCookies()
+                .findCookie(SESSION_COOKIE)
+                .ifPresent(cookie -> attachUser(request, cookie.getValue()));
+            return request;
+        });
+    }
+
+    private void attachUser(HttpRequest<?> request, String sessionId) {
+        Map<String, Integer> sessions = AuthController.getSessions();
+        Integer userId = sessions.get(sessionId);
+        if (userId == null) return;
+        try {
+            User user = userRepo.find(userId);
+            if (user != null) {
+                request.setAttribute("user", user);
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur DB dans le filtre: " + e.getMessage());
+        }
+    }
+}
+
+# src/security/Guards.java
+
+package security;
+
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.exceptions.HttpStatusException;
+import model.User;
+
+public final class Guards {
+
+    private Guards() {}
+
+    public static User requireUser(HttpRequest<?> request) {
+        User user = request.getAttribute("user", User.class).orElse(null);
+        if (user == null) {
+            throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "Authentification requise");
+        }
+        return user;
+    }
+
+    public static User requireAdmin(HttpRequest<?> request) {
+        User user = requireUser(request);
+        if (!user.isAdmin) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
+        }
+        return user;
+    }
+}
+
+# src/security/CorsConfig.java
+
+package security;
+
+import io.micronaut.http.HttpRequest;
+import io.micronaut.http.HttpResponse;
+import io.micronaut.http.MutableHttpResponse;
+import jakarta.inject.Singleton;
+import java.util.Set;
+
+/**
+ * Centralises CORS rules and header wiring.
+ */
+@Singleton
+public final class CorsConfig {
+
+    private static final Set<String> ALLOWED = Set.of(
+        "http://localhost:8300",
+        "http://127.0.0.1:8300"
+    );
+
+    public boolean isAllowed(String origin) {
+        return origin != null && ALLOWED.contains(origin);
+    }
+
+    public boolean isPreflight(HttpRequest<?> request) {
+        return "OPTIONS".equals(request.getMethodName());
+    }
+
+    public MutableHttpResponse<?> preflight(HttpRequest<?> request, String origin) {
+        MutableHttpResponse<?> response = HttpResponse.ok();
+        apply(response, origin, request);
+        response.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+        String requested = request.getHeaders().get("Access-Control-Request-Headers");
+        response.header("Access-Control-Allow-Headers", requested != null ? requested : "Content-Type, Cookie");
+        return response;
+    }
+
+    public <T> MutableHttpResponse<T> apply(MutableHttpResponse<T> response, String origin, HttpRequest<?> request) {
+        if (!isAllowed(origin)) return response;
+        response.header("Access-Control-Allow-Origin", origin);
+        response.header("Access-Control-Allow-Credentials", "true");
+        response.header("Vary", "Origin");
+        if (isPreflight(request)) {
+            response.header("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+            String requested = request.getHeaders().get("Access-Control-Request-Headers");
+            response.header("Access-Control-Allow-Headers", requested != null ? requested : "Content-Type, Cookie");
+        }
+        return response;
+    }
+}
+
+# src/models/OrderItem.java
+
+package model;
+
+import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
+import java.math.BigDecimal;
+
+@Introspected
+@Serdeable
+public final class OrderItem {
+    public int id;
+    public int orderId;
+    public int plantId;
+    public int quantity;
+    public BigDecimal price;
+
+    public OrderItem(int id, int orderId, int plantId, int quantity, BigDecimal price) {
+        this.id = id;
+        this.orderId = orderId;
+        this.plantId = plantId;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
+    public OrderItem(int orderId, int plantId, int quantity, BigDecimal price) {
+        this(0, orderId, plantId, quantity, price);
+    }
+}
+
+# src/models/User.java
+
+package model;
+
+import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
+import java.sql.Timestamp;
+
+@Introspected
+@Serdeable
+public final class User {
+    public int id;
+    public String name;
+    public String email;
+    public String passwordHash; // null si non chargé
+    public boolean isAdmin;
+    public Timestamp createdAt; // null lors de l’insertion
+
+    /* constructeur complet (lecture DB) */
+    public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.isAdmin = isAdmin;
+        this.createdAt = createdAt;
+    }
+
+    /* constructeur pour insertion (id et createdAt générés par la DB) */
+    public User(String name, String email, String passwordHash, boolean isAdmin) {
+        this(0, name, email, passwordHash, isAdmin, null);
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean admin) {
+        this.isAdmin = admin;
+    }
+}
+
+# src/models/Order.java
+
+package model;
+
+import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+@Introspected
+@Serdeable
+public final class Order {
+    public int id;
+    public int userId;
+    public BigDecimal total;
+    public String status;
+    public Timestamp createdAt; // null lors de l’insertion
+
+    public Order(int id, int userId, BigDecimal total, String status, Timestamp createdAt) {
+        this.id = id;
+        this.userId = userId;
+        this.total = total;
+        this.status = status;
+        this.createdAt = createdAt;
+    }
+
+    public Order(int userId, BigDecimal total, String status) {
+        this(0, userId, total, status, null);
+    }
+}
+
+# src/models/Plant.java
+
+package model;
+
+import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+
+@Introspected
+@Serdeable
+public final class Plant {
+    public int id;
+    public String name;
+    public String description; // nullable
+    public BigDecimal price;
+    public int stock;
+    public Timestamp createdAt; // null lors de l’insertion
+
+    public Plant(int id, String name, String description, BigDecimal price, int stock, Timestamp createdAt) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.stock = stock;
+        this.createdAt = createdAt;
+    }
+
+    public Plant(String name, String description, BigDecimal price, int stock) {
+        this(0, name, description, price, stock, null);
+    }
+}
+
+# src/repositories/OrderRepository.java
+
+package repository;
+
+import io.micronaut.context.annotation.Bean;
+import jakarta.inject.Singleton;
+import java.math.BigDecimal;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import model.Order;
+
+@Singleton
+public final class OrderRepository extends BaseRepository<Order> {
+
+    public OrderRepository(Connection db) {
+        super(db, "orders");
+    }
+
+    @Override
+    protected Order mapFromResultSet(ResultSet rs) throws SQLException {
+        return new Order(
+            rs.getInt("id"),
+            rs.getInt("user_id"),
+            rs.getBigDecimal("total"),
+            rs.getString("status"),
+            rs.getTimestamp("created_at")
+        );
+    }
+
+    public int create(Order o) throws SQLException {
+        String sql = "INSERT INTO orders(user_id, total, status) VALUES (?, ?, ?)";
+        try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, o.userId);
+            ps.setBigDecimal(2, o.total);
+            ps.setString(3, o.status);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    public void updateTotal(int id, BigDecimal total) throws SQLException {
+        String sql = "UPDATE orders SET total=? WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setBigDecimal(1, total);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateStatus(int id, String status) throws SQLException {
+        String sql = "UPDATE orders SET status=? WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }
+    }
+
+    public List<Order> listByUser(int userId) throws SQLException {
+        List<Order> results = new ArrayList<>();
+        String sql = "SELECT * FROM orders WHERE user_id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    results.add(mapFromResultSet(rs));
+                }
+            }
+        }
+        return results;
+    }
+}
+
+# src/repositories/BaseRepository.java
+
+package repository;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class BaseRepository<T> {
+
+    protected final Connection db;
+    protected final String tableName;
+
+    public BaseRepository(Connection db, String tableName) {
+        this.db = db;
+        this.tableName = tableName;
+    }
+
+    protected abstract T mapFromResultSet(ResultSet rs) throws SQLException;
+
+    public T find(int id) throws SQLException {
+        String sql = "SELECT * FROM " + tableName + " WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapFromResultSet(rs);
+                }
+                return null;
+            }
+        }
+    }
+
+    public List<T> list() throws SQLException {
+        List<T> results = new ArrayList<>();
+        String sql = "SELECT * FROM " + tableName;
+        try (Statement st = db.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                results.add(mapFromResultSet(rs));
+            }
+        }
+        return results;
+    }
+
+    public void delete(int id) throws SQLException {
+        String sql = "DELETE FROM " + tableName + " WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ps.executeUpdate();
+        }
+    }
+}
+
+# src/repositories/OrderItemRepository.java
+
+package repository;
+
+import io.micronaut.context.annotation.Bean;
+import jakarta.inject.Singleton;
+import java.sql.*;
+import java.util.*;
+import model.OrderItem;
+
+@Singleton
+public final class OrderItemRepository extends BaseRepository<OrderItem> {
+
+    public OrderItemRepository(Connection db) {
+        super(db, "order_items");
+    }
+
+    @Override
+    protected OrderItem mapFromResultSet(ResultSet rs) throws SQLException {
+        return new OrderItem(
+            rs.getInt("id"),
+            rs.getInt("order_id"),
+            rs.getInt("plant_id"),
+            rs.getInt("quantity"),
+            rs.getBigDecimal("price")
+        );
+    }
+
+    public int create(OrderItem it) throws SQLException {
+        String sql = "INSERT INTO order_items(order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, it.orderId);
+            ps.setInt(2, it.plantId);
+            ps.setInt(3, it.quantity);
+            ps.setBigDecimal(4, it.price);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    public List<OrderItem> listByOrder(int orderId) throws SQLException {
+        List<OrderItem> out = new ArrayList<>();
+        String sql = "SELECT * FROM order_items WHERE order_id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    out.add(mapFromResultSet(rs));
+                }
+            }
+        }
+        return out;
+    }
+
+    public void deleteByOrder(int orderId) throws SQLException {
+        String sql = "DELETE FROM order_items WHERE order_id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setInt(1, orderId);
+            ps.executeUpdate();
+        }
+    }
+}
+
+# src/repositories/UserRepository.java
+
+package repository;
+
+import io.micronaut.context.annotation.Bean;
+import jakarta.inject.Singleton;
+import java.sql.*;
+import model.User;
+
+@Singleton
+public final class UserRepository extends BaseRepository<User> {
+
+    public UserRepository(Connection db) {
+        super(db, "users");
+    }
+
+    @Override
+    protected User mapFromResultSet(ResultSet rs) throws SQLException {
+        return new User(
+            rs.getInt("id"),
+            rs.getString("name"),
+            rs.getString("email"),
+            null, // passwordHash est volontairement laissé à null
+            rs.getBoolean("is_admin"),
+            rs.getTimestamp("created_at")
+        );
+    }
+
+    public User findByEmailWithPassword(String email) throws SQLException {
+        String sql = "SELECT * FROM users WHERE email=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new User(
+                        rs.getInt("id"),
+                        rs.getString("name"),
+                        rs.getString("email"),
+                        rs.getString("password_hash"),
+                        rs.getBoolean("is_admin"),
+                        rs.getTimestamp("created_at")
+                    );
+                }
+                return null;
+            }
+        }
+    }
+
+    public int create(User u) throws SQLException {
+        String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, u.name);
+            ps.setString(2, u.email);
+            ps.setString(3, u.passwordHash);
+            ps.setBoolean(4, u.isAdmin);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    public void update(User u) throws SQLException {
+        boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
+        String sql = updatePassword
+            ? "UPDATE users SET name=?, email=?, is_admin=?, password_hash=? WHERE id=?"
+            : "UPDATE users SET name=?, email=?, is_admin=? WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setString(1, u.name);
+            ps.setString(2, u.email);
+            ps.setBoolean(3, u.isAdmin);
+            if (updatePassword) {
+                ps.setString(4, u.passwordHash);
+                ps.setInt(5, u.id);
+            } else {
+                ps.setInt(4, u.id);
+            }
+            ps.executeUpdate();
+        }
+    }
+}
+
+# src/repositories/PlantRepository.java
+
+package repository;
+
+import io.micronaut.context.annotation.Bean;
+import jakarta.inject.Singleton;
+import java.sql.*;
+import model.Plant;
+import java.math.BigDecimal;
+
+@Singleton
+public final class PlantRepository extends BaseRepository<Plant> {
+
+    public PlantRepository(Connection db) {
+        super(db, "plants");
+    }
+
+    @Override
+    protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
+        return new Plant(
+            rs.getInt("id"),
+            rs.getString("name"),
+            rs.getString("description"),
+            rs.getBigDecimal("price"),
+            rs.getInt("stock"),
+            rs.getTimestamp("created_at")
+        );
+    }
+
+    public int create(Plant p) throws SQLException {
+        String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, p.name);
+            ps.setString(2, p.description);
+            ps.setBigDecimal(3, p.price);
+            ps.setInt(4, p.stock);
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    public void update(Plant p) throws SQLException {
+        String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setString(1, p.name);
+            ps.setString(2, p.description);
+            ps.setBigDecimal(3, p.price);
+            ps.setInt(4, p.stock);
+            ps.setInt(5, p.id);
+            ps.executeUpdate();
+        }
+    }
+
+    public void updateStock(int id, int newStock) throws SQLException {
+        String sql = "UPDATE plants SET stock=? WHERE id=?";
+        try (PreparedStatement ps = db.prepareStatement(sql)) {
+            ps.setInt(1, newStock);
+            ps.setInt(2, id);
+            ps.executeUpdate();
+        }
+    }
+}
+
+# src/db/Seed.java
+
+package db;
+
+import java.io.*;
+import java.math.BigDecimal;
+import java.sql.*;
+import java.util.*;
+import util.PasswordUtil;
+
+/** Seed aligné sur la version C++ : noms réalistes, descriptions, prix cohérents,
+    décrémentation du stock, génération users.txt                                     */
+public final class Seed {
+
+	/* ---------- Lecture .env ---------- */
+	private static Map<String,String> env() throws IOException {
+		Map<String,String> out = new HashMap<>();
+		try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
+			String l;
+			while ((l = br.readLine()) != null) {
+				int i = l.indexOf('=');
+				if (i > 0) out.put(l.substring(0, i).trim(), l.substring(i + 1).trim());
+			}
+		}
+		return out;
+	}
+
+	/* ---------- Constantes ---------- */
+	private static final int NB_ADMINS = 3;
+	private static final int NB_USERS  = 20;
+	private static final int NB_PLANTS = 50;
+	private static final int MAX_ORDERS_PER_USER = 7;
+
+	private static final String[] PLANT_NAMES = {
+		"Rose","Tulipe","Lavande","Orchidée","Basilic","Menthe","Pivoine","Tournesol",
+		"Cactus (Echinopsis)","Bambou","Camomille (Matricaria recutita)","Sauge (Salvia officinalis)",
+		"Romarin (Rosmarinus officinalis)","Thym (Thymus vulgaris)","Laurier-rose (Nerium oleander)",
+		"Aloe vera","Jasmin (Jasminum officinale)","Hortensia (Hydrangea macrophylla)",
+		"Marguerite (Leucanthemum vulgare)","Géranium (Pelargonium graveolens)",
+		"Fuchsia (Fuchsia magellanica)","Anémone (Anemone coronaria)","Azalée (Rhododendron simsii)",
+		"Chrysanthème (Chrysanthemum morifolium)","Digitale pourpre (Digitalis purpurea)",
+		"Glaïeul (Gladiolus hortulanus)","Lys (Lilium candidum)","Violette (Viola odorata)",
+		"Muguet (Convallaria majalis)","Iris (Iris germanica)","Lavandin (Lavandula intermedia)",
+		"Érable du Japon (Acer palmatum)","Citronnelle (Cymbopogon citratus)","Pin parasol (Pinus pinea)",
+		"Cyprès (Cupressus sempervirens)","Olivier (Olea europaea)","Papyrus (Cyperus papyrus)",
+		"Figuier (Ficus carica)","Eucalyptus (Eucalyptus globulus)","Acacia (Acacia dealbata)",
+		"Bégonia (Begonia semperflorens)","Calathea (Calathea ornata)","Dieffenbachia (Dieffenbachia seguine)",
+		"Ficus elastica","Sansevieria (Sansevieria trifasciata)","Philodendron (Philodendron scandens)",
+		"Yucca (Yucca elephantipes)","Zamioculcas zamiifolia","Monstera deliciosa",
+		"Pothos (Epipremnum aureum)","Agave (Agave americana)","Cactus raquette (Opuntia ficus-indica)"
+	};
+
+	private static final String[] FIRST = {
+		"Alice","Bruno","Cathy","David","Emma","Franck",
+		"Gwen","Hugo","Inès","Jules","Katia","Léo"
+	};
+	private static final String[] LAST = {
+		"Dupont","Martin","Bernard","Petit","Robert","Richard","Durand","Moreau","Roux","Fournier"
+	};
+	private static final String[] EMAIL_DOMAINS = {"gmail.com","yahoo.com","hotmail.com"};
+
+	private static final Random RNG = new Random();
+
+	/* ---------- Helpers ---------- */
+	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
+
+	private static String loremSentence() {
+		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
+				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};
+		int n = rnd(10,14);
+		StringBuilder sb = new StringBuilder();
+		for(int i=0;i<n;i++){
+			String w = words[rnd(0,words.length-1)];
+			sb.append(i==0? Character.toUpperCase(w.charAt(0))+w.substring(1): w);
+			sb.append(i==n-1?'.':' ');
+		}
+		return sb.toString();
+	}
+
+	/* ---------- Main ---------- */
+	public static void main(String[] args) throws Exception {
+
+		Map<String,String> cfg = env();
+		Connection db = DriverManager.getConnection(
+				cfg.get("DATABASE_URL"), cfg.get("DATABASE_USER"), cfg.get("DATABASE_PASS")
+		);
+
+		/* Nettoyage */
+		System.out.println("🧹 Nettoyage de la base de données…");
+		try(Statement st=db.createStatement()){
+			st.execute("TRUNCATE order_items,orders,plants,users RESTART IDENTITY CASCADE");
+		}
+		System.out.println("✅ Base vidée.");
+
+		/* ---------- Users ---------- */
+		PreparedStatement insUser = db.prepareStatement(
+			"INSERT INTO users(name,email,password_hash,is_admin) VALUES (?,?,?,?)",
+			Statement.RETURN_GENERATED_KEYS);
+
+		List<Integer> adminIds = new ArrayList<>();
+		List<Integer> userIds  = new ArrayList<>();
+		List<String>  credsOut = new ArrayList<>();
+		credsOut.add("Administrateurs :\n");
+
+		// Admins
+		System.out.println("👑 Création des administrateurs…");
+		for(int i=0;i<NB_ADMINS;i++){
+			String name = pick(FIRST)+" "+pick(LAST);
+			String email = "admin"+(i+1)+"@planteshop.com";
+			String pwd = "password";
+			insUser.setString(1,name);
+			insUser.setString(2,email);
+			insUser.setString(3,hash(pwd));
+			insUser.setBoolean(4,true);
+			insUser.executeUpdate();
+			try(ResultSet rs=insUser.getGeneratedKeys()){ rs.next(); adminIds.add(rs.getInt(1)); }
+			credsOut.add(email+" "+pwd);
+		}
+		System.out.println("✅ "+adminIds.size()+" admins.");
+
+		credsOut.add("");
+		credsOut.add("Utilisateurs :\n");
+
+		// Users
+		System.out.println("👥 Création des utilisateurs…");
+		for(int i=0;i<NB_USERS;i++){
+			String first = pick(FIRST), last = pick(LAST);
+			String email = first.toLowerCase()+"_"+last.toLowerCase()+rnd(20,99)+"@"+pick(EMAIL_DOMAINS);
+			String pwd = randPwd();
+			String name = first+" "+last;
+			insUser.setString(1,name);
+			insUser.setString(2,email);
+			insUser.setString(3,hash(pwd));
+			insUser.setBoolean(4,false);
+			insUser.executeUpdate();
+			try(ResultSet rs=insUser.getGeneratedKeys()){ rs.next(); userIds.add(rs.getInt(1)); }
+			credsOut.add(email+" "+pwd);
+		}
+		System.out.println("✅ "+userIds.size()+" utilisateurs.");
+
+		/* ---------- Plants ---------- */
+		PreparedStatement insPlant = db.prepareStatement(
+			"INSERT INTO plants(name,description,price,stock) VALUES (?,?,?,?)",
+			Statement.RETURN_GENERATED_KEYS);
+
+		System.out.println("🌱 Création des plantes…");
+		class PlantInfo{ int id,price,stock; PlantInfo(int id,int p,int s){this.id=id;price=p;stock=s;} }
+		List<PlantInfo> plants = new ArrayList<>();
+
+		for(int i=0;i<NB_PLANTS;i++){
+			String base = PLANT_NAMES[i % PLANT_NAMES.length];
+			String name = NB_PLANTS>PLANT_NAMES.length ? base+" "+(i/PLANT_NAMES.length+1): base;
+			int price = rnd(5,50);
+			int stock = rnd(5,30);
+			insPlant.setString(1,name);
+			insPlant.setString(2,loremSentence());
+			insPlant.setBigDecimal(3,new BigDecimal(price));
+			insPlant.setInt(4,stock);
+			insPlant.executeUpdate();
+			try(ResultSet rs=insPlant.getGeneratedKeys()){
+				rs.next();
+				int id = rs.getInt(1);
+				plants.add(new PlantInfo(id,price,stock));
+			}
+		}
+		System.out.println("✅ "+plants.size()+" plantes.");
+
+		/* ---------- Orders & items ---------- */
+		PreparedStatement insOrder = db.prepareStatement(
+				"INSERT INTO orders(user_id,total,status) VALUES (?,?,?)",
+				Statement.RETURN_GENERATED_KEYS);
+		PreparedStatement insItem = db.prepareStatement(
+			"INSERT INTO order_items(order_id,plant_id,quantity,price) VALUES (?,?,?,?)");
+		PreparedStatement updPlantStock = db.prepareStatement(
+			"UPDATE plants SET stock = stock - ? WHERE id = ?");
+
+		String[] statusArr = {"confirmed","pending","shipped","delivered"};
+		int totalOrders = 0;
+
+		System.out.println("🛒 Création des commandes…");
+		for(Integer uid : userIds){
+			int nb = rnd(0,MAX_ORDERS_PER_USER);
+			for(int k=0;k<nb;k++){
+				insOrder.setInt(1,uid);
+				insOrder.setBigDecimal(2,BigDecimal.ZERO); // placeholder
+				insOrder.setString(3,statusArr[rnd(0,3)]);
+				insOrder.executeUpdate();
+				int orderId;
+				try(ResultSet rs=insOrder.getGeneratedKeys()){ rs.next(); orderId = rs.getInt(1); }
+
+				BigDecimal total = BigDecimal.ZERO;
+				for(int it=0;it<2;it++){
+					// sélection plante avec stock >0
+					List<PlantInfo> avail = plants.stream().filter(p->p.stock>0).toList();
+					if(avail.isEmpty()) break;
+					PlantInfo p = avail.get(rnd(0,avail.size()-1));
+					int qty = Math.min(rnd(1,5),p.stock);
+					insItem.setInt(1,orderId);
+					insItem.setInt(2,p.id);
+					insItem.setInt(3,qty);
+					insItem.setBigDecimal(4,new BigDecimal(p.price));
+					insItem.executeUpdate();
+					// stock --
+					p.stock -= qty;
+					updPlantStock.setInt(1,qty);
+					updPlantStock.setInt(2,p.id);
+					updPlantStock.executeUpdate();
+					total = total.add(new BigDecimal(p.price*qty));
+				}
+				try(PreparedStatement up=db.prepareStatement("UPDATE orders SET total=? WHERE id=?")){
+					up.setBigDecimal(1,total);
+					up.setInt(2,orderId);
+					up.executeUpdate();
+				}
+				totalOrders++;
+			}
+		}
+		System.out.println("✅ "+totalOrders+" commandes.");
+
+		/* ---------- users.txt ---------- */
+		try(PrintWriter pw=new PrintWriter("users.txt")){
+			credsOut.forEach(pw::println);
+		}
+		System.out.println("✍️ Fichier users.txt généré ("+credsOut.size()+" lignes).");
+
+		db.close();
+		System.out.println("🎉 Seed terminée !");
+	}
+}
+
+# Tree du dossier
+
+.
+├── bin
+│   ├── Application.class
+│   ├── controller
+│   │   ├── $AuthController$Definition$Exec.class
+│   │   ├── $AuthController$Definition.class
+│   │   ├── $OrderController$Definition$Exec.class
+│   │   ├── $OrderController$Definition.class
+│   │   ├── $PlantController$Definition$Exec.class
+│   │   ├── $PlantController$Definition.class
+│   │   ├── $UserController$Definition$Exec.class
+│   │   ├── $UserController$Definition.class
+│   │   ├── AuthController.class
+│   │   ├── OrderController.class
+│   │   ├── PlantController.class
+│   │   └── UserController.class
+│   ├── META-INF
+│   │   └── micronaut
+│   │       ├── io.micronaut.core.beans.BeanIntrospectionReference
+│   │       │   ├── model.$Order$Introspection
+│   │       │   ├── model.$OrderItem$Introspection
+│   │       │   ├── model.$Plant$Introspection
+│   │       │   └── model.$User$Introspection
+│   │       └── io.micronaut.inject.BeanDefinitionReference
+│   │           ├── controller.$AuthController$Definition
+│   │           ├── controller.$OrderController$Definition
+│   │           ├── controller.$PlantController$Definition
+│   │           ├── controller.$UserController$Definition
+│   │           ├── repository.$OrderItemRepository$Definition
+│   │           ├── repository.$OrderRepository$Definition
+│   │           ├── repository.$PlantRepository$Definition
+│   │           ├── repository.$UserRepository$Definition
+│   │           ├── security.$CorsConfig$Definition
+│   │           ├── security.$RequestLoggingFilter$Definition
+│   │           ├── security.$SessionAuthFilter$Definition
+│   │           ├── util.$DatabaseFactory$Connection0$Definition
+│   │           └── util.$DatabaseFactory$Definition
+│   ├── model
+│   │   ├── $Order$Introspection.class
+│   │   ├── $OrderItem$Introspection.class
+│   │   ├── $Plant$Introspection.class
+│   │   ├── $User$Introspection.class
+│   │   ├── Order.class
+│   │   ├── OrderItem.class
+│   │   ├── Plant.class
+│   │   └── User.class
+│   ├── repository
+│   │   ├── $OrderItemRepository$Definition.class
+│   │   ├── $OrderRepository$Definition.class
+│   │   ├── $PlantRepository$Definition.class
+│   │   ├── $UserRepository$Definition.class
+│   │   ├── BaseRepository.class
+│   │   ├── OrderItemRepository.class
+│   │   ├── OrderRepository.class
+│   │   ├── PlantRepository.class
+│   │   └── UserRepository.class
+│   ├── security
+│   │   ├── $CorsConfig$Definition.class
+│   │   ├── $RequestLoggingFilter$Definition.class
+│   │   ├── $SessionAuthFilter$Definition.class
+│   │   ├── CorsConfig.class
+│   │   ├── Guards.class
+│   │   ├── RequestLoggingFilter.class
+│   │   └── SessionAuthFilter.class
+│   └── util
+│       ├── $DatabaseFactory$Connection0$Definition.class
+│       ├── $DatabaseFactory$Definition.class
+│       ├── ApiMapper$PlantLookup.class
+│       ├── ApiMapper.class
+│       ├── DatabaseFactory.class
+│       └── PasswordUtil.class
+├── config
+│   ├── dependencies.txt
+│   └── InstallCoursier.java
+├── lib
+│   ├── asm-9.5.jar
+│   ├── asm-commons-9.5.jar
+│   ├── asm-tree-9.5.jar
+│   ├── checker-qual-3.42.0.jar
+│   ├── jackson-annotations-2.17.2.jar
+│   ├── jackson-core-2.17.2.jar
+│   ├── jackson-databind-2.17.2.jar
+│   ├── jackson-datatype-jdk8-2.17.2.jar
+│   ├── jackson-datatype-jsr310-2.17.2.jar
+│   ├── jakarta.annotation-api-2.1.1.jar
+│   ├── jakarta.inject-api-2.0.1.jar
+│   ├── jakarta.validation-api-3.0.2.jar
+│   ├── javaparser-core-3.26.1.jar
+│   ├── javaparser-symbol-solver-core-3.26.1.jar
+│   ├── jbcrypt-0.4.jar
+│   ├── json-20210307.jar
+│   ├── micronaut-aop-4.6.3.jar
+│   ├── micronaut-buffer-netty-4.6.3.jar
+│   ├── micronaut-context-4.6.3.jar
+│   ├── micronaut-context-propagation-4.6.3.jar
+│   ├── micronaut-core-4.6.3.jar
+│   ├── micronaut-core-processor-4.6.3.jar
+│   ├── micronaut-core-reactive-4.6.3.jar
+│   ├── micronaut-discovery-core-4.6.3.jar
+│   ├── micronaut-http-4.6.3.jar
+│   ├── micronaut-http-netty-4.6.3.jar
+│   ├── micronaut-http-server-4.6.3.jar
+│   ├── micronaut-http-server-netty-4.6.3.jar
+│   ├── micronaut-inject-4.6.3.jar
+│   ├── micronaut-inject-java-4.6.3.jar
+│   ├── micronaut-jackson-core-4.6.3.jar
+│   ├── micronaut-jackson-databind-4.6.3.jar
+│   ├── micronaut-json-core-4.6.3.jar
+│   ├── micronaut-retry-4.6.3.jar
+│   ├── micronaut-router-4.6.3.jar
+│   ├── micronaut-runtime-4.6.3.jar
+│   ├── micronaut-serde-api-2.11.1.jar
+│   ├── micronaut-serde-jackson-2.11.1.jar
+│   ├── micronaut-serde-support-2.11.1.jar
+│   ├── micronaut-validation-4.12.0.jar
+│   ├── netty-buffer-4.1.99.Final.jar
+│   ├── netty-codec-4.1.99.Final.jar
+│   ├── netty-codec-http2-4.1.99.Final.jar
+│   ├── netty-codec-http-4.1.99.Final.jar
+│   ├── netty-common-4.1.99.Final.jar
+│   ├── netty-handler-4.1.99.Final.jar
+│   ├── netty-resolver-4.1.99.Final.jar
+│   ├── netty-transport-4.1.99.Final.jar
+│   ├── netty-transport-native-unix-common-4.1.99.Final.jar
+│   ├── postgresql-42.7.4.jar
+│   ├── reactive-streams-1.0.3.jar
+│   ├── reactor-core-3.5.0.jar
+│   ├── slf4j-api-2.0.12.jar
+│   ├── slf4j-simple-2.0.12.jar
+│   └── snakeyaml-2.2.jar
+├── Makefile
+├── projet.txt
+├── src
+│   ├── Application.java
+│   ├── controllers
+│   │   ├── AuthController.java
+│   │   ├── OrderController.java
+│   │   ├── PlantController.java
+│   │   └── UserController.java
+│   ├── db
+│   │   ├── schema.sql
+│   │   └── Seed.java
+│   ├── models
+│   │   ├── OrderItem.java
+│   │   ├── Order.java
+│   │   ├── Plant.java
+│   │   └── User.java
+│   ├── repositories
+│   │   ├── BaseRepository.java
+│   │   ├── OrderItemRepository.java
+│   │   ├── OrderRepository.java
+│   │   ├── PlantRepository.java
+│   │   └── UserRepository.java
+│   ├── security
+│   │   ├── CorsConfig.java
+│   │   ├── Guards.java
+│   │   ├── RequestLoggingFilter.java
+│   │   └── SessionAuthFilter.java
+│   └── utils
+│       ├── ApiMapper.java
+│       ├── DatabaseFactory.java
+│       └── PasswordUtil.java
+├── test
+│   └── Test.java
+├── tmp.txt
+└── users.txt
+
+21 directories, 145 files

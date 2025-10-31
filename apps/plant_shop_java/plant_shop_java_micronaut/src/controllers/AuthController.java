@@ -14,6 +14,7 @@ import model.User;
 import repository.UserRepository;
 import util.ApiMapper;
 import util.PasswordUtil;
+import io.micronaut.http.HttpRequest;
 
 @Controller("/api/auth")
 public class AuthController {

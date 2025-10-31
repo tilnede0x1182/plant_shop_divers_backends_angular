@@ -1,0 +1,26 @@
+name: plant_shop_java_micronaut
+dependencies:
+  # cœur Micronaut
+  - io.micronaut:micronaut-runtime:4.6.3
+  - io.micronaut:micronaut-http-server-netty:4.6.3
+  - io.micronaut:micronaut-http:4.6.3
+  - io.micronaut:micronaut-inject:4.6.3
+  - io.micronaut:micronaut-context:4.6.3
+
+  # gestion JSON
+  - com.fasterxml.jackson.core:jackson-databind:2.17.2
+  - com.fasterxml.jackson.core:jackson-core:2.17.2
+  - com.fasterxml.jackson.core:jackson-annotations:2.17.2
+
+  # base de données PostgreSQL
+  - org.postgresql:postgresql:42.7.4
+
+  # sécurité / hashage
+  - org.mindrot:jbcrypt:0.4
+
+  # logs simples
+  - org.slf4j:slf4j-api:2.0.12
+  - org.slf4j:slf4j-simple:2.0.12
+
+  # parsing YAML pour InstallLibs.java
+  - org.yaml:snakeyaml:2.2

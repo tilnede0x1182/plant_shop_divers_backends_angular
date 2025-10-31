@@ -15,6 +15,8 @@ dependencies:
   - io.micronaut.http.HttpRequest
   - io.micronaut:micronaut-aop:4.6.3
   - io.micronaut:micronaut-core-processor:4.6.3
+  - io.micronaut:micronaut-validation:3.10.2
+  - jakarta.validation:jakarta.validation-api:3.0.2
 
   # gestion JSON
   - com.fasterxml.jackson.core:jackson-databind:2.17.2

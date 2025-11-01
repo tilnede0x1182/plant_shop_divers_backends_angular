@@ -1,5 +1,6 @@
 #include "OrderController.h"
 #include <drogon/orm/Mapper.h>
+#include <drogon/orm/Exception.h>
 #include <drogon/utils/Utilities.h>
 #include "AuthController.h"
 
@@ -125,10 +126,15 @@ void OrderController::listOrders(const HttpRequestPtr& req,
 			auto items = mi.findBy(Criteria(OrderItems::Cols::_order_id, o.getValueOfId()));
 			Json::Value jItems(Json::arrayValue);
 			for (auto &it : items) {
-				auto jItem = it.toJson();
-				auto plant = mp.findByPrimaryKey(it.getValueOfPlantId());
-				jItem["plant"] = plant.toJson();
-				jItems.append(jItem);
+				try {
+					auto plant = mp.findByPrimaryKey(it.getValueOfPlantId());
+					auto jItem = it.toJson();
+					jItem["plant"] = plant.toJson();
+					jItems.append(jItem);
+				} catch (const DrogonDbException &) {
+					// Plante supprimée : on ignore l'item pour ne pas casser la réponse
+					continue;
+				}
 			}
 			jsonOrder["orderItems"] = jItems;
 			arr.append(jsonOrder);

@@ -65,7 +65,11 @@ public final class ApiMapper {
     public static List<Map<String, Object>> toOrderItems(List<OrderItem> items, PlantLookup lookup) throws Exception {
         List<Map<String, Object>> mapped = new ArrayList<>(items.size());
         for (OrderItem item : items) {
-            mapped.add(toOrderItem(item, lookup.find(item.plantId)));
+            Plant plant = lookup.find(item.plantId);
+            if (plant == null) {
+                continue;
+            }
+            mapped.add(toOrderItem(item, plant));
         }
         return mapped;
     }

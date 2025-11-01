@@ -17,7 +17,7 @@ public class Main {
         System.setProperty("bootstrap", "launch.AppBootstrap");
         System.setProperty("controllerConfig", "launch.AppControllerConfig");
         System.setProperty("dbconfig", "util.DbConfig");
-        System.setProperty("rootPackage", "controllers");
+        System.setProperty("rootPackage", "app");
 
         Map<String, String> env = loadEnv();
 				int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));

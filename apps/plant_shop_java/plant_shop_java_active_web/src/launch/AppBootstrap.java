@@ -15,7 +15,7 @@ public final class AppBootstrap extends Bootstrap {
         Map<String, String> envValues = DatabaseFactory.loadEnv();
         envValues.forEach((key, value) -> System.setProperty(key, value));
 
-        System.setProperty("activeweb.root_package", "controllers");
+        System.setProperty("activeweb.root_package", "app");
         System.setProperty("activeweb.encoding", "UTF-8");
     }
 }

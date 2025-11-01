@@ -1,4 +1,4 @@
-package controllers;
+package app.controllers;
 
 import models.User;
 import org.javalite.activejdbc.LazyList;

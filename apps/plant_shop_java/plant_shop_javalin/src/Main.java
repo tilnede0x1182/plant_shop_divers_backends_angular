@@ -1,5 +1,6 @@
 // src/Main.java
 import io.javalin.Javalin;
+import util.JavalinJsonMapper;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Map;

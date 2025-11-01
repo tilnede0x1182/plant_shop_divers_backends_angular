@@ -29,7 +29,7 @@ compile:
 		src/repositories/*.java \
 		src/security/*.java \
 		src/controllers/*.java \
-		src/Application.java
+		src/Main.java
 run:
 	java -cp "$(CLASSPATH)" Application
 

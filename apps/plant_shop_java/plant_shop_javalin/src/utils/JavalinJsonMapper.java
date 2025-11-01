@@ -1,4 +1,6 @@
-// src/JavalinJsonMapper.java
+package util;
+
+// src/utils/JavalinJsonMapper.java
 import io.javalin.json.JsonMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;

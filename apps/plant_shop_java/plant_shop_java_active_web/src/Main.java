@@ -55,6 +55,44 @@ public class Main {
         // Active le CORS avant le filtre ActiveWeb
         CorsUtil.enable(context);
 
+				context.addFilter(new org.eclipse.jetty.servlet.FilterHolder(new javax.servlet.Filter() {
+						@Override
+						public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse res, javax.servlet.FilterChain chain)
+										throws java.io.IOException, javax.servlet.ServletException {
+								javax.servlet.http.HttpServletRequest hreq = (javax.servlet.http.HttpServletRequest) req;
+								javax.servlet.http.HttpServletResponse hres = (javax.servlet.http.HttpServletResponse) res;
+								try {
+										chain.doFilter(req, res);
+								} catch (Throwable t) {
+										System.err.println(hreq.getMethod() + " " + hreq.getRequestURI()
+												+ " -> 500 (exception: " + t.getClass().getSimpleName() + ": " + t.getMessage() + ")");
+										if (t instanceof java.io.IOException) {
+												throw (java.io.IOException) t;
+										} else if (t instanceof javax.servlet.ServletException) {
+												throw (javax.servlet.ServletException) t;
+										} else {
+												throw new javax.servlet.ServletException(t);
+										}
+								}
+								int code = hres.getStatus();
+								if (code >= 400) {
+										String qs = hreq.getQueryString();
+										String path = (qs == null) ? hreq.getRequestURI() : (hreq.getRequestURI() + "?" + qs);
+										System.out.println(hreq.getMethod() + " " + path + " -> " + code);
+								}
+						}
+
+						@Override
+						public void init(javax.servlet.FilterConfig filterConfig) throws javax.servlet.ServletException {
+								// Rien à initialiser
+						}
+
+						@Override
+						public void destroy() {
+								// Rien à nettoyer
+						}
+				}), "/*", java.util.EnumSet.of(javax.servlet.DispatcherType.REQUEST));
+
         // Configuration du filtre ActiveWeb
         FilterHolder filterHolder = new FilterHolder(new RequestDispatcher());
         filterHolder.setInitParameter("exclusions", "css,images,js");

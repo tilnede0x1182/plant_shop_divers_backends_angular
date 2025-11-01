@@ -27,8 +27,8 @@ struct Order {
 		Json::Value j;
 		j["id"] = id;
 		j["status"] = status;
-		j["total"] = total;
-		j["created_at"] = created_at;
+		j["totalPrice"] = total;
+		j["createdAt"] = created_at;
 
 		Json::Value arr(Json::arrayValue);
 		for (const auto& it : items) arr.append(it.toJson());

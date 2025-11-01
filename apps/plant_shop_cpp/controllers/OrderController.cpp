@@ -9,6 +9,8 @@
 #include "../models/Plants.h"
 #include "../models/Orders.h"
 #include "../models/OrderItems.h"
+#include "../models_struct/Order.h"
+#include "../models_struct/OrderItem.h"
 #include <unordered_map>
 
 using namespace drogon_model::plant_shop_cpp;
@@ -69,9 +71,38 @@ void OrderController::createOrder(const HttpRequestPtr& req,
 			mp.update(plant);
 		}
 
-		Json::Value resp;
-		resp["id"] = o.getValueOfId();
-		auto r = HttpResponse::newHttpJsonResponse(resp);
+		// Recharger la commande complète pour renvoyer des données cohérentes
+		auto fullOrder = mo.findByPrimaryKey(o.getValueOfId());
+		auto items = mi.findBy(Criteria(OrderItems::Cols::_order_id, o.getValueOfId()));
+		std::vector<OrderItem> mappedItems;
+		mappedItems.reserve(items.size());
+		for (auto &it : items) {
+			try {
+				auto plant = mp.findByPrimaryKey(it.getValueOfPlantId());
+				OrderItem out{
+					it.getValueOfId(),
+					it.getValueOfOrderId(),
+					it.getValueOfPlantId(),
+					it.getValueOfQuantity(),
+					std::stod(it.getValueOfPrice()),
+					plant.getValueOfName()
+				};
+				mappedItems.push_back(out);
+			} catch (const DrogonDbException &) {
+				continue;
+			}
+		}
+
+		Order summary{
+			fullOrder.getValueOfId(),
+			fullOrder.getValueOfUserId(),
+			std::stod(fullOrder.getValueOfTotal()),
+			fullOrder.getValueOfStatus(),
+			fullOrder.getValueOfCreatedAt().toDbString(),
+			std::move(mappedItems)
+		};
+
+		auto r = HttpResponse::newHttpJsonResponse(summary.toJson());
 		r->setStatusCode(k201Created);
 		cb(r);
 	} catch (...) { cb(err(500,"Erreur serveur")); }
@@ -118,7 +149,11 @@ void OrderController::listOrders(const HttpRequestPtr& req,
 
 		Json::Value arr(Json::arrayValue);
 		for (auto &o : ordersDesc) {
-			auto jsonOrder = o.toJson();
+			Json::Value jsonOrder;
+			jsonOrder["id"] = o.getValueOfId();
+			jsonOrder["status"] = o.getValueOfStatus();
+			jsonOrder["totalPrice"] = std::stod(o.getValueOfTotal());
+			jsonOrder["createdAt"] = o.getValueOfCreatedAt().toDbString();
 			// injecte la numérotation chronologique (1 = plus ancienne)
 			jsonOrder["chronological_number"] = chronoIdx[o.getValueOfId()];
 
@@ -128,9 +163,15 @@ void OrderController::listOrders(const HttpRequestPtr& req,
 			for (auto &it : items) {
 				try {
 					auto plant = mp.findByPrimaryKey(it.getValueOfPlantId());
-					auto jItem = it.toJson();
-					jItem["plant"] = plant.toJson();
-					jItems.append(jItem);
+					OrderItem out{
+						it.getValueOfId(),
+						it.getValueOfOrderId(),
+						it.getValueOfPlantId(),
+						it.getValueOfQuantity(),
+						std::stod(it.getValueOfPrice()),
+						plant.getValueOfName()
+					};
+					jItems.append(out.toJson());
 				} catch (const DrogonDbException &) {
 					// Plante supprimée : on ignore l'item pour ne pas casser la réponse
 					continue;

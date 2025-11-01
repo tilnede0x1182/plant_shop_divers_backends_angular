@@ -25,6 +25,7 @@ compile:
 	mkdir -p bin
 	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
+		src/launch/*.java \
 		src/models/*.java \
 		src/controllers/*.java \
 		src/Application.java -Xlint:unchecked

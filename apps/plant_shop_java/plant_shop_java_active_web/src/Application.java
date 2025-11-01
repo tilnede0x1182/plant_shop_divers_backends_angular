@@ -14,6 +14,11 @@ import utils.CorsUtil;
 public class Application {
 
     public static void main(String[] args) throws Exception {
+        System.setProperty("activeweb.bootstrap", "launch.AppBootstrap");
+        System.setProperty("activeweb.controller_config", "launch.AppControllerConfig");
+        System.setProperty("activeweb.db_config", "utils.DbConfig");
+        System.setProperty("activeweb.root_package", "controllers");
+
         Map<String, String> env = loadEnv();
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));
 

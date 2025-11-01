@@ -17,6 +17,7 @@ public class Main {
         System.setProperty("bootstrap", "launch.AppBootstrap");
         System.setProperty("controllerConfig", "launch.AppControllerConfig");
         System.setProperty("dbconfig", "util.DbConfig");
+        System.setProperty("route_config", "launch.AppRouteConfig");
         System.setProperty("rootPackage", "app");
 
         Map<String, String> env = loadEnv();

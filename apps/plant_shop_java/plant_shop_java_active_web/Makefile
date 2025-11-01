@@ -24,6 +24,7 @@ CLASSPATH = bin:lib/*
 compile:
 	mkdir -p bin
 	cp src/activeweb.properties bin/
+	cp src/activejdbc_models.properties bin/
 	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
 		src/launch/*.java \

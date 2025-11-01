@@ -53,7 +53,13 @@ public final class UserController extends AppController {
             String name = (String) body.get("name");
             String email = (String) body.get("email");
             String password = (String) body.get("password");
-            Boolean isAdmin = (Boolean) body.getOrDefault("is_admin", Boolean.FALSE);
+            Boolean isAdmin = extractBoolean(body, "is_admin");
+            if (isAdmin == null) {
+                isAdmin = extractBoolean(body, "admin");
+            }
+            if (isAdmin == null) {
+                isAdmin = Boolean.FALSE;
+            }
 
             if (name == null || email == null || password == null) {
                 respondJson(400, JsonHelper.toJsonString(Map.of("error", "name, email et password requis")));
@@ -102,8 +108,19 @@ public final class UserController extends AppController {
                 user.set("password_hash", PasswordUtil.hashPassword((String) body.get("password")));
             }
 
-            if (body.containsKey("is_admin") && Boolean.TRUE.equals(current.getBoolean("is_admin"))) {
-                user.set("is_admin", Boolean.TRUE.equals(body.get("is_admin")));
+            Boolean adminFlag = null;
+            if (body.containsKey("is_admin")) {
+                adminFlag = extractBoolean(body, "is_admin");
+            } else if (body.containsKey("admin")) {
+                adminFlag = extractBoolean(body, "admin");
+            }
+            if (adminFlag != null && Boolean.TRUE.equals(current.getBoolean("is_admin"))) {
+                user.set("is_admin", adminFlag);
+            }
+
+            if (!user.isModified()) {
+                respondJson(200, user.toJson(false, "id", "name", "email", "is_admin"));
+                return;
             }
 
             if (!user.saveIt()) {
@@ -128,6 +145,18 @@ public final class UserController extends AppController {
             user.delete();
             respondEmpty(200);
         });
+    }
+
+    private Boolean extractBoolean(Map<String, Object> body, String key) {
+        Object value = body.get(key);
+        if (value instanceof Boolean b) {
+            return b;
+        }
+        if (value instanceof String s) {
+            if ("true".equalsIgnoreCase(s)) return Boolean.TRUE;
+            if ("false".equalsIgnoreCase(s)) return Boolean.FALSE;
+        }
+        return null;
     }
 
     private Integer parseId(String value) {

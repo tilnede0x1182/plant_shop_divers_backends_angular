@@ -6,6 +6,7 @@ module Controllers.OrderController (routes) where
 
 import           Control.Exception                 (SomeException, try)
 import           Control.Monad.IO.Class            (liftIO)
+import           Data.Maybe                        (catMaybes)
 import           Database.PostgreSQL.Simple
 import           Network.HTTP.Types.Status         (status200)
 import           Web.Scotty
@@ -33,7 +34,10 @@ orderSelectById = orderSelectBase <> " WHERE id = ?"
 
 orderItemsSelectByOrder :: Query
 orderItemsSelectByOrder =
-  "SELECT id, order_id, plant_id, quantity, price::int AS price FROM order_items WHERE order_id = ?"
+  "SELECT oi.id, oi.order_id, oi.plant_id, oi.quantity, oi.price::int AS price \
+  \FROM order_items oi \
+  \JOIN plants p ON p.id = oi.plant_id \
+  \WHERE oi.order_id = ?"
 
 routes :: Connection -> ScottyM ()
 routes conn = do
@@ -130,7 +134,7 @@ processItem conn orderId item = do
 fetchFullOrder :: Connection -> Order -> IO FullOrder
 fetchFullOrder conn order = do
   items <- liftIO $ query conn orderItemsSelectByOrder (Only $ orderId order)
-  fullItems <- mapM (fetchFullOrderItem conn) (items :: [OrderItem])
+  fullItems <- catMaybes <$> mapM (fetchFullOrderItem conn) (items :: [OrderItem])
   return FullOrder
     { fullOrderId = orderId order
     , fullOrderUserId = orderUserId order
@@ -140,16 +144,19 @@ fetchFullOrder conn order = do
     , fullOrderItems = fullItems
     }
 
-fetchFullOrderItem :: Connection -> OrderItem -> IO FullOrderItem
+fetchFullOrderItem :: Connection -> OrderItem -> IO (Maybe FullOrderItem)
 fetchFullOrderItem conn item = do
-  [plant] <- liftIO $ query conn plantSelectSql (Only $ OI.orderItemPlantId item)
-  return FullOrderItem
-    { fullOrderItemId = orderItemId item
-    , fullOrderItemOrderId = orderItemOrderId item
-    , fullOrderItemQuantity = OI.orderItemQuantity item
-    , fullOrderItemPrice = orderItemPrice item
-    , fullOrderItemPlant = plant
-    }
+  plants <- liftIO $ query conn plantSelectSql (Only $ OI.orderItemPlantId item)
+  case plants of
+    [plant] ->
+      return $ Just FullOrderItem
+        { fullOrderItemId = orderItemId item
+        , fullOrderItemOrderId = orderItemOrderId item
+        , fullOrderItemQuantity = OI.orderItemQuantity item
+        , fullOrderItemPrice = orderItemPrice item
+        , fullOrderItemPlant = plant
+        }
+    _ -> return Nothing
 
 -- Helper pour extraire une valeur Maybe d'une liste (plus sûr que `head`)
 listToMaybe :: [a] -> Maybe a

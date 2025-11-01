@@ -10,7 +10,7 @@ DB = plant_shop_haskell
 # Server
 ## ────────────────
 
-build:
+compile:
 	$(STACK) build
 
 run:
@@ -18,7 +18,7 @@ run:
 
 prod: run
 
-build-run: build run
+compile_run: compile run
 
 clean:
 	$(STACK) clean

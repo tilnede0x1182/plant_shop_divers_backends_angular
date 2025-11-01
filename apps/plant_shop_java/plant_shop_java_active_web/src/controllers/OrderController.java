@@ -13,6 +13,8 @@ import org.javalite.activeweb.annotations.POST;
 import org.javalite.common.JsonHelper;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,26 +32,7 @@ public final class OrderController extends AppController {
 
             List<Map<String, Object>> payload = new ArrayList<>();
             for (Order order : orders) {
-                Map<String, Object> orderMap = order.toMap();
-                LazyList<OrderItem> items = order.getAll(OrderItem.class);
-                List<Map<String, Object>> itemMaps = new ArrayList<>();
-                for (OrderItem item : items) {
-                    Plant plant = item.parent(Plant.class);
-                    if (plant == null) {
-                        continue;
-                    }
-                    Map<String, Object> itemMap = item.toMap();
-                    Map<String, Object> plantMap = new LinkedHashMap<>();
-                    plantMap.put("id", plant.get("id"));
-                    plantMap.put("name", plant.get("name"));
-                    plantMap.put("price", plant.get("price"));
-                    plantMap.put("stock", plant.get("stock"));
-                    plantMap.put("description", plant.get("description"));
-                    itemMap.put("plant", plantMap);
-                    itemMaps.add(itemMap);
-                }
-                orderMap.put("orderItems", itemMaps);
-                payload.add(orderMap);
+                payload.add(serializeOrder(order));
             }
 
             respondJson(200, JsonHelper.toJsonString(payload));
@@ -109,7 +92,7 @@ public final class OrderController extends AppController {
             }
 
             Order created = Order.findById(order.getId());
-            respondJson(201, created.toJson(false));
+            respondJson(201, JsonHelper.toJsonString(serializeOrder(created)));
         });
     }
 
@@ -128,7 +111,7 @@ public final class OrderController extends AppController {
             if (status instanceof String) {
                 order.set("status", status).saveIt();
             }
-            respondJson(200, order.toJson(false));
+            respondJson(200, JsonHelper.toJsonString(serializeOrder(order)));
         });
     }
 
@@ -153,5 +136,54 @@ public final class OrderController extends AppController {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private Map<String, Object> serializeOrder(Order order) {
+        Map<String, Object> orderMap = new LinkedHashMap<>();
+        orderMap.put("id", order.getLongId());
+        orderMap.put("userId", order.getInteger("user_id"));
+        orderMap.put("status", order.getString("status"));
+        orderMap.put("totalPrice", toDecimal(order.getBigDecimal("total")));
+        orderMap.put("createdAt", toIso(order.getTimestamp("created_at")));
+        orderMap.put("orderItems", serializeItems(order));
+        return orderMap;
+    }
+
+    private List<Map<String, Object>> serializeItems(Order order) {
+        LazyList<OrderItem> items = order.getAll(OrderItem.class);
+        List<Map<String, Object>> serialized = new ArrayList<>();
+        for (OrderItem item : items) {
+            Plant plant = item.parent(Plant.class);
+            if (plant == null) {
+                continue;
+            }
+            Map<String, Object> itemMap = new LinkedHashMap<>();
+            itemMap.put("id", item.getLongId());
+            itemMap.put("orderId", item.getInteger("order_id"));
+            itemMap.put("plantId", item.getInteger("plant_id"));
+            itemMap.put("quantity", item.getInteger("quantity"));
+            itemMap.put("price", toDecimal(item.getBigDecimal("price")));
+            itemMap.put("plant", serializePlant(plant));
+            serialized.add(itemMap);
+        }
+        return serialized;
+    }
+
+    private Map<String, Object> serializePlant(Plant plant) {
+        Map<String, Object> plantMap = new LinkedHashMap<>();
+        plantMap.put("id", plant.getLongId());
+        plantMap.put("name", plant.getString("name"));
+        plantMap.put("price", toDecimal(plant.getBigDecimal("price")));
+        plantMap.put("stock", plant.getInteger("stock"));
+        plantMap.put("description", plant.getString("description"));
+        return plantMap;
+    }
+
+    private Double toDecimal(BigDecimal value) {
+        return value == null ? null : value.doubleValue();
+    }
+
+    private String toIso(Timestamp timestamp) {
+        return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 }

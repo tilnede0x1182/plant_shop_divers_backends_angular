@@ -106,10 +106,11 @@ public final class OrderController extends AppController {
     }
 
     @PATCH
-    public void update(int id) {
+    public void update() {
         runAction(() -> {
             requireAdmin();
-            Order order = Order.findById(id);
+            Integer orderId = parseId(getId());
+            Order order = (orderId == null) ? null : Order.findById(orderId);
             if (order == null) {
                 respondJson(404, JsonHelper.toJsonString(Map.of("error", "Commande introuvable")));
                 return;
@@ -124,10 +125,11 @@ public final class OrderController extends AppController {
     }
 
     @DELETE
-    public void destroy(int id) {
+    public void destroy() {
         runAction(() -> {
             requireAdmin();
-            Order order = Order.findById(id);
+            Integer orderId = parseId(getId());
+            Order order = (orderId == null) ? null : Order.findById(orderId);
             if (order == null) {
                 respondJson(404, JsonHelper.toJsonString(Map.of("error", "Commande introuvable")));
                 return;
@@ -135,5 +137,13 @@ public final class OrderController extends AppController {
             order.deleteCascade();
             respondEmpty(200);
         });
+    }
+
+    private Integer parseId(String value) {
+        try {
+            return value == null ? null : Integer.valueOf(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

@@ -194,6 +194,30 @@ compile-test-backend-micronaut:
 	make -C apps/plant_shop_java/plant_shop_java_micronaut compile-test
 
 # ======================================================
+# ☕ Backend Java ActiveWeb
+# ======================================================
+
+run-backend-java-activeweb:
+	make -C apps/plant_shop_java/plant_shop_java_active_web run
+
+compile-backend-java-activeweb:
+	make -C apps/plant_shop_java/plant_shop_java_active_web compile
+
+seed-backend-java-activeweb:
+	make -C apps/plant_shop_java/plant_shop_java_active_web seed
+
+compile-run-backend-java-activeweb: compile-backend-java-activeweb run-backend-java-activeweb
+
+prod-backend-java-activeweb:
+	make -C apps/plant_shop_java/plant_shop_java_active_web build-dev
+
+test-backend-java-activeweb:
+	make -C apps/plant_shop_java/plant_shop_java_active_web tests
+
+compile-test-backend-java-activeweb:
+	make -C apps/plant_shop_java/plant_shop_java_active_web compile-test
+
+# ======================================================
 # 🛠️ Backend C (HTTPServer)
 # ======================================================
 

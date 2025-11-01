@@ -72,7 +72,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **C++ (Drogon)** : serveur HTTP moderne en C++17, basé sur le framework `Drogon` avec ORM intégré, compilation via `CMake`.
 * **Java (Natif)** : serveur HTTP minimaliste en Java 21, utilisant `HttpServer` natif, MVC manuel.
 * **Java (Javalin)** : backend Java léger, utilisant le framework `Javalin` pour les routes HTTP.
-* **Java (Micronaut)** : backend Java moderne, utilisant le framework Micronaut, avec injection de dépendances et définition des routes REST par annotations.
+* **Java (Java Lite avec active web)** : backend Java MVC utilisant le framework JavaLite ActiveWeb avec Jetty pour le serveur HTTP et ActiveJDBC pour la base de données.
 * **Python (Flask)** : backend minimaliste REST avec `Flask`, connexion PostgreSQL via `psycopg2`.
 * **Haskell (Stack)** : serveur HTTP en style fonctionnel avec `Scotty`, architecture MVC claire, ORM léger via `postgresql-simple`, sécurité JWT
 

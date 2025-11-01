@@ -7,8 +7,13 @@ pub struct Order {
     pub id: i32,
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
+    #[serde(
+        rename = "totalPrice",
+        serialize_with = "crate::plants::models::serialize_bigdecimal_as_i32"
+    )]
     pub total: BigDecimal,
     pub status: String,
+    #[serde(rename = "createdAt")]
     pub created_at: DateTime<Utc>,
 }
 
@@ -28,6 +33,7 @@ pub struct OrderItemWithPlant {
 	pub quantity: i32,
 	#[serde(serialize_with = "crate::plants::models::serialize_bigdecimal_as_i32")]
 	pub price: BigDecimal,
+	#[serde(rename = "plantId")]
 	pub plant_id: i32,
 	pub plant: PlantBasic,
 }
@@ -38,8 +44,13 @@ pub struct OrderWithItems {
 		#[allow(dead_code)]
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
+    #[serde(
+        rename = "totalPrice",
+        serialize_with = "crate::plants::models::serialize_bigdecimal_as_i32"
+    )]
     pub total: BigDecimal,
     pub status: String,
+    #[serde(rename = "createdAt")]
     pub created_at: DateTime<Utc>,
     #[serde(rename = "orderItems")]
     pub items: Vec<OrderItemWithPlant>,

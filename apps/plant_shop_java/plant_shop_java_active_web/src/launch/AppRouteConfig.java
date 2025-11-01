@@ -36,6 +36,11 @@ public final class AppRouteConfig extends AbstractRouteConfig {
             .get()
             .action("show");
 
+        route("/admin/users/{id}")
+            .to(UserController.class)
+            .get()
+            .action("show");
+
         route("/users")
             .to(UserController.class)
             .post()
@@ -46,7 +51,17 @@ public final class AppRouteConfig extends AbstractRouteConfig {
             .patch()
             .action("update");
 
+        route("/admin/users/{id}")
+            .to(UserController.class)
+            .patch()
+            .action("update");
+
         route("/users/{id}")
+            .to(UserController.class)
+            .delete()
+            .action("destroy");
+
+        route("/admin/users/{id}")
             .to(UserController.class)
             .delete()
             .action("destroy");

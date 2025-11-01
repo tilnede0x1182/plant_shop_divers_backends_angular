@@ -14,6 +14,7 @@ import org.javalite.common.JsonHelper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import util.ApiMapper;
@@ -33,11 +34,18 @@ public final class OrderController extends AppController {
                 LazyList<OrderItem> items = order.getAll(OrderItem.class);
                 List<Map<String, Object>> itemMaps = new ArrayList<>();
                 for (OrderItem item : items) {
-                    Map<String, Object> itemMap = item.toMap();
                     Plant plant = item.parent(Plant.class);
-                    if (plant != null) {
-                        itemMap.put("plant", plant.toMap());
+                    if (plant == null) {
+                        continue;
                     }
+                    Map<String, Object> itemMap = item.toMap();
+                    Map<String, Object> plantMap = new LinkedHashMap<>();
+                    plantMap.put("id", plant.get("id"));
+                    plantMap.put("name", plant.get("name"));
+                    plantMap.put("price", plant.get("price"));
+                    plantMap.put("stock", plant.get("stock"));
+                    plantMap.put("description", plant.get("description"));
+                    itemMap.put("plant", plantMap);
                     itemMaps.add(itemMap);
                 }
                 orderMap.put("orderItems", itemMaps);

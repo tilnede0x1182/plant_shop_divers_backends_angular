@@ -24,13 +24,13 @@ public final class UserController extends AppController {
     }
 
     @GET
-    public void show(int id) {
+    public void show() {
         runAction(() -> {
             User current = getCurrentUser();
+            Integer userId = parseId(getId());
             if (current == null || (!current.getBoolean("is_admin") && !current.getId().equals(id))) {
                 throw new SecurityException("Accès non autorisé.");
             }
-            User user = User.findById(id);
             if (user == null) {
                 respondJson(404, JsonHelper.toJsonString(Map.of("error", "Utilisateur introuvable")));
                 return;

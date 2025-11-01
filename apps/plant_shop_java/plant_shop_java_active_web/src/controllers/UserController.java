@@ -19,7 +19,7 @@ public final class UserController extends AppController {
         runAction(() -> {
             requireAdmin();
             LazyList<User> users = User.findAll().orderBy("is_admin desc, name asc");
-            respondJson(200, users.toJson(false, "id", "name", "email", "is_admin"));
+            respondJson(200, usersJson(users));
         });
     }
 
@@ -41,7 +41,7 @@ public final class UserController extends AppController {
                 respondJson(404, JsonHelper.toJsonString(Map.of("error", "Utilisateur introuvable")));
                 return;
             }
-            respondJson(200, user.toJson(false, "id", "name", "email", "is_admin"));
+            respondJson(200, userJson(user));
         });
     }
 
@@ -77,7 +77,7 @@ public final class UserController extends AppController {
                 return;
             }
 
-            respondJson(201, user.toJson(false, "id", "name", "email", "is_admin"));
+            respondJson(201, userJson(user));
         });
     }
 
@@ -119,7 +119,7 @@ public final class UserController extends AppController {
             }
 
             if (!user.isModified()) {
-                respondJson(200, user.toJson(false, "id", "name", "email", "is_admin"));
+                respondJson(200, userJson(user));
                 return;
             }
 
@@ -128,7 +128,7 @@ public final class UserController extends AppController {
                 return;
             }
 
-            respondJson(200, user.toJson(false, "id", "name", "email", "is_admin"));
+            respondJson(200, userJson(user));
         });
     }
 

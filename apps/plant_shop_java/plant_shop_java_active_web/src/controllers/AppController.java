@@ -9,6 +9,10 @@ import org.slf4j.LoggerFactory;
 import util.DatabaseFactory;
 import util.SessionManager;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -70,6 +74,24 @@ public abstract class AppController extends org.javalite.activeweb.AppController
             .status(status);
     }
 
+    protected String userJson(User user) {
+        if (user == null) {
+            return "{}";
+        }
+        return JsonHelper.toJsonString(userPayload(user));
+    }
+
+    protected String usersJson(Iterable<User> users) {
+        if (users == null) {
+            return "[]";
+        }
+        List<Map<String, Object>> payload = new ArrayList<>();
+        for (User user : users) {
+            payload.add(userPayload(user));
+        }
+        return JsonHelper.toJsonString(Collections.unmodifiableList(payload));
+    }
+
     private void respondError(int status, String message) {
         Map<String, String> payload = Map.of("error", message == null ? "Erreur" : message);
         respondJson(status, JsonHelper.toJsonString(payload));
@@ -103,5 +125,16 @@ public abstract class AppController extends org.javalite.activeweb.AppController
             return;
         }
         currentUser = User.findById(userId);
+    }
+
+    private Map<String, Object> userPayload(User user) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("id", user.get("id"));
+        payload.put("name", user.get("name"));
+        payload.put("email", user.get("email"));
+        Boolean isAdmin = user.getBoolean("is_admin");
+        payload.put("is_admin", isAdmin);
+        payload.put("admin", Boolean.TRUE.equals(isAdmin));
+        return payload;
     }
 }

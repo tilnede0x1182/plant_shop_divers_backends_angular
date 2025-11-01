@@ -42,7 +42,7 @@ public final class AuthController extends AppController {
             cookie.setMaxAge(3600);
             sendCookie(cookie);
 
-            respondJson(201, user.toJson(false, "id", "name", "email", "is_admin"));
+            respondJson(201, userJson(user));
         });
     }
 
@@ -75,7 +75,7 @@ public final class AuthController extends AppController {
                 return;
             }
 
-            respondJson(201, user.toJson(false, "id", "name", "email", "is_admin"));
+            respondJson(201, userJson(user));
         });
     }
 
@@ -103,7 +103,7 @@ public final class AuthController extends AppController {
                 respondEmpty(401);
                 return;
             }
-            respondJson(200, user.toJson(false, "id", "name", "email", "is_admin"));
+            respondJson(200, userJson(user));
         });
     }
 }

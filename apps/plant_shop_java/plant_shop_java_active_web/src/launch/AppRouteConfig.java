@@ -26,6 +26,11 @@ public final class AppRouteConfig extends AbstractRouteConfig {
             .get()
             .action("index");
 
+        route("/admin/users")
+            .to(UserController.class)
+            .get()
+            .action("index");
+
         route("/users/{id}")
             .to(UserController.class)
             .get()

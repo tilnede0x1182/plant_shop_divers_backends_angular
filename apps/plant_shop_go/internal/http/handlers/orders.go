@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"strconv"
 
@@ -57,11 +58,17 @@ func ListUserOrders(db *gorm.DB) http.HandlerFunc {
 			orders = make([]models.Order, 0)
 		}
 
-		for i := range orders {
-			for j := range orders[i].Items {
-				orders[i].Items[j].Plant.Price = float64(int(orders[i].Items[j].Plant.Price*100)) / 100.0
+	for i := range orders {
+		filtered := orders[i].Items[:0]
+		for _, item := range orders[i].Items {
+			if item.Plant.ID == 0 {
+				continue
 			}
+			item.Plant.Price = math.Round(item.Plant.Price*100) / 100.0
+			filtered = append(filtered, item)
 		}
+		orders[i].Items = filtered
+	}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(orders)

@@ -108,7 +108,7 @@ void plant_repo_del(PGconn *c, int id) {
 }
 
 void plant_repo_each(PGconn *c, void (*cb)(Plant*, void*), void *ctx) {
-	PGresult *r = PQexec(c, "SELECT id,name,description,price,stock FROM plants");
+	PGresult *r = PQexec(c, "SELECT id,name,description,price,stock FROM plants ORDER BY name ASC");
 	if (PQresultStatus(r) != PGRES_TUPLES_OK) {
 		// fprintf(stderr, "plant_repo_each failed: %s\n", PQerrorMessage(c));
 		PQclear(r);

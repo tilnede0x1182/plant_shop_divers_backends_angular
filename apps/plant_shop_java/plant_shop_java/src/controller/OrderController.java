@@ -166,20 +166,23 @@ public final class OrderController extends BaseController {
 				/* Tableau orderItems toujours présent, même lors du listing */
 				JSONArray itemsArray = new JSONArray();
 				for (OrderItem it : items) {
+						Plant p = plantRepo.find(it.plantId);
+						if (p == null) {
+								continue;
+						}
+
 						JSONObject itemJson = new JSONObject();
 						itemJson.put("id", it.id);
 						itemJson.put("plantId", it.plantId);
 						itemJson.put("quantity", it.quantity);
 						itemJson.put("price", it.price);
 
-						Plant p = plantRepo.find(it.plantId);
-						if (p != null) {
-								JSONObject plantJson = new JSONObject();
-								plantJson.put("id", p.id);
-								plantJson.put("name", p.name);
-								plantJson.put("price", p.price);
-								itemJson.put("plant", plantJson);
-						}
+						JSONObject plantJson = new JSONObject();
+						plantJson.put("id", p.id);
+						plantJson.put("name", p.name);
+						plantJson.put("price", p.price);
+						itemJson.put("plant", plantJson);
+
 						itemsArray.put(itemJson);
 				}
 				json.put("orderItems", itemsArray);

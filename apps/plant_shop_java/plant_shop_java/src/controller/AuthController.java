@@ -142,7 +142,7 @@ public final class AuthController extends BaseController {
 			userJson.put("id", currentUser.id);
 			userJson.put("name", currentUser.name);
 			userJson.put("email", currentUser.email);
-			userJson.put("is_admin", currentUser.isAdmin);
+			userJson.put("admin", currentUser.isAdmin);
 
 			sendJsonResponse(ex, 200, userJson.toString());
 		}

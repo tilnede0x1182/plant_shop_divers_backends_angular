@@ -31,7 +31,13 @@ compile:
 		src/models/*.java \
 		src/controllers/*.java \
 		src/Main.java -Xlint:unchecked
-run:
+
+instrument:
+	java -cp "bin:lib/activejdbc-instrumentation-2.3.1-j8.jar:lib/activejdbc-2.3.1-j8.jar:lib/slf4j-api-2.0.17.jar:lib/slf4j-simple-2.0.17.jar:lib/activeweb-2.3.1-j8.jar" \
+		-DoutputDirectory=bin \
+		org.javalite.instrumentation.Main src/models
+
+run: instrument
 	java -cp "$(CLASSPATH)" Main
 
 compile_run: compile run

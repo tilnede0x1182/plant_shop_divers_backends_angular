@@ -7,6 +7,7 @@ org.slf4j:slf4j-simple:2.0.17
 
 # Driver PostgreSQL
 org.postgresql:postgresql:42.7.4
+org.javalite:activejdbc-instrumentation:2.3.1-j8
 
 # Utilitaires JSON et mot de passe
 org.json:json:20210307

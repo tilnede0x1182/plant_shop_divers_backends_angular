@@ -136,32 +136,35 @@ pub async fn list_orders(
         let mut item_details = Vec::new();
 
         for item in items {
-            // Cherche le nom de la plante si possible
-            let plant_name = if let Some(pid) = item.plant_id {
-                match Plant::find_by_id(pid).one(db).await {
-                    Ok(Some(plant)) => plant.name,
-                    _ => String::new(),
-                }
-            } else {
-                String::new()
+            let pid = match item.plant_id {
+                Some(pid) => pid,
+                None => continue,
             };
 
-						item_details.push(json!({
-								"id": item.id,
-								"plantId": item.plant_id,
-								"quantity": item.quantity,
-								"price": item.price,
-								"plant": {
-										"id": item.plant_id,
-										"name": plant_name
-								}
-						}));
+            // Ignore l'item si la plante n'existe plus
+            let plant = match Plant::find_by_id(pid).one(db).await {
+                Ok(Some(plant)) => plant,
+                _ => continue,
+            };
+
+            item_details.push(json!({
+                "id": item.id,
+                "plantId": pid,
+                "quantity": item.quantity,
+                "price": item.price,
+                "plant": {
+                    "id": plant.id,
+                    "name": plant.name,
+                    "price": plant.price,
+                }
+            }));
         }
 
         response.push(json!({
             "id": order.id,
             "status": order.status,
-            "total": order.total,
+            "totalPrice": order.total,
+            "createdAt": order.created_at,
             "orderItems": item_details
         }));
     }

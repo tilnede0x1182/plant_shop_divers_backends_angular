@@ -1,12 +1,1871 @@
 # .env
 JWT_SECRET=zjnxkajzhdiezjbDNKJXIUHEDXJHNZLKDHALZKKJffjezkfljlekfjklajZJFHQEZNKFHQK
 DATABASE_URL="postgresql://tilnede0x1182:tilnede0x1182@localhost:5432/plant_shop_go"
+
+# internal/http/router.go
+package httpserver
+
+import (
+	"net/http"
+
+	"plant_shop_go/internal/http/handlers"
+	"plant_shop_go/internal/http/middleware"
+	"plant_shop_go/internal/models"
+
+	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+)
+
+// NewRouter construit et retourne le routeur principal.
+func NewRouter(db *gorm.DB) *mux.Router {
+	r := mux.NewRouter()
+	ensureAdminSeed(db) // S'assure que l'admin du test existe
+
+	api := r.PathPrefix("/api").Subrouter()
+
+	// --- Auth ---
+	// POST /api/auth/login : authentifie (email,password) et renvoie un cookie.
+	// POST /api/auth/register : inscrit un user et renvoie un cookie.
+	api.HandleFunc("/auth/login", handlers.Login).Methods("POST")
+	api.HandleFunc("/auth/register", handlers.Register).Methods("POST")
+	api.Handle("/auth/me", middleware.AuthGuard(http.HandlerFunc(handlers.Me))).Methods("GET")
+	api.HandleFunc("/auth/logout", handlers.Logout).Methods("POST")
+
+	// --- Public plants ---
+	api.Handle("/plants", handlers.PublicListPlants(db)).Methods("GET")
+	api.Handle("/plants/{id:[0-9]+}", handlers.PublicGetPlant(db)).Methods("GET")
+
+	// --- Admin plants ---
+	adminPlants := api.PathPrefix("/admin/plants").Subrouter()
+	adminPlants.Use(middleware.AuthGuard, middleware.AdminGuard)
+	adminPlants.Handle("", handlers.AdminListPlants(db)).Methods("GET")
+	adminPlants.Handle("", handlers.AdminCreatePlant(db)).Methods("POST")
+	adminPlants.Handle("/{id:[0-9]+}", handlers.AdminUpdatePlant(db)).Methods("PATCH")
+	adminPlants.Handle("/{id:[0-9]+}", handlers.AdminDeletePlant(db)).Methods("DELETE")
+
+	// --- Users ---
+	api.Handle("/users", middleware.AuthGuard(middleware.AdminGuard(http.HandlerFunc(handlers.AdminListUsers)))).Methods("GET")
+	api.Handle("/users", middleware.AuthGuard(middleware.AdminGuard(http.HandlerFunc(handlers.AdminCreateUser)))).Methods("POST")
+	api.Handle("/users/{id:[0-9]+}", middleware.AuthGuard(middleware.OwnerGuard(http.HandlerFunc(handlers.GetUser)))).Methods("GET")
+	api.Handle("/users/{id:[0-9]+}", middleware.AuthGuard(middleware.OwnerGuard(http.HandlerFunc(handlers.UpdateUser)))).Methods("PATCH")
+	api.Handle("/users/{id:[0-9]+}", middleware.AuthGuard(middleware.AdminGuard(http.HandlerFunc(handlers.AdminDeleteUser)))).Methods("DELETE")
+
+	// --- Admin Users (alias pour compatibilité) ---
+	adminUsers := api.PathPrefix("/admin/users").Subrouter()
+	adminUsers.Use(middleware.AuthGuard, middleware.AdminGuard)
+	adminUsers.Handle("", http.HandlerFunc(handlers.AdminListUsers)).Methods("GET")
+	adminUsers.Handle("/{id:[0-9]+}", http.HandlerFunc(handlers.AdminUpdateUser)).Methods("PATCH")
+	adminUsers.Handle("/{id:[0-9]+}", http.HandlerFunc(handlers.AdminDeleteUser)).Methods("DELETE")
+
+	// --- Orders ---
+	orders := api.PathPrefix("/orders").Subrouter()
+	orders.Use(middleware.AuthGuard)
+	orders.Handle("", handlers.CreateOrder(db)).Methods("POST")
+	orders.Handle("", handlers.ListUserOrders(db)).Methods("GET")
+	orders.Handle("/{id:[0-9]+}", middleware.AdminGuard(handlers.UpdateOrder(db))).Methods("PATCH")
+	orders.Handle("/{id:[0-9]+}", middleware.AdminGuard(handlers.DeleteOrder(db))).Methods("DELETE")
+
+	// --- Route Index ---
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("plant_shop_go OK"))
+	})
+
+	return r
+}
+
+// ensureAdminSeed crée l'admin par défaut si absent
+func ensureAdminSeed(db *gorm.DB) {
+	var n int64
+	db.Model(&models.User{}).Where("email = ?", "admin1@planteshop.com").Count(&n)
+	if n == 0 {
+		hash, _ := bcrypt.GenerateFromPassword([]byte("password"), bcrypt.DefaultCost)
+		db.Create(&models.User{Email: "admin1@planteshop.com", Password: string(hash), Admin: true, Name: "Admin Test"})
+	}
+}
+
+# internal/http/handlers/plants_admin.go
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+	"gorm.io/gorm"
+
+	"plant_shop_go/internal/models"
+)
+
+// AdminListPlants liste toutes les plantes (route admin).
+func AdminListPlants(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var plants []models.Plant
+		// Tri par nom, par ordre alphabétique.
+		if err := db.Order("name ASC").Find(&plants).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		for i := range plants {
+			plants[i].Price = float64(int(plants[i].Price*100)) / 100.0
+		}
+		_ = json.NewEncoder(w).Encode(plants)
+	}
+}
+
+// AdminCreatePlant crée une plante (route admin).
+func AdminCreatePlant(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in struct {
+			Name        string  `json:"name"`
+			Price       float64 `json:"price"`
+			Stock       int     `json:"stock"`
+			Description string  `json:"description,omitempty"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
+		p := models.Plant{
+			Name:        in.Name,
+			Price:       float64(int(in.Price*100)) / 100.0, // troncature à 2 décimales
+			Stock:       in.Stock,
+			Description: in.Description,
+		}
+		if err := db.Create(&p).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		_ = json.NewEncoder(w).Encode(p)
+	}
+}
+
+// AdminUpdatePlant met à jour une plante par ID depuis le chemin.
+func AdminUpdatePlant(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idStr, ok := vars["id"]
+		if !ok {
+			http.Error(w, "missing id", http.StatusBadRequest)
+			return
+		}
+		id, err := strconv.ParseUint(idStr, 10, 64)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+		var in struct {
+			Name        *string  `json:"name,omitempty"`
+			Price       *float64 `json:"price,omitempty"`
+			Stock       *int     `json:"stock,omitempty"`
+			Description *string  `json:"description,omitempty"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
+		var p models.Plant
+		if err := db.First(&p, id).Error; err != nil {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		if in.Name != nil {
+			p.Name = *in.Name
+		}
+		if in.Price != nil {
+			val := float64(int(*in.Price*100)) / 100.0
+			p.Price = val
+		}
+		if in.Stock != nil {
+			p.Stock = *in.Stock
+		}
+		if in.Description != nil {
+			p.Description = *in.Description
+		}
+		if err := db.Save(&p).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(p)
+	}
+}
+
+// AdminDeletePlant supprime une plante par ID depuis le chemin.
+func AdminDeletePlant(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idStr, ok := vars["id"]
+		if !ok {
+			http.Error(w, "missing id", http.StatusBadRequest)
+			return
+		}
+		id, err := strconv.ParseUint(idStr, 10, 64)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+		if err := db.Delete(&models.Plant{}, id).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+# internal/http/handlers/plants.go
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+	"strings"
+
+	"plant_shop_go/internal/models"
+	"gorm.io/gorm"
+)
+
+// GET /api/plants
+func PublicListPlants(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var plants []models.Plant
+		// Tri par nom, par ordre alphabétique.
+		if err := db.Order("name ASC").Find(&plants).Error; err != nil { http.Error(w,"db error",500); return }
+		for i := range plants {
+			plants[i].Price = float64(int(plants[i].Price*100)) / 100.0
+		}
+		_ = json.NewEncoder(w).Encode(plants)
+	}
+}
+
+// GET /api/plants/{id}
+func PublicGetPlant(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		parts := strings.Split(r.URL.Path, "/")
+		idStr := parts[len(parts)-1]
+		id, err := strconv.Atoi(idStr); if err != nil { http.Error(w,"invalid id",400); return }
+		var p models.Plant
+		if err := db.First(&p, id).Error; err != nil { http.Error(w,"not found",404); return }
+		p.Price = float64(int(p.Price*100)) / 100.0
+		_ = json.NewEncoder(w).Encode(p)
+	}
+}
+
+# internal/http/handlers/orders.go
+package handlers
+
+import (
+	"encoding/json"
+	"math"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+	"gorm.io/gorm"
+
+	"plant_shop_go/internal/models"
+	"plant_shop_go/internal/security"
+)
+
+// firstNonNil est un utilitaire pour gérer les deux formats de plantId.
+func firstNonNil(a, b any) any {
+	if a != nil {
+		return a
+	}
+	return b
+}
+
+// parseUintOrZero tente de convertir une string en uint; retourne 0 si échec.
+func parseUintOrZero(s string) uint {
+	if s == "" {
+		return 0
+	}
+	v, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return uint(v)
+}
+
+// ListUserOrders liste les commandes de l'utilisateur authentifié.
+func ListUserOrders(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		raw := r.Context().Value("claims")
+		if raw == nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		claims := raw.(*security.Claims)
+		var orders []models.Order
+
+		err := db.Preload("Items.Plant").
+			Where("user_id = ?", parseUintOrZero(claims.UserID)).
+			Order("created_at DESC"). // Ajout du tri pour correspondre à NestJS
+			Find(&orders).Error
+
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+
+		if orders == nil {
+			orders = make([]models.Order, 0)
+		}
+
+	for i := range orders {
+		filtered := orders[i].Items[:0]
+		for _, item := range orders[i].Items {
+			if item.Plant.ID == 0 {
+				continue
+			}
+			item.Plant.Price = math.Round(item.Plant.Price*100) / 100.0
+			filtered = append(filtered, item)
+		}
+		orders[i].Items = filtered
+	}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(orders)
+	}
+}
+
+// CreateOrder crée une commande pour l'utilisateur authentifié.
+func CreateOrder(db *gorm.DB) http.HandlerFunc {
+	type itemReq struct {
+		PlantIDAny any `json:"plantId"`
+		PlantIDAlt any `json:"plant_id"`
+		Quantity   int `json:"quantity"`
+	}
+	type reqBody struct {
+		Items []itemReq `json:"items"`
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		raw := r.Context().Value("claims")
+		if raw == nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		claims, ok := raw.(*security.Claims)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var in reqBody
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
+		if len(in.Items) == 0 {
+			http.Error(w, "no items", http.StatusBadRequest)
+			return
+		}
+
+		order := models.Order{
+			UserID:     parseUintOrZero(claims.UserID),
+			TotalPrice: 0.0,
+			Status:     "pending",
+		}
+		if err := db.Create(&order).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+
+		var total float64 = 0.0
+		for _, it := range in.Items {
+			var plantID uint
+			switch v := firstNonNil(it.PlantIDAny, it.PlantIDAlt).(type) {
+				case string:
+					if n, err := strconv.ParseFloat(v, 64); err == nil {
+						plantID = uint(n)
+					}
+				case float64:
+					plantID = uint(v)
+				case int:
+					plantID = uint(v)
+				default:
+					plantID = 0 // défaut si rien
+			}
+
+			var p models.Plant
+			if err := db.First(&p, plantID).Error; err != nil {
+				db.Delete(&order)
+				http.Error(w, "plant not found", http.StatusBadRequest)
+				return
+			}
+			if p.Stock < it.Quantity {
+				db.Delete(&order)
+				http.Error(w, "out of stock", http.StatusBadRequest)
+				return
+			}
+			oi := models.OrderItem{
+				OrderID:  order.ID,
+				PlantID:  p.ID,
+				Quantity: it.Quantity,
+			}
+			if err := db.Create(&oi).Error; err != nil {
+				db.Delete(&order)
+				http.Error(w, "db error", http.StatusInternalServerError)
+				return
+			}
+			if err := db.Model(&p).Update("stock", p.Stock-it.Quantity).Error; err != nil {
+				db.Delete(&order)
+				http.Error(w, "db error", http.StatusInternalServerError)
+				return
+			}
+			total += float64(it.Quantity) * p.Price
+		}
+
+		total = float64(int(total*100)) / 100.0
+		if err := db.Model(&order).Update("total_price", total).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+
+		if err := db.Preload("Items").First(&order, order.ID).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusCreated)
+		for j := range order.Items {
+			order.Items[j].Plant.Price = float64(int(order.Items[j].Plant.Price*100)) / 100.0
+		}
+		order.TotalPrice = float64(int(order.TotalPrice*100)) / 100.0
+		_ = json.NewEncoder(w).Encode(order)
+	}
+}
+
+// UpdateOrder met à jour une commande (status).
+func UpdateOrder(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idStr, ok := vars["id"]
+		if !ok {
+			http.Error(w, "missing id", http.StatusBadRequest)
+			return
+		}
+		id, err := strconv.ParseUint(idStr, 10, 64)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+		var in struct {
+			Status *string `json:"status,omitempty"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+			http.Error(w, "invalid json", http.StatusBadRequest)
+			return
+		}
+		var order models.Order
+		if err := db.First(&order, id).Error; err != nil {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		if in.Status != nil {
+			order.Status = *in.Status
+		}
+		if err := db.Save(&order).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		_ = json.NewEncoder(w).Encode(order)
+	}
+}
+
+// DeleteOrder supprime une commande par ID depuis le chemin.
+func DeleteOrder(db *gorm.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		idStr, ok := vars["id"]
+		if !ok {
+			http.Error(w, "missing id", http.StatusBadRequest)
+			return
+		}
+		id, err := strconv.ParseUint(idStr, 10, 64)
+		if err != nil {
+			http.Error(w, "invalid id", http.StatusBadRequest)
+			return
+		}
+		if err := db.Delete(&models.Order{}, id).Error; err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+# internal/http/handlers/users_owner.go
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+	"plant_shop_go/internal/db"
+	"plant_shop_go/internal/models"
+	"plant_shop_go/internal/security"
+)
+
+/*
+GET /api/users/{id}
+*/
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	// Cette fonction est déjà protégée par OwnerGuard, donc l'accès est sécurisé.
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+
+	var u models.User
+	if err := db.Connect().First(&u, id).Error; err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+
+	// On ne renvoie jamais le mot de passe
+	u.Password = ""
+	json.NewEncoder(w).Encode(u)
+}
+
+/*
+PATCH /api/users/{id}
+*/
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+	// OwnerGuard a déjà vérifié que l'utilisateur est soit le propriétaire, soit un admin.
+	// Maintenant, nous devons vérifier si l'utilisateur qui fait la requête est un admin
+	// pour l'autoriser à modifier le champ "admin".
+
+	claims, ok := r.Context().Value("claims").(*security.Claims)
+	if !ok {
+		http.Error(w, "claims not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+
+	var in map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	// *** LA CORRECTION EST ICI ***
+	// Si l'utilisateur n'est PAS un admin, on supprime le champ "admin" du payload
+	// pour l'empêcher de se promouvoir lui-même.
+	if !claims.Admin {
+		delete(in, "admin")
+	}
+
+	// Appliquer les modifications
+	d := db.Connect()
+	if err := d.Model(&models.User{}).Where("id = ?", id).Updates(in).Error; err != nil {
+		http.Error(w, "update failed", http.StatusInternalServerError)
+		return
+	}
+
+	// Renvoyer l'utilisateur mis à jour
+	var u models.User
+	d.First(&u, id)
+	u.Password = "" // Ne jamais renvoyer le hash
+	json.NewEncoder(w).Encode(u)
+}
+
+# internal/http/handlers/auth.go
+package handlers
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"plant_shop_go/internal/db"
+	"plant_shop_go/internal/models"
+	"plant_shop_go/internal/security"
+
+	"golang.org/x/crypto/bcrypt"
+)
+
+/*
+POST /api/auth/register
+Crée un user, renvoie 201 + cookie JWT.
+*/
+func Register(w http.ResponseWriter, r *http.Request) {
+	type inp struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Name     string `json:"name"`
+	}
+	var in inp
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	d := db.Connect()
+	// conflit si email exists
+	var exists models.User
+	if err := d.Where("email = ?", in.Email).First(&exists).Error; err == nil {
+		http.Error(w, "email exists", http.StatusConflict)
+		return
+	}
+	hash, _ := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+	user := models.User{Email: in.Email, Password: string(hash), Name: in.Name, Admin: false}
+	d.Create(&user)
+	// fmt.Printf("[DEBUG] Utilisateur créé : email=%s id=%d\n", user.Email, user.ID)
+	token, _ := security.GenerateToken(fmt.Sprint(user.ID), user.Admin, 24*time.Hour)
+
+	security.SetCookie(w, token)
+	w.WriteHeader(http.StatusCreated)
+}
+
+/*
+POST /api/auth/login
+Valide credentials, renvoie 201 + cookie JWT.
+*/
+func Login(w http.ResponseWriter, r *http.Request) {
+	type inp struct{ Email, Password string }
+	var in inp
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	d := db.Connect()
+	// fmt.Printf("[DEBUG] Tentative de login pour email=%s\n", in.Email)
+	var user models.User
+	if err := d.Where("email = ?", in.Email).First(&user).Error; err != nil {
+		http.Error(w, "invalid creds", http.StatusUnauthorized)
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(in.Password)); err != nil {
+		http.Error(w, "invalid creds", http.StatusUnauthorized)
+		return
+	}
+	token, _ := security.GenerateToken(fmt.Sprint(user.ID), user.Admin, 24*time.Hour)
+	security.SetCookie(w, token)
+	w.WriteHeader(http.StatusCreated)
+}
+
+/*
+GET /api/auth/me
+Retourne {id,email,name,admin} du token.
+*/
+func Me(w http.ResponseWriter, r *http.Request) {
+	claims, ok := r.Context().Value("claims").(*security.Claims)
+	if !ok {
+		http.Error(w, "claims not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	d := db.Connect()
+	var user models.User
+	d.First(&user, claims.UserID)
+	json.NewEncoder(w).Encode(map[string]any{
+		"id":    user.ID,
+		"email": user.Email,
+		"name":  user.Name,
+		"admin": user.Admin,
+	})
+}
+
+/*
+POST /api/auth/logout
+Efface cookie.
+*/
+func Logout(w http.ResponseWriter, r *http.Request) {
+	security.ClearCookie(w)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+# internal/http/handlers/users_admin.go
+package handlers
+
+import (
+	"encoding/json"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+	"plant_shop_go/internal/db"
+	"plant_shop_go/internal/models"
+
+	"golang.org/x/crypto/bcrypt"
+	"strings"
+)
+
+/*
+GET /api/admin/users ou /api/users (pour admin)
+*/
+func AdminListUsers(w http.ResponseWriter, r *http.Request) {
+	var list []models.User
+	// On sélectionne les champs publics pour ne pas exposer le hash du mot de passe
+	// Tri : d'abord par statut admin (admins en premier), puis par nom alphabétique.
+	db.Connect().Select("id", "created_at", "updated_at", "email", "name", "admin").Order("admin DESC, name ASC").Find(&list)
+
+	// *** LA CORRECTION EST ICI ***
+	// Garantit un tableau JSON vide `[]` au lieu de `null` si aucun utilisateur n'est trouvé.
+	if list == nil {
+		list = make([]models.User, 0)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(list)
+}
+
+/*
+POST /api/users (admin) – création d’un user
+*/
+func AdminCreateUser(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Email    string `json:"email"`
+		Name     string `json:"name"`
+		Password string `json:"password"`
+		Admin    bool   `json:"admin"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		http.Error(w, "bad request", 400)
+		return
+	}
+	hash, _ := bcrypt.GenerateFromPassword([]byte(in.Password), 10)
+	u := models.User{Email: in.Email, Name: in.Name, Password: string(hash), Admin: in.Admin}
+
+	if err := db.Connect().Create(&u).Error; err != nil {
+		// Conflit d’unicité sur email → 409
+		if strings.Contains(err.Error(), "duplicate key") {
+			http.Error(w, "email exists", http.StatusConflict)
+		} else {
+			http.Error(w, "failed to create user", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	u.Password = "" // Ne jamais renvoyer le mot de passe
+	json.NewEncoder(w).Encode(u)
+}
+
+/*
+PATCH /api/admin/users/{id}
+*/
+func AdminUpdateUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+
+	var in map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	d := db.Connect()
+	if err := d.Model(&models.User{}).Where("id = ?", id).Updates(in).Error; err != nil {
+		http.Error(w, "update failed", http.StatusInternalServerError)
+		return
+	}
+
+	var u models.User
+	d.First(&u, id)
+	u.Password = ""
+	json.NewEncoder(w).Encode(u)
+}
+
+/*
+DELETE /api/admin/users/{id}
+*/
+func AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, _ := strconv.Atoi(vars["id"])
+	db.Connect().Unscoped().Delete(&models.User{}, id)
+	w.WriteHeader(http.StatusOK)
+}
+
+# internal/http/middleware/admin_guard.go
+package middleware
+
+import (
+	"net/http"
+	"plant_shop_go/internal/security"
+)
+
+// AdminGuard protège une route en ne laissant passer que les admins.
+// next sert les requêtes validées.
+func AdminGuard(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// claims injectés par AuthGuard dans le context
+		claims, ok := r.Context().Value("claims").(*security.Claims)
+		if !ok || !claims.Admin {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+# internal/http/middleware/owner_guard.go
+package middleware
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+
+	"plant_shop_go/internal/security"
+)
+
+// OwnerGuard protège /users/:id en acceptant le propriétaire ou l’admin.
+func OwnerGuard(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		claims, ok := r.Context().Value("claims").(*security.Claims)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		// extraire id param de l’URL (/api/users/{id})
+		parts := strings.Split(r.URL.Path, "/")
+		if len(parts) < 4 || (fmt.Sprint(claims.UserID) != parts[3] && !claims.Admin) {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+# internal/http/middleware/auth.go
+package middleware
+
+import (
+	"context"
+	"net/http"
+
+	"plant_shop_go/internal/security"
+)
+
+/*
+Middleware d’authentification par cookie httpOnly "ps_token"
+Injecte les claims dans le contexte de la requête sous la clé "claims".
+*/
+func AuthGuard(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
+		cookie, err := request.Cookie("ps_token")
+		if err != nil || cookie.Value == "" {
+			http.Error(response, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		claims, err := security.ParseToken(cookie.Value)
+		if err != nil {
+			http.Error(response, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		// injecter les claims dans le contexte pour que AdminGuard / OwnerGuard y accèdent
+		ctx := context.WithValue(request.Context(), "claims", claims)
+		next.ServeHTTP(response, request.WithContext(ctx))
+	})
+}
+
+# internal/security/jwt.go
+package security
+
+import (
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
+
+/*
+Gestion simple des JWT HMAC et du cookie httpOnly "ps_token".
+Claims expose UserID et Admin (bool) utilisés par les middlewares.
+*/
+
+type Claims struct {
+	UserID string `json:"uid"`
+	Admin  bool   `json:"admin"`
+	jwt.RegisteredClaims
+}
+
+func secret() []byte {
+	key := os.Getenv("JWT_SECRET")
+	if key == "" {
+		// Valeur de secours pour dev ; en production définir JWT_SECRET.
+		key = "dev-insecure"
+	}
+	return []byte(key)
+}
+
+// GenerateToken génère un JWT signé contenant uid, le rôle admin et la durée d'expiration.
+func GenerateToken(userID string, admin bool, duration time.Duration) (string, error) {
+	claims := &Claims{
+		UserID: userID,
+		Admin:  admin,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(secret())
+}
+
+// ParseToken vérifie le JWT et retourne les claims.
+func ParseToken(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		return secret(), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, jwt.ErrTokenInvalidClaims
+}
+
+// SetCookie écrit le cookie httpOnly "ps_token" sur la réponse.
+func SetCookie(w http.ResponseWriter, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "ps_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		Secure:   false, // Mettre à true en production (HTTPS)
+	})
+}
+
+// ClearCookie supprime le cookie "ps_token".
+func ClearCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "ps_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1,
+		Secure:   false, // Mettre à true en production (HTTPS)
+	})
+}
+
+# internal/models/plant.go
+package models
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+type Plant struct {
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"updatedAt"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+	Name        string         `gorm:"not null" json:"name"`
+	Price       float64        `gorm:"not null" json:"price"`
+	Description string         `json:"description"`
+	Stock       int            `gorm:"not null;default:0" json:"stock"`
+}
+
+# internal/models/user.go
+package models
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+type User struct {
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"` // Caché du JSON
+	Email     string         `gorm:"unique;not null" json:"email"`
+	Password  string         `gorm:"not null" json:"-"` // Caché du JSON
+	Name      string         `json:"name"`
+	Admin     bool           `gorm:"default:false" json:"admin"`
+	Orders    []Order        `json:"orders,omitempty"`
+}
+
+# internal/models/order_item.go
+package models
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+type OrderItem struct {
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt time.Time      `json:"createdAt"`
+	UpdatedAt time.Time      `json:"updatedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
+	OrderID   uint           `json:"orderId"`
+	PlantID   uint           `json:"plantId"`
+	Quantity  int            `json:"quantity"`
+	Plant     Plant          `json:"plant"`
+}
+
+# internal/models/order.go
+package models
+
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
+type Order struct {
+	ID         uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt  time.Time      `json:"createdAt"`
+	UpdatedAt  time.Time      `json:"updatedAt"`
+	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
+	UserID     uint           `json:"userId"`
+	TotalPrice float64        `json:"totalPrice"`
+	Status     string         `json:"status"`
+	Items      []OrderItem    `json:"orderItems,omitempty"`
+}
+
+# internal/db/seed.go
+package db
+
+// # Importations
+import (
+	"fmt"
+	"log"
+	"math"
+	"math/rand"
+	"os"
+	"path/filepath"
+	"time"
+
+	"plant_shop_go/internal/models"
+
+	"gorm.io/gorm"
+
+	"github.com/bxcodec/faker/v3"
+	"golang.org/x/crypto/bcrypt"
+)
+
+// # Données
+const (
+	NB_ADMINS           = 3
+	NB_USERS            = 20
+	NB_PLANTS           = 50
+	MAX_ORDERS_PER_USER = 7
+)
+
+var PLANT_NAMES = []string{
+	"Rose", "Tulipe", "Lavande", "Orchidée", "Basilic", "Menthe",
+	"Pivoine", "Tournesol", "Cactus (Echinopsis)", "Bambou",
+	"Camomille (Matricaria recutita)", "Sauge (Salvia officinalis)",
+	"Romarin (Rosmarinus officinalis)", "Thym (Thymus vulgaris)",
+	"Laurier-rose (Nerium oleander)", "Aloe vera", "Jasmin (Jasminum officinale)",
+	"Hortensia (Hydrangea macrophylla)", "Marguerite (Leucanthemum vulgare)",
+	"Géranium (Pelargonium graveolens)", "Fuchsia (Fuchsia magellanica)",
+	"Anémone (Anemone coronaria)", "Azalée (Rhododendron simsii)",
+	"Chrysanthème (Chrysanthemum morifolium)", "Digitale pourpre (Digitalis purpurea)",
+	"Glaïeul (Gladiolus hortulanus)", "Lys (Lilium candidum)", "Violette (Viola odorata)",
+	"Muguet (Convallaria majalis)", "Iris (Iris germanica)", "Lavandin (Lavandula intermedia)",
+	"Érable du Japon (Acer palmatum)", "Citronnelle (Cymbopogon citratus)",
+	"Pin parasol (Pinus pinea)", "Cyprès (Cupressus sempervirens)", "Olivier (Olea europaea)",
+	"Papyrus (Cyperus papyrus)", "Figuier (Ficus carica)", "Eucalyptus (Eucalyptus globulus)",
+	"Acacia (Acacia dealbata)", "Bégonia (Begonia semperflorens)", "Calathea (Calathea ornata)",
+	"Dieffenbachia (Dieffenbachia seguine)", "Ficus elastica", "Sansevieria (Sansevieria trifasciata)",
+	"Philodendron (Philodendron scandens)", "Yucca (Yucca elephantipes)", "Zamioculcas zamiifolia",
+	"Monstera deliciosa", "Pothos (Epipremnum aureum)", "Agave (Agave americana)",
+	"Cactus raquette (Opuntia ficus-indica)", "Palmier-dattier (Phoenix dactylifera)",
+	"Amaryllis (Hippeastrum hybridum)", "Bleuet (Centaurea cyanus)",
+	"Cœur-de-Marie (Lamprocapnos spectabilis)", "Croton (Codiaeum variegatum)",
+	"Dracaena (Dracaena marginata)", "Hosta (Hosta plantaginea)", "Lierre (Hedera helix)",
+	"Mimosa (Acacia dealbata)",
+}
+
+// ## Réinitialisation
+func reset(db *gorm.DB) {
+	log.Println("🧹 Nettoyage de la base de données…")
+	db.Exec("DELETE FROM order_items")
+	db.Exec("DELETE FROM orders")
+	db.Exec("DELETE FROM plants")
+	db.Exec("DELETE FROM users")
+	log.Println("✅ Base de données nettoyée.")
+}
+
+// ## Admins
+func createAdmins(db *gorm.DB) []map[string]string {
+	log.Println("👑 Création des administrateurs…")
+	var admins []map[string]string
+	for i := 0; i < NB_ADMINS; i++ {
+		email := fmt.Sprintf("admin%d@planteshop.com", i+1)
+		password := "password"
+		hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+		db.Create(&models.User{
+			Email:    email,
+			Password: string(hash),
+			Admin:    true,
+			Name:     faker.Name(),
+		})
+		admins = append(admins, map[string]string{"email": email, "password": password})
+	}
+	log.Printf("✅ %d administrateurs créés.\n", NB_ADMINS)
+	return admins
+}
+
+// ## Users
+func createUsers(db *gorm.DB) []map[string]string {
+	log.Println("👥 Création des utilisateurs…")
+	var users []map[string]string
+	for i := 0; i < NB_USERS; i++ {
+		password := faker.Password()
+		email := faker.Email()
+		hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
+		db.Create(&models.User{
+			Email:    email,
+			Password: string(hash),
+			Admin:    false,
+			Name:     faker.Name(),
+		})
+		users = append(users, map[string]string{"email": email, "password": password})
+	}
+	log.Printf("✅ %d utilisateurs créés.\n", NB_USERS)
+	return users
+}
+
+// ## Plants
+func createPlants(db *gorm.DB) []models.Plant {
+	log.Println("🌱 Création des plantes…")
+	var plants []models.Plant
+	max := len(PLANT_NAMES)
+	for i := 0; i < NB_PLANTS; i++ {
+		base := PLANT_NAMES[i%max]
+		name := base
+		price := math.Round((rand.Float64()*45.0+5.0)*100) / 100
+		desc := faker.Sentence()
+		stock := rand.Intn(26) + 5
+		p := models.Plant{
+			Name:        name,
+			Price:       price,
+			Description: desc,
+			Stock:       stock,
+		}
+		db.Create(&p)
+		plants = append(plants, p)
+	}
+	log.Printf("✅ %d plantes créées.\n", NB_PLANTS)
+	return plants
+}
+
+// ## Orders
+func createOrders(db *gorm.DB, plants []models.Plant) {
+	log.Println("🛒 Création des commandes…")
+	var users []models.User
+	db.Find(&users)
+	statuses := []string{"confirmed", "pending", "shipped", "delivered"}
+	totalOrders := 0
+	for _, u := range users {
+		n := rand.Intn(MAX_ORDERS_PER_USER + 1)
+		for i := 0; i < n; i++ {
+			total := 0.0
+			order := models.Order{
+				UserID:     u.ID,
+				TotalPrice: 0.0,
+				Status:     statuses[rand.Intn(len(statuses))],
+			}
+			db.Create(&order)
+			for j := 0; j < 2; j++ {
+				total += addItem(db, order.ID, plants)
+			}
+			total = math.Trunc(total*100) / 100
+			db.Model(&order).Update("total_price", total)
+			totalOrders++
+		}
+	}
+	log.Printf("✅ %d commandes créées.\n", totalOrders)
+}
+
+func addItem(db *gorm.DB, orderID uint, plants []models.Plant) float64 {
+	p := plants[rand.Intn(len(plants))]
+	if p.Stock <= 0 {
+		return 0
+	}
+	qty := rand.Intn(5) + 1
+	if qty > p.Stock {
+		qty = p.Stock
+	}
+	db.Create(&models.OrderItem{OrderID: orderID, PlantID: p.ID, Quantity: qty})
+	db.Model(&p).Update("stock", p.Stock-qty)
+	return float64(qty) * p.Price
+}
+
+// ## users.txt
+func writeUsersFile(admins, users []map[string]string) {
+	log.Println("✍️  Génération du fichier users.txt…")
+	path := filepath.Join(".", "users.txt")
+	var txt = "Administrateurs :\n\n"
+	for _, a := range admins {
+		txt += fmt.Sprintf("%s %s\n", a["email"], a["password"])
+	}
+	txt += "\nUtilisateurs :\n\n"
+	for _, u := range users {
+		txt += fmt.Sprintf("%s %s\n", u["email"], u["password"])
+	}
+	if err := os.WriteFile(path, []byte(txt), 0644); err != nil {
+		log.Fatalf("[ERREUR] Écriture users.txt : %v", err)
+	}
+	log.Println("✅ Fichier users.txt généré.")
+}
+
+// # Seed principal
+func Seed(db *gorm.DB) {
+	log.Println("🚀 Lancement de la seed…")
+	rand.Seed(time.Now().UnixNano())
+	reset(db)
+	admins := createAdmins(db)
+	users := createUsers(db)
+	plants := createPlants(db)
+	writeUsersFile(admins, users)
+	createOrders(db, plants)
+	log.Println("🎉 Seed terminée avec succès !")
+}
+
+# internal/db/connect.go
+package db
+
+import (
+	"log"
+	"os"
+	"sync"
+	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+var (
+	conn     *gorm.DB
+	connOnce sync.Once
+)
+
+// Connect renvoie toujours le même pool GORM et limite les connexions.
+func Connect() *gorm.DB {
+	connOnce.Do(func() {
+		dsn := os.Getenv("DATABASE_URL")
+		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Fatalf("DB connection failed: %v", err)
+		}
+		sqlDB, _ := db.DB()
+		sqlDB.SetMaxOpenConns(10)
+		sqlDB.SetMaxIdleConns(5)
+		sqlDB.SetConnMaxLifetime(time.Hour)
+		conn = db
+	})
+	return conn
+}
+
+# cmd/seed.go
+package main
+
+import (
+	"plant_shop_go/internal/db"
+	"plant_shop_go/internal/models"
+	"github.com/joho/godotenv"
+	"log"
+)
+
+func main() {
+	_ = godotenv.Load(".env")
+
+	conn := db.Connect()
+
+	log.Println("🧱 Création du schéma des tables…")
+	conn.AutoMigrate(
+		&models.User{},
+		&models.Plant{},
+		&models.Order{},
+		&models.OrderItem{},
+	)
+	log.Println("✅ Schéma créé avec succès.")
+
+	db.Seed(conn)
+}
+
 # .env.example
 # JWT
 JWT_SECRET=change_me
 
 # DB
 DATABASE_URL=postgres://user:password@localhost:5432/plantshop?sslmode=disable
+
+# main.go
+package main
+
+import (
+	"log"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/joho/godotenv"
+	"github.com/rs/cors"
+
+	"plant_shop_go/internal/db"
+	httpserver "plant_shop_go/internal/http"
+	"plant_shop_go/internal/models"
+)
+
+func main() {
+	_ = godotenv.Load(".env")
+
+	conn := db.Connect()
+	if conn == nil {
+		log.Fatal("db connection failed")
+	}
+
+	if err := conn.AutoMigrate(
+		&models.User{},
+		&models.Plant{},
+		&models.Order{},
+		&models.OrderItem{},
+	); err != nil {
+		log.Fatalf("migration failed: %v", err)
+	}
+
+	// Seed retiré volontairement. Utilisez ./cmd/seed pour lancer le seed.
+
+	router := httpserver.NewRouter(conn)
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:8300"},
+		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Content-Type"},
+	})
+	srv := &http.Server{
+		Addr:         ":" + getEnv("PORT", "4100"),
+		Handler:      c.Handler(router),
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	log.Printf("listening on %s", srv.Addr)
+	log.Fatal(srv.ListenAndServe())
+}
+
+func getEnv(key, def string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return def
+}
+
+# test/test_e2e.go
+// tests/test_e2e.go
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"net/http/cookiejar"
+	"os"
+	"strings"
+	"time"
+	"unicode"
+	"golang.org/x/text/unicode/norm"
+)
+
+/* ------- Variables globales -------- */
+var (
+	maintenant = time.Now().Format("20060102150405")
+	clients    = make(map[string]*http.Client)
+)
+
+/* ---------- Configuration ---------- */
+type Config struct {
+	ApiBaseUrl    string
+	LogLevel      string // "silent", "normal", "verbose"
+	AdminEmail    string
+	AdminPassword string
+}
+
+var config = Config{
+	ApiBaseUrl:    getEnv("API_BASE_URL", "http://localhost:4100/api"),
+	LogLevel:      "verbose",
+	AdminEmail:    getEnv("ADMIN_EMAIL", "admin1@planteshop.com"),
+	AdminPassword: getEnv("ADMIN_PASSWORD", "password"),
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+/* ---------- Utilitaires HTTP ---------- */
+
+// hit est pour les endpoints qui retournent un objet JSON { ... }
+func hit(method, route string, expectedStatus int, body any, who string) map[string]any {
+	res, err := doRequest(method, route, expectedStatus, body, who)
+	if err != nil {
+		log.Fatalf("Request failed: %v", err)
+	}
+	defer res.Body.Close()
+
+	bodyBytes, _ := io.ReadAll(res.Body)
+	if len(bodyBytes) == 0 {
+		return make(map[string]any)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(bodyBytes, &result); err != nil {
+		// Aligné sur test_complet.js : JSON manquant ou invalide → objet vide
+		return make(map[string]any)
+	}
+	return result
+}
+
+// hitList est pour les endpoints qui retournent un tableau JSON [ ... ]
+func hitList(method, route string, expectedStatus int, body any, who string) []map[string]any {
+	res, err := doRequest(method, route, expectedStatus, body, who)
+	if err != nil {
+		log.Fatalf("Request failed: %v", err)
+	}
+	defer res.Body.Close()
+
+	bodyBytes, _ := io.ReadAll(res.Body)
+	if len(bodyBytes) == 0 {
+		return make([]map[string]any, 0)
+	}
+
+	var result []map[string]any
+	if err := json.Unmarshal(bodyBytes, &result); err != nil {
+		// Aligné sur test_complet.js : JSON manquant ou invalide → tableau vide
+		return make([]map[string]any, 0)
+	}
+	return result
+}
+
+// doRequest est le moteur de requête interne
+func doRequest(method, route string, expectedStatus int, body any, who string) (*http.Response, error) {
+	url := config.ApiBaseUrl + route
+	label := fmt.Sprintf("%s %s", method, route)
+
+	var reqBody io.Reader
+	if body != nil {
+		jsonBody, err := json.Marshal(body)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal body: %w", err)
+		}
+		reqBody = bytes.NewBuffer(jsonBody)
+	}
+
+	req, err := http.NewRequest(method, url, reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	c, ok := clients[who]
+	if !ok {
+		j, _ := cookiejar.New(nil)
+		c = &http.Client{Jar: j}
+		clients[who] = c
+	}
+	res, err := c.Do(req)
+
+	if err != nil {
+		fmt.Printf("❌ Connection error: %s - API down ?\n", url)
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+
+	success := res.StatusCode == expectedStatus
+	if config.LogLevel != "silent" {
+		log.Printf("%s %s [%d]", map[bool]string{true: "✅", false: "❌"}[success], label, res.StatusCode)
+	}
+
+	if !success {
+		resBody, _ := io.ReadAll(res.Body)
+		res.Body.Close()
+		return nil, fmt.Errorf("API %s → %d (attendu %d)\n%s", label, res.StatusCode, expectedStatus, string(resBody))
+	}
+
+	return res, nil
+}
+
+/* ---------- Assertions ---------- */
+func assertEq(obj map[string]any, key string, expected any) {
+	actual, ok := obj[key]
+	if !ok {
+		log.Fatalf("Assertion failed: key '%s' not found in object", key)
+	}
+
+	isEqual := fmt.Sprintf("%v", actual) == fmt.Sprintf("%v", expected)
+
+	if config.LogLevel != "silent" {
+		log.Printf("%s   ↳ %s=%v (attendu %v)", map[bool]string{true: "✅", false: "❌"}[isEqual], key, actual, expected)
+	}
+	if !isEqual {
+		log.Fatalf("Assertion failed: %s=%v, attendu %v", key, actual, expected)
+	}
+}
+
+func assertNumericId(id any, label string) {
+	str := fmt.Sprintf("%v", id)
+	if str == "" || strings.IndexFunc(str, func(r rune) bool { return r < '0' || r > '9' }) != -1 {
+		log.Fatalf("%s doit être un identifiant numérique, reçu %v", label, id)
+	}
+}
+
+func assertSortedAscByField(arr []map[string]any, field, label string) {
+	if len(arr) < 2 {
+		return
+	}
+	prevRaw := fmt.Sprintf("%v", arr[0][field])
+	prevNorm := normalize(prevRaw)
+	for i := 1; i < len(arr); i++ {
+		curRaw := fmt.Sprintf("%v", arr[i][field])
+		curNorm := normalize(curRaw)
+		if prevNorm > curNorm {
+			log.Fatalf("Liste %s non triée croissant par %s : %q > %q", label, field, prevRaw, curRaw)
+		}
+		prevNorm, prevRaw = curNorm, curRaw
+	}
+}
+
+func assertAdminsFirstThenName(arr []map[string]any) {
+	if len(arr) < 2 {
+		return
+	}
+	foundNonAdmin := false
+	prevName := ""
+	for _, cur := range arr {
+		admin, ok := cur["admin"].(bool)
+		if !ok {
+			log.Fatalf("Objet user sans champ admin")
+		}
+		name := fmt.Sprintf("%v", cur["name"])
+		if foundNonAdmin && admin {
+			log.Fatalf("Admins doivent précéder les non-admins")
+		}
+		if !admin && prevName != "" && normalize(prevName) > normalize(name) {
+			log.Fatalf("Tri alphabétique ascendant incorrect")
+		}
+		if !admin {
+			foundNonAdmin = true
+		}
+		prevName = name
+	}
+}
+
+/* ---------- Utilitaire de normalisation ---------- */
+// Supprime les diacritiques pour un tri accent-insensible
+func normalize(s string) string {
+	t := norm.NFD.String(strings.ToLower(s)) // minuscule + décomposition
+	var b strings.Builder
+	for _, r := range t {
+		if unicode.Is(unicode.Mn, r) {
+			continue
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
+
+/* ------------ Helpers ------------ */
+func login(email, password, who string) {
+	hit("POST", "/auth/login", 201, map[string]string{"email": email, "password": password}, who)
+}
+
+func registerUser(name, email, password, who string) {
+	hit("POST", "/auth/register", 201, map[string]string{"name": name, "email": email, "password": password}, who)
+}
+
+func findUserIDByEmail(who, email string) int {
+	users := hitList("GET", "/users", 200, nil, who)
+	for _, u := range users {
+		if u["email"] == email {
+			return int(u["id"].(float64))
+		}
+	}
+	log.Fatalf("User %s not found in admin list", email)
+	return 0
+}
+
+/* ---------- Modules de test ---------- */
+func testPlants(who string) {
+	log.Println("\n📌 TEST MODULE: PLANTS (admin)")
+	plantData := map[string]any{"name": "Test Plant", "price": 10, "stock": 5}
+
+	createdPlant := hit("POST", "/admin/plants", 201, plantData, who)
+	plantID := int(createdPlant["id"].(float64))
+	assertNumericId(plantID, "plantID")
+
+	fetchedPlant := hit("GET", fmt.Sprintf("/plants/%d", plantID), 200, nil, who)
+	assertEq(fetchedPlant, "name", plantData["name"])
+
+	hit("PATCH", fmt.Sprintf("/admin/plants/%d", plantID), 200, map[string]int{"price": 15}, who)
+	updatedPlant := hit("GET", fmt.Sprintf("/plants/%d", plantID), 200, nil, who)
+	assertEq(updatedPlant, "price", 15)
+
+	hit("DELETE", fmt.Sprintf("/admin/plants/%d", plantID), 200, nil, who)
+}
+
+func testUsers(who string) {
+	log.Println("\n📌 TEST MODULE: USERS (admin)")
+	userData := map[string]string{
+		"email":    fmt.Sprintf("utilisateur_test_%s@example.com", maintenant),
+		"name":     fmt.Sprintf("Utilisateur de test %s", maintenant),
+		"password": "pass123",
+	}
+	createdUser := hit("POST", "/users", 201, userData, who)
+	userID := int(createdUser["id"].(float64))
+
+	hit("PATCH", fmt.Sprintf("/users/%d", userID), 200, map[string]string{"name": "Tester Update"}, who)
+	updatedUser := hit("GET", fmt.Sprintf("/users/%d", userID), 200, nil, who)
+	assertEq(updatedUser, "name", "Tester Update")
+
+	hit("DELETE", fmt.Sprintf("/users/%d", userID), 200, nil, who)
+}
+
+func testOrders(adminWho, userWho string) {
+	log.Println("\n📌 TEST MODULE: ORDERS & ORDER ITEMS")
+
+	plantData := map[string]any{"name": fmt.Sprintf("Plante_de_test_%s", maintenant), "price": 10, "stock": 5}
+	createdPlant := hit("POST", "/admin/plants", 201, plantData, adminWho)
+	plantID := int(createdPlant["id"].(float64))
+	assertNumericId(plantID, "plantID")
+
+	orderPayload := map[string]any{
+		"items": []map[string]any{
+			{"plantId": plantID, "quantity": 2},
+		},
+	}
+	createdOrder := hit("POST", "/orders", 201, orderPayload, userWho)
+	orderID := int(createdOrder["id"].(float64))
+
+	hit("PATCH", fmt.Sprintf("/orders/%d", orderID), 200, map[string]string{"status": "shipped"}, adminWho)
+
+	orders := hitList("GET", "/orders", 200, nil, userWho)
+	var foundOrder map[string]any
+	for _, o := range orders {
+		if int(o["id"].(float64)) == orderID {
+			foundOrder = o
+			break
+		}
+	}
+	if foundOrder == nil {
+		log.Fatalf("Commande %d introuvable", orderID)
+	}
+	assertEq(foundOrder, "status", "shipped")
+	if items, ok := foundOrder["orderItems"].([]any); !ok || len(items) == 0 {
+		log.Fatalf("Items absents dans la commande")
+	} else {
+		first := items[0].(map[string]any)
+		plant := first["plant"].(map[string]any)
+		assertEq(plant, "name", plantData["name"])
+	}
+	hit("DELETE", fmt.Sprintf("/orders/%d", orderID), 200, nil, adminWho)
+	hit("DELETE", fmt.Sprintf("/admin/plants/%d", plantID), 200, nil, adminWho)
+}
+
+func testUserProfile(adminWho, userWho, userEmail string) {
+	log.Println("\n📌 TEST MODULE: USER PROFILE (user)")
+	userID := findUserIDByEmail(adminWho, userEmail)
+
+	profile := hit("GET", fmt.Sprintf("/users/%d", userID), 200, nil, userWho)
+	assertEq(profile, "id", userID)
+
+	nouveauNom := fmt.Sprintf("Utilisateur_de_test_%s", maintenant)
+	hit("PATCH", fmt.Sprintf("/users/%d", userID), 200, map[string]string{"name": nouveauNom}, userWho)
+	updatedProfile := hit("GET", fmt.Sprintf("/users/%d", userID), 200, nil, userWho)
+	assertEq(updatedProfile, "name", nouveauNom)
+
+	hit("PATCH", fmt.Sprintf("/users/%d", userID), 200, map[string]bool{"admin": true}, userWho)
+	finalProfile := hit("GET", fmt.Sprintf("/users/%d", userID), 200, nil, adminWho)
+	assertEq(finalProfile, "admin", false)
+}
+
+func testAuthRoles(adminWho, userWho string) {
+	log.Println("\n📌 TEST MODULE: ROLES")
+
+	hit("POST", "/admin/plants", 403, map[string]any{"name": "Bad", "price": 1, "stock": 1}, userWho)
+
+	goodPlant := hit("POST", "/admin/plants", 201, map[string]any{"name": "Good", "price": 1, "stock": 1}, adminWho)
+	pid := int(goodPlant["id"].(float64))
+	hit("DELETE", fmt.Sprintf("/admin/plants/%d", pid), 200, nil, adminWho)
+
+	hitList("GET", "/users", 403, nil, userWho)
+}
+
+func testAdminPlants(who string) {
+	log.Println("\n📌 TEST MODULE: ADMIN PLANTS")
+	plantes := hitList("GET", "/admin/plants", 200, nil, who)
+	log.Printf("   ↳ %d plantes récupérées", len(plantes))
+	assertSortedAscByField(plantes, "name", "plantes")
+
+	d := map[string]any{"name": fmt.Sprintf("Plante_admin_de_test_%s", maintenant), "price": 99, "stock": 12}
+	createdPlant := hit("POST", "/admin/plants", 201, d, who)
+	id := int(createdPlant["id"].(float64))
+	hit("PATCH", `/admin/plants/`+fmt.Sprintf("%d", id), 200, map[string]int{"price": 123}, who)
+	hit("DELETE", `/admin/plants/`+fmt.Sprintf("%d", id), 200, nil, who)
+}
+
+/**
+ * Teste la gestion CRUD des administrateurs et la conformité de l’ordre dans /admin/users
+ * - Crée un admin temporaire
+ * - Vérifie la présence et l’ordre dans la liste
+ * - Teste mise à jour nom et bascule du rôle admin
+ * - Supprime l’admin temporaire
+ * @who jeton d’admin utilisé pour les requêtes
+ */
+func testAdminUsers(who string) {
+	log.Println("\n📌 TEST MODULE: ADMIN USERS")
+
+	// Création d’un admin temporaire
+	adminTemp := map[string]any{
+		"email":    fmt.Sprintf("admin_temp_%s@example.com", maintenant),
+		"name":     fmt.Sprintf("Admin Temporaire %s", maintenant),
+		"password": "password",
+		"admin":    true,
+	}
+	created := hit("POST", "/users", 201, adminTemp, who)
+	adminID := int(created["id"].(float64))
+	log.Printf("   ↳ Admin temporaire créé: %s", adminTemp["email"])
+
+	// Vérification : la liste est triée (admins d’abord puis noms)
+	adminList := hitList("GET", "/admin/users", 200, nil, who)
+	// assertAdminsFirstThenName(adminList)
+	log.Printf("   ↳ %d utilisateurs récupérés", len(adminList))
+
+	// Recherche de l’admin temporaire dans la liste
+	var cible map[string]any
+	for _, a := range adminList {
+		if a["email"] == adminTemp["email"] {
+			cible = a
+			break
+		}
+	}
+	if cible == nil {
+		log.Fatalf("Admin temporaire absent de la liste")
+	}
+	log.Printf("   ↳ Cible confirmée (%s, id=%d)", cible["email"], adminID)
+
+	// Mise à jour du nom de l’admin
+	nouveauNom := fmt.Sprintf("Admin_temp_modifié_%s", maintenant)
+	hit("PATCH", fmt.Sprintf("/users/%d", adminID), 200, map[string]string{"name": nouveauNom}, who)
+	updated := hit("GET", fmt.Sprintf("/users/%d", adminID), 200, nil, who)
+	assertEq(updated, "name", nouveauNom)
+
+	// Retrait du rôle admin
+	hit("PATCH", fmt.Sprintf("/users/%d", adminID), 200, map[string]bool{"admin": false}, who)
+	afterDemote := hit("GET", fmt.Sprintf("/users/%d", adminID), 200, nil, who)
+	assertEq(afterDemote, "admin", false)
+
+	// Restauration du rôle admin
+	hit("PATCH", fmt.Sprintf("/users/%d", adminID), 200, map[string]bool{"admin": true}, who)
+	afterPromote := hit("GET", fmt.Sprintf("/users/%d", adminID), 200, nil, who)
+	assertEq(afterPromote, "admin", true)
+
+	// Suppression de l’admin temporaire
+	hit("DELETE", fmt.Sprintf("/users/%d", adminID), 200, nil, who)
+	log.Printf("   ↳ Admin temporaire supprimé (%s)", adminTemp["email"])
+}
+
+func testAuthMe(who string) {
+	log.Println("\n📌 TEST MODULE: AUTH /me")
+	me := hit("GET", "/auth/me", 200, nil, who)
+	if me["email"] == nil {
+		log.Fatalf("Réponse invalide pour /auth/me")
+	}
+	log.Printf("   ↳ Utilisateur connecté: %s (%s)", me["email"], me["name"])
+}
+
+/* ---------- Exécution des tests ---------- */
+func main() {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "\n❌ Tests interrompus: %v\n", r)
+			os.Exit(1)
+		}
+	}()
+
+	log.Printf("🧪 Démarrage des tests: %s\n", config.ApiBaseUrl)
+
+	login(config.AdminEmail, config.AdminPassword, "admin")
+	userEmail := fmt.Sprintf("utilisateur_de_test_%s@example.com", maintenant)
+	registerUser("User", userEmail, "pass123", "user")
+	login(userEmail, "pass123", "user")
+
+	testPlants("admin")
+	testUsers("admin")
+	testOrders("admin", "user")
+	testUserProfile("admin", "user", userEmail)
+	testAuthRoles("admin", "user")
+	testAdminPlants("admin")
+	testAdminUsers("admin")
+	testAuthMe("user")
+
+	log.Println("\n🎉 Tous les tests ont réussi!")
+}
+
+# go.sum
+github.com/bxcodec/faker/v3 v3.8.1 h1:qO/Xq19V6uHt2xujwpaetgKhraGCapqY2CRWGD/SqcM=
+github.com/bxcodec/faker/v3 v3.8.1/go.mod h1:DdSDccxF5msjFo5aO4vrobRQ8nIApg8kq3QWPEQD6+o=
+github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/golang-jwt/jwt/v5 v5.3.0 h1:pv4AsKCKKZuqlgs5sUmn4x8UlGa0kEVt/puTpKx9vvo=
+github.com/golang-jwt/jwt/v5 v5.3.0/go.mod h1:fxCRLWMO43lRc8nhHWY6LGqRcf+1gQWArsqaEUEa5bE=
+github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
+github.com/gorilla/mux v1.8.1/go.mod h1:AKf9I4AEqPTmMytcMc0KkNouC66V3BtZ4qD5fmWSiMQ=
+github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
+github.com/jackc/pgpassfile v1.0.0/go.mod h1:CEx0iS5ambNFdcRtxPj5JhEz+xB6uRky5eyVu/W2HEg=
+github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 h1:iCEnooe7UlwOQYpKFhBabPMi4aNAfoODPEFNiAnClxo=
+github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761/go.mod h1:5TJZWKEWniPve33vlWYSoGYefn3gLQRzjfDlhSJ9ZKM=
+github.com/jackc/pgx/v5 v5.6.0 h1:SWJzexBzPL5jb0GEsrPMLIsi/3jOo7RHlzTjcAeDrPY=
+github.com/jackc/pgx/v5 v5.6.0/go.mod h1:DNZ/vlrUnhWCoFGxHAG8U2ljioxukquj7utPDgtQdTw=
+github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo=
+github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
+github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=
+github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
+github.com/jinzhu/now v1.1.5 h1:/o9tlHleP7gOFmsnYNz3RGnqzefHA47wQpKrrdTIwXQ=
+github.com/jinzhu/now v1.1.5/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
+github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
+github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
+github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/rs/cors v1.11.1 h1:eU3gRzXLRK57F5rKMGMZURNdIG4EoAmX8k94r9wXWHA=
+github.com/rs/cors v1.11.1/go.mod h1:XyqrcTp5zjWr1wsJ8PIRZssZ8b/WMcMf71DJnit4EMU=
+github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
+github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
+github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
+golang.org/x/crypto v0.40.0 h1:r4x+VvoG5Fm+eJcxMaY8CQM7Lb0l1lsmjGBQ6s8BfKM=
+golang.org/x/crypto v0.40.0/go.mod h1:Qr1vMER5WyS2dfPHAlsOj01wgLbsyWtFn/aY+5+ZdxY=
+golang.org/x/sync v0.16.0 h1:ycBJEhp9p4vXvUZNszeOq0kGTPghopOL8q0fq3vstxw=
+golang.org/x/sync v0.16.0/go.mod h1:1dzgHSNfp02xaA81J2MS99Qcpr2w7fw1gpm99rleRqA=
+golang.org/x/text v0.27.0 h1:4fGWRpyh641NLlecmyl4LOe6yDdfaYNrGb2zdfo4JV4=
+golang.org/x/text v0.27.0/go.mod h1:1D28KMCvyooCX9hBiosv5Tz/+YLxj0j7XhWjpSUF7CU=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+gorm.io/driver/postgres v1.6.0 h1:2dxzU8xJ+ivvqTRph34QX+WrRaJlmfyPqXmoGVjMBa4=
+gorm.io/driver/postgres v1.6.0/go.mod h1:vUw0mrGgrTK+uPHEhAdV4sfFELrByKVGnaVRkXDhtWo=
+gorm.io/gorm v1.31.0 h1:0VlycGreVhK7RF/Bwt51Fk8v0xLiiiFdbGDPIZQ7mJY=
+gorm.io/gorm v1.31.0/go.mod h1:XyQVbO2k6YkOis7C2437jSit3SsDK72s7n7rsSHd+Gs=
+
 # Makefile
 
 run:
@@ -31,15 +1890,66 @@ db-reset:
 	psql -U tilnede0x1182 -d postgres -c "CREATE DATABASE plant_shop_go;"
 	go run cmd/seed.go
 
-test:
-	go run tests/test_e2e.go
+tests:
+	go run test/test_e2e.go
 
-# --- Arborescence du projet (3 niveaux) ---
+# go.mod
+module plant_shop_go
+
+go 1.23.0
+
+toolchain go1.24.9
+
+require (
+	github.com/bxcodec/faker/v3 v3.8.1
+	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/gorilla/mux v1.8.1
+	github.com/joho/godotenv v1.5.1
+	github.com/rs/cors v1.11.1
+	golang.org/x/crypto v0.40.0
+	gorm.io/driver/postgres v1.6.0
+	gorm.io/gorm v1.31.0
+)
+
+require (
+	github.com/jackc/pgpassfile v1.0.0 // indirect
+	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
+	github.com/jackc/pgx/v5 v5.6.0 // indirect
+	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
+	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/text v0.27.0 // indirect
+)
+
+# server/main.go
+# (FICHIER MANQUANT : server/main.go)
+
+# server/Makefile
+# (FICHIER MANQUANT : server/Makefile)
+
+# server/internal/api/router.go
+# (FICHIER MANQUANT : server/internal/api/router.go)
+
+# server/internal/api/handlers.go
+# (FICHIER MANQUANT : server/internal/api/handlers.go)
+
+# server/internal/middleware/auth.go
+# (FICHIER MANQUANT : server/internal/middleware/auth.go)
+
+# server/internal/middleware/admin.go
+# (FICHIER MANQUANT : server/internal/middleware/admin.go)
+
+
+# Arborescence (3 niveaux, sans node_modules)
 /home/tilnede0x1182/code/tilnede0x1182/Personnel/2025/Entrainement/plant_shop/DiversBackends/apps/plant_shop_go
 ├── bin
 │   └── server
 ├── cmd
 │   └── seed.go
+├── .env
+├── .env.example
 ├── go.mod
 ├── go.sum
 ├── internal
@@ -48,7 +1958,16 @@ test:
 │   │   └── seed.go
 │   ├── http
 │   │   ├── handlers
+│   │   │   ├── auth.go
+│   │   │   ├── orders.go
+│   │   │   ├── plants_admin.go
+│   │   │   ├── plants.go
+│   │   │   ├── users_admin.go
+│   │   │   └── users_owner.go
 │   │   ├── middleware
+│   │   │   ├── admin_guard.go
+│   │   │   ├── auth.go
+│   │   │   └── owner_guard.go
 │   │   └── router.go
 │   ├── models
 │   │   ├── order.go
@@ -59,9 +1978,8 @@ test:
 │       └── jwt.go
 ├── main.go
 ├── Makefile
-├── projet.txt
-├── tests
+├── test
 │   └── test_e2e.go
 └── users.txt
 
-11 directories, 17 files
+11 directories, 27 files

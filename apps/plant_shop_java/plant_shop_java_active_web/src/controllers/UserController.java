@@ -28,9 +28,15 @@ public final class UserController extends AppController {
         runAction(() -> {
             User current = getCurrentUser();
             Integer userId = parseId(getId());
-            if (current == null || (!current.getBoolean("is_admin") && !current.getId().equals(id))) {
+            if (current == null || userId == null) {
+                respondEmpty(401);
+                return;
+            }
+            boolean isAdmin = Boolean.TRUE.equals(current.getBoolean("is_admin"));
+            if (!isAdmin && !current.getLongId().equals(userId.longValue())) {
                 throw new SecurityException("Accès non autorisé.");
             }
+            User user = User.findById(userId);
             if (user == null) {
                 respondJson(404, JsonHelper.toJsonString(Map.of("error", "Utilisateur introuvable")));
                 return;
@@ -70,14 +76,15 @@ public final class UserController extends AppController {
     }
 
     @PATCH
-    public void update(int id) {
+    public void update() {
         runAction(() -> {
             User current = getCurrentUser();
             if (current == null) {
                 respondEmpty(401);
                 return;
             }
-            User user = User.findById(id);
+            Integer userId = parseId(getId());
+            User user = (userId == null) ? null : User.findById(userId);
             if (user == null) {
                 respondJson(404, JsonHelper.toJsonString(Map.of("error", "Utilisateur introuvable")));
                 return;
@@ -109,10 +116,11 @@ public final class UserController extends AppController {
     }
 
     @DELETE
-    public void destroy(int id) {
+    public void destroy() {
         runAction(() -> {
             requireAdmin();
-            User user = User.findById(id);
+            Integer userId = parseId(getId());
+            User user = (userId == null) ? null : User.findById(userId);
             if (user == null) {
                 respondJson(404, JsonHelper.toJsonString(Map.of("error", "Utilisateur introuvable")));
                 return;
@@ -120,5 +128,13 @@ public final class UserController extends AppController {
             user.delete();
             respondEmpty(200);
         });
+    }
+
+    private Integer parseId(String value) {
+        try {
+            return value == null ? null : Integer.valueOf(value);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

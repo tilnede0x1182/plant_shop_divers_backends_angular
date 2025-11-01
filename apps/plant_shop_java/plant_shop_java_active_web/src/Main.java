@@ -11,18 +11,43 @@ import java.util.HashMap;
 import java.util.Map;
 import util.CorsUtil;
 
-public class Application {
+public class Main {
 
     public static void main(String[] args) throws Exception {
-        System.setProperty("activeweb.bootstrap", "launch.AppBootstrap");
-        System.setProperty("activeweb.controller_config", "launch.AppControllerConfig");
-        System.setProperty("activeweb.db_config", "util.DbConfig");
-        System.setProperty("activeweb.root_package", "controllers");
+        System.setProperty("bootstrap", "launch.AppBootstrap");
+        System.setProperty("controllerConfig", "launch.AppControllerConfig");
+        System.setProperty("dbconfig", "util.DbConfig");
+        System.setProperty("rootPackage", "controllers");
 
         Map<String, String> env = loadEnv();
-        int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));
+				int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));
 
-        Server server = new Server(port);
+				try {
+						java.nio.file.Path appCfgDir = java.nio.file.Paths.get("config", "app_config");
+						java.nio.file.Files.createDirectories(appCfgDir);
+
+						java.util.Properties appProps = new java.util.Properties();
+						appProps.setProperty("app.name", env.getOrDefault("APP_NAME", "plant_shop"));
+						appProps.setProperty("server.port", String.valueOf(port));
+						try (java.io.OutputStream out = java.nio.file.Files.newOutputStream(appCfgDir.resolve("development.properties"))) {
+								appProps.store(out, "generated from config/.env");
+						}
+
+						java.util.Properties dbProps = new java.util.Properties();
+						dbProps.setProperty("development.driver", env.getOrDefault("DATABASE_DRIVER", "org.postgresql.Driver"));
+						dbProps.setProperty("development.username", env.getOrDefault("DATABASE_USER", "postgres"));
+						dbProps.setProperty("development.password", env.getOrDefault("DATABASE_PASS", "postgrespw"));
+						dbProps.setProperty("development.url", env.getOrDefault("DATABASE_URL", "jdbc:postgresql://localhost:5432/plant_shop_java_lite_active_web"));
+						try (java.io.OutputStream out = java.nio.file.Files.newOutputStream(java.nio.file.Paths.get("config", "database.properties"))) {
+								dbProps.store(out, "generated from config/.env");
+						}
+
+						System.setProperty("app_config.properties", "config/app_config/development.properties");
+				} catch (Exception e) {
+						System.err.println("Impossible d'écrire config/app_config or config/database.properties: " + e.getMessage());
+				}
+
+				Server server = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/api");
         server.setHandler(context);

@@ -1,4 +1,4 @@
-package ;
+package util;
 
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlets.CrossOriginFilter;

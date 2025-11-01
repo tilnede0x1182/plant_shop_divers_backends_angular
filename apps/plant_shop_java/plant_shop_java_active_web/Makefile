@@ -23,14 +23,15 @@ CLASSPATH = bin:lib/*
 
 compile:
 	mkdir -p bin
+	cp src/activeweb.properties bin/
 	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
 		src/launch/*.java \
 		src/models/*.java \
 		src/controllers/*.java \
-		src/Application.java -Xlint:unchecked
+		src/Main.java -Xlint:unchecked
 run:
-	java -cp "$(CLASSPATH)" Application
+	java -cp "$(CLASSPATH)" Main
 
 compile_run: compile run
 

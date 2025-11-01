@@ -24,8 +24,8 @@ public final class Main {
     private static Connection db = null;
     private static Javalin app = null;
     private static final Set<String> ALLOWED_ORIGINS = Set.of(
-        "http://localhost:4200",
-        "http://127.0.0.1:4200"
+        "http://localhost:8300",
+        "http://127.0.0.1:8300"
     );
 
     private static Map<String, String> env() throws IOException {

@@ -65,6 +65,20 @@ int order_repo_add(PGconn *c, int user_id, cJSON* items_json) {
 
 /* ---------- helpers ---------- */
 struct _item_ctx { PGconn *db; cJSON *dst; };
+
+static void format_timestamp_iso(const char *pg_ts, char *out, size_t out_sz) {
+	if (!pg_ts || !out || out_sz == 0) {
+		if (out && out_sz > 0) out[0] = '\0';
+		return;
+	}
+	int year, month, day, hour, minute, second;
+	if (sscanf(pg_ts, "%d-%d-%d %d:%d:%d", &year, &month, &day, &hour, &minute, &second) == 6) {
+		snprintf(out, out_sz, "%04d-%02d-%02dT%02d:%02d:%02dZ", year, month, day, hour, minute, second);
+	} else {
+		/* fallback: copy raw value */
+		snprintf(out, out_sz, "%.*s", (int)(out_sz - 1), pg_ts);
+	}
+}
 static void _item_to_json(OrderItem *it, void *ud) {
 	struct _item_ctx *ctx = ud;
 	Plant p = {0};
@@ -95,8 +109,8 @@ cJSON* order_repo_list(PGconn *c, int uid) {
 
 	PGresult *r = PQexecParams(
 		c,
-		"SELECT id,total,status, row_number() OVER (ORDER BY id ASC) AS number "
-		"FROM orders WHERE user_id=$1 ORDER BY id DESC",
+		"SELECT id,total,status,created_at, row_number() OVER (ORDER BY created_at ASC) AS number "
+		"FROM orders WHERE user_id=$1 ORDER BY created_at DESC",
 		1, NULL, params, NULL, NULL, 0);
 
 	/* protection basique en cas d'erreur SQL */
@@ -108,15 +122,19 @@ cJSON* order_repo_list(PGconn *c, int uid) {
 	cJSON *out = cJSON_CreateArray();
 	for (int i = 0; i < PQntuples(r); i++) {
 		int oid = atoi(PQgetvalue(r, i, 0));
-		int total = atoi(PQgetvalue(r, i, 1));
+		double total = atof(PQgetvalue(r, i, 1));
 		const char *status = PQgetvalue(r, i, 2);
-		int number = atoi(PQgetvalue(r, i, 3)); /* 1 = plus ancienne */
+		const char *created_raw = PQgetvalue(r, i, 3);
+		int number = atoi(PQgetvalue(r, i, 4)); /* 1 = plus ancienne */
 
 		cJSON *j = cJSON_CreateObject();
 		cJSON_AddNumberToObject(j, "id", oid);
 		cJSON_AddNumberToObject(j, "userId", uid);
 		cJSON_AddNumberToObject(j, "totalPrice", total);
 		cJSON_AddStringToObject(j, "status", status);
+		char created_iso[32];
+		format_timestamp_iso(created_raw, created_iso, sizeof(created_iso));
+		cJSON_AddStringToObject(j, "createdAt", created_iso);
 		cJSON_AddNumberToObject(j, "number", number); /* nouvelle propriété */
 
 		/* items */

@@ -24,13 +24,9 @@ public abstract class AppController extends org.javalite.activeweb.AppController
 
     protected void runAction(ControllerAction action) {
         try {
-            System.out.println("[AppController] runAction start for " + getClass().getSimpleName() + " " + getHttpServletRequest().getMethod() + " " + getHttpServletRequest().getRequestURI());
             openConnectionIfNeeded();
-            System.out.println("[AppController] connexion ouverte");
             resolveCurrentUser();
-            System.out.println("[AppController] utilisateur courant = " + currentUser);
             action.execute();
-            System.out.println("[AppController] action exécutée OK");
         } catch (SecurityException se) {
             respondError(403, se.getMessage());
         } catch (IllegalArgumentException iae) {
@@ -80,7 +76,6 @@ public abstract class AppController extends org.javalite.activeweb.AppController
 
     private void openConnectionIfNeeded() {
         if (!Base.hasConnection()) {
-            System.out.println("[AppController] ouverture connexion DB");
             Base.open(
                 "org.postgresql.Driver",
                 DatabaseFactory.jdbcUrlOrDefault(),
@@ -99,15 +94,12 @@ public abstract class AppController extends org.javalite.activeweb.AppController
     private void resolveCurrentUser() {
         String sessionId = cookieValue("session_id");
         if (sessionId == null) {
-            System.out.println("[AppController] aucun cookie session");
             return;
         }
         Long userId = SessionManager.getUserId(sessionId);
         if (userId == null) {
-            System.out.println("[AppController] session inconnue " + sessionId);
             return;
         }
         currentUser = User.findById(userId);
-        System.out.println("[AppController] utilisateur courant résolu: " + currentUser);
     }
 }

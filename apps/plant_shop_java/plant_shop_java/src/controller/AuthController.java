@@ -106,7 +106,8 @@ public final class AuthController extends BaseController {
         String sessionId = UUID.randomUUID().toString();
         sessions.put(sessionId, user.id);
 
-        ex.getResponseHeaders().add("Set-Cookie", "session_id=" + sessionId + "; HttpOnly; Path=/; Max-Age=3600");
+				ex.getResponseHeaders().add("Set-Cookie",
+						"session_id=" + sessionId + "; HttpOnly; Path=/api; Max-Age=3600; SameSite=Lax");
         // Le test attend un corps vide ou JSON, donc c'est ok.
         sendJsonResponse(ex, 201, "{\"message\":\"Connexion réussie.\"}");
     }
@@ -124,7 +125,7 @@ public final class AuthController extends BaseController {
 			// Cookie expiré -> effacement côté navigateur
 			ex.getResponseHeaders().add(
 					"Set-Cookie",
-					"session_id=deleted; Path=/; Max-Age=0; HttpOnly"
+					"session_id=deleted; Path=/api; Max-Age=0; HttpOnly; SameSite=Lax"
 			);
 			sendEmptyResponse(ex, 204);   // helper déjà présent dans BaseController :contentReference[oaicite:0]{index=0}
 		}
@@ -141,7 +142,7 @@ public final class AuthController extends BaseController {
 			userJson.put("id", currentUser.id);
 			userJson.put("name", currentUser.name);
 			userJson.put("email", currentUser.email);
-			userJson.put("admin", currentUser.isAdmin);
+			userJson.put("is_admin", currentUser.isAdmin);
 
 			sendJsonResponse(ex, 200, userJson.toString());
 		}

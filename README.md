@@ -92,6 +92,7 @@ apps/
  |    ├── plant_shop_java             → Backend en Java avec HTTP
  |    ├── plant_shop_javalin          → Backend en Java avec Javalin
  |    └── plant_shop_java_micronaut   → Backend en Java avec Micronaut
+ |    └── plant_shop_java_micronaut   → Backend en Java avec Java Lite (Active Web)
  ├─ plant_shop_python                 → Backend en Python
  ├─ plant_shop_haskell                → Backend en Haskell
  └─ plant_shop_rust

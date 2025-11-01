@@ -26,21 +26,22 @@ public class InstallCoursier {
 
     public static void main(String[] args) {
         try {
-            System.out.println("📦 Installation des dépendances via Coursier...");
+            // System.out.println("📦 Installation des dépendances via Coursier...");
             ensureCs();
             Files.createDirectories(Paths.get(LIB_DIR));
             List<String> deps = Files.readAllLines(Paths.get(DEP_FILE)).stream().map(String::trim).toList();
-            for (String raw : deps) {
-                if (raw.isEmpty() || raw.startsWith("#")) continue;
-                System.out.println("➡️  Téléchargement : " + raw);
-                List<String> jars = fetchJarPathsFor(raw);
-                if (jars.isEmpty()) {
-                    System.out.println("⚠️  Aucun .jar trouvé pour : " + raw);
-                }
-                for (String jar : jars) {
-                    copyJarImmediate(jar);
-                }
-            }
+						for (String raw : deps) {
+								if (raw.isEmpty() || raw.startsWith("#")) continue;
+								String[] p = raw.split(":");
+								if (p.length >= 3) {
+										Path libJar = Paths.get(LIB_DIR, p[1] + "-" + p[2] + ".jar");
+										if (Files.exists(libJar)) { System.out.println("ℹ️  Existe, skip : " + libJar.getFileName()); continue; }
+								}
+								System.out.println("➡️  Téléchargement : " + raw);
+								List<String> jars = fetchJarPathsFor(raw);
+								if (jars.isEmpty()) System.out.println("⚠️  Aucun .jar trouvé pour : " + raw);
+								for (String jar : jars) copyJarImmediate(jar);
+						}
 						cleanObsoleteJars(deps);
 						System.out.println("✅ Dépendances installées dans ./lib");
         } catch (Exception e) {
@@ -56,7 +57,7 @@ public class InstallCoursier {
     private static void ensureCs() throws IOException, InterruptedException {
         try {
             runAndCollect("cs", "--version");
-            System.out.println("✔️  Coursier trouvé.");
+            // System.out.println("✔️  Coursier trouvé.");
             return;
         } catch (IOException ignored) {
             System.out.println("➡️  Coursier non trouvé. Installation locale...");
@@ -66,26 +67,23 @@ public class InstallCoursier {
         System.out.println("✔️  Coursier installé.");
     }
 
-    /**
-     * Exécute cs fetch <dep> -p, attend la fin puis extrait tous les tokens
-     * qui se terminent par .jar (séparateurs : whitespace et ':').
-     */
-    private static List<String> fetchJarPathsFor(String dep) throws IOException, InterruptedException {
-        List<String> out = runAndCollect("cs", "fetch", dep, "-p");
-        StringBuilder sb = new StringBuilder();
-        for (String s : out) sb.append(s).append('\n');
-        String all = sb.toString();
-        String[] tokens = all.split("\\s+|:"); // couvre les cas "Downloading ..." et classpath
-        List<String> jars = new ArrayList<>();
-        for (String t : tokens) {
-            String s = t.trim();
-            if (s.isEmpty()) continue;
-            if (s.endsWith(".jar")) {
-                jars.add(s);
-            }
-        }
-        return jars;
-    }
+		/**
+		 * Récupère les chemins .jar pour une dépendance.
+		 * Si l'artifact principal (artifact-version.jar) existe déjà dans ./lib,
+		 * évite d'appeler `cs fetch` et retourne une liste vide.
+		 */
+		private static List<String> fetchJarPathsFor(String dep) throws IOException, InterruptedException {
+				String[] parts = dep.split(":");
+				if (parts.length >= 3) {
+						Path p = Paths.get(LIB_DIR, parts[1] + "-" + parts[2] + ".jar");
+						if (Files.exists(p)) { System.out.println("ℹ️  Existe localement, skip fetch : " + p.getFileName()); return java.util.Collections.emptyList(); }
+				}
+				List<String> out = runAndCollect("cs", "fetch", dep, "-p");
+				String all = String.join("\n", out);
+				List<String> jars = new ArrayList<>();
+				for (String token : all.split("\\s+|:")) if (token.trim().endsWith(".jar")) jars.add(token.trim());
+				return jars;
+		}
 
     /**
      * Copie immédiatement le jar depuis le cache vers ./lib si absent.
@@ -134,7 +132,8 @@ public class InstallCoursier {
 		 * par les dépendances actives ni leurs dépendances transitives.
 		 */
 		private static void cleanObsoleteJars(List<String> deps) throws IOException, InterruptedException {
-				System.out.println("🧹 Nettoyage des dépendances obsolètes...");
+				boolean didDelete = false;
+
 				// 1. Obtenir le classpath complet via coursier
 				List<String> lines = new ArrayList<>();
 				lines.addAll(runAndCollect("bash", "-c",
@@ -148,6 +147,15 @@ public class InstallCoursier {
 								valid.add(Paths.get(s.trim()).getFileName().toString());
 						}
 				}
+
+				// 2.1 Vérifier s'il existe au moins un .jar à supprimer
+				try (var stream = Files.list(Paths.get(LIB_DIR))) {
+						didDelete = stream.filter(p -> p.toString().endsWith(".jar"))
+								.anyMatch(jar -> !valid.contains(jar.getFileName().toString()));
+				}
+
+				if (didDelete) System.out.println("🧹 Nettoyage des dépendances obsolètes...");
+
 				// 3. Parcourir ./lib et supprimer ce qui n’est plus valide
 				try (var stream = Files.list(Paths.get(LIB_DIR))) {
 						stream.filter(p -> p.toString().endsWith(".jar"))
@@ -163,6 +171,6 @@ public class InstallCoursier {
 											}
 									});
 				}
-				System.out.println("✅ Nettoyage terminé.");
+				if (didDelete) System.out.println("✅ Nettoyage terminé.");
 		}
 }

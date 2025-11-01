@@ -2,6 +2,7 @@ package app.controllers;
 
 import models.User;
 import org.javalite.activejdbc.Base;
+import org.javalite.activeweb.Cookie;
 import org.javalite.common.JsonHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,10 +93,11 @@ public abstract class AppController extends org.javalite.activeweb.AppController
     }
 
     private void resolveCurrentUser() {
-        String sessionId = cookieValue("session_id");
-        if (sessionId == null) {
+        Cookie sessionCookie = cookie("session_id");
+        if (sessionCookie == null) {
             return;
         }
+        String sessionId = sessionCookie.getValue();
         Long userId = SessionManager.getUserId(sessionId);
         if (userId == null) {
             return;

@@ -32,7 +32,7 @@ public final class Test {
 	/* -------- .env -------- */
 	private static Map<String, String> env() throws IOException {
 		Map<String, String> m = new HashMap<>();
-		try (BufferedReader br = new BufferedReader(new FileReader(".env"))) {
+		try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
 			String l;
 			while ((l = br.readLine()) != null) {
 				int i = l.indexOf('=');

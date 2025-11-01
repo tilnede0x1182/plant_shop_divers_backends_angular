@@ -26,10 +26,8 @@ compile:
 	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
 		src/models/*.java \
-		src/repositories/*.java \
-		src/security/*.java \
 		src/controllers/*.java \
-		src/Application.java
+		src/Application.java -Xlint:unchecked
 run:
 	java -cp "$(CLASSPATH)" Application
 

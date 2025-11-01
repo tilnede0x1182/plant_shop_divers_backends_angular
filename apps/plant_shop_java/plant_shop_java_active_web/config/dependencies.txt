@@ -1,0 +1,5 @@
+org.javalite:activeweb:2.3.1-j8
+org.javalite:activejdbc:2.3.1-j8
+org.postgresql:postgresql:42.7.4
+org.json:json:20210307
+org.mindrot:jbcrypt:0.4

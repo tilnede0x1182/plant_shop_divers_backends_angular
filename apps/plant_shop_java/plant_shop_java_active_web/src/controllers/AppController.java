@@ -60,14 +60,14 @@ public abstract class AppController extends org.javalite.activeweb.AppController
     }
 
     protected void respondJson(int status, String json) {
-        getHttpServletResponse().setStatus(status);
-        getHttpServletResponse().setContentType("application/json");
-        respond(json);
+        respond(json)
+            .contentType("application/json")
+            .status(status);
     }
 
     protected void respondEmpty(int status) {
-        getHttpServletResponse().setStatus(status);
-        respond("");
+        respond("")
+            .status(status);
     }
 
     private void respondError(int status, String message) {

@@ -1,4 +1,4 @@
-package utils;
+package util;
 
 import org.javalite.activeweb.AbstractDBConfig;
 import org.javalite.activeweb.AppContext;

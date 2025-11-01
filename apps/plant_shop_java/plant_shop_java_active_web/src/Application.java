@@ -9,14 +9,14 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import utils.CorsUtil;
+import util.CorsUtil;
 
 public class Application {
 
     public static void main(String[] args) throws Exception {
         System.setProperty("activeweb.bootstrap", "launch.AppBootstrap");
         System.setProperty("activeweb.controller_config", "launch.AppControllerConfig");
-        System.setProperty("activeweb.db_config", "utils.DbConfig");
+        System.setProperty("activeweb.db_config", "util.DbConfig");
         System.setProperty("activeweb.root_package", "controllers");
 
         Map<String, String> env = loadEnv();
@@ -55,7 +55,7 @@ public class Application {
 								ServletContextHandler newContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
 								newContext.setContextPath(context.getContextPath());
 								server.setHandler(newContext);
-								utils.CorsUtil.enable(newContext);
+								util.CorsUtil.enable(newContext);
 								FilterHolder newFilterHolder = new FilterHolder(new org.javalite.activeweb.RequestDispatcher());
 								newFilterHolder.setInitParameter("exclusions", "css,images,js");
 								newContext.addFilter(newFilterHolder, "/*", EnumSet.of(DispatcherType.REQUEST));

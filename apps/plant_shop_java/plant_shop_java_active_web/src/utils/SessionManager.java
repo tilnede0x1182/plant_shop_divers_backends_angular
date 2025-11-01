@@ -5,17 +5,20 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class SessionManager {
-    private static final Map<String, Integer> SESSIONS = new ConcurrentHashMap<>();
+    private static final Map<String, Long> SESSIONS = new ConcurrentHashMap<>();
 
     private SessionManager() {}
 
-    public static String createSession(Integer userId) {
+    public static String createSession(Number userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId ne peut pas être null");
+        }
         String id = UUID.randomUUID().toString();
-        SESSIONS.put(id, userId);
+        SESSIONS.put(id, userId.longValue());
         return id;
     }
 
-    public static Integer getUserId(String sessionId) {
+    public static Long getUserId(String sessionId) {
         if (sessionId == null) return null;
         return SESSIONS.get(sessionId);
     }

@@ -47,6 +47,14 @@ public class Main {
 						System.err.println("Impossible d'écrire config/app_config or config/database.properties: " + e.getMessage());
 				}
 
+				// Vérifie si le port est disponible avant de lancer Jetty
+				try (java.net.ServerSocket socket = new java.net.ServerSocket(port)) {
+						socket.setReuseAddress(true);
+				} catch (java.io.IOException e) {
+						System.err.println("❌ Le port " + port + " est déjà utilisé. Impossible de démarrer le serveur.");
+						System.exit(1);
+				}
+
 				Server server = new Server(port);
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/api");

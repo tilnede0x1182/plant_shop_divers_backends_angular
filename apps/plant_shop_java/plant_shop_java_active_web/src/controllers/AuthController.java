@@ -17,6 +17,7 @@ public final class AuthController extends AppController {
     public void login() {
         runAction(() -> {
             Map<String, Object> body = ApiMapper.jsonToMap(getRequestString());
+            System.out.println("[AuthController] body = " + body);
             String email = (String) body.get("email");
             String password = (String) body.get("password");
 
@@ -26,17 +27,25 @@ public final class AuthController extends AppController {
             }
 
             User user = User.findFirst("email = ?", email);
+            System.out.println("[AuthController] user = " + user);
             if (user == null || !PasswordUtil.checkPassword(password, user.getString("password_hash"))) {
                 respondJson(401, JsonHelper.toJsonString(Map.of("error", "Identifiants invalides")));
                 return;
             }
 
-            String sessionId = SessionManager.createSession(user.getInteger("id"));
+            Object userIdObj = user.getId();
+            System.out.println("[AuthController] user id obj = " + userIdObj + " (" + (userIdObj == null ? "null" : userIdObj.getClass().getName()) + ")");
+            if (!(userIdObj instanceof Number)) {
+                throw new IllegalStateException("Identifiant utilisateur non numérique");
+            }
+            String sessionId = SessionManager.createSession((Number) userIdObj);
+            System.out.println("[AuthController] session id = " + sessionId);
             Cookie cookie = new Cookie("session_id", sessionId);
             cookie.setPath("/");
             cookie.setHttpOnly();
             cookie.setMaxAge(3600);
             sendCookie(cookie);
+            System.out.println("[AuthController] cookie envoyé");
 
             respondJson(201, user.toJson(false, "id", "name", "email", "is_admin"));
         });

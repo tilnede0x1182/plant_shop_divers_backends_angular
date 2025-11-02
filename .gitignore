@@ -90,6 +90,12 @@ apps/plant_shop_rust/target/
 *.dylib
 Cargo.lock
 
+# ─────────────────────────────────────────────────────────────────────────────
+# ☕ Backend Java – fichiers spécifiques
+# ─────────────────────────────────────────────────────────────────────────────
+# Ignorer tous les fichiers JAR dans le projet
+*.jar
+
 # 🗄️ SQLx / migrations
 sqlx-data.json  # cache d'introspection SQLx
 

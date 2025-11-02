@@ -39,9 +39,7 @@ public class OrderController {
     @GET
     public Response list() throws Exception {
         User currentUser = guards.requireUser();
-        List<Order> orders = currentUser.isAdmin
-            ? repo.list()
-            : repo.listByUser(currentUser.id);
+        List<Order> orders = repo.listByUser(currentUser.id);
 
         orders.sort(Comparator.comparing(o -> o.createdAt, Comparator.reverseOrder()));
 

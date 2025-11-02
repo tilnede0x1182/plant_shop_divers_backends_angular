@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import models.User;
 import repositories.UserRepository;
@@ -44,15 +45,15 @@ public class UserController {
     @PATCH
     @Path("/admin/users/{id}")
     @Transactional
-    public Response updateAdminAlias(@PathParam("id") int id, User updatedData) throws Exception {
-        return updateImpl(id, updatedData);
+    public Response updateAdminAlias(@PathParam("id") int id, Map<String, Object> body) throws Exception {
+        return updateImpl(id, body);
     }
 
     @PATCH
     @Path("/users/{id}")
     @Transactional
-    public Response updateUser(@PathParam("id") int id, User updatedData) throws Exception {
-        return updateImpl(id, updatedData);
+    public Response updateUser(@PathParam("id") int id, Map<String, Object> body) throws Exception {
+        return updateImpl(id, body);
     }
 
     @DELETE
@@ -99,15 +100,26 @@ public class UserController {
     @POST
     @Path("/users")
     @Transactional
-    public Response create(User userData) throws Exception {
+    public Response create(Map<String, Object> body) throws Exception {
         guards.requireAdmin(); // Seul un admin peut créer un utilisateur (selon test)
 
-        if (repo.findByEmailWithPassword(userData.email) != null) {
+        String email = (String) body.get("email");
+        String name = (String) body.get("name");
+        String password = body.get("password") instanceof String ? (String) body.get("password") : null;
+        boolean adminFlag = body.containsKey("admin")
+            && Boolean.parseBoolean(String.valueOf(body.get("admin")));
+
+        if (email == null || password == null || password.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                           .entity(Map.of("error", "email et password sont requis"))
+                           .build();
+        }
+
+        if (repo.findByEmailWithPassword(email) != null) {
             return Response.status(Response.Status.CONFLICT).build();
         }
 
-        // Le mot de passe est "password" dans le test
-        userData.passwordHash = PasswordUtil.hashPassword(userData.password);
+        User userData = new User(name, email, PasswordUtil.hashPassword(password), adminFlag);
         int newId = repo.create(userData);
 
         return Response.status(Response.Status.CREATED)
@@ -115,7 +127,7 @@ public class UserController {
                        .build();
     }
 
-    private Response updateImpl(int id, User updatedData) throws Exception {
+    private Response updateImpl(int id, Map<String, Object> body) throws Exception {
         User currentUser = guards.requireUser();
 
         // Un utilisateur ne peut modifier que lui-même, un admin peut modifier tout le monde
@@ -128,15 +140,27 @@ public class UserController {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        if (updatedData.name != null) existing.name = updatedData.name;
-        if (updatedData.email != null) existing.email = updatedData.email;
+        if (body.containsKey("name")) {
+            existing.name = (String) body.get("name");
+        }
+        if (body.containsKey("email")) {
+            existing.email = (String) body.get("email");
+        }
 
         // **Logique critique pour la sécurité (demandée par l'utilisateur)**
         // Seul un admin peut changer le statut admin de quelqu'un.
         // Si un user normal (currentUser.isAdmin == false) patche son profil
         // avec "admin: true", cette condition sera fausse et le statut ignoré.
-        if (currentUser.isAdmin) {
-            existing.isAdmin = updatedData.isAdmin;
+        if (currentUser.isAdmin && body.containsKey("admin")) {
+            Object adminValue = body.get("admin");
+            existing.isAdmin = adminValue instanceof Boolean ? (Boolean) adminValue : Boolean.parseBoolean(String.valueOf(adminValue));
+        }
+
+        if (body.containsKey("password")) {
+            Object pwd = body.get("password");
+            if (pwd instanceof String password && !password.isBlank()) {
+                existing.passwordHash = PasswordUtil.hashPassword(password);
+            }
         }
 
         repo.update(existing);

@@ -1,23 +1,22 @@
-import jakarta.servlet.Filter;
-import org.apache.catalina.Wrapper;
-import org.apache.catalina.core.StandardContext;
-import org.apache.catalina.startup.Tomcat;
-import org.apache.tomcat.util.descriptor.web.FilterDef;
-import org.apache.tomcat.util.descriptor.web.FilterMap;
-import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
-import org.springframework.web.filter.RequestContextFilter;
-import org.springframework.web.servlet.DispatcherServlet;
-import security.CorsFilter;
-import security.SessionAuthFilter;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+@SpringBootApplication(
+    scanBasePackages = {"controllers", "repositories", "security", "utils"},
+    exclude = {
+        DataSourceAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class
+    }
+)
 public class Main {
 
     private static final Path ENV_FILE = Path.of("config", ".env");
@@ -27,53 +26,8 @@ public class Main {
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS",
             env.getOrDefault("SERVER_ADRRESS", "4100")));
 
-        Tomcat tomcat = new Tomcat();
-        tomcat.setBaseDir(determineBaseDir());
-        tomcat.setPort(port);
-        tomcat.getConnector();
-
-        StandardContext context = (StandardContext) tomcat.addContext("", new File(".").getAbsolutePath());
-        context.addLifecycleListener(new Tomcat.FixContextListener());
-        context.addApplicationListener("org.springframework.web.context.request.RequestContextListener");
-
-        AnnotationConfigWebApplicationContext applicationContext = new AnnotationConfigWebApplicationContext();
-        applicationContext.scan("controllers", "repositories", "security", "utils");
-        applicationContext.setServletContext(context.getServletContext());
-        applicationContext.refresh();
-
-        DispatcherServlet dispatcherServlet = new DispatcherServlet(applicationContext);
-        Wrapper dispatcher = Tomcat.addServlet(context, "dispatcher", dispatcherServlet);
-        dispatcher.setLoadOnStartup(1);
-        context.addServletMappingDecoded("/", "dispatcher");
-
-        registerFilter(context, "requestContextFilter", new RequestContextFilter());
-        registerFilter(context, "corsFilter", applicationContext.getBean(CorsFilter.class));
-        registerFilter(context, "sessionAuthFilter", applicationContext.getBean(SessionAuthFilter.class));
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                tomcat.stop();
-            } catch (Exception ignored) {
-            }
-            applicationContext.close();
-        }));
-
-        tomcat.start();
-        System.out.println("🚀 Serveur Spring MVC démarré sur http://localhost:" + port);
-        tomcat.getServer().await();
-    }
-
-    private static void registerFilter(StandardContext context, String name, Filter filter) {
-        FilterDef definition = new FilterDef();
-        definition.setFilterName(name);
-        definition.setFilter(filter);
-        definition.setFilterClass(filter.getClass().getName());
-        context.addFilterDef(definition);
-
-        FilterMap mapping = new FilterMap();
-        mapping.setFilterName(name);
-        mapping.addURLPattern("/*");
-        context.addFilterMap(mapping);
+        System.setProperty("server.port", String.valueOf(port));
+        SpringApplication.run(Main.class, args);
     }
 
     private static Map<String, String> loadEnv() {
@@ -110,11 +64,5 @@ public class Main {
             System.err.println("⚠️  Valeur de port invalide (" + rawPort + "), utilisation de 4100.");
             return 4100;
         }
-    }
-
-    private static String determineBaseDir() throws IOException {
-        Path tempDir = Files.createTempDirectory("tomcat");
-        tempDir.toFile().deleteOnExit();
-        return tempDir.toAbsolutePath().toString();
     }
 }

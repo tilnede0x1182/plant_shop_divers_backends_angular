@@ -1,21 +1,17 @@
-# --- Spring Core/MVC (Jakarta) ---
-org.springframework:spring-core:6.1.14
-org.springframework:spring-beans:6.1.14
-org.springframework:spring-context:6.1.14
-org.springframework:spring-web:6.1.14
-org.springframework:spring-webmvc:6.1.14
+# --- Spring Boot (Web + Security, sans Hibernate) ---
+org.springframework.boot:spring-boot:3.3.5
+org.springframework.boot:spring-boot-autoconfigure:3.3.5
+org.springframework.boot:spring-boot-starter-web:3.3.5
+org.springframework.boot:spring-boot-starter-security:3.3.5
 
 # --- Servlet API (compile) - Tomcat embarqué fournit l'impl à l'exécution ---
 jakarta.servlet:jakarta.servlet-api:6.0.0
 
-# --- Tomcat embarqué (HTTP server) ---
-org.apache.tomcat.embed:tomcat-embed-core:10.1.30
-
-# --- JSON / Jackson ---
-com.fasterxml.jackson.core:jackson-core:2.17.0
-com.fasterxml.jackson.core:jackson-annotations:2.17.0
-com.fasterxml.jackson.core:jackson-databind:2.17.0
-com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0
+# --- JSON / Jackson (compléments explicites) ---
+com.fasterxml.jackson.core:jackson-core:2.17.2
+com.fasterxml.jackson.core:jackson-annotations:2.17.2
+com.fasterxml.jackson.core:jackson-databind:2.17.2
+com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2
 
 # --- JDBC driver ---
 org.postgresql:postgresql:42.7.8

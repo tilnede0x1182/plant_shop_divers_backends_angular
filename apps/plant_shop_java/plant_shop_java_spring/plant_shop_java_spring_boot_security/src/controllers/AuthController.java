@@ -6,6 +6,9 @@ import models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import repositories.UserRepository;
 import security.Guards;
@@ -13,6 +16,7 @@ import security.SessionService;
 import utils.ApiMapper;
 import utils.PasswordUtil;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -60,6 +64,7 @@ public class AuthController {
         cookie.setHttpOnly(true);
         // cookie.setSecure(true); // À activer en production (HTTPS)
         response.addCookie(cookie);
+        authenticateUser(user);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                              .body(ApiMapper.toUser(user));
@@ -68,7 +73,7 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CookieValue(name = "session_id", required = false) String sessionId, HttpServletResponse response) {
         if (sessionId != null) {
-            sessionService.getSessions().remove(sessionId);
+            sessionService.removeSession(sessionId);
         }
 
         // Crée un cookie expiré pour l'effacer
@@ -78,6 +83,8 @@ public class AuthController {
         expiredCookie.setHttpOnly(true);
         response.addCookie(expiredCookie);
 
+        SecurityContextHolder.clearContext();
+
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 
@@ -86,5 +93,19 @@ public class AuthController {
         // Le Guard lève une AuthException (401) si l'utilisateur n'est pas trouvé
         User user = guards.requireUser();
         return ResponseEntity.ok(ApiMapper.toUser(user));
+    }
+
+    private void authenticateUser(User user) {
+        List<SimpleGrantedAuthority> authorities = user.isAdmin
+            ? List.of(
+                new SimpleGrantedAuthority("ROLE_ADMIN"),
+                new SimpleGrantedAuthority("ROLE_USER")
+            )
+            : List.of(new SimpleGrantedAuthority("ROLE_USER"));
+
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(user, null, authorities);
+        authentication.setDetails(user);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

@@ -18,4 +18,10 @@ public class SessionService {
     public Map<String, Integer> getSessions() {
         return sessions;
     }
+
+    public void removeSession(String sessionId) {
+        if (sessionId != null) {
+            sessions.remove(sessionId);
+        }
+    }
 }

@@ -1,20 +1,28 @@
 package security;
 
-import jakarta.servlet.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 import repositories.UserRepository;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1) // S'exécute juste après CorsFilter
-public class SessionAuthFilter implements Filter {
+public class SessionAuthFilter extends OncePerRequestFilter {
 
     private static final String SESSION_COOKIE = "session_id";
 
@@ -28,35 +36,40 @@ public class SessionAuthFilter implements Filter {
     UserRepository userRepo; // Le repo est @RequestScope, Spring injecte le bon proxy
 
     @Override
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-            throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        HttpServletRequest request = (HttpServletRequest) req;
+        SecurityContextHolder.clearContext();
         authenticatedUser.setUser(null); // Réinitialise l'utilisateur pour cette requête
 
-        if (request.getCookies() == null) {
-            chain.doFilter(req, res);
-            return;
+        Cookie sessionCookie = extractSessionCookie(request);
+        if (sessionCookie != null) {
+            handleSession(sessionCookie.getValue());
         }
 
-        Cookie sessionCookie = null;
-        for (Cookie cookie : request.getCookies()) {
+        filterChain.doFilter(request, response);
+    }
+
+    private Cookie extractSessionCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+        for (Cookie cookie : cookies) {
             if (SESSION_COOKIE.equals(cookie.getName())) {
-                sessionCookie = cookie;
-                break;
+                return cookie;
             }
         }
+        return null;
+    }
 
-        if (sessionCookie == null) {
-            chain.doFilter(req, res);
-            return; // Pas de cookie, l'utilisateur n'est pas connecté
+    private void handleSession(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            return;
         }
-
-        String sessionId = sessionCookie.getValue();
         Integer userId = sessionService.getSessions().get(sessionId);
-
         if (userId == null) {
-            chain.doFilter(req, res);
             return; // Session inconnue ou expirée
         }
 
@@ -64,12 +77,28 @@ public class SessionAuthFilter implements Filter {
             User user = userRepo.find(userId);
             if (user != null) {
                 authenticatedUser.setUser(user); // Stocke l'utilisateur pour la requête
+                UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                        user,
+                        null,
+                        buildAuthorities(user.isAdmin)
+                    );
+                authentication.setDetails(user);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
             System.err.println("Erreur DB dans le filtre d'authentification: " + e.getMessage());
             // Continue quand même, l'utilisateur sera juste "non connecté"
         }
+    }
 
-        chain.doFilter(req, res);
+    private List<SimpleGrantedAuthority> buildAuthorities(boolean isAdmin) {
+        if (isAdmin) {
+            return List.of(
+                new SimpleGrantedAuthority("ROLE_ADMIN"),
+                new SimpleGrantedAuthority("ROLE_USER")
+            );
+        }
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
     }
 }

@@ -34,6 +34,8 @@ public class SessionAuthFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
+        authenticatedUser.user = null;
+
         Cookie sessionCookie = ctx.getCookies().get(SESSION_COOKIE);
         if (sessionCookie == null) {
             return; // Pas de cookie, l'utilisateur n'est pas connecté
@@ -46,11 +48,8 @@ public class SessionAuthFilter implements ContainerRequestFilter {
         }
 
         try {
-            // Récupère le repository pour cette requête
-            UserRepository repo = userRepoProvider.get();
-            User user = repo.find(userId);
+            User user = userRepoProvider.get().find(userId);
             if (user != null) {
-                // Stocke l'utilisateur dans le bean @RequestScoped
                 authenticatedUser.user = user;
             }
         } catch (Exception e) {

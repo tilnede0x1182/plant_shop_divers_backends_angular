@@ -2,7 +2,6 @@ package controllers;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.core.MediaType;
@@ -34,7 +33,6 @@ public class AuthController {
 
     @POST
     @Path("/register")
-    @Transactional // Enveloppe cette méthode dans une transaction DB
     public Response register(Map<String, String> body) throws Exception {
         String name = body.get("name");
         String email = body.get("email");
@@ -50,7 +48,6 @@ public class AuthController {
         int newId = userRepo.create(newUser);
         User created = userRepo.find(newId);
 
-        // 201 Created
         return Response.status(Response.Status.CREATED)
                        .entity(ApiMapper.toUser(created))
                        .build();
@@ -77,7 +74,6 @@ public class AuthController {
             .httpOnly(true)
             .build();
 
-        // 201 Created (comme dans le test)
         return Response.status(Response.Status.CREATED)
                        .cookie(cookie)
                        .entity(ApiMapper.toUser(user))

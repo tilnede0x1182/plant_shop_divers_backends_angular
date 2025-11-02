@@ -100,6 +100,6 @@ public class PlantController {
     public Response destroy(@PathParam("id") int id) throws Exception {
         guards.requireAdmin();
         repo.delete(id);
-        return Response.ok().build(); // Le test E2E attend 200 OK
+        return Response.ok().build();
     }
 }

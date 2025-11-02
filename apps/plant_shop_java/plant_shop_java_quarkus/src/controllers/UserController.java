@@ -28,8 +28,6 @@ public class UserController {
     @Inject
     Guards guards;
 
-    // --- ALIASES (pour coller au test E2E) ---
-
     @GET
     @Path("/admin/users")
     public Response listAdmin() throws Exception {

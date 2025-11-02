@@ -1,4 +1,5 @@
 import jakarta.servlet.Filter;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.tomcat.util.descriptor.web.FilterDef;
@@ -24,26 +25,27 @@ public class Main {
     public static void main(String[] args) throws Exception {
         Map<String, String> env = loadEnv();
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS",
-                                              env.getOrDefault("SERVER_ADRRESS", "4100")));
-
-        AnnotationConfigWebApplicationContext applicationContext = new AnnotationConfigWebApplicationContext();
-        applicationContext.scan("controllers", "repositories", "security", "utils");
-        applicationContext.refresh();
-        applicationContext.registerShutdownHook();
+            env.getOrDefault("SERVER_ADRRESS", "4100")));
 
         Tomcat tomcat = new Tomcat();
         tomcat.setBaseDir(determineBaseDir());
         tomcat.setPort(port);
-        tomcat.getConnector(); // Force la création du connecteur
+        tomcat.getConnector();
 
         StandardContext context = (StandardContext) tomcat.addContext("", new File(".").getAbsolutePath());
+        context.addLifecycleListener(new Tomcat.FixContextListener());
         context.addApplicationListener("org.springframework.web.context.request.RequestContextListener");
 
+        AnnotationConfigWebApplicationContext applicationContext = new AnnotationConfigWebApplicationContext();
+        applicationContext.scan("controllers", "repositories", "security", "utils");
+        applicationContext.setServletContext(context.getServletContext());
+        applicationContext.refresh();
+
         DispatcherServlet dispatcherServlet = new DispatcherServlet(applicationContext);
-        Tomcat.addServlet(context, "dispatcher", dispatcherServlet).setLoadOnStartup(1);
+        Wrapper dispatcher = Tomcat.addServlet(context, "dispatcher", dispatcherServlet);
+        dispatcher.setLoadOnStartup(1);
         context.addServletMappingDecoded("/", "dispatcher");
 
-        // Enregistre les filtres Spring (ordre identique à l'annotation @Order)
         registerFilter(context, "requestContextFilter", new RequestContextFilter());
         registerFilter(context, "corsFilter", applicationContext.getBean(CorsFilter.class));
         registerFilter(context, "sessionAuthFilter", applicationContext.getBean(SessionAuthFilter.class));
@@ -62,16 +64,16 @@ public class Main {
     }
 
     private static void registerFilter(StandardContext context, String name, Filter filter) {
-        FilterDef filterDef = new FilterDef();
-        filterDef.setFilterName(name);
-        filterDef.setFilterClass(filter.getClass().getName());
-        filterDef.setFilter(filter);
-        context.addFilterDef(filterDef);
+        FilterDef definition = new FilterDef();
+        definition.setFilterName(name);
+        definition.setFilter(filter);
+        definition.setFilterClass(filter.getClass().getName());
+        context.addFilterDef(definition);
 
-        FilterMap filterMap = new FilterMap();
-        filterMap.setFilterName(name);
-        filterMap.addURLPattern("/*");
-        context.addFilterMap(filterMap);
+        FilterMap mapping = new FilterMap();
+        mapping.setFilterName(name);
+        mapping.addURLPattern("/*");
+        context.addFilterMap(mapping);
     }
 
     private static Map<String, String> loadEnv() {

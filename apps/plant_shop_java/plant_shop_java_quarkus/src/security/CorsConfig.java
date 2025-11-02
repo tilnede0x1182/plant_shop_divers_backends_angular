@@ -17,7 +17,6 @@ import java.util.Set;
 public final class CorsConfig implements ContainerRequestFilter, ContainerResponseFilter {
 
     // L'Angular est sur 8300 (vu dans le test) ou 4200 (défaut) ?
-    // Le test E2E ne mentionne pas le port du front, mais Micronaut ciblait 8300.
     // Gardons 8300, 4200 (défaut Angular) et 3000 (défaut React) pour être larges.
     private static final Set<String> ALLOWED = Set.of(
         "http://localhost:8300",

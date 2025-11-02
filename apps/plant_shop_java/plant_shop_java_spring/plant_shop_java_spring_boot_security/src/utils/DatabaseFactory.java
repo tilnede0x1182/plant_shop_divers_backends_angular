@@ -49,7 +49,7 @@ public class DatabaseFactory {
      * @RequestScope garantit un bean par requête.
      * La connexion sera automatiquement fermée à la fin de la requête.
      */
-    @Bean
+    @Bean(destroyMethod = "close")
     @RequestScope
     public Connection connection() throws SQLException, IOException {
         Map<String, String> env = loadEnv();

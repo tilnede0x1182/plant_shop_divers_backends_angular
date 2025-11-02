@@ -61,8 +61,6 @@ public class UserRepository extends BaseRepository<User> {
     }
 
     public void update(User u) throws SQLException {
-        // Le test e2e n'inclut pas la modification de mot de passe,
-        // mais nous gardons la logique de Micronaut pour la robustesse.
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword
             ? "UPDATE users SET name=?, email=?, is_admin=?, password_hash=? WHERE id=?"

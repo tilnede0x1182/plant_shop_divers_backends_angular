@@ -33,7 +33,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     AuthenticatedUser authenticatedUser;
 
     @Autowired
-    UserRepository userRepo; // Le repo est @RequestScope, Spring injecte le bon proxy
+    UserRepository userRepo;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -75,7 +75,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         }
 
         try {
-            User user = userRepo.find(userId);
+            User user = userRepo.findById(userId).orElse(null);
             if (user != null) {
                 authenticatedUser.setUser(user); // Stocke l'utilisateur pour la requête
                 UsernamePasswordAuthenticationToken authentication =

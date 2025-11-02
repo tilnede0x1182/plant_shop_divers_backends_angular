@@ -5,10 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import repositories.UserRepository;
 import security.Guards;
 import utils.ApiMapper;
 import utils.PasswordUtil;
+import repositories.UserRepository;
 
 import java.util.Comparator;
 import java.util.List;
@@ -29,7 +29,7 @@ public class UserController {
     public ResponseEntity<List<?>> listUsers() throws Exception {
         guards.requireAdmin(); // Seul un admin peut lister
 
-        List<?> payload = repo.list().stream()
+        List<?> payload = repo.findAll().stream()
             .sorted(userComparator())
             .map(ApiMapper::toUser)
             .collect(Collectors.toList());
@@ -47,7 +47,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        User existing = repo.find(id);
+        User existing = repo.findById(id).orElse(null);
         if (existing == null) {
             return ResponseEntity.notFound().build();
         }
@@ -76,14 +76,14 @@ public class UserController {
             }
         }
 
-        repo.update(existing);
-        return ResponseEntity.ok(ApiMapper.toUser(repo.find(id)));
+        repo.save(existing);
+        return ResponseEntity.ok(ApiMapper.toUser(existing));
     }
 
     @DeleteMapping({"/admin/users/{id}", "/users/{id}"})
     public ResponseEntity<Void> destroyUser(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin(); // Seul un admin peut supprimer
-        repo.delete(id);
+        repo.deleteById(id);
         return ResponseEntity.ok().build(); // 200 OK
     }
 
@@ -98,7 +98,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        User user = repo.find(id);
+        User user = repo.findById(id).orElse(null);
         return user != null
             ? ResponseEntity.ok(ApiMapper.toUser(user))
             : ResponseEntity.notFound().build();
@@ -119,15 +119,15 @@ public class UserController {
                            .body(Map.of("error", "email et password sont requis"));
         }
 
-        if (repo.findByEmailWithPassword(email) != null) {
+        if (repo.existsByEmail(email)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         User userData = new User(name, email, PasswordUtil.hashPassword(password), adminFlag);
-        int newId = repo.create(userData);
+        User created = repo.save(userData);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(ApiMapper.toUser(repo.find(newId)));
+                             .body(ApiMapper.toUser(created));
     }
 
     // Helper de tri

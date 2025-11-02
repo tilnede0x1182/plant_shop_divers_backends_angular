@@ -10,11 +10,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import repositories.UserRepository;
 import security.Guards;
 import security.SessionService;
 import utils.ApiMapper;
 import utils.PasswordUtil;
+import repositories.UserRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -33,14 +33,13 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<Object> register(@RequestBody User body) throws Exception {
-        if (userRepo.findByEmailWithPassword(body.email) != null) {
+        if (userRepo.existsByEmail(body.email)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                                  .body(Map.of("error", "Cet email est déjà utilisé."));
         }
 
         User newUser = new User(body.name, body.email, PasswordUtil.hashPassword(body.password), false);
-        int newId = userRepo.create(newUser);
-        User created = userRepo.find(newId);
+        User created = userRepo.save(newUser);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                              .body(ApiMapper.toUser(created));
@@ -48,7 +47,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody Map<String, String> body, HttpServletResponse response) throws Exception {
-        User user = userRepo.findByEmailWithPassword(body.get("email"));
+        User user = userRepo.findByEmail(body.get("email")).orElse(null);
 
         if (user == null || !PasswordUtil.checkPassword(body.get("password"), user.passwordHash)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

@@ -16,9 +16,9 @@ import utils.ApiMapper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -36,15 +36,13 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> list() throws Exception {
         User currentUser = guards.requireUser();
-        List<Order> orders = repo.listByUser(currentUser.id);
-
-        orders.sort(Comparator.comparing(o -> o.createdAt, Comparator.reverseOrder()));
+        List<Order> orders = repo.findByUserIdOrderByCreatedAtDesc(currentUser.id);
 
         List<Map<String, Object>> payload = new ArrayList<>();
         for (Order order : orders) {
             List<Map<String, Object>> items = ApiMapper.toOrderItems(
-                itemRepo.listByOrder(order.id),
-                plantRepo::find // Utilise la lambda pour le PlantLookup
+                itemRepo.findByOrderId(order.id),
+                plantId -> plantRepo.findById(plantId).orElse(null)
             );
             payload.add(ApiMapper.toOrder(order, items));
         }
@@ -52,6 +50,7 @@ public class OrderController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<Object> create(@RequestBody Map<String, List<Map<String, Integer>>> body) throws Exception {
         User currentUser = guards.requireUser();
         List<Map<String, Integer>> itemsJson = body.get("items");
@@ -60,28 +59,24 @@ public class OrderController {
             return ResponseEntity.badRequest().body(Map.of("error", "items requis"));
         }
 
-        // Note: La gestion transactionnelle manuelle est complexe en pur JDBC.
-        // Pour ce test, nous ne gérons pas le rollback atomique.
-        // Spring Boot le ferait avec @Transactional si on utilisait Spring Data JDBC.
-
         try {
             Order newOrder = new Order(currentUser.id, BigDecimal.ZERO, "pending");
-            int orderId = repo.create(newOrder);
+            Order savedOrder = repo.save(newOrder);
             BigDecimal total = BigDecimal.ZERO;
 
             for (Map<String, Integer> it : itemsJson) {
-                total = total.add(createOrderItem(orderId, it));
+                total = total.add(createOrderItem(savedOrder, it));
             }
-            repo.updateTotal(orderId, total);
+            savedOrder.total = total;
+            repo.save(savedOrder);
 
-            Order finalOrder = repo.find(orderId);
             List<Map<String, Object>> items = ApiMapper.toOrderItems(
-                itemRepo.listByOrder(orderId),
-                plantRepo::find
+                itemRepo.findByOrderId(savedOrder.id),
+                plantId -> plantRepo.findById(plantId).orElse(null)
             );
 
             return ResponseEntity.status(HttpStatus.CREATED)
-                                 .body(ApiMapper.toOrder(finalOrder, items));
+                                 .body(ApiMapper.toOrder(savedOrder, items));
 
         } catch (IllegalArgumentException ex) {
             // Gère les erreurs de stock ou d'ID
@@ -92,44 +87,47 @@ public class OrderController {
     @PatchMapping("/{id}")
     public ResponseEntity<Object> patch(@PathVariable("id") int id, @RequestBody Map<String, String> body) throws Exception {
         guards.requireAdmin();
-        if (repo.find(id) == null) {
+        Order existing = repo.findById(id).orElse(null);
+        if (existing == null) {
             return ResponseEntity.notFound().build();
         }
         if (body.containsKey("status")) {
-            repo.updateStatus(id, body.get("status"));
+            existing.status = body.get("status");
+            repo.save(existing);
         }
 
-        Order updated = repo.find(id);
         List<Map<String, Object>> items = ApiMapper.toOrderItems(
-            itemRepo.listByOrder(id),
-            plantRepo::find
+            itemRepo.findByOrderId(id),
+            plantId -> plantRepo.findById(plantId).orElse(null)
         );
-        return ResponseEntity.ok(ApiMapper.toOrder(updated, items));
+        return ResponseEntity.ok(ApiMapper.toOrder(existing, items));
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin();
         // Doit supprimer les items avant la commande à cause de la clé étrangère
-        itemRepo.deleteByOrder(id);
-        repo.delete(id);
+        itemRepo.deleteByOrderId(id);
+        repo.deleteById(id);
         return ResponseEntity.ok().build(); // 200 OK attendu par le test
     }
 
     /**
      * Logique privée pour créer un item et mettre à jour le stock.
      */
-    private BigDecimal createOrderItem(int orderId, Map<String, Integer> itemMap) throws Exception {
+    private BigDecimal createOrderItem(Order order, Map<String, Integer> itemMap) throws Exception {
         int plantId = itemMap.get("plantId");
         int quantity = itemMap.get("quantity");
-        Plant plant = plantRepo.find(plantId);
+        Plant plant = plantRepo.findById(plantId).orElse(null);
 
         if (plant == null) throw new IllegalArgumentException("Plante " + plantId + " introuvable");
         if (plant.stock < quantity) throw new IllegalArgumentException("Stock insuffisant pour " + plant.name);
 
-        plantRepo.updateStock(plant.id, plant.stock - quantity);
-        OrderItem item = new OrderItem(orderId, plantId, quantity, plant.price);
-        itemRepo.create(item);
+        plant.stock = plant.stock - quantity;
+        plantRepo.save(plant);
+        OrderItem item = new OrderItem(order.id, plantId, quantity, plant.price);
+        itemRepo.save(item);
 
         return plant.price.multiply(BigDecimal.valueOf(quantity));
     }

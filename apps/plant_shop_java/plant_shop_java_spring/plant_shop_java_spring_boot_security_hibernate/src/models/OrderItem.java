@@ -1,11 +1,31 @@
 package models;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.math.BigDecimal;
 
-public final class OrderItem {
+@Entity
+@Table(name = "order_items")
+public class OrderItem {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     public int id;
+
+    @Column(name = "order_id", nullable = false)
     public int orderId;
+
+    @Column(name = "plant_id", nullable = false)
     public int plantId;
+
+    @Column(nullable = false)
     public int quantity;
+
+    @Column(nullable = false)
     public BigDecimal price;
 
     public OrderItem(int id, int orderId, int plantId, int quantity, BigDecimal price) {

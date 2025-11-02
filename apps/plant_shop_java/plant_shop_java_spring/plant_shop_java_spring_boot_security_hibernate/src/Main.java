@@ -1,10 +1,9 @@
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,13 +13,9 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-@SpringBootApplication(
-    scanBasePackages = {"controllers", "repositories", "security", "utils"},
-    exclude = {
-        DataSourceAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class
-    }
-)
+@SpringBootApplication(scanBasePackages = {"controllers", "repositories", "security", "utils", "models"})
+@EnableJpaRepositories(basePackages = "repositories")
+@EntityScan(basePackages = "models")
 public class Main {
 
     private static final Path ENV_FILE = Path.of("config", ".env");
@@ -36,6 +31,7 @@ public class Main {
         }
 
         System.setProperty("server.port", String.valueOf(port));
+        applyDataSourceOverrides(env);
         System.out.println("🚀 Lancement du serveur Spring Boot Security sur http://localhost:" + port);
 
         SpringApplication app = new SpringApplication(Main.class);
@@ -43,6 +39,19 @@ public class Main {
             System.out.println("✅ Serveur Spring prêt sur http://localhost:" + port)
         );
         app.run(args);
+    }
+
+    private static void applyDataSourceOverrides(Map<String, String> env) {
+        setIfPresent(env, "DATABASE_URL", "spring.datasource.url");
+        setIfPresent(env, "DATABASE_USER", "spring.datasource.username");
+        setIfPresent(env, "DATABASE_PASS", "spring.datasource.password");
+    }
+
+    private static void setIfPresent(Map<String, String> env, String envKey, String propertyKey) {
+        String value = env.get(envKey);
+        if (value != null && !value.isBlank()) {
+            System.setProperty(propertyKey, value);
+        }
     }
 
     private static Map<String, String> loadEnv() {

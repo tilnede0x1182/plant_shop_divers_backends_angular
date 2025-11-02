@@ -5,14 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import repositories.PlantRepository;
 import security.Guards;
 import utils.ApiMapper;
+import repositories.PlantRepository;
 
-import java.text.Collator;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 @RestController
@@ -24,22 +21,11 @@ public class PlantController {
     @Autowired
     Guards guards;
 
-    // Logique de tri (identique)
-    private static final Collator COLLATOR;
-    static {
-        COLLATOR = Collator.getInstance(Locale.ROOT);
-        COLLATOR.setStrength(Collator.PRIMARY);
-    }
-    private int comparePlants(Plant a, Plant b) {
-        return COLLATOR.compare(a.name, b.name);
-    }
-
     // --- Endpoints Publics ---
 
     @GetMapping("/plants")
     public ResponseEntity<List<?>> listPublic() throws Exception {
-        List<?> payload = repo.list().stream()
-            .sorted(this::comparePlants)
+        List<?> payload = repo.findAllByOrderByNameAsc().stream()
             .map(ApiMapper::toPlant)
             .collect(Collectors.toList());
         return ResponseEntity.ok(payload);
@@ -47,10 +33,11 @@ public class PlantController {
 
     @GetMapping("/plants/{id}")
     public ResponseEntity<Object> show(@PathVariable("id") int id) throws Exception {
-        Plant plant = repo.find(id);
-        return plant != null
-            ? ResponseEntity.ok(ApiMapper.toPlant(plant))
-            : ResponseEntity.notFound().build();
+        Plant plant = repo.findById(id).orElse(null);
+        if (plant == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(ApiMapper.toPlant(plant));
     }
 
     // --- Endpoints Admin (/admin/plants) ---
@@ -64,8 +51,10 @@ public class PlantController {
     @PostMapping("/admin/plants")
     public ResponseEntity<Object> create(@RequestBody Plant plant) throws Exception {
         guards.requireAdmin();
-        int id = repo.create(plant);
-        Plant created = repo.find(id);
+        if (plant.description == null) {
+            plant.description = "";
+        }
+        Plant created = repo.save(plant);
         return ResponseEntity.status(HttpStatus.CREATED)
                              .body(ApiMapper.toPlant(created));
     }
@@ -73,7 +62,7 @@ public class PlantController {
     @PatchMapping("/admin/plants/{id}")
     public ResponseEntity<Object> update(@PathVariable("id") int id, @RequestBody Plant updatedData) throws Exception {
         guards.requireAdmin();
-        Plant existing = repo.find(id);
+        Plant existing = repo.findById(id).orElse(null);
         if (existing == null) {
             return ResponseEntity.notFound().build();
         }
@@ -82,15 +71,14 @@ public class PlantController {
         if (updatedData.description != null) existing.description = updatedData.description;
         if (updatedData.price != null) existing.price = updatedData.price;
         if (updatedData.stock != 0) existing.stock = updatedData.stock;
-
-        repo.update(existing);
-        return ResponseEntity.ok(ApiMapper.toPlant(repo.find(id)));
+        repo.save(existing);
+        return ResponseEntity.ok(ApiMapper.toPlant(existing));
     }
 
     @DeleteMapping("/admin/plants/{id}")
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin();
-        repo.delete(id);
+        repo.deleteById(id);
         return ResponseEntity.ok().build();
     }
 }

@@ -72,6 +72,8 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **C++ (Drogon)** : serveur HTTP moderne en C++17, basé sur le framework `Drogon` avec ORM intégré, compilation via `CMake`.
 * **Java (Natif)** : serveur HTTP minimaliste en Java 21, utilisant `HttpServer` natif, MVC manuel.
 * **Java (Javalin)** : backend Java léger, utilisant le framework `Javalin` pour les routes HTTP.
+* **Java (Quarkus / RESTEasy)** : backend Java structuré autour de Quarkus, utilisant RESTEasy et Undertow pour l’API HTTP, avec injection de dépendances CDI et mapping JAX-RS.
+* **Java (Micronaut)** : backend Java performant utilisant le framework `Micronaut` pour gérer les routes HTTP, l’injection de dépendances et la configuration applicative.
 * **Java (Java Lite avec active web)** : backend Java MVC utilisant le framework JavaLite ActiveWeb avec Jetty pour le serveur HTTP et ActiveJDBC pour la base de données.
 * **Python (Flask)** : backend minimaliste REST avec `Flask`, connexion PostgreSQL via `psycopg2`.
 * **Haskell (Stack)** : serveur HTTP en style fonctionnel avec `Scotty`, architecture MVC claire, ORM léger via `postgresql-simple`, sécurité JWT
@@ -91,8 +93,9 @@ apps/
  ├─ plant_shop_java
  |    ├── plant_shop_java             → Backend en Java avec HTTP
  |    ├── plant_shop_javalin          → Backend en Java avec Javalin
- |    └── plant_shop_java_micronaut   → Backend en Java avec Micronaut
- |    └── plant_shop_java_micronaut   → Backend en Java avec Java Lite (Active Web)
+ |    ├── plant_shop_java_micronaut   → Backend en Java avec Micronaut
+ |    ├── plant_shop_java_quarkus     → Backend en Java avec Quarkus
+ |    └── plant_shop_java_active_web  → Backend en Java avec Java Lite (Active Web)
  ├─ plant_shop_python                 → Backend en Python
  ├─ plant_shop_haskell                → Backend en Haskell
  └─ plant_shop_rust

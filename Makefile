@@ -194,6 +194,30 @@ compile-test-backend-micronaut:
 	make -C apps/plant_shop_java/plant_shop_java_micronaut compile-test
 
 # ======================================================
+# ☕ Backend Java Quarkus
+# ======================================================
+
+run-backend-java-quarkus:
+	make -C apps/plant_shop_java/plant_shop_java_quarkus run
+
+compile-backend-java-quarkus:
+	make -C apps/plant_shop_java/plant_shop_java_quarkus compile
+
+seed-backend-java-quarkus:
+	make -C apps/plant_shop_java/plant_shop_java_quarkus seed
+
+compile-run-backend-java-quarkus: compile-backend-java-quarkus run-backend-java-quarkus
+
+prod-backend-java-quarkus:
+	make -C apps/plant_shop_java/plant_shop_java_quarkus build-dev
+
+test-backend-java-quarkus:
+	make -C apps/plant_shop_java/plant_shop_java_quarkus tests
+
+compile-test-backend-java-quarkus:
+	make -C apps/plant_shop_java/plant_shop_java_quarkus compile-test
+
+# ======================================================
 # ☕ Backend Java ActiveWeb
 # ======================================================
 

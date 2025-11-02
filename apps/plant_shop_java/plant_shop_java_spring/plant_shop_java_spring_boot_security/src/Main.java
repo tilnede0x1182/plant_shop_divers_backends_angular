@@ -42,9 +42,6 @@ public class Main {
         app.addListeners((ApplicationListener<ApplicationReadyEvent>) event ->
             System.out.println("✅ Serveur Spring prêt sur http://localhost:" + port)
         );
-        app.addListeners((ApplicationListener<ContextClosedEvent>) event ->
-            System.out.println("❌ Arrêt du serveur Spring Boot Security")
-        );
         app.run(args);
     }
 

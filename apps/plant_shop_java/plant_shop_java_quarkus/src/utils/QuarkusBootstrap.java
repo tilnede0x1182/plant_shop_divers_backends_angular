@@ -1,19 +1,19 @@
+// src/utils/QuarkusBootstrap.java
 package utils;
 
-import io.quarkus.runtime.Quarkus;
+import io.undertow.Undertow;
+import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
+import org.jboss.resteasy.spi.ResteasyDeployment;
+import org.jboss.resteasy.core.ResteasyDeploymentImpl;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Gère le démarrage manuel de Quarkus en lisant le port
- * depuis le fichier .env, en s'assurant qu'il est disponible,
- * puis en le passant en System Property avant de lancer Quarkus.
- */
 public final class QuarkusBootstrap {
 
     public static void run(String[] args) throws Exception {
@@ -25,26 +25,30 @@ public final class QuarkusBootstrap {
             System.exit(1);
         }
 
-        // Définir le port pour Quarkus via une System Property
-        System.setProperty("quarkus.http.port", String.valueOf(port));
+        System.out.println("🚀 Serveur RESTEasy/Undertow sur http://localhost:" + port);
 
-        System.out.println("🚀 Serveur Quarkus en démarrage sur http://localhost:" + port);
+        UndertowJaxrsServer server = new UndertowJaxrsServer();
+        server.start(Undertow.builder().addHttpListener(port, "0.0.0.0"));
 
-        // Démarrer Quarkus (cette méthode est bloquante)
-        Quarkus.run(args);
+        ResteasyDeployment deployment = new ResteasyDeploymentImpl();
+        // Enregistrez vos ressources JAX-RS ici.
+        deployment.setResources(Arrays.asList(
+            new controllers.AuthController(),
+            new controllers.PlantController(),
+            new controllers.UserController(),
+            new controllers.OrderController()
+        ));
+
+        server.deploy(deployment);
     }
 
     private static Map<String, String> loadEnv() {
         Map<String, String> map = new HashMap<>();
-        // Note: Le Seed.java utilise "config/.env", mais le Test.java utilise ".env"
-        // Nous utilisons ".env" pour être cohérent avec le Test.java
         try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
             String line;
             while ((line = br.readLine()) != null) {
                 int i = line.indexOf('=');
-                if (i > 0) {
-                    map.put(line.substring(0, i).trim(), line.substring(i + 1).trim());
-                }
+                if (i > 0) map.put(line.substring(0, i).trim(), line.substring(i + 1).trim());
             }
         } catch (IOException e) {
             System.err.println("⚠️  Fichier .env introuvable, utilisation des valeurs par défaut.");
@@ -54,9 +58,7 @@ public final class QuarkusBootstrap {
 
     private static int parsePort(String value) {
         try {
-            if (value.contains(":")) {
-                return Integer.parseInt(value.split(":")[1]);
-            }
+            if (value.contains(":")) return Integer.parseInt(value.split(":")[1]);
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             System.err.println("⚠️  Valeur SERVER_ADDRESS invalide, utilisation du port 4100.");

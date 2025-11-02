@@ -1,4 +1,3 @@
-
 ## ────────────────
 # Dépendances
 ## ────────────────
@@ -24,13 +23,15 @@ CLASSPATH = bin:lib/*
 
 compile:
 	mkdir -p bin
+	# Compile tous les packages nécessaires pour l'application Spring
 	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
-		src/utils/*.java \
+		src/Main.java \
 		src/models/*.java \
+		src/utils/*.java \
 		src/repositories/*.java \
 		src/security/*.java \
-		src/controllers/*.java \
-		src/Main.java
+		src/controllers/*.java
+
 run:
 	java -cp "$(CLASSPATH)" Main
 
@@ -42,6 +43,7 @@ build-dev: clean compile_run
 # # Serveur - Production
 ## ────────────────
 
+# Inclut tous les .java de src (y compris Seed, ce qui est acceptable)
 SRCS := $(shell find src -type f -name '*.java')
 
 build-prod: clean
@@ -55,14 +57,12 @@ run-prod:
 	java \
 	  -XX:+TieredCompilation \
 	  -XX:TieredStopAtLevel=1 \
-	  -Dmicronaut.env=prod \
+	  -Dspring.profiles.active=prod \
 	  -Djava.security.egd=file:/dev/./urandom \
 	  -Xms512m -Xmx1g \
 	  -XX:+UseG1GC -XX:MaxGCPauseMillis=200 \
 	  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=build/heap.hprof \
 	  -cp "bin:lib/*" Main
-
-prod: build-prod run-prod
 
 ## ────────────────
 # Seed

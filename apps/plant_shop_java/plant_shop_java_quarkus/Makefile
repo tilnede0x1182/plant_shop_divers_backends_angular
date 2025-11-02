@@ -12,10 +12,11 @@ compile-install-libs:
 install: compile-install-libs
 	java -cp bin config.InstallCoursier
 
-install:
+clean:
+	rm -rf bin/*
 
 ## ────────────────
-# Server
+# Serveur - Développement
 ## ────────────────
 
 # Variables de base
@@ -35,10 +36,33 @@ run:
 
 compile_run: compile run
 
-clean:
-	rm -rf bin/*
-
 build-dev: clean compile_run
+
+## ────────────────
+# # Serveur - Production
+## ────────────────
+
+SRCS := $(shell find src -type f -name '*.java')
+
+build-prod: clean
+	mkdir -p bin build
+	@echo "Compiling $$(echo $(SRCS) | wc -w) sources..."
+	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "lib/*" $(SRCS)
+	jar --create --file build/app-prod.jar --main-class=Main -C bin .
+
+run-prod:
+	# JVM optimisée pour prod (démarrage plus rapide, heap fixe, GC G1)
+	java \
+	  -XX:+TieredCompilation \
+	  -XX:TieredStopAtLevel=1 \
+	  -Dmicronaut.env=prod \
+	  -Djava.security.egd=file:/dev/./urandom \
+	  -Xms512m -Xmx1g \
+	  -XX:+UseG1GC -XX:MaxGCPauseMillis=200 \
+	  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=build/heap.hprof \
+	  -cp "bin:lib/*" Main
+
+prod: build-prod run-prod
 
 ## ────────────────
 # Seed

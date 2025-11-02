@@ -99,7 +99,6 @@ apps/
   │  ├── plant_shop_java_quarkus                            → Backend en Java avec Quarkus
   │  ├── plant_shop_java_spring
   │  │  ├── plant_shop_java_spring_boot_security            → Backend Spring Boot + Security
-  │  │  ├── plant_shop_java_spring_boot_security_hibernate  → Backend Spring Boot + Security + Hibernate
   │  │  └── plant_shop_java_spring_no_hibernate             → Backend Spring (sans Hibernate)
   │  └── plant_shop_play_framework                          → Backend avec Play Framework
   ├─ plant_shop_python                                      → Backend en Python

@@ -12,6 +12,7 @@ import org.jboss.resteasy.core.ResteasyDeploymentImpl;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import security.CorsConfig;
+import security.CdiRequestScopeFilter;
 import security.SessionAuthFilter;
 
 import java.io.BufferedReader;
@@ -45,6 +46,9 @@ public class QuarkusBootstrap {
     @Inject
     CorsConfig corsConfig;
 
+    @Inject
+    CdiRequestScopeFilter requestScopeFilter;
+
     public void run(String[] args, CountDownLatch shutdownLatch) throws Exception {
         Map<String, String> env = loadEnv();
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));
@@ -68,6 +72,7 @@ public class QuarkusBootstrap {
         singletons.add(orderController);
         singletons.add(sessionAuthFilter);
         singletons.add(corsConfig);
+        singletons.add(requestScopeFilter);
 
         ResteasyDeployment deployment = new ResteasyDeploymentImpl();
         deployment.setApplication(new Application() {

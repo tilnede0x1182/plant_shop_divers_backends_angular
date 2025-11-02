@@ -11,6 +11,7 @@ import repositories.PlantRepository;
 import repositories.UserRepository;
 import security.AuthenticatedUser;
 import security.CorsConfig;
+import security.CdiRequestScopeFilter;
 import security.Guards;
 import security.SessionAuthFilter;
 import security.SessionService;
@@ -34,6 +35,7 @@ public class Main {
                 AuthenticatedUser.class,
                 Guards.class,
                 SessionAuthFilter.class,
+                CdiRequestScopeFilter.class,
                 CorsConfig.class,
                 AuthController.class,
                 PlantController.class,

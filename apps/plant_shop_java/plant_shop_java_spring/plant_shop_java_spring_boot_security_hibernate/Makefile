@@ -2,7 +2,7 @@
 # Dépendances
 ## ────────────────
 
-DB_NAME=plant_shop_java_spring_boot_security
+DB_NAME=plant_shop_java_spring_boot_security_hibernate
 
 compile-install-libs:
 	mkdir -p bin

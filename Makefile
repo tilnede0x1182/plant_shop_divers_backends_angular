@@ -126,144 +126,168 @@ compile-test-backend-cpp:
 # ======================================================
 
 run-backend-java:
-	make -C apps/plant_shop_java/plant_shop_java run
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java run
 
 compile-backend-java:
-	make -C apps/plant_shop_java/plant_shop_java compile
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java compile
 
 seed-backend-java:
-	make -C apps/plant_shop_java/plant_shop_java seed
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java seed
 
 compile-run-backend-java: compile-backend-java run-backend-java
 
 prod-backend-java:
-	make -C apps/plant_shop_java/plant_shop_java prod
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java prod
 
 test-backend-java:
-	make -C apps/plant_shop_java/plant_shop_java tests
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java tests
 
 compile-test-backend-java:
-	make -C apps/plant_shop_java/plant_shop_java compile-test
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java compile-test
 
 # ======================================================
 # ☕ Backend Javalin
 # ======================================================
 
 run-backend-javalin:
-	make -C apps/plant_shop_java/plant_shop_javalin run
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_javalin run
 
 compile-backend-javalin:
-	make -C apps/plant_shop_java/plant_shop_javalin compile
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_javalin compile
 
 seed-backend-javalin:
-	make -C apps/plant_shop_java/plant_shop_javalin seed
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_javalin seed
 
 compile-run-backend-javalin: compile-backend-javalin run-backend-javalin
 
 prod-backend-javalin:
-	make -C apps/plant_shop_java/plant_shop_javalin prod
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_javalin prod
 
 test-backend-javalin:
-	make -C apps/plant_shop_java/plant_shop_javalin tests
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_javalin tests
 
 compile-test-backend-javalin:
-	make -C apps/plant_shop_java/plant_shop_javalin compile-test
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_javalin compile-test
 
 # ======================================================
 # ☕ Backend Micronaut
 # ======================================================
 
 run-backend-micronaut:
-	make -C apps/plant_shop_java/plant_shop_java_micronaut run
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_micronaut run
 
 compile-backend-micronaut:
-	make -C apps/plant_shop_java/plant_shop_java_micronaut compile
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_micronaut compile
 
 seed-backend-micronaut:
-	make -C apps/plant_shop_java/plant_shop_java_micronaut seed
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_micronaut seed
 
 compile-run-backend-micronaut: compile-backend-micronaut run-backend-micronaut
 
 prod-backend-micronaut:
-	make -C apps/plant_shop_java/plant_shop_java_micronaut build-dev
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_micronaut build-dev
 
 test-backend-micronaut:
-	make -C apps/plant_shop_java/plant_shop_java_micronaut tests
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_micronaut tests
 
 compile-test-backend-micronaut:
-	make -C apps/plant_shop_java/plant_shop_java_micronaut compile-test
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_micronaut compile-test
 
 # ======================================================
 # ☕ Backend Java Quarkus
 # ======================================================
 
 run-backend-java-quarkus:
-	make -C apps/plant_shop_java/plant_shop_java_quarkus run
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_quarkus run
 
 compile-backend-java-quarkus:
-	make -C apps/plant_shop_java/plant_shop_java_quarkus compile
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_quarkus compile
 
 seed-backend-java-quarkus:
-	make -C apps/plant_shop_java/plant_shop_java_quarkus seed
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_quarkus seed
 
 compile-run-backend-java-quarkus: compile-backend-java-quarkus run-backend-java-quarkus
 
 prod-backend-java-quarkus:
-	make -C apps/plant_shop_java/plant_shop_java_quarkus build-dev
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_quarkus build-dev
 
 test-backend-java-quarkus:
-	make -C apps/plant_shop_java/plant_shop_java_quarkus tests
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_quarkus tests
 
 compile-test-backend-java-quarkus:
-	make -C apps/plant_shop_java/plant_shop_java_quarkus compile-test
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_quarkus compile-test
 
 # ======================================================
 # ☕ Backend Java Spring Boot Security
 # ======================================================
 
 run-backend-java-spring-boot-security:
-	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security run
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security run
 
 compile-backend-java-spring-boot-security:
-	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security compile
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security compile
 
 seed-backend-java-spring-boot-security:
-	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security seed
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security seed
 
 compile-run-backend-java-spring-boot-security: compile-backend-java-spring-boot-security run-backend-java-spring-boot-security
 
 prod-backend-java-spring-boot-security:
-	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security build-dev
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security build-dev
 
 test-backend-java-spring-boot-security:
-	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security tests
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security tests
 
 compile-test-backend-java-spring-boot-security:
-	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security compile-test
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security compile-test
+
+# ======================================================
+# ☕ Backend Java Spring Boot Security (Hibernate)
+# ======================================================
+
+run-backend-java-spring-boot-security-hibernate:
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security_hibernate run
+
+compile-backend-java-spring-boot-security-hibernate:
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security_hibernate compile
+
+seed-backend-java-spring-boot-security-hibernate:
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security_hibernate seed
+
+compile-run-backend-java-spring-boot-security-hibernate: compile-backend-java-spring-boot-security-hibernate run-backend-java-spring-boot-security-hibernate
+
+prod-backend-java-spring-boot-security-hibernate:
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security_hibernate build-dev
+
+test-backend-java-spring-boot-security-hibernate:
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security_hibernate tests
+
+compile-test-backend-java-spring-boot-security-hibernate:
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security_hibernate compile-test
 
 # ======================================================
 # ☕ Backend Java ActiveWeb
 # ======================================================
 
 run-backend-java-activeweb:
-	make -C apps/plant_shop_java/plant_shop_java_active_web run
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_active_web run
 
 compile-backend-java-activeweb:
-	make -C apps/plant_shop_java/plant_shop_java_active_web compile
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_active_web compile
 
 seed-backend-java-activeweb:
-	make -C apps/plant_shop_java/plant_shop_java_active_web seed
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_active_web seed
 
 compile-run-backend-java-activeweb: compile-backend-java-activeweb run-backend-java-activeweb
 
 prod-backend-java-activeweb:
-	make -C apps/plant_shop_java/plant_shop_java_active_web build-dev
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_active_web build-dev
 
 test-backend-java-activeweb:
-	make -C apps/plant_shop_java/plant_shop_java_active_web tests
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_active_web tests
 
 compile-test-backend-java-activeweb:
-	make -C apps/plant_shop_java/plant_shop_java_active_web compile-test
+	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_active_web compile-test
 
 # ======================================================
 # 🛠️ Backend C (HTTPServer)

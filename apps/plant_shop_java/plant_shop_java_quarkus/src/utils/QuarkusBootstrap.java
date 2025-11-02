@@ -19,10 +19,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 @Singleton
-public final class QuarkusBootstrap {
+public class QuarkusBootstrap {
 
     @Inject
     AuthController authController;
@@ -42,7 +45,7 @@ public final class QuarkusBootstrap {
     @Inject
     CorsConfig corsConfig;
 
-    public void run(String[] args) throws Exception {
+    public void run(String[] args, CountDownLatch shutdownLatch) throws Exception {
         Map<String, String> env = loadEnv();
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));
 
@@ -58,18 +61,28 @@ public final class QuarkusBootstrap {
         UndertowJaxrsServer server = new UndertowJaxrsServer();
         server.start(Undertow.builder().addHttpListener(port, "0.0.0.0"));
 
+        Set<Object> singletons = new HashSet<>();
+        singletons.add(authController);
+        singletons.add(plantController);
+        singletons.add(userController);
+        singletons.add(orderController);
+        singletons.add(sessionAuthFilter);
+        singletons.add(corsConfig);
+
         ResteasyDeployment deployment = new ResteasyDeploymentImpl();
-        deployment.setApplication(new Application() {});
-        deployment.getRegistry().addSingletonResource(authController);
-        deployment.getRegistry().addSingletonResource(plantController);
-        deployment.getRegistry().addSingletonResource(userController);
-        deployment.getRegistry().addSingletonResource(orderController);
-        deployment.getProviderFactory().register(sessionAuthFilter);
-        deployment.getProviderFactory().register(corsConfig);
+        deployment.setApplication(new Application() {
+            @Override
+            public Set<Object> getSingletons() {
+                return singletons;
+            }
+        });
 
         server.deploy(deployment);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            server.stop();
+            shutdownLatch.countDown();
+        }));
     }
 
     private Map<String, String> loadEnv() throws IOException {

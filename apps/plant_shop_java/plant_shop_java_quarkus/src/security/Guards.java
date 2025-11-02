@@ -12,17 +12,17 @@ import models.User;
  * stocké dans le bean AuthenticatedUser.
  */
 @RequestScoped
-public final class Guards {
+public class Guards {
 
     @Inject
     AuthenticatedUser authenticatedUser;
 
     public User requireUser() {
-        if (authenticatedUser.user == null) {
+        if (authenticatedUser.getUser() == null) {
             // Lance une exception JAX-RS qui se traduit par une réponse 401
             throw new WebApplicationException("Authentification requise", Response.Status.UNAUTHORIZED);
         }
-        return authenticatedUser.user;
+        return authenticatedUser.getUser();
     }
 
     public User requireAdmin() {

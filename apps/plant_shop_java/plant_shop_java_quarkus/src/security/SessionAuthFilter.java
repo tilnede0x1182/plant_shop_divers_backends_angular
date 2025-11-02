@@ -34,7 +34,7 @@ public class SessionAuthFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
-        authenticatedUser.user = null;
+        authenticatedUser.setUser(null);
 
         Cookie sessionCookie = ctx.getCookies().get(SESSION_COOKIE);
         if (sessionCookie == null) {
@@ -50,7 +50,7 @@ public class SessionAuthFilter implements ContainerRequestFilter {
         try {
             User user = userRepoProvider.get().find(userId);
             if (user != null) {
-                authenticatedUser.user = user;
+                authenticatedUser.setUser(user);
             }
         } catch (Exception e) {
             System.err.println("Erreur DB dans le filtre d'authentification: " + e.getMessage());

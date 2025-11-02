@@ -9,7 +9,7 @@ import java.util.List;
 import models.Order;
 
 @RequestScoped
-public final class OrderRepository extends BaseRepository<Order> {
+public class OrderRepository extends BaseRepository<Order> {
 
     @Inject
     public OrderRepository(Connection db) {

@@ -7,7 +7,7 @@ import java.util.*;
 import models.OrderItem;
 
 @RequestScoped
-public final class OrderItemRepository extends BaseRepository<OrderItem> {
+public class OrderItemRepository extends BaseRepository<OrderItem> {
 
     @Inject
     public OrderItemRepository(Connection db) {

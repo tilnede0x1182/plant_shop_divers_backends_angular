@@ -6,7 +6,7 @@ import java.sql.*;
 import models.Plant;
 
 @RequestScoped
-public final class PlantRepository extends BaseRepository<Plant> {
+public class PlantRepository extends BaseRepository<Plant> {
 
     @Inject
     public PlantRepository(Connection db) {

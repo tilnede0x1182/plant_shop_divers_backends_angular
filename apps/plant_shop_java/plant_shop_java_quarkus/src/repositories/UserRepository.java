@@ -6,7 +6,7 @@ import java.sql.*;
 import models.User;
 
 @RequestScoped // Ce repository vivra le temps d'une requête HTTP
-public final class UserRepository extends BaseRepository<User> {
+public class UserRepository extends BaseRepository<User> {
 
     @Inject // Injecte la connexion @RequestScoped fournie par DatabaseFactory
     public UserRepository(Connection db) {

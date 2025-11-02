@@ -34,7 +34,7 @@ public class SecurityConfig {
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
             .logout(logout -> logout.disable())
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+						.authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
             .addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

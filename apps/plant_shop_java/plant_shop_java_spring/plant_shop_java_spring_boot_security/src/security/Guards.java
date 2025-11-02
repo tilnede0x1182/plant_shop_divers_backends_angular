@@ -19,7 +19,6 @@ public class Guards {
             throw new AuthException(HttpStatus.UNAUTHORIZED, "Authentification requise");
         }
         User user = authenticatedUser.getUser();
-        System.out.println("👤 requireUser -> " + user.email + " (admin=" + user.isAdmin + ")");
         return authenticatedUser.getUser();
     }
 
@@ -29,7 +28,6 @@ public class Guards {
             // Lance une exception 403
             throw new AuthException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
         }
-        System.out.println("🛡️  requireAdmin OK pour " + user.email);
         return user;
     }
 }

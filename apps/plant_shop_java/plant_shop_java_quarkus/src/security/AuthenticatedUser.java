@@ -1,0 +1,14 @@
+package security;
+
+import jakarta.enterprise.context.RequestScoped;
+import models.User;
+
+/**
+ * Un bean @RequestScoped qui contient l'utilisateur
+ * authentifié pour la requête en cours.
+ * Il est rempli par le SessionAuthFilter et lu par les Guards.
+ */
+@RequestScoped
+public class AuthenticatedUser {
+    public User user;
+}

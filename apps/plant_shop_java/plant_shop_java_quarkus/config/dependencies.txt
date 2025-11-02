@@ -1,0 +1,16 @@
+# Serveur Quarkus
+io.quarkus:quarkus-rest:3.10.0
+io.quarkus:quarkus-jackson:3.10.0
+io.quarkus:quarkus-hibernate-orm:3.10.0
+io.quarkus:quarkus-jdbc-mysql:3.10.0
+io.quarkus:quarkus-hibernate-validator:3.10.0
+
+# Sécurité
+org.mindrot:jbcrypt:0.4
+
+# Base de données
+org.postgresql:postgresql:42.7.8
+
+# Logs serveur
+ org.slf4j:slf4j-simple:2.0.17
+# org.slf4j:slf4j-nop:2.0.17

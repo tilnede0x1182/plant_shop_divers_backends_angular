@@ -2,9 +2,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -26,8 +30,22 @@ public class Main {
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS",
             env.getOrDefault("SERVER_ADRRESS", "4100")));
 
+        if (!isPortAvailable(port)) {
+            System.err.println("❌ Port " + port + " déjà utilisé, arrêt du lancement Spring Boot Security.");
+            return;
+        }
+
         System.setProperty("server.port", String.valueOf(port));
-        SpringApplication.run(Main.class, args);
+        System.out.println("🚀 Lancement du serveur Spring Boot Security sur http://localhost:" + port);
+
+        SpringApplication app = new SpringApplication(Main.class);
+        app.addListeners((ApplicationListener<ApplicationReadyEvent>) event ->
+            System.out.println("✅ Serveur Spring prêt sur http://localhost:" + port)
+        );
+        app.addListeners((ApplicationListener<ContextClosedEvent>) event ->
+            System.out.println("❌ Arrêt du serveur Spring Boot Security")
+        );
+        app.run(args);
     }
 
     private static Map<String, String> loadEnv() {
@@ -63,6 +81,15 @@ public class Main {
         } catch (NumberFormatException e) {
             System.err.println("⚠️  Valeur de port invalide (" + rawPort + "), utilisation de 4100.");
             return 4100;
+        }
+    }
+
+    private static boolean isPortAvailable(int port) {
+        try (ServerSocket socket = new ServerSocket(port)) {
+            socket.setReuseAddress(true);
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 }

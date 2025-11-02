@@ -1,8 +1,10 @@
 package security;
 
 import models.User;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * Un bean @RequestScope qui contient l'utilisateur
@@ -10,7 +12,7 @@ import org.springframework.web.context.annotation.RequestScope;
  * Il est rempli par le SessionAuthFilter et lu par les Guards.
  */
 @Component
-@RequestScope
+@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class AuthenticatedUser {
     private User user;
 

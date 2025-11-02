@@ -55,6 +55,7 @@ public class AuthController {
                                  .body(Map.of("error", "Identifiants invalides"));
         }
 
+        System.out.println("🔐 Connexion utilisateur " + user.email + " (admin=" + user.isAdmin + ")");
         String sessionId = UUID.randomUUID().toString();
         sessionService.getSessions().put(sessionId, user.id);
 

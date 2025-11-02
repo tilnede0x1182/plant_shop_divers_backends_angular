@@ -44,6 +44,9 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         authenticatedUser.setUser(null); // Réinitialise l'utilisateur pour cette requête
 
         Cookie sessionCookie = extractSessionCookie(request);
+        if (sessionCookie == null) {
+            System.out.println("🔓 Requête " + request.getMethod() + " " + request.getRequestURI() + " sans session");
+        }
         if (sessionCookie != null) {
             handleSession(sessionCookie.getValue());
         }
@@ -70,6 +73,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         }
         Integer userId = sessionService.getSessions().get(sessionId);
         if (userId == null) {
+            System.out.println("⚠️ Session inconnue pour id=" + sessionId);
             return; // Session inconnue ou expirée
         }
 
@@ -77,6 +81,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
             User user = userRepo.find(userId);
             if (user != null) {
                 authenticatedUser.setUser(user); // Stocke l'utilisateur pour la requête
+                System.out.println("🛡️  Session reconnue pour " + user.email + " (admin=" + user.isAdmin + ")");
                 UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                         user,

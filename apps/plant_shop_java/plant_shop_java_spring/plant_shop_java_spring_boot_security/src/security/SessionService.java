@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * (mapping entre l'ID de session (cookie) et l'ID utilisateur).
  */
 @Service
-@ApplicationScope // Garantit un seul instance pour toute l'application
 public class SessionService {
 
     private final Map<String, Integer> sessions = new ConcurrentHashMap<>();

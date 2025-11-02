@@ -64,6 +64,8 @@ run-prod:
 	  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=build/heap.hprof \
 	  -cp "bin:lib/*" Main
 
+prod: build-prod run-prod
+
 ## ────────────────
 # Seed
 ## ────────────────

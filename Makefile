@@ -218,6 +218,30 @@ compile-test-backend-java-quarkus:
 	make -C apps/plant_shop_java/plant_shop_java_quarkus compile-test
 
 # ======================================================
+# ☕ Backend Java Spring Boot Security
+# ======================================================
+
+run-backend-java-spring-boot-security:
+	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security run
+
+compile-backend-java-spring-boot-security:
+	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security compile
+
+seed-backend-java-spring-boot-security:
+	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security seed
+
+compile-run-backend-java-spring-boot-security: compile-backend-java-spring-boot-security run-backend-java-spring-boot-security
+
+prod-backend-java-spring-boot-security:
+	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security build-dev
+
+test-backend-java-spring-boot-security:
+	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security tests
+
+compile-test-backend-java-spring-boot-security:
+	make -C apps/plant_shop_java/plant_shop_java_spring/plant_shop_java_spring_boot_security compile-test
+
+# ======================================================
 # ☕ Backend Java ActiveWeb
 # ======================================================
 

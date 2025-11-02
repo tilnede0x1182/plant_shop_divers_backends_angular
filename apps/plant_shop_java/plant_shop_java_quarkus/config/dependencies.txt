@@ -8,6 +8,9 @@ io.quarkus:quarkus-hibernate-validator:3.10.0
 # Sécurité
 org.mindrot:jbcrypt:0.4
 
+# JSON
+org.json:json:20210307
+
 # Base de données
 org.postgresql:postgresql:42.7.8
 

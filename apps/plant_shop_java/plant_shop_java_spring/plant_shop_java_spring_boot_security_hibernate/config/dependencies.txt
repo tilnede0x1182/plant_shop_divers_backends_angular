@@ -1,8 +1,9 @@
-# --- Spring Boot (Web + Security, sans Hibernate) ---
+# --- Spring Boot (Web + Security, Hibernate) ---
 org.springframework.boot:spring-boot:3.3.5
 org.springframework.boot:spring-boot-autoconfigure:3.3.5
 org.springframework.boot:spring-boot-starter-web:3.3.5
 org.springframework.boot:spring-boot-starter-security:3.3.5
+org.springframework.boot:spring-boot-starter-data-jpa:3.3.5
 
 # --- Servlet API (compile) - Tomcat embarqué fournit l'impl à l'exécution ---
 jakarta.servlet:jakarta.servlet-api:6.0.0

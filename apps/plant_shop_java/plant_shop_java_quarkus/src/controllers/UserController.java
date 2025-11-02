@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 import models.User;
 import repositories.UserRepository;
 import security.Guards;
-import util.ApiMapper;
-import util.PasswordUtil;
+import utils.ApiMapper;
+import utils.PasswordUtil;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)

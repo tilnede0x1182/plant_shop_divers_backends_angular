@@ -6,6 +6,7 @@ public final class User {
     public int id;
     public String name;
     public String email;
+    public String password; // plain password from payload only
     public String passwordHash; // null si non chargé
     public boolean isAdmin;
     public Timestamp createdAt; // null lors de l’insertion

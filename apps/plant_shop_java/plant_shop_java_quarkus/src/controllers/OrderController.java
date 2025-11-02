@@ -19,7 +19,7 @@ import repositories.OrderItemRepository;
 import repositories.OrderRepository;
 import repositories.PlantRepository;
 import security.Guards;
-import util.ApiMapper;
+import utils.ApiMapper;
 
 @Path("/api/orders")
 @Produces(MediaType.APPLICATION_JSON)

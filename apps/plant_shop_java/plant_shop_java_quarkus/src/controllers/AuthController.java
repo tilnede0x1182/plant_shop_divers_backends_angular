@@ -4,7 +4,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.CookieParam;
+import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
@@ -14,8 +14,8 @@ import models.User;
 import repositories.UserRepository;
 import security.Guards;
 import security.SessionService;
-import util.ApiMapper;
-import util.PasswordUtil;
+import utils.ApiMapper;
+import utils.PasswordUtil;
 
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)

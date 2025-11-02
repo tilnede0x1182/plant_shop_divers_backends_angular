@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import models.Plant;
 import repositories.PlantRepository;
 import security.Guards;
-import util.ApiMapper;
+import utils.ApiMapper;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)

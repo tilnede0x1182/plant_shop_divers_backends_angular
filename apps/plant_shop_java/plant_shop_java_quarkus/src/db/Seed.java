@@ -4,7 +4,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
-import util.PasswordUtil;
+import utils.PasswordUtil;
 import java.nio.file.*;
 
 /** Seed aligné sur la version C++ : noms réalistes, descriptions, prix cohérents,

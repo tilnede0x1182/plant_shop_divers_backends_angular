@@ -31,7 +31,7 @@ compile:
 		src/controllers/*.java \
 		src/Main.java
 run:
-	java -cp "$(CLASSPATH)" Application
+	java -cp "$(CLASSPATH)" Main
 
 compile_run: compile run
 

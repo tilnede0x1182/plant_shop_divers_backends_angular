@@ -290,6 +290,33 @@ compile-test-backend-java-activeweb:
 	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_active_web compile-test
 
 # ======================================================
+# ☕ Backend Java Microservices
+# ======================================================
+
+run-backend-java-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_microservices run-gateway
+
+compile-backend-java-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_microservices compile
+
+seed-backend-java-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_microservices seed
+
+pm2-start-backend-java-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_microservices pm2-start-all
+
+pm2-stop-backend-java-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_microservices pm2-stop-all
+
+pm2-start-service-java-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_microservices pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_microservices pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
 # 🛠️ Backend C (HTTPServer)
 # ======================================================
 
@@ -406,3 +433,6 @@ tests: test-routes
 # ======================================================
 tree:
 	tree -L 6 -I "node_modules" -I "target" -I "uploads" -I "browser" -I "bin" -I "build" -I ".stack-work" -I "venv" -I "__pycache__" -I "lib"
+
+generate_explained_repository:
+	node explained_repository_generator.js

@@ -76,6 +76,9 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **Java (Micronaut)** : backend Java performant utilisant le framework `Micronaut` pour gérer les routes HTTP, l’injection de dépendances et la configuration applicative.
 * **Java (Java Lite avec active web)** : backend Java MVC utilisant le framework JavaLite ActiveWeb avec Jetty pour le serveur HTTP et ActiveJDBC pour la base de données.
 * **Java (Spring Boot Security avec JDBC manuel)** : backend Java MVC utilisant le framework Spring Boot Security avec Tomcat embarqué pour le serveur HTTP et une gestion JDBC directe pour la base de données.
+* **Java (microservices HTTP avec JDBC natif)** : architecture backend modulaire en Java où chaque service (auth, catalogue, commandes, utilisateurs, passerelle) fonctionne comme un microservice indépendant utilisant le serveur HTTP intégré de Java. Les échanges se font en JSON, la persistance repose sur JDBC pur sans ORM, et la coordination inter-services est gérée par un gestionnaire maison inspiré de PM2.
+
+* **Java (Spring Boot Security avec Hibernate)** : backend Java MVC utilisant Spring Boot 3 et Spring Security 6 avec Tomcat embarqué pour le serveur HTTP et Spring Data JPA/Hibernate pour la base de données PostgreSQL.
 * **Python (Flask)** : backend minimaliste REST avec `Flask`, connexion PostgreSQL via `psycopg2`.
 * **Haskell (Stack)** : serveur HTTP en style fonctionnel avec `Scotty`, architecture MVC claire, ORM léger via `postgresql-simple`, sécurité JWT
 
@@ -84,30 +87,35 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 ## 📦 Structure du repo
 
 ```
-apps/
-  ├─ plant-shop-angular-universal                           → Frontend Angular
-  ├─ plant_shop_nest                                        → Backend NestJS
-  ├─ plant_shop_manifest_ABANDON                            → Backend Manifest (abandonné)
-  ├─ plant_shop_go                                          → Backend Golang avec GORM
-  ├─ plant_shop_cpp                                         → Backend en C++
-  ├─ plant_shop_c                                           → Backend en C
-  ├─ plant_shop_java
-  │  ├── plant_shop_java                                    → Backend en Java avec HTTP
-  │  ├── plant_shop_java_active_web                         → Backend en Java avec Java Lite (Active Web)
-  │  ├── plant_shop_javalin                                 → Backend en Java avec Javalin
-  │  ├── plant_shop_java_micronaut                          → Backend en Java avec Micronaut
-  │  ├── plant_shop_java_quarkus                            → Backend en Java avec Quarkus
-  │  ├── plant_shop_java_spring
-  │  │  ├── plant_shop_java_spring_boot_security            → Backend Spring Boot + Security (sans Hibernate)
-  │  │  ├── plant_shop_java_spring_boot_security_hibernate  → Backend Spring Boot + Security + Hibernate
-  │  └── plant_shop_play_framework                          → Backend avec Play Framework
-  ├─ plant_shop_python                                      → Backend en Python
-  ├─ plant_shop_haskell                                     → Backend en Haskell
-  └─ plant_shop_rust
-     ├─ plant_shop_rust_sqlx                                → Backend Rust avec SQLx
-     └─ plant_shop_rust_see_orm                             → Backend Rust avec SeaORM
+## 📦 Structure du repo
 
-prisma/                                                     → Modèles + seed
-tests/                                                      → Scripts de test des routes backend
-diagnose-ora.js                                             → Script diagnostic
+apps/
+  ├─ plant-shop-angular-universal                              → Frontend Angular
+  ├─ plant_shop_nest                                           → Backend NestJS
+  ├─ plant_shop_manifest_ABANDON                               → Backend Manifest (abandonné)
+  ├─ plant_shop_go                                             → Backend Golang avec GORM
+  ├─ plant_shop_cpp                                            → Backend en C++
+  ├─ plant_shop_c                                              → Backend en C
+  ├─ plant_shop_java
+  │  ├── Structure_en_micro_services                           →
+  │  │  └── plant_shop_java_microservices                      → Microservices Java
+  │  └── Structure_monolithique                                →
+  │     ├── plant_shop_java                                    → Backend en Java avec HTTP
+  │     ├── plant_shop_java_active_web                         → Backend en Java avec Java Lite (Active Web)
+  │     ├── plant_shop_javalin                                 → Backend en Java avec Javalin
+  │     ├── plant_shop_java_micronaut                          → Backend en Java avec Micronaut
+  │     ├── plant_shop_java_quarkus                            → Backend en Java avec Quarkus
+  │     ├── plant_shop_java_spring                             →
+  │     │  ├── plant_shop_java_spring_boot_security            → Backend Spring Boot + Security
+  │     │  └── plant_shop_java_spring_boot_security_hibernate  → Backend Spring Boot + Security + Hibernate
+  │     └── plant_shop_play_framework                          → Backend avec Play Framework
+  ├─ plant_shop_python                                         → Backend en Python
+  ├─ plant_shop_haskell                                        → Backend en Haskell
+  └─ plant_shop_rust
+     ├─ plant_shop_rust_sqlx                                   → Backend Rust avec SQLx
+     └─ plant_shop_rust_see_orm                                → Backend Rust avec SeaORM
+
+prisma/                                                        → Modèles + seed
+tests/                                                         → Scripts de test des routes backend
+diagnose-ora.js                                                → Script diagnostic
 ```

@@ -108,15 +108,15 @@ run: pm2-start-all
 
 clean:
 	rm -rf \
-			$(UTILS_DIR)/bin \
-			$(AUTH_DIR)/bin \
-			$(CATALOG_DIR)/bin \
-			$(ORDER_DIR)/bin \
-			$(USER_DIR)/bin \
-			$(GATEWAY_DIR)/bin \
-			$(DB_DIR)/bin \
-			$(TEST_DIR)/bin \
-			$(ROOT)/bin
+		$(UTILS_DIR)/bin \
+		$(AUTH_DIR)/bin \
+		$(CATALOG_DIR)/bin \
+		$(ORDER_DIR)/bin \
+		$(USER_DIR)/bin \
+		$(GATEWAY_DIR)/bin \
+		$(DB_DIR)/bin \
+		$(TEST_DIR)/bin \
+		$(ROOT)/bin
 
 
 ## ────────────────

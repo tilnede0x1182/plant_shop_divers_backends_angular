@@ -1,0 +1,5 @@
+name: plant_shop_java
+dependencies:
+  - postgresql-42.7.8
+  - json-20210307
+  - jbcrypt-0.4

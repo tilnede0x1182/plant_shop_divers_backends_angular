@@ -104,6 +104,8 @@ ifndef SERVICE
 endif
 	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
 
+run: pm2-start-all
+
 clean:
 	rm -rf \
 			$(UTILS_DIR)/bin \

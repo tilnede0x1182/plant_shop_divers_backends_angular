@@ -209,6 +209,14 @@ final class OrderController extends OrderBaseController {
             }
             return;
         }
+        if ("PATCH".equals(method) && id != -1) {
+            if (!ctx.isAdmin()) {
+                sendJson(ex, 403, "{\"error\":\"Accès interdit\"}");
+                return;
+            }
+            patch(ex, id);
+            return;
+        }
         if ("POST".equals(method) && id == -1) {
             create(ex, ctx);
             return;
@@ -218,7 +226,11 @@ final class OrderController extends OrderBaseController {
 
     private void adminRoutes(HttpExchange ex, String method, String path) throws Exception {
         int id = extractId(path);
-        if ("PATCH".equals(method) && id != -1) {
+        if ("PATCH".equals(method)) {
+            if (id == -1) {
+                sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
+                return;
+            }
             patch(ex, id);
             return;
         }

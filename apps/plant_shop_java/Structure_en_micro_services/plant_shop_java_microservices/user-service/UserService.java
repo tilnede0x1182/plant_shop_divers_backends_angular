@@ -224,6 +224,14 @@ final class UserController extends UserBaseController {
     private void userRoutes(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
         int id = extractId(path);
         if (id == -1) {
+            if ("POST".equals(method)) {
+                if (!ctx.isAdmin()) {
+                    sendJson(ex, 403, "{\"error\":\"Accès interdit\"}");
+                    return;
+                }
+                create(ex);
+                return;
+            }
             sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
             return;
         }

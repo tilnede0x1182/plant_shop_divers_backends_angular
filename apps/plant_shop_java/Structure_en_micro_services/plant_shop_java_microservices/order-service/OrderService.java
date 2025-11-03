@@ -221,6 +221,14 @@ final class OrderController extends OrderBaseController {
             create(ex, ctx);
             return;
         }
+        if ("DELETE".equals(method) && id != -1) {
+            if (!ctx.isAdmin()) {
+                sendJson(ex, 403, "{\"error\":\"Accès interdit\"}");
+                return;
+            }
+            destroy(ex, id);
+            return;
+        }
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
@@ -234,7 +242,11 @@ final class OrderController extends OrderBaseController {
             patch(ex, id);
             return;
         }
-        if ("DELETE".equals(method) && id != -1) {
+        if ("DELETE".equals(method)) {
+            if (id == -1) {
+                sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
+                return;
+            }
             destroy(ex, id);
             return;
         }

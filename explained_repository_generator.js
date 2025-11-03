@@ -1,6 +1,4 @@
-// Collez tout ce bloc dans la console JS
-
-const items = [
+onst items = [
   { raw: '## 📦 Structure du repo' },
   { raw: '' },
   { raw: 'apps/' },

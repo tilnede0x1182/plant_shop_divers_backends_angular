@@ -76,8 +76,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 * **Java (Micronaut)** : backend Java performant utilisant le framework `Micronaut` pour gérer les routes HTTP, l’injection de dépendances et la configuration applicative.
 * **Java (Java Lite avec active web)** : backend Java MVC utilisant le framework JavaLite ActiveWeb avec Jetty pour le serveur HTTP et ActiveJDBC pour la base de données.
 * **Java (Spring Boot Security avec JDBC manuel)** : backend Java MVC utilisant le framework Spring Boot Security avec Tomcat embarqué pour le serveur HTTP et une gestion JDBC directe pour la base de données.
-* **Java (microservices HTTP avec JDBC natif)** : architecture backend modulaire en Java où chaque service (auth, catalogue, commandes, utilisateurs, passerelle) fonctionne comme un microservice indépendant utilisant le serveur HTTP intégré de Java. Les échanges se font en JSON, la persistance repose sur JDBC pur sans ORM, et la coordination inter-services est gérée par un gestionnaire maison inspiré de PM2.
-
+* **Java (microservices HTTP distribués avec sessions partagées)** : backend Java modulaire en architecture distribuée utilisant le serveur HTTP natif pour une gateway et quatre services (auth, catalogue, commandes, utilisateurs), avec authentification par cookie de session, routage centralisé et accès PostgreSQL en JDBC direct à partir d’un fichier d’environnement commun.
 * **Java (Spring Boot Security avec Hibernate)** : backend Java MVC utilisant Spring Boot 3 et Spring Security 6 avec Tomcat embarqué pour le serveur HTTP et Spring Data JPA/Hibernate pour la base de données PostgreSQL.
 * **Python (Flask)** : backend minimaliste REST avec `Flask`, connexion PostgreSQL via `psycopg2`.
 * **Haskell (Stack)** : serveur HTTP en style fonctionnel avec `Scotty`, architecture MVC claire, ORM léger via `postgresql-simple`, sécurité JWT

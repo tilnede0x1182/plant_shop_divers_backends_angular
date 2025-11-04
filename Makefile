@@ -290,6 +290,33 @@ compile-test-backend-java-activeweb:
 	make -C apps/plant_shop_java/Structure_monolithique/plant_shop_java_active_web compile-test
 
 # ======================================================
+# ☕ Backend Java Architecture distribuée
+# ======================================================
+
+run-backend-java-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_distribuée" run-gateway
+
+compile-backend-java-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_distribuée" compile
+
+seed-backend-java-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_distribuée" seed
+
+pm2-start-backend-java-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_distribuée" pm2-start-all
+
+pm2-stop-backend-java-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_distribuée" pm2-stop-all
+
+pm2-start-service-java-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_distribuée" pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_distribuée" pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
 # ☕ Backend Java Microservices
 # ======================================================
 

@@ -6,7 +6,6 @@ CATALOG_DIR := $(ROOT)/catalog-service
 ORDER_DIR := $(ROOT)/order-service
 USER_DIR := $(ROOT)/user-service
 GATEWAY_DIR := $(ROOT)/gateway
-DB_DIR := $(ROOT)/db
 TEST_DIR := $(ROOT)/Tests
 
 LIB_CP := $(LIB_DIR)/*
@@ -130,25 +129,10 @@ clean:
 		$(ORDER_DIR)/bin \
 		$(USER_DIR)/bin \
 		$(GATEWAY_DIR)/bin \
-		$(DB_DIR)/bin \
 		$(TEST_DIR)/bin \
 		$(ROOT)/bin
 
 build-dev: clean compile
-
-## ────────────────
-# Seed
-## ────────────────
-
-compile-seed:
-	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin utils/PasswordUtil.java db/Seed.java
-
-seed:
-	@if [ ! -f db/Seed.class ]; then make compile-seed; fi
-	java -cp $(CLASSPATH) db.Seed
-
-seed-dev: clean compile-seed seed
 
 ## ────────────────
 # Test
@@ -164,19 +148,68 @@ tests:
 
 test-dev: clean compile-test tests
 
+
 ## ────────────────
-# DB
+# DB (CIBLES MODIFIÉES)
 ## ────────────────
 
 db-create:
 	sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME);"
 
-db-migrate:
-	sudo -u postgres psql -d $(DB_NAME) -f db/schema.sql
-
 db-drop:
 	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
 
-db-seed: seed
+# --- Cibles de migration par service ---
+db-migrate-users:
+	@echo "🐘 Migration user-service..."
+	@sudo -u postgres psql -d $(DB_NAME) -f user-service/db/schema.sql
 
-db-reset: db-drop db-create db-migrate db-seed
+db-migrate-catalog:
+	@echo "🐘 Migration catalog-service..."
+	@sudo -u postgres psql -d $(DB_NAME) -f catalog-service/db/schema.sql
+
+db-migrate-orders:
+	@echo "🐘 Migration order-service..."
+	@sudo -u postgres psql -d $(DB_NAME) -f order-service/db/schema.sql
+
+# --- Cible de migration globale ---
+# Note: L'ordre est important à cause des clés étrangères
+db-migrate: db-migrate-users db-migrate-catalog db-migrate-orders
+	@echo "✅ Toutes les migrations sont terminées."
+
+# --- Cibles de compilation des Seeders ---
+compile-seed-users: compile-utils
+	@echo "🔧 Compilation Seed user-service"
+	@mkdir -p $(USER_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java
+
+compile-seed-catalog: compile-utils
+	@echo "🔧 Compilation Seed catalog-service"
+	@mkdir -p $(CATALOG_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin catalog-service/db/Seed.java
+
+compile-seed-orders: compile-utils
+	@echo "🔧 Compilation Seed order-service"
+	@mkdir -p $(ORDER_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin order-service/db/Seed.java
+
+# --- Cibles de Seed par service ---
+seed-users: compile-seed-users
+	@echo "🌱 Seed user-service..."
+	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+
+seed-catalog: compile-seed-catalog
+	@echo "🌱 Seed catalog-service..."
+	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+
+seed-orders: compile-seed-orders
+	@echo "🌱 Seed order-service..."
+	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+
+# --- Cible de Seed globale ---
+# Note: L'ordre est important (les commandes dépendent des utilisateurs et des plantes)
+seed: seed-users seed-catalog seed-orders
+	@echo "✅ Seed global terminé."
+
+# --- Cible de Reset globale ---
+db-reset: db-drop db-create db-migrate seed

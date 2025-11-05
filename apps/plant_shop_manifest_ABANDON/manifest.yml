@@ -3,37 +3,241 @@ name: plant-shop
 entities:
   User:
     authenticable: true
+    mainProp: name
+    seedCount: 2
+    policies:
+      read:
+        - access: restricted
+      create:
+        - access: admin
+      update:
+        - access: restricted
+        - access: admin
+      delete:
+        - access: admin
     properties:
-      - "email string @unique"
-      - "name string"
-      - "password string @private"
-      - "admin boolean @default(false)"
-      - "createdAt datetime @default(now())"
+      - name
+      - { name: admin, type: boolean, default: false }
 
   Plant:
+    mainProp: name
+    seedCount: 10
+    slug: plants
+    policies:
+      read:
+        - access: public
+      create:
+        - access: admin
+      update:
+        - access: admin
+      delete:
+        - access: admin
     properties:
-      - "id int @id @default(autoincrement())"
-      - "name string"
-      - "price float"
-      - "stock int"
-      - "description string?"
-      - "createdAt datetime @default(now())"
+      - name
+      - { name: price, type: number }
+      - { name: stock, type: number }
+      - { name: description, type: text }
 
   Order:
+    mainProp: id
+    seedCount: 5
+    slug: orders
+    policies:
+      read:
+        - access: restricted
+        - access: admin
+      create:
+        - access: restricted
+      update:
+        - access: admin
+      delete:
+        - access: admin
     properties:
-      - "id int @id @default(autoincrement())"
-      - "userId int"
-      - "status string?"
-      - "totalPrice float?"
-      - "createdAt datetime @default(now())"
-      - "user User @relation(fields: [userId], references: [id])"
-      - "orderItems OrderItem[]"
+      - { name: status, type: string }
+      - { name: totalPrice, type: number }
+    belongsTo:
+      - User
 
   OrderItem:
+    mainProp: id
+    seedCount: 15
+    slug: order-items
+    policies:
+      read:
+        - access: admin
+      create:
+        - access: admin
+      update:
+        - access: admin
+      delete:
+        - access: admin
     properties:
-      - "id int @id @default(autoincrement())"
-      - "orderId int"
-      - "plantId int"
-      - "quantity int"
-      - "order Order @relation(fields: [orderId], references: [id])"
-      - "plant Plant @relation(fields: [plantId], references: [id])"
+      - { name: quantity, type: number }
+    belongsTo:
+      - Order
+      - Plant
+
+endpoints:
+  # ============ AUTH ENDPOINTS ============
+  authLogin:
+    path: /auth/login
+    method: POST
+    handler: auth/authLogin
+    description: Login endpoint compatible with Angular frontend
+
+  authRegister:
+    path: /auth/register
+    method: POST
+    handler: auth/authRegister
+    description: Register endpoint compatible with Angular frontend
+
+  authMe:
+    path: /auth/me
+    method: GET
+    handler: auth/authMe
+    policies:
+      - access: restricted
+    description: Get current user info
+
+  authLogout:
+    path: /auth/logout
+    method: POST
+    handler: auth/authLogout
+    description: Logout endpoint
+
+  # ============ PLANT ENDPOINTS (public) ============
+  getPlantsPublic:
+    path: /plants
+    method: GET
+    handler: plants/getPlantsPublic
+    description: Get all plants (public access)
+
+  getPlantByIdPublic:
+    path: /plants/:id
+    method: GET
+    handler: plants/getPlantByIdPublic
+    description: Get one plant by ID (public access)
+
+  # ============ ADMIN PLANT ENDPOINTS ============
+  getAdminPlants:
+    path: /admin/plants
+    method: GET
+    handler: admin/plants/getAdminPlants
+    policies:
+      - access: admin
+    description: Get all plants (admin)
+
+  createAdminPlant:
+    path: /admin/plants
+    method: POST
+    handler: plants/createAdminPlant
+    policies:
+      - access: admin
+    description: Create plant (admin)
+
+  updateAdminPlant:
+    path: /admin/plants/:id
+    method: PATCH
+    handler: plants/updateAdminPlant
+    policies:
+      - access: admin
+    description: Update plant (admin)
+
+  deleteAdminPlant:
+    path: /admin/plants/:id
+    method: DELETE
+    handler: plants/deleteAdminPlant
+    policies:
+      - access: admin
+    description: Delete plant (admin)
+
+  # ============ USER ENDPOINTS ============
+  getAllUsers:
+    path: /users
+    method: GET
+    handler: users/getAllUsers
+    policies:
+      - access: admin
+    description: Get all users (admin)
+
+  createUser:
+    path: /users
+    method: POST
+    handler: users/createUser
+    policies:
+      - access: admin
+    description: Create user (admin)
+
+  getUserById:
+    path: /users/:id
+    method: GET
+    handler: users/getUserById
+    policies:
+      - access: restricted
+    description: Get user by ID
+
+  updateUser:
+    path: /users/:id
+    method: PATCH
+    handler: users/updateUser
+    policies:
+      - access: restricted
+    description: Update user
+
+  deleteUser:
+    path: /users/:id
+    method: DELETE
+    handler: users/deleteUser
+    policies:
+      - access: admin
+    description: Delete user (admin)
+
+  # ============ ADMIN USER ENDPOINTS ============
+  getAdminUsers:
+    path: /admin/users
+    method: GET
+    handler: admin/orders/getAdminUsers
+    policies:
+      - access: admin
+    description: Get all users (admin panel)
+
+  # ============ ORDER ENDPOINTS ============
+  getUserOrders:
+    path: /orders
+    method: GET
+    handler: orders/getUserOrders
+    policies:
+      - access: restricted
+    description: Get current user orders
+
+  getOrderById:
+    path: /orders/:id
+    method: GET
+    handler: orders/getOrderById
+    policies:
+      - access: restricted
+    description: Get order by ID
+
+  createOrder:
+    path: /orders
+    method: POST
+    handler: orders/createOrder
+    policies:
+      - access: restricted
+    description: Create new order
+
+  updateOrder:
+    path: /orders/:id
+    method: PATCH
+    handler: orders/updateOrder
+    policies:
+      - access: admin
+    description: Update order (admin)
+
+  deleteOrder:
+    path: /orders/:id
+    method: DELETE
+    handler: orders/deleteOrder
+    policies:
+      - access: admin
+    description: Delete order (admin)

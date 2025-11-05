@@ -1,9 +1,6 @@
 package catalog.repository;
 
 import catalog.model.Plant;
-import com.sun.net.httpserver.HttpExchange;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -38,9 +35,18 @@ abstract class CatalogBaseRepository<T> {
 
     // Rendu public pour accès direct par le Controller
     public List<T> findAll() throws SQLException {
+        return findAllOrderedBy(null);
+    }
+
+    protected List<T> findAllOrderedBy(String orderClause) throws SQLException {
         List<T> out = new ArrayList<>();
+        String sql = "SELECT * FROM " + table;
+        if (orderClause != null && !orderClause.isBlank()) {
+            sql += " ORDER BY " + orderClause;
+        }
+
         try (Statement st = db.createStatement();
-             ResultSet rs = st.executeQuery("SELECT * FROM " + table)) {
+             ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 out.add(map(rs));
             }
@@ -100,5 +106,13 @@ public final class PlantRepository extends CatalogBaseRepository<Plant> {
             ps.setInt(5, plant.id());
             ps.executeUpdate();
         }
+    }
+
+    public List<Plant> findAllOrderedByName() throws SQLException {
+        return findAllOrderedBy("name ASC");
+    }
+
+    public void delete(int id) throws SQLException {
+        super.delete(id);
     }
 }

@@ -6,14 +6,11 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.util.stream.Collectors;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import util.AuthContext;
-import java.nio.charset.StandardCharsets;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
 
 // Définition locale de BaseController pour résoudre les dépendances du classpath lors de la compilation
 abstract class BaseController implements HttpHandler {
@@ -62,6 +59,8 @@ abstract class BaseController implements HttpHandler {
 
 public final class PlantController extends BaseController {
 
+    private static final String ADMIN_BASE = "/admin/plants";
+
     private final PlantRepository repo;
 
     public PlantController(Connection db) {
@@ -83,18 +82,33 @@ public final class PlantController extends BaseController {
             }
 
             // Routes admin
-            if (path.startsWith("/admin/plants")) {
+            if (path.startsWith(ADMIN_BASE)) {
                 if (!ctx.isAdmin()) {
                     sendJson(ex, 403, "{\"error\":\"Accès administrateur requis\"}");
                     return;
                 }
 
-                if ("POST".equals(method)) {
-                    create(ex, ctx);
-                } else if ("PUT".equals(method)) {
-                    update(ex, ctx);
-                } else {
-                    sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
+                if (ADMIN_BASE.equals(path)) {
+                    switch (method) {
+                        case "POST" -> create(ex);
+                        case "GET" -> listAdmin(ex);
+                        default -> sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
+                    }
+                    return;
+                }
+
+                int id = extractPlantId(path, ADMIN_BASE + "/");
+                if (id <= 0) {
+                    sendJson(ex, 404, "{\"error\":\"Plante introuvable\"}");
+                    return;
+                }
+
+                switch (method) {
+                    case "GET" -> sendPlant(ex, id);
+                    case "PUT" -> replace(ex, id);
+                    case "PATCH" -> patch(ex, id);
+                    case "DELETE" -> delete(ex, id);
+                    default -> sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
                 }
                 return;
             }
@@ -155,43 +169,118 @@ public final class PlantController extends BaseController {
         sendJson(ex, 200, repo.find(id).toJson());
     }
 
-    private void create(HttpExchange ex, AuthContext ctx) throws Exception {
-        JSONObject body = parseJson(ex);
-        Plant plant = Plant.fromJson(body);
-        repo.create(plant);
-        sendJson(ex, 201, plant.toJson());
+    private int extractPlantId(String path, String prefix) {
+        if (!path.startsWith(prefix)) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(path.substring(prefix.length()));
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
     }
 
-    private void update(HttpExchange ex, AuthContext ctx) throws Exception {
+    private void create(HttpExchange ex) throws Exception {
         JSONObject body = parseJson(ex);
         Plant plant = Plant.fromJson(body);
-        if (plant.id() <= 0) {
-            throw new IllegalArgumentException("L'ID de la plante est requis pour la mise à jour");
+        int id = repo.create(plant);
+        Plant created = repo.find(id);
+        if (created == null) {
+            created = plant.withId(id);
         }
+        sendJson(ex, 201, created.toJson());
+    }
+
+    private void replace(HttpExchange ex, int id) throws Exception {
+        JSONObject body = parseJson(ex);
+        Plant plant = Plant.fromJson(body).withId(id);
         repo.update(plant);
-        sendJson(ex, 200, plant.toJson());
+        Plant updated = repo.find(id);
+        sendJson(ex, 200, (updated != null ? updated : plant).toJson());
+    }
+
+    private void patch(HttpExchange ex, int id) throws Exception {
+        Plant existing = repo.find(id);
+        if (existing == null) {
+            sendJson(ex, 404, "{\"error\":\"Plante introuvable\"}");
+            return;
+        }
+
+        JSONObject body = parseJson(ex);
+        Plant patched = applyPatch(existing, body);
+        repo.update(patched);
+        Plant updated = repo.find(id);
+        sendJson(ex, 200, (updated != null ? updated : patched).toJson());
+    }
+
+    private void delete(HttpExchange ex, int id) throws Exception {
+        Plant existing = repo.find(id);
+        if (existing == null) {
+            sendJson(ex, 404, "{\"error\":\"Plante introuvable\"}");
+            return;
+        }
+        repo.delete(id);
+        sendEmpty(ex, 200);
+    }
+
+    private void listAdmin(HttpExchange ex) throws Exception {
+        sendPlantList(ex);
     }
 
     private void getAll(HttpExchange ex, AuthContext ctx) throws Exception {
-        var plants = repo.findAll();
-        String json = plants.stream()
-            .map(Plant::toJson)
-            .map(JSONObject::toString) // Correction pour l'erreur de collect
-            .collect(Collectors.joining(",", "[", "]"));
-        sendJson(ex, 200, json);
+        sendPlantList(ex);
     }
 
     private void getOne(HttpExchange ex, AuthContext ctx) throws Exception {
         try {
             int id = Integer.parseInt(ex.getRequestURI().getPath().substring("/plants/".length()));
-            Plant plant = repo.find(id);
-            if (plant != null) {
-                sendJson(ex, 200, plant.toJson());
-            } else {
-                sendJson(ex, 404, "{\"error\":\"Plante introuvable\"}");
-            }
+            sendPlant(ex, id);
         } catch (NumberFormatException e) {
             sendJson(ex, 400, "{\"error\":\"ID invalide\"}");
         }
+    }
+
+    private void sendPlant(HttpExchange ex, int id) throws Exception {
+        Plant plant = repo.find(id);
+        if (plant != null) {
+            sendJson(ex, 200, plant.toJson());
+        } else {
+            sendJson(ex, 404, "{\"error\":\"Plante introuvable\"}");
+        }
+    }
+
+    private Plant applyPatch(Plant base, JSONObject body) {
+        Plant current = base;
+        if (body.has("name")) {
+            if (body.isNull("name")) {
+                throw new IllegalArgumentException("Le champ 'name' ne peut pas être nul");
+            }
+            current = current.withName(body.getString("name"));
+        }
+        if (body.has("description")) {
+            current = current.withDescription(body.isNull("description") ? null : body.getString("description"));
+        }
+        if (body.has("price")) {
+            if (body.isNull("price")) {
+                throw new IllegalArgumentException("Le champ 'price' ne peut pas être nul");
+            }
+            current = current.withPrice(body.getBigDecimal("price"));
+        }
+        if (body.has("stock")) {
+            if (body.isNull("stock")) {
+                throw new IllegalArgumentException("Le champ 'stock' ne peut pas être nul");
+            }
+            current = current.withStock(body.getInt("stock"));
+        }
+        return current;
+    }
+
+    private void sendPlantList(HttpExchange ex) throws Exception {
+        var plants = repo.findAllOrderedByName();
+        String json = plants.stream()
+            .map(Plant::toJson)
+            .map(JSONObject::toString)
+            .collect(Collectors.joining(",", "[", "]"));
+        sendJson(ex, 200, json);
     }
 }

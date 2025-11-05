@@ -13,6 +13,10 @@ public record Plant(
     int stock,
     Instant createdAt
 ) {
+    public Plant withId(int value) {
+        return new Plant(value, name, description, price, stock, createdAt);
+    }
+
     public static Plant fromJson(JSONObject json) {
         // Constructeur simple pour la création (ID sera 0)
         return new Plant(

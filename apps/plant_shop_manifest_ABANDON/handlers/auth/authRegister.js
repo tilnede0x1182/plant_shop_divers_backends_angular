@@ -1,5 +1,6 @@
 const bcrypt = require('bcrypt');
 const { generateUserToken } = require('./tokenUtils');
+const { findUserByEmail } = require('./db');
 
 module.exports = async (req, res, manifest) => {
   try {
@@ -10,10 +11,7 @@ module.exports = async (req, res, manifest) => {
     }
 
     // Check if user already exists
-    const existingUser = await manifest
-      .from('users')
-      .where([{ email }])
-      .findOne();
+    const existingUser = await findUserByEmail(email);
 
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });

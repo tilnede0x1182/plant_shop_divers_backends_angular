@@ -23,14 +23,14 @@ const pool = new Pool({
 
 async function findUserByEmail(email) {
   const query =
-    'SELECT id, email, password, name, admin FROM "user" WHERE email = $1 LIMIT 1';
+    'SELECT id, true_id, email, password, name, admin FROM "user" WHERE email = $1 LIMIT 1';
   const { rows } = await pool.query(query, [email]);
   return rows[0] || null;
 }
 
 async function findAdminByEmail(email) {
   const query =
-    'SELECT id, email, password FROM "admin" WHERE email = $1 LIMIT 1';
+    'SELECT id, true_id, email, password FROM "admin" WHERE email = $1 LIMIT 1';
   const { rows } = await pool.query(query, [email]);
   const admin = rows[0];
   if (!admin) return null;
@@ -41,8 +41,58 @@ async function findAdminByEmail(email) {
   };
 }
 
+async function findPlantByUuid(uuid) {
+  const { rows } = await pool.query(
+    'SELECT id, true_id, name, price, stock, description, "createdAt", "updatedAt" FROM "plant" WHERE id = $1 LIMIT 1',
+    [uuid]
+  );
+  return rows[0] || null;
+}
+
+async function findPlantByTrueId(trueId) {
+  const { rows } = await pool.query(
+    'SELECT id, true_id, name, price, stock, description, "createdAt", "updatedAt" FROM "plant" WHERE true_id = $1 LIMIT 1',
+    [trueId]
+  );
+  return rows[0] || null;
+}
+
+async function findPlantUuidByTrueId(trueId) {
+  const { rows } = await pool.query(
+    'SELECT id FROM "plant" WHERE true_id = $1 LIMIT 1',
+    [trueId]
+  );
+  return rows[0]?.id || null;
+}
+
+async function listPlantsWithTrueId() {
+  const { rows } = await pool.query(
+    'SELECT id, true_id, name, price, stock, description, "createdAt", "updatedAt" FROM "plant" ORDER BY true_id'
+  );
+  return rows;
+}
+
+function serializePlant(row) {
+  if (!row) return null;
+  return {
+    id: row.true_id,
+    uuid: row.id,
+    name: row.name,
+    price: row.price,
+    stock: row.stock,
+    description: row.description,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt
+  };
+}
+
 module.exports = {
   pool,
   findUserByEmail,
-  findAdminByEmail
+  findAdminByEmail,
+  findPlantByUuid,
+  findPlantByTrueId,
+  findPlantUuidByTrueId,
+  listPlantsWithTrueId,
+  serializePlant
 };

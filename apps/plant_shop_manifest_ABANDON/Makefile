@@ -5,15 +5,18 @@ DB_HOST = localhost
 DB_PORT = 5432
 DB_NAME = plant_shop_manifest
 
-run:
+patch-manifest:
+	./patch_manifest/patch_manifest.sh
+
+run: patch-manifest
 	npm run dev
 
-prod:
+prod: patch-manifest
 	npm run start
 
-seed:
+seed: patch-manifest
 	npm run seed
-	npx dotenv -e .env -- node ./db/seed-custom.js
+# 	npx dotenv -e .env -- node ./db/seed-custom.js
 
 proxy:
 	node proxy.js
@@ -36,5 +39,5 @@ db-drop:
 	@echo "✅ Base supprimée"
 
 # Reset complet: drop + create + migrate
-db-reset: db-drop db-create db-migrate
+db-reset: db-drop db-create db-migrate seed
 	@echo "🔄 Reset de la base de données terminé"

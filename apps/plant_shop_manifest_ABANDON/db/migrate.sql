@@ -1,6 +1,12 @@
 -- Migration SQL pour plant_shop_manifest
 -- Création des tables basées sur manifest.yml (noms en minuscules utilisés par Manifest)
 
+DROP TABLE IF EXISTS "order_item" CASCADE;
+DROP TABLE IF EXISTS "order" CASCADE;
+DROP TABLE IF EXISTS "plant" CASCADE;
+DROP TABLE IF EXISTS "admin" CASCADE;
+DROP TABLE IF EXISTS "user" CASCADE;
+
 -- Table user
 CREATE TABLE IF NOT EXISTS "user" (
     id SERIAL PRIMARY KEY,

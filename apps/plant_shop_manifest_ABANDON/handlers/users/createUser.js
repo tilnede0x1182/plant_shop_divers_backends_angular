@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { pool } = require('../auth/db');
 
 module.exports = async (req, res, manifest) => {
   try {
@@ -8,13 +9,13 @@ module.exports = async (req, res, manifest) => {
       return res.status(400).json({ message: 'Email, password, and name required' });
     }
 
-    // Check if user already exists
-    const existingUser = await manifest
-      .from('users')
-      .where([{ email }])
-      .findOne();
+    // Check if user already exists via SQL direct
+    const { rows } = await pool.query(
+      'SELECT id FROM "user" WHERE email = $1 LIMIT 1',
+      [email]
+    );
 
-    if (existingUser) {
+    if (rows.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
 

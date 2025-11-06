@@ -1,27 +1,23 @@
+const { findUserIdByTrueId } = require('../auth/db');
+
 module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;
-    const currentUser = req.authenticable;
+    const numericId = Number(id);
     const updates = {};
 
-    // Check if user is updating their own profile or is an admin
-    const isOwner = currentUser.id === parseInt(id);
-    const isAdmin = currentUser.admin === true;
-
-    if (!isOwner && !isAdmin) {
-      return res.status(403).json({ message: 'Forbidden' });
+    // Trouver l'id INTEGER via true_id
+    const userId = await findUserIdByTrueId(numericId);
+    if (!userId) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Only include fields that are provided
     if (req.body.name !== undefined) updates.name = req.body.name;
     if (req.body.email !== undefined) updates.email = req.body.email;
+    if (req.body.admin !== undefined) updates.admin = req.body.admin;
 
-    // Only admins can change admin status
-    if (req.body.admin !== undefined && isAdmin) {
-      updates.admin = req.body.admin;
-    }
-
-    const user = await manifest.from('users').patch(parseInt(id), updates);
+    const user = await manifest.from('users').patch(userId, updates);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

@@ -28,6 +28,22 @@ async function findUserByEmail(email) {
   return rows[0] || null;
 }
 
+async function findUserByTrueId(trueId) {
+  const { rows } = await pool.query(
+    'SELECT id, true_id, email, name, admin FROM "user" WHERE true_id = $1 LIMIT 1',
+    [trueId]
+  );
+  return rows[0] || null;
+}
+
+async function findUserIdByTrueId(trueId) {
+  const { rows } = await pool.query(
+    'SELECT id FROM "user" WHERE true_id = $1 LIMIT 1',
+    [trueId]
+  );
+  return rows[0]?.id || null;
+}
+
 async function findAdminByEmail(email) {
   const query =
     'SELECT id, true_id, email, password FROM "admin" WHERE email = $1 LIMIT 1';
@@ -169,6 +185,8 @@ function serializeOrder(orderRow, itemsRows = []) {
 module.exports = {
   pool,
   findUserByEmail,
+  findUserByTrueId,
+  findUserIdByTrueId,
   findAdminByEmail,
   findPlantByUuid,
   findPlantByTrueId,

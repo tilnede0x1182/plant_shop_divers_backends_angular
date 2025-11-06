@@ -1,14 +1,17 @@
+const { findUserIdByTrueId } = require('../auth/db');
+
 module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;
-    const currentUser = req.authenticable;
+    const numericId = Number(id);
 
-    // Check if user is accessing their own profile or is an admin
-    if (currentUser.id !== parseInt(id) && !currentUser.admin) {
-      return res.status(403).json({ message: 'Forbidden' });
+    // Trouver l'id INTEGER via true_id
+    const userId = await findUserIdByTrueId(numericId);
+    if (!userId) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    const user = await manifest.from('users').findOneById(parseInt(id));
+    const user = await manifest.from('users').findOneById(userId);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

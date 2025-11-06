@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const { generateUserToken } = require('./tokenUtils');
 
 module.exports = async (req, res, manifest) => {
   try {
@@ -30,11 +31,7 @@ module.exports = async (req, res, manifest) => {
     });
 
     // Generate JWT token
-    const token = manifest.auth.generateToken({
-      id: user.id,
-      email: user.email,
-      admin: user.admin
-    });
+    const token = generateUserToken(user);
 
     // Set cookie
     res.cookie('jwt', token, {

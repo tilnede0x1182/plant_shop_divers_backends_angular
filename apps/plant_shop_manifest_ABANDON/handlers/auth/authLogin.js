@@ -2,6 +2,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
+const { generateUserToken } = require('./tokenUtils');
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -58,11 +59,7 @@ module.exports = async (req, res, manifest) => {
 
     // Generate JWT token
     console.log('🎫 Generating JWT token...');
-    const token = manifest.auth.generateToken({
-      id: user.id,
-      email: user.email,
-      admin: user.admin
-    });
+    const token = generateUserToken(user);
     console.log('🎫 Token generated:', token ? 'YES' : 'NO');
 
     // Set cookie

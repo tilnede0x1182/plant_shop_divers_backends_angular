@@ -8,14 +8,18 @@ entities:
     policies:
       read:
         - access: restricted
+          allow: User
       create:
         - access: admin
       update:
         - access: restricted
+          allow: User
         - access: admin
       delete:
         - access: admin
     properties:
+      - { name: email, type: string }
+      - { name: password, type: string }
       - name
       - { name: admin, type: boolean, default: false }
 
@@ -45,9 +49,11 @@ entities:
     policies:
       read:
         - access: restricted
+          allow: User
         - access: admin
       create:
         - access: restricted
+          allow: User
       update:
         - access: admin
       delete:
@@ -97,6 +103,7 @@ endpoints:
     handler: auth/authMe
     policies:
       - access: restricted
+        allow: User
     description: Get current user info
 
   authLogout:
@@ -174,6 +181,7 @@ endpoints:
     handler: users/getUserById
     policies:
       - access: restricted
+        allow: User
     description: Get user by ID
 
   updateUser:
@@ -182,6 +190,7 @@ endpoints:
     handler: users/updateUser
     policies:
       - access: restricted
+        allow: User
     description: Update user
 
   deleteUser:
@@ -208,6 +217,7 @@ endpoints:
     handler: orders/getUserOrders
     policies:
       - access: restricted
+        allow: User
     description: Get current user orders
 
   getOrderById:
@@ -216,6 +226,7 @@ endpoints:
     handler: orders/getOrderById
     policies:
       - access: restricted
+        allow: User
     description: Get order by ID
 
   createOrder:
@@ -224,6 +235,7 @@ endpoints:
     handler: orders/createOrder
     policies:
       - access: restricted
+        allow: User
     description: Create new order
 
   updateOrder:

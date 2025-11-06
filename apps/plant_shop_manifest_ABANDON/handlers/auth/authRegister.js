@@ -1,4 +1,3 @@
-const bcrypt = require('bcrypt');
 const { generateUserToken } = require('./tokenUtils');
 const { findUserByEmail } = require('./db');
 
@@ -17,14 +16,11 @@ module.exports = async (req, res, manifest) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Create user
     const user = await manifest.from('users').create({
       email,
       name,
-      password: hashedPassword,
+      password,
       admin: false
     });
 

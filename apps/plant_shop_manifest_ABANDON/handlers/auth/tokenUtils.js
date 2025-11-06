@@ -12,8 +12,12 @@ const USER_ENTITY_SLUG =
   process.env.USER_ENTITY_SLUG ||
   process.env.MANIFEST_USER_SLUG ||
   'users';
+const ADMIN_ENTITY_SLUG =
+  process.env.ADMIN_ENTITY_SLUG ||
+  process.env.MANIFEST_ADMIN_SLUG ||
+  'admins';
 
-function generateUserToken(user) {
+function generateUserToken(user, options = {}) {
   if (!user?.email) {
     throw new Error('Cannot generate token without user email');
   }
@@ -22,10 +26,13 @@ function generateUserToken(user) {
     console.warn('[auth] TOKEN_SECRET_KEY is missing or default.');
   }
 
+  const entitySlug =
+    options.entitySlug || (user.admin ? ADMIN_ENTITY_SLUG : USER_ENTITY_SLUG);
+
   return jwt.sign(
     {
       email: user.email,
-      entitySlug: USER_ENTITY_SLUG,
+      entitySlug,
       id: user.id,
       admin: !!user.admin
     },
@@ -35,5 +42,7 @@ function generateUserToken(user) {
 }
 
 module.exports = {
-  generateUserToken
+  generateUserToken,
+  USER_ENTITY_SLUG,
+  ADMIN_ENTITY_SLUG
 };

@@ -28,7 +28,21 @@ async function findUserByEmail(email) {
   return rows[0] || null;
 }
 
+async function findAdminByEmail(email) {
+  const query =
+    'SELECT id, email, password FROM "admin" WHERE email = $1 LIMIT 1';
+  const { rows } = await pool.query(query, [email]);
+  const admin = rows[0];
+  if (!admin) return null;
+  return {
+    ...admin,
+    name: admin.name || admin.email.split('@')[0],
+    admin: true
+  };
+}
+
 module.exports = {
   pool,
-  findUserByEmail
+  findUserByEmail,
+  findAdminByEmail
 };

@@ -11,6 +11,25 @@ app.use((req, res, next) => {
   next();
 });
 
+// Inject Authorization header from jwt cookie for Manifest guards
+app.use((req, _res, next) => {
+  if (req.headers.authorization || !req.headers.cookie) {
+    return next();
+  }
+  const jwtCookie = req.headers.cookie
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith('jwt='));
+
+  if (jwtCookie) {
+    const token = decodeURIComponent(jwtCookie.split('=')[1] || '');
+    if (token) {
+      req.headers.authorization = `Bearer ${token}`;
+    }
+  }
+  next();
+});
+
 app.use(morgan('dev'));
 
 // Proxy : transforme /api/* en /endpoints/* pour les custom endpoints de Manifest

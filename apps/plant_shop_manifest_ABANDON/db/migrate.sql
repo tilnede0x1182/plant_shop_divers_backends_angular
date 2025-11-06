@@ -4,6 +4,7 @@
 -- Table user
 CREATE TABLE IF NOT EXISTS "user" (
     id SERIAL PRIMARY KEY,
+    true_id BIGSERIAL UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     admin BOOLEAN DEFAULT FALSE,
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 -- Table plant
 CREATE TABLE IF NOT EXISTS "plant" (
     id SERIAL PRIMARY KEY,
+    true_id BIGSERIAL UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
     price INTEGER NOT NULL,
     stock INTEGER NOT NULL,
@@ -26,6 +28,7 @@ CREATE TABLE IF NOT EXISTS "plant" (
 -- Table order
 CREATE TABLE IF NOT EXISTS "order" (
     id SERIAL PRIMARY KEY,
+    true_id BIGSERIAL UNIQUE NOT NULL,
     "userId" INTEGER NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
     "totalPrice" INTEGER DEFAULT 0,
     status VARCHAR(50) DEFAULT 'pending',
@@ -36,9 +39,20 @@ CREATE TABLE IF NOT EXISTS "order" (
 -- Table order_item
 CREATE TABLE IF NOT EXISTS "order_item" (
     id SERIAL PRIMARY KEY,
+    true_id BIGSERIAL UNIQUE NOT NULL,
     "orderId" INTEGER NOT NULL REFERENCES "order"(id) ON DELETE CASCADE,
     "plantId" INTEGER NOT NULL REFERENCES "plant"(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL,
+    "createdAt" TIMESTAMP DEFAULT NOW(),
+    "updatedAt" TIMESTAMP DEFAULT NOW()
+);
+
+-- Table admin (panel Manifest)
+CREATE TABLE IF NOT EXISTS "admin" (
+    id SERIAL PRIMARY KEY,
+    true_id BIGSERIAL UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
     "createdAt" TIMESTAMP DEFAULT NOW(),
     "updatedAt" TIMESTAMP DEFAULT NOW()
 );

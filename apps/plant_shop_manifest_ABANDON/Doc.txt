@@ -1,0 +1,637 @@
+plant-shop
+ 1.0.0
+OAS 3.1
+Servers
+
+http://localhost:4250/api - Development server
+
+Authorize
+Users
+
+
+POST
+/collections/users
+Create a new user
+
+
+Creates a new user passing the properties in the request body as JSON.
+
+Parameters
+Try it out
+No parameters
+
+Request body
+
+application/json
+Example Value
+Schema
+{
+  "email": "user@example.com",
+  "password": "********",
+  "name": "This is a simple string example.",
+  "admin": true
+}
+Responses
+Code	Description	Links
+201
+OK
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "email": "user@example.com",
+  "password": "********",
+  "name": "This is a simple string example.",
+  "admin": true,
+  "orders": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "status": "This is a simple string example.",
+      "totalPrice": 42,
+      "user": "string",
+      "orderItems": [
+        {
+          "id": "123e4567-e89b-12d3-a456-426614174000",
+          "quantity": 42,
+          "order": "string",
+          "plant": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "name": "This is a simple string example.",
+            "price": 42,
+            "stock": 42,
+            "description": "This is a longer text example that might span multiple lines and contain more detailed information.",
+            "orderItems": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+No links
+400
+Bad request
+
+Media type
+
+application/json
+Example Value
+Schema
+{
+  "message": "Validation failed",
+  "error": "Bad Request",
+  "statusCode": 400
+}
+No links
+😱 Could not render OperationContainer, see the console.
+😱 Could not render OperationContainer, see the console.
+
+PUT
+/collections/users/{id}
+Update an existing user (full replace)
+
+
+Updates a single user by its ID. The properties to update are passed in the request body as JSON. This operation fully replaces the entity and its relations. Leaving a property out will remove it.
+
+Parameters
+Try it out
+Name	Description
+id *
+string($uuid)
+(path)
+The ID of the user
+
+123e4567-e89b-12d3-a456-426614174000
+Request body
+
+application/json
+Example Value
+Schema
+{
+  "email": "user@example.com",
+  "password": "********",
+  "name": "This is a simple string example.",
+  "admin": true
+}
+Responses
+Code	Description	Links
+200
+OK
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "email": "user@example.com",
+  "password": "********",
+  "name": "This is a simple string example.",
+  "admin": true,
+  "orders": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "status": "This is a simple string example.",
+      "totalPrice": 42,
+      "user": "string",
+      "orderItems": [
+        {
+          "id": "123e4567-e89b-12d3-a456-426614174000",
+          "quantity": 42,
+          "order": "string",
+          "plant": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "name": "This is a simple string example.",
+            "price": 42,
+            "stock": 42,
+            "description": "This is a longer text example that might span multiple lines and contain more detailed information.",
+            "orderItems": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+No links
+404
+Not found
+
+Media type
+
+application/json
+Example Value
+Schema
+{
+  "message": "Item not Found",
+  "error": "Not Found",
+  "statusCode": 404
+}
+No links
+
+PATCH
+/collections/users/{id}
+Update an existing user (partial update)
+
+
+Updates a single user by its ID. The properties to update are passed in the request body as JSON. This operation partially updates the entity and its relations. Leaving a property out will not remove it.
+
+Parameters
+Try it out
+Name	Description
+id *
+string($uuid)
+(path)
+The ID of the user
+
+123e4567-e89b-12d3-a456-426614174000
+Request body
+
+application/json
+Example Value
+Schema
+{
+  "email": "user@example.com",
+  "password": "********",
+  "name": "This is a simple string example.",
+  "admin": true
+}
+Responses
+Code	Description	Links
+200
+OK
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "email": "user@example.com",
+  "password": "********",
+  "name": "This is a simple string example.",
+  "admin": true,
+  "orders": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "status": "This is a simple string example.",
+      "totalPrice": 42,
+      "user": "string",
+      "orderItems": [
+        {
+          "id": "123e4567-e89b-12d3-a456-426614174000",
+          "quantity": 42,
+          "order": "string",
+          "plant": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "name": "This is a simple string example.",
+            "price": 42,
+            "stock": 42,
+            "description": "This is a longer text example that might span multiple lines and contain more detailed information.",
+            "orderItems": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+No links
+404
+Not found
+
+Media type
+
+application/json
+Example Value
+Schema
+{
+  "message": "Item not Found",
+  "error": "Not Found",
+  "statusCode": 404
+}
+No links
+
+DELETE
+/collections/users/{id}
+Delete an existing user
+
+
+Deletes a single user by its ID.
+
+Parameters
+Try it out
+Name	Description
+id *
+string($uuid)
+(path)
+The ID of the user
+
+123e4567-e89b-12d3-a456-426614174000
+Responses
+Code	Description	Links
+200
+OK
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "email": "user@example.com",
+  "password": "********",
+  "name": "This is a simple string example.",
+  "admin": true,
+  "orders": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "status": "This is a simple string example.",
+      "totalPrice": 42,
+      "user": "string",
+      "orderItems": [
+        {
+          "id": "123e4567-e89b-12d3-a456-426614174000",
+          "quantity": 42,
+          "order": "string",
+          "plant": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "name": "This is a simple string example.",
+            "price": 42,
+            "stock": 42,
+            "description": "This is a longer text example that might span multiple lines and contain more detailed information.",
+            "orderItems": [
+              "string"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+No links
+404
+The user was not found
+
+Media type
+
+application/json
+Example Value
+Schema
+{
+  "message": "Not Found",
+  "error": "Not Found",
+  "statusCode": 404
+}
+No links
+
+GET
+/collections/users/select-options
+List users for select options (admin panel)
+
+
+Plants
+
+
+POST
+/collections/plants
+Create a new plant
+
+
+
+GET
+/collections/plants
+List plants
+
+
+GET
+/collections/plants/{id}
+Get a single plant
+
+
+PUT
+/collections/plants/{id}
+Update an existing plant (full replace)
+
+
+
+PATCH
+/collections/plants/{id}
+Update an existing plant (partial update)
+
+
+
+DELETE
+/collections/plants/{id}
+Delete an existing plant
+
+
+
+GET
+/collections/plants/select-options
+List plants for select options (admin panel)
+
+
+Orders
+
+😱 Could not render OperationContainer, see the console.
+
+GET
+/collections/orders
+List orders
+
+
+
+GET
+/collections/orders/{id}
+Get a single order
+
+
+
+PUT
+/collections/orders/{id}
+Update an existing order (full replace)
+
+
+
+PATCH
+/collections/orders/{id}
+Update an existing order (partial update)
+
+
+
+DELETE
+/collections/orders/{id}
+Delete an existing order
+
+
+
+GET
+/collections/orders/select-options
+List orders for select options (admin panel)
+
+
+Retrieves a list of orders for select options. The response is an array of objects with the properties 'id' and 'label'. Used in the admin panel to fill select dropdowns.
+
+Parameters
+Try it out
+No parameters
+
+Responses
+Code	Description	Links
+200
+List of orders for select options
+
+Media type
+
+application/json
+Controls Accept header.
+Example Value
+Schema
+[
+  {
+    "id": 0,
+    "label": "string"
+  }
+]
+No links
+OrderItems
+
+
+POST
+/collections/order-items
+Create a new orderItem
+
+
+
+GET
+/collections/order-items
+List orderItems
+
+
+
+GET
+/collections/order-items/{id}
+Get a single orderItem
+
+
+
+PUT
+/collections/order-items/{id}
+Update an existing orderItem (full replace)
+
+
+
+PATCH
+/collections/order-items/{id}
+Update an existing orderItem (partial update)
+
+
+
+DELETE
+/collections/order-items/{id}
+Delete an existing orderItem
+
+
+
+GET
+/collections/order-items/select-options
+List orderItems for select options (admin panel)
+
+
+Manifest
+
+
+GET
+/manifest
+Get the manifest
+
+
+
+GET
+/manifest/entities/users
+Get the user manifest
+
+
+
+GET
+/manifest/entities/plants
+Get the plant manifest
+
+
+
+GET
+/manifest/entities/orders
+Get the order manifest
+
+
+
+GET
+/manifest/entities/order-items
+Get the orderItem manifest
+
+
+Auth
+
+
+POST
+/auth/users/login
+Login as a user
+
+
+GET
+/auth/users/me
+Get current user
+
+
+
+POST
+/auth/users/signup
+Signup as user
+
+
+POST
+/auth/admins/login
+Login as a admin
+
+
+GET
+/auth/admins/me
+Get current admin
+
+
+Dynamic endpoints
+
+
+POST
+/endpoints/api/auth/login
+authLogin
+
+
+POST
+/endpoints/api/auth/register
+authRegister
+
+😱 Could not render OperationContainer, see the console.
+
+POST
+/endpoints/api/auth/logout
+authLogout
+
+
+GET
+/endpoints/api/plants
+getPlantsPublic
+
+
+GET
+/endpoints/api/plants/{id}
+getPlantByIdPublic
+
+
+POST
+/endpoints/api/admin/plants
+createAdminPlant
+
+
+
+DELETE
+/endpoints/api/admin/plants/{id}
+deleteAdminPlant
+
+
+
+POST
+/endpoints/api/users
+createUser
+
+
+
+DELETE
+/endpoints/api/users/{id}
+deleteUser
+
+
+
+GET
+/endpoints/api/admin/users
+getAdminUsers
+
+
+😱 Could not render OperationContainer, see the console.
+
+DELETE
+/endpoints/api/orders/{id}
+deleteOrder
+
+
+
+Schemas
+UserExpand allobject
+PlantExpand allobject
+OrderExpand allobject
+OrderItemExpand allobject
+CreateUpdateUserDtoExpand allobject
+CreateUpdatePlantDtoExpand allobject
+CreateUpdateOrderDtoExpand allobject
+CreateUpdateOrderItemDtoExpand allobject
+PaginatorExpand allobject
+SelectOptionExpand allobject
+AppManifestExpand allobject
+EntityManifestExpand allobject
+RelationshipManifestExpand allobject
+PropertyManifestExpand allobject

@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 
 module.exports = async (req, res, manifest) => {
+  console.log('🔥 authLogin handler called!', req.body);
   try {
     const { email, password } = req.body;
 
@@ -10,8 +11,8 @@ module.exports = async (req, res, manifest) => {
 
     // Find user by email
     const user = await manifest
-      .from('users')
-      .where([{ email }])
+      .from('User')
+      .where([{ email: { '=': email } }])
       .findOne();
 
     if (!user) {

@@ -1,22 +1,38 @@
-module.exports = async (req, res, manifest) => {
+const {
+  findOrderUuidByTrueId,
+  findOrderByUuid,
+  listOrderItemsWithPlants,
+  serializeOrder
+} = require('../auth/db');
+
+module.exports = async (req, res) => {
   try {
     const { id } = req.params;
     const currentUser = req.authenticable;
+    const numericId = Number(id);
+    if (!Number.isInteger(numericId)) {
+      return res.status(400).json({ message: 'Invalid order id' });
+    }
 
-    // Get order with related items and plants
-    const order = await manifest
-      .from('orders')
-      .with(['orderItems.plant'])
-      .findOneById(parseInt(id));
+    const orderUuid = await findOrderUuidByTrueId(numericId);
 
-    if (!order) {
+    if (!orderUuid) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    const orderRow = await findOrderByUuid(orderUuid);
+
+    if (!orderRow) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
     // Check if user owns the order or is admin
-    if (order.userId !== currentUser.id && !currentUser.admin) {
+    if (orderRow.userId !== currentUser.id && !currentUser.admin) {
       return res.status(403).json({ message: 'Forbidden' });
     }
+
+    const itemsRows = await listOrderItemsWithPlants(orderUuid);
+    const order = serializeOrder(orderRow, itemsRows);
 
     res.status(200).json(order);
   } catch (error) {

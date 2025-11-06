@@ -1,10 +1,20 @@
+const { findOrderUuidByTrueId, deleteOrderItemsByOrder } = require('../auth/db');
+
 module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;
+    const numericId = Number(id);
+    if (!Number.isInteger(numericId)) {
+      return res.status(400).json({ message: 'Invalid order id' });
+    }
 
-    // Admin only - enforced by policy
-    // Note: OrderItems will be deleted automatically by cascade
-    await manifest.from('orders').destroy(parseInt(id));
+    const orderUuid = await findOrderUuidByTrueId(numericId);
+    if (!orderUuid) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    await deleteOrderItemsByOrder(orderUuid);
+    await manifest.from('orders').destroy(orderUuid);
 
     res.status(200).json({ message: 'Order deleted successfully' });
   } catch (error) {

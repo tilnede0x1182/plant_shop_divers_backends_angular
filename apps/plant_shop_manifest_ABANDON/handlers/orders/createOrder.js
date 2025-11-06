@@ -1,3 +1,11 @@
+const {
+  findPlantByTrueId,
+  findPlantUuidByTrueId,
+  findOrderByUuid,
+  listOrderItemsWithPlants,
+  serializeOrder
+} = require('../auth/db');
+
 module.exports = async (req, res, manifest) => {
   try {
     const currentUser = req.authenticable;
@@ -26,7 +34,13 @@ module.exports = async (req, res, manifest) => {
 
     // Create order items and calculate total
     for (const item of items) {
-      const plant = await manifest.from('plants').findOneById(item.plantId);
+      const plantUuid = await findPlantUuidByTrueId(item.plantId);
+      if (!plantUuid) {
+        await manifest.from('orders').destroy(order.id);
+        return res.status(400).json({ message: `Plant with ID ${item.plantId} not found` });
+      }
+
+      const plant = await findPlantByTrueId(item.plantId);
 
       if (!plant) {
         // Rollback: delete the order
@@ -34,7 +48,10 @@ module.exports = async (req, res, manifest) => {
         return res.status(400).json({ message: `Plant with ID ${item.plantId} not found` });
       }
 
-      if (plant.stock < item.quantity) {
+      const plantPrice = Number(plant.price);
+      const plantStock = Number(plant.stock);
+
+      if (plantStock < item.quantity) {
         // Rollback: delete the order
         await manifest.from('orders').destroy(order.id);
         return res.status(400).json({ message: `Insufficient stock for plant: ${plant.name}` });
@@ -43,16 +60,16 @@ module.exports = async (req, res, manifest) => {
       // Create order item
       const orderItem = await manifest.from('order-items').create({
         orderId: order.id,
-        plantId: plant.id,
+        plantId: plantUuid,
         quantity: item.quantity
       });
 
       // Update plant stock
-      await manifest.from('plants').patch(plant.id, {
-        stock: plant.stock - item.quantity
+      await manifest.from('plants').patch(plantUuid, {
+        stock: plantStock - item.quantity
       });
 
-      totalPrice += plant.price * item.quantity;
+      totalPrice += plantPrice * item.quantity;
       orderItems.push(orderItem);
     }
 
@@ -61,11 +78,10 @@ module.exports = async (req, res, manifest) => {
       totalPrice
     });
 
-    // Get complete order with items and plants
-    const completeOrder = await manifest
-      .from('orders')
-      .with(['orderItems.plant'])
-      .findOneById(order.id);
+    // Get complete order with items and plants via SQL helpers
+    const orderRow = await findOrderByUuid(order.id);
+    const itemsRows = await listOrderItemsWithPlants(order.id);
+    const completeOrder = serializeOrder(orderRow, itemsRows);
 
     res.status(201).json(completeOrder);
   } catch (error) {

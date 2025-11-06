@@ -1,13 +1,15 @@
-module.exports = async (req, res, manifest) => {
+const { listOrdersForUser, listOrderItemsWithPlants, serializeOrder } = require('../auth/db');
+
+module.exports = async (req, res) => {
   try {
     const currentUser = req.authenticable;
+    const ordersRows = await listOrdersForUser(currentUser.id);
 
-    // Get orders for the current user with related items and plants
-    const orders = await manifest
-      .from('orders')
-      .where([{ userId: currentUser.id }])
-      .with(['orderItems.plant'])
-      .find();
+    const orders = [];
+    for (const orderRow of ordersRows) {
+      const itemsRows = await listOrderItemsWithPlants(orderRow.id);
+      orders.push(serializeOrder(orderRow, itemsRows));
+    }
 
     res.status(200).json(orders);
   } catch (error) {

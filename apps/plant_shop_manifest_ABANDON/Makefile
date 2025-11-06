@@ -13,7 +13,7 @@ prod:
 
 seed:
 	npm run seed
-# 	npx dotenv -e .env -- node ./db/seed-custom.js
+	npx dotenv -e .env -- node ./db/seed-custom.js
 
 proxy:
 	node proxy.js

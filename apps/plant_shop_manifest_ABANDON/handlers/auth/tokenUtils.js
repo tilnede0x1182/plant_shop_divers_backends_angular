@@ -41,8 +41,24 @@ function generateUserToken(user, options = {}) {
   );
 }
 
+function getUserFromToken(req) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+    const token = authHeader.substring(7);
+    const decoded = jwt.verify(token, TOKEN_SECRET);
+    return decoded;
+  } catch (error) {
+    console.error('Error decoding token:', error.message);
+    return null;
+  }
+}
+
 module.exports = {
   generateUserToken,
+  getUserFromToken,
   USER_ENTITY_SLUG,
   ADMIN_ENTITY_SLUG
 };

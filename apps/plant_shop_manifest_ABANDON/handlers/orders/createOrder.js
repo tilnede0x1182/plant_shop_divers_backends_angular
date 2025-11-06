@@ -5,10 +5,15 @@ const {
   listOrderItemsWithPlants,
   serializeOrder
 } = require('../auth/db');
+const { getUserFromToken } = require('../auth/tokenUtils');
 
 module.exports = async (req, res, manifest) => {
   try {
-    const currentUser = req.authenticable;
+    const currentUser = getUserFromToken(req);
+    if (!currentUser) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
     const { items } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -36,7 +41,7 @@ module.exports = async (req, res, manifest) => {
     for (const item of items) {
       const plantUuid = await findPlantUuidByTrueId(item.plantId);
       if (!plantUuid) {
-        await manifest.from('orders').destroy(order.id);
+        await manifest.from('orders').delete(order.id);
         return res.status(400).json({ message: `Plant with ID ${item.plantId} not found` });
       }
 
@@ -44,7 +49,7 @@ module.exports = async (req, res, manifest) => {
 
       if (!plant) {
         // Rollback: delete the order
-        await manifest.from('orders').destroy(order.id);
+        await manifest.from('orders').delete(order.id);
         return res.status(400).json({ message: `Plant with ID ${item.plantId} not found` });
       }
 
@@ -53,7 +58,7 @@ module.exports = async (req, res, manifest) => {
 
       if (plantStock < item.quantity) {
         // Rollback: delete the order
-        await manifest.from('orders').destroy(order.id);
+        await manifest.from('orders').delete(order.id);
         return res.status(400).json({ message: `Insufficient stock for plant: ${plant.name}` });
       }
 

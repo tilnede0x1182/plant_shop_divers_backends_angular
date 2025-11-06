@@ -80,19 +80,19 @@ entities:
 endpoints:
   # ============ AUTH ENDPOINTS ============
   authLogin:
-    path: /auth/login
+    path: /api/auth/login
     method: POST
     handler: auth/authLogin
     description: Login endpoint compatible with Angular frontend
 
   authRegister:
-    path: /auth/register
+    path: /api/auth/register
     method: POST
     handler: auth/authRegister
     description: Register endpoint compatible with Angular frontend
 
   authMe:
-    path: /auth/me
+    path: /api/auth/me
     method: GET
     handler: auth/authMe
     policies:
@@ -100,27 +100,27 @@ endpoints:
     description: Get current user info
 
   authLogout:
-    path: /auth/logout
+    path: /api/auth/logout
     method: POST
     handler: auth/authLogout
     description: Logout endpoint
 
   # ============ PLANT ENDPOINTS (public) ============
   getPlantsPublic:
-    path: /plants
+    path: /api/plants
     method: GET
     handler: plants/getPlantsPublic
     description: Get all plants (public access)
 
   getPlantByIdPublic:
-    path: /plants/:id
+    path: /api/plants/:id
     method: GET
     handler: plants/getPlantByIdPublic
     description: Get one plant by ID (public access)
 
   # ============ ADMIN PLANT ENDPOINTS ============
   getAdminPlants:
-    path: /admin/plants
+    path: /api/admin/plants
     method: GET
     handler: admin/plants/getAdminPlants
     policies:
@@ -128,7 +128,7 @@ endpoints:
     description: Get all plants (admin)
 
   createAdminPlant:
-    path: /admin/plants
+    path: /api/admin/plants
     method: POST
     handler: plants/createAdminPlant
     policies:
@@ -136,7 +136,7 @@ endpoints:
     description: Create plant (admin)
 
   updateAdminPlant:
-    path: /admin/plants/:id
+    path: /api/admin/plants/:id
     method: PATCH
     handler: plants/updateAdminPlant
     policies:
@@ -144,7 +144,7 @@ endpoints:
     description: Update plant (admin)
 
   deleteAdminPlant:
-    path: /admin/plants/:id
+    path: /api/admin/plants/:id
     method: DELETE
     handler: plants/deleteAdminPlant
     policies:
@@ -153,7 +153,7 @@ endpoints:
 
   # ============ USER ENDPOINTS ============
   getAllUsers:
-    path: /users
+    path: /api/users
     method: GET
     handler: users/getAllUsers
     policies:
@@ -161,7 +161,7 @@ endpoints:
     description: Get all users (admin)
 
   createUser:
-    path: /users
+    path: /api/users
     method: POST
     handler: users/createUser
     policies:
@@ -169,7 +169,7 @@ endpoints:
     description: Create user (admin)
 
   getUserById:
-    path: /users/:id
+    path: /api/users/:id
     method: GET
     handler: users/getUserById
     policies:
@@ -177,7 +177,7 @@ endpoints:
     description: Get user by ID
 
   updateUser:
-    path: /users/:id
+    path: /api/users/:id
     method: PATCH
     handler: users/updateUser
     policies:
@@ -185,7 +185,7 @@ endpoints:
     description: Update user
 
   deleteUser:
-    path: /users/:id
+    path: /api/users/:id
     method: DELETE
     handler: users/deleteUser
     policies:
@@ -194,7 +194,7 @@ endpoints:
 
   # ============ ADMIN USER ENDPOINTS ============
   getAdminUsers:
-    path: /admin/users
+    path: /api/admin/users
     method: GET
     handler: admin/orders/getAdminUsers
     policies:
@@ -203,7 +203,7 @@ endpoints:
 
   # ============ ORDER ENDPOINTS ============
   getUserOrders:
-    path: /orders
+    path: /api/orders
     method: GET
     handler: orders/getUserOrders
     policies:
@@ -211,7 +211,7 @@ endpoints:
     description: Get current user orders
 
   getOrderById:
-    path: /orders/:id
+    path: /api/orders/:id
     method: GET
     handler: orders/getOrderById
     policies:
@@ -219,7 +219,7 @@ endpoints:
     description: Get order by ID
 
   createOrder:
-    path: /orders
+    path: /api/orders
     method: POST
     handler: orders/createOrder
     policies:
@@ -227,7 +227,7 @@ endpoints:
     description: Create new order
 
   updateOrder:
-    path: /orders/:id
+    path: /api/orders/:id
     method: PATCH
     handler: orders/updateOrder
     policies:
@@ -235,7 +235,7 @@ endpoints:
     description: Update order (admin)
 
   deleteOrder:
-    path: /orders/:id
+    path: /api/orders/:id
     method: DELETE
     handler: orders/deleteOrder
     policies:

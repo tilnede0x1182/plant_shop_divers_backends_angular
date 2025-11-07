@@ -1,4 +1,4 @@
-const { findUserIdByTrueId, findUserByTrueId, serializeUser } = require('../auth/db');
+const { pool, findUserIdByTrueId, findUserByTrueId, serializeUser } = require('../auth/db');
 const { getUserFromToken } = require('../auth/tokenUtils');
 
 module.exports = async (req, res, manifest) => {
@@ -6,7 +6,10 @@ module.exports = async (req, res, manifest) => {
     const { id } = req.params;
     const numericId = Number(id);
     const currentUser = getUserFromToken(req);
-    const updates = {};
+
+    if (!currentUser) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
     // Trouver l'id INTEGER via true_id
     const userId = await findUserIdByTrueId(numericId);
@@ -14,23 +17,46 @@ module.exports = async (req, res, manifest) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    const setClauses = [];
+    const values = [];
+    let paramIndex = 1;
+
     // Only include fields that are provided
-    if (req.body.name !== undefined) updates.name = req.body.name;
-    if (req.body.email !== undefined) updates.email = req.body.email;
+    if (req.body.name !== undefined) {
+      setClauses.push(`name = $${paramIndex++}`);
+      values.push(req.body.name);
+    }
+    if (req.body.email !== undefined) {
+      setClauses.push(`email = $${paramIndex++}`);
+      values.push(req.body.email);
+    }
 
     // Only admins can change admin status
     if (req.body.admin !== undefined && currentUser?.admin) {
-      updates.admin = req.body.admin;
+      setClauses.push(`admin = $${paramIndex++}`);
+      values.push(req.body.admin);
     }
 
-    const user = await manifest.from('users').patch(userId, updates);
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    // If no fields to update, just return the current user
+    if (setClauses.length === 0) {
+      const fresh = await findUserByTrueId(numericId);
+      return res.status(200).json(serializeUser(fresh));
     }
+
+    // Add updatedAt
+    setClauses.push(`"updatedAt" = NOW()`);
+
+    // Add userId to values
+    values.push(userId);
+
+    // Update user directly via SQL
+    await pool.query(
+      `UPDATE "user" SET ${setClauses.join(', ')} WHERE id = $${paramIndex}`,
+      values
+    );
 
     const fresh = await findUserByTrueId(numericId);
-    res.status(200).json(serializeUser({ ...fresh, email: user.email ?? fresh.email, name: user.name ?? fresh.name, admin: user.admin ?? fresh.admin }));
+    res.status(200).json(serializeUser(fresh));
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({ message: 'Internal server error' });

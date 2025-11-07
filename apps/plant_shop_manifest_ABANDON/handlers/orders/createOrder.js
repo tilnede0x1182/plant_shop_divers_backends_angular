@@ -70,20 +70,20 @@ module.exports = async (req, res, manifest) => {
         return res.status(400).json({ message: `Insufficient stock for plant: ${plant.name}` });
       }
 
-      // Create order item
-      const orderItem = await manifest.from('order-items').create({
-        order: orderId,
-        plant: plantUuid,
-        quantity: item.quantity
-      });
+      // Create order item directement en SQL
+      const { rows: itemRows } = await pool.query(
+        'INSERT INTO "order_item" ("orderId", "plantId", quantity, "createdAt", "updatedAt") VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id',
+        [orderId, plantUuid, item.quantity]
+      );
 
       // Update plant stock
-      await manifest.from('plants').patch(plantUuid, {
-        stock: plantStock - item.quantity
-      });
+      await pool.query(
+        'UPDATE "plant" SET stock = $1, "updatedAt" = NOW() WHERE id = $2',
+        [plantStock - item.quantity, plantUuid]
+      );
 
       totalPrice += plantPrice * item.quantity;
-      orderItems.push(orderItem);
+      orderItems.push({ id: itemRows[0].id });
     }
 
     // Update order with total price

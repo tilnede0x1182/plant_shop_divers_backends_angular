@@ -43,11 +43,28 @@ function generateUserToken(user, options = {}) {
 
 function getUserFromToken(req) {
   try {
+    let token = null;
+
+    // Check Authorization header first (Bearer token)
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+
+    // If no Bearer token, check cookies
+    if (!token && req.headers.cookie) {
+      const cookies = req.headers.cookie.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        acc[key] = value;
+        return acc;
+      }, {});
+      token = cookies.jwt;
+    }
+
+    if (!token) {
       return null;
     }
-    const token = authHeader.substring(7);
+
     const decoded = jwt.verify(token, TOKEN_SECRET);
     return decoded;
   } catch (error) {

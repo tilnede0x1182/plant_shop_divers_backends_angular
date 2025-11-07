@@ -101,9 +101,6 @@ endpoints:
     path: /api/auth/me
     method: GET
     handler: auth/authMe
-    policies:
-      - access: restricted
-        allow: User
     description: Get current user info
 
   authLogout:
@@ -179,18 +176,12 @@ endpoints:
     path: /api/users/:id
     method: GET
     handler: users/getUserById
-    policies:
-      - access: restricted
-        allow: User
     description: Get user by ID
 
   updateUser:
     path: /api/users/:id
     method: PATCH
     handler: users/updateUser
-    policies:
-      - access: restricted
-        allow: User
     description: Update user
 
   deleteUser:
@@ -215,27 +206,18 @@ endpoints:
     path: /api/orders
     method: GET
     handler: orders/getUserOrders
-    policies:
-      - access: restricted
-        allow: User
     description: Get current user orders
 
   getOrderById:
     path: /api/orders/:id
     method: GET
     handler: orders/getOrderById
-    policies:
-      - access: restricted
-        allow: User
     description: Get order by ID
 
   createOrder:
     path: /api/orders
     method: POST
     handler: orders/createOrder
-    policies:
-      - access: restricted
-        allow: User
     description: Create new order
 
   updateOrder:

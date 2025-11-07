@@ -17,6 +17,12 @@ module.exports = async (req, res, manifest) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Un utilisateur normal ne peut modifier que son propre profil
+    // Un admin peut modifier n'importe quel profil
+    if (!currentUser.admin && currentUser.id !== numericId) {
+      return res.status(403).json({ message: 'Forbidden: you can only modify your own profile' });
+    }
+
     const setClauses = [];
     const values = [];
     let paramIndex = 1;

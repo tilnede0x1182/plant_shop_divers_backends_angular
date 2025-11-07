@@ -22,26 +22,17 @@ buid-back:
 	npm run build-backend
 
 # ======================================================
-# 📜 Backend Manifest ABANDON
+# 📜 Backend Manifest
 # ======================================================
 
-run-proxy-manifest:
-	node apps/plant_shop_manifest/proxy.js
+run-backend-manifest:
+	make -C apps/plant_shop_manifest run
 
-# Run Manifest backend (API seule, mode dev)
-run-manifest:
-	PORT=4120 pnpm run --prefix apps/plant_shop_manifest dev
+seed-backend-manifest:
+	make -C apps/plant_shop_manifest seed
 
-# Build Manifest backend
-build-manifest:
-	pnpm run --prefix apps/plant_shop_manifest build
-
-# Start Manifest backend (mode prod)
-prod-manifest:
-	PORT=4120 pnpm run --prefix apps/plant_shop_manifest start
-
-# Build puis exécution en prod
-build-prod: build-manifest prod-manifest
+proxy-backend-manifest:
+	make -C apps/plant_shop_manifest proxy
 
 # ======================================================
 # 🐹 Backend Go

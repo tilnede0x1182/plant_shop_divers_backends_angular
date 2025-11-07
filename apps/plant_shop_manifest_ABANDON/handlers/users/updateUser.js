@@ -1,9 +1,11 @@
 const { findUserIdByTrueId, findUserByTrueId, serializeUser } = require('../auth/db');
+const { getUserFromToken } = require('../auth/tokenUtils');
 
 module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;
     const numericId = Number(id);
+    const currentUser = getUserFromToken(req);
     const updates = {};
 
     // Trouver l'id INTEGER via true_id
@@ -15,7 +17,11 @@ module.exports = async (req, res, manifest) => {
     // Only include fields that are provided
     if (req.body.name !== undefined) updates.name = req.body.name;
     if (req.body.email !== undefined) updates.email = req.body.email;
-    if (req.body.admin !== undefined) updates.admin = req.body.admin;
+
+    // Only admins can change admin status
+    if (req.body.admin !== undefined && currentUser?.admin) {
+      updates.admin = req.body.admin;
+    }
 
     const user = await manifest.from('users').patch(userId, updates);
 

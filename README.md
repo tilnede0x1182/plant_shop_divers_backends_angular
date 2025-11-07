@@ -64,7 +64,7 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 ## 🧩 Backends
 
 * **NestJS 11** : backend de référence, API REST + SSR Angular Universal.
-* **Manifest 4.17.8** : backend déclaratif en YAML, API REST branchée sur PostgreSQL.
+* **Manifest 4.17.8** : backend déclaratif piloté par `manifest.yml` (entités, policies, endpoints) où la CLI Manifest orchestre les handlers Node custom + seeds PostgreSQL pour exposer l’API PlantShop.
 * **Go (GORM)** : backend en Go structuré, sans framework web tiers, API REST implémentée manuellement avec `net/http`, GORM et JWT cookie sécurisé.
 * **Rust (Poem + SQLx)** : backend Rust moderne, basé sur le framework `poem` pour les routes HTTP et `sqlx` pour la base de données.
 * **Rust (Poem + SeaORM)** : backend Rust moderne, basé sur le framework `poem` pour les routes HTTP et `SeaORM` pour la gestion de la base de données.`

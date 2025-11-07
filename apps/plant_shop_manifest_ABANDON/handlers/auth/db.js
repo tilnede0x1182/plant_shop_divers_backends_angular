@@ -129,7 +129,7 @@ async function listOrderItemsWithPlants(orderUuid) {
 
 async function listOrdersForUser(userUuid) {
   const { rows } = await pool.query(
-    'SELECT id, true_id, "userId", "totalPrice", status, "createdAt", "updatedAt" FROM "order" WHERE "userId" = $1 ORDER BY true_id',
+    'SELECT id, true_id, "userId", "totalPrice", status, "createdAt", "updatedAt" FROM "order" WHERE "userId" = $1 ORDER BY true_id DESC',
     [userUuid]
   );
   return rows;

@@ -83,7 +83,7 @@ async function findPlantUuidByTrueId(trueId) {
 
 async function listPlantsWithTrueId() {
   const { rows } = await pool.query(
-    'SELECT id, true_id, name, price, stock, description, "createdAt", "updatedAt" FROM "plant" ORDER BY true_id'
+    'SELECT id, true_id, name, price, stock, description, "createdAt", "updatedAt" FROM "plant" ORDER BY name ASC'
   );
   return rows;
 }

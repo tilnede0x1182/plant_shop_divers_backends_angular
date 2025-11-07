@@ -1,5 +1,5 @@
-const { pool, findUserIdByTrueId, findUserByTrueId, serializeUser } = require('../auth/db');
-const { getUserFromToken } = require('../auth/tokenUtils');
+const { pool, findUserIdByTrueId, findUserByTrueId, findAdminById, serializeUser } = require('../auth/db');
+const { getUserFromToken, generateUserToken } = require('../auth/tokenUtils');
 
 module.exports = async (req, res, manifest) => {
   try {
@@ -67,7 +67,46 @@ module.exports = async (req, res, manifest) => {
       values
     );
 
-    const fresh = await findUserByTrueId(numericId);
+    // Fetch updated user data
+    let fresh;
+    if (currentUser.entitySlug === 'admins') {
+      // Admin updated - check if it's updating themselves
+      if (currentUser.id === numericId) {
+        // Admin can't update users through this endpoint, this shouldn't happen
+        // But if it does, fetch admin data
+        fresh = await findAdminById(currentUser.id);
+      } else {
+        // Admin updating a user
+        fresh = await findUserByTrueId(numericId);
+      }
+    } else {
+      // Regular user
+      fresh = await findUserByTrueId(numericId);
+    }
+
+    // If the current user updated their own profile, regenerate JWT with new data
+    if (currentUser.id === numericId) {
+      // Prepare user object for JWT with true_id as id
+      const userForToken = {
+        id: numericId, // Use true_id
+        email: fresh.email,
+        admin: fresh.admin
+      };
+
+      const newToken = generateUserToken(userForToken, {
+        entitySlug: currentUser.entitySlug
+      });
+
+      res.cookie('jwt', newToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+      });
+
+      console.log('🔄 User updated their own profile - JWT regenerated with new email:', fresh.email);
+    }
+
     res.status(200).json(serializeUser(fresh));
   } catch (error) {
     console.error('Update user error:', error);

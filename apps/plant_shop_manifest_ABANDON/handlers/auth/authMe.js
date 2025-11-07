@@ -1,4 +1,4 @@
-const { pool, findUserByTrueId, serializeUser } = require('./db');
+const { findUserByTrueId, serializeUser } = require('./db');
 const { getUserFromToken } = require('./tokenUtils');
 
 module.exports = async (req, res, manifest) => {
@@ -14,20 +14,9 @@ module.exports = async (req, res, manifest) => {
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    let user = null;
-
-    // Check if admin or user based on entitySlug
-    if (currentUser.entitySlug === 'admins') {
-      // Query admin table
-      const { rows } = await pool.query(
-        'SELECT id AS true_id, email, email AS name, true AS admin FROM "admin" WHERE id = $1 LIMIT 1',
-        [currentUser.id]
-      );
-      user = rows[0] ? { ...rows[0], id: rows[0].true_id } : null;
-    } else {
-      // Query user table
-      user = await findUserByTrueId(currentUser.id);
-    }
+    // All users (including admins) are in the user table
+    // Admins just have admin: true boolean
+    const user = await findUserByTrueId(currentUser.id);
 
     console.log('👤 User from DB:', user);
 

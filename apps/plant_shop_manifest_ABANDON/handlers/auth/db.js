@@ -57,6 +57,22 @@ async function findAdminByEmail(email) {
   };
 }
 
+async function findAdminById(id) {
+  const { rows } = await pool.query(
+    'SELECT id, email FROM "admin" WHERE id = $1 LIMIT 1',
+    [id]
+  );
+  const admin = rows[0];
+  if (!admin) return null;
+  return {
+    id: admin.id,
+    true_id: admin.id,
+    email: admin.email,
+    name: admin.email.split('@')[0],  // Use email prefix as name
+    admin: true
+  };
+}
+
 async function findPlantByUuid(uuid) {
   const { rows } = await pool.query(
     'SELECT id, true_id, name, price, stock, description, "createdAt", "updatedAt" FROM "plant" WHERE id = $1 LIMIT 1',
@@ -215,8 +231,10 @@ function serializeOrder(orderRow, itemsRows = []) {
 
 function serializeUser(row) {
   if (!row) return null;
+  // Convert true_id to number if it's a string (from BIGSERIAL)
+  const trueId = typeof row.true_id === 'number' ? row.true_id : parseInt(row.true_id, 10);
   return {
-    id: row.true_id,
+    id: trueId,
     uuid: row.id,
     email: row.email,
     name: row.name,
@@ -233,6 +251,7 @@ module.exports = {
   findUserIdByTrueId,
   findUserByUuid,
   findAdminByEmail,
+  findAdminById,
   findPlantByUuid,
   findPlantByTrueId,
   findPlantUuidByTrueId,

@@ -4,8 +4,10 @@ module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;
     const numericId = Number(id);
+    if (!Number.isInteger(numericId)) {
+      return res.status(400).json({ message: 'Invalid user id' });
+    }
 
-    // Trouver l'id INTEGER via true_id
     const userId = await findUserIdByTrueId(numericId);
     if (!userId) {
       return res.status(404).json({ message: 'User not found' });

@@ -14,7 +14,7 @@ module.exports = async (req, res, manifest) => {
     }
 
     await deleteOrderItemsByOrder(orderUuid);
-    await manifest.from('orders').delete(orderUuid);
+    await manifest.from('orders').destroy(orderUuid);
 
     res.status(200).json({ message: 'Order deleted successfully' });
   } catch (error) {

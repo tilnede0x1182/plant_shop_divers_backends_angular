@@ -1,4 +1,4 @@
-const { findUserIdByTrueId } = require('../auth/db');
+const { findUserIdByTrueId, findUserByTrueId, serializeUser } = require('../auth/db');
 
 module.exports = async (req, res, manifest) => {
   try {
@@ -23,13 +23,8 @@ module.exports = async (req, res, manifest) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Return user info (without password)
-    res.status(200).json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      admin: user.admin
-    });
+    const fresh = await findUserByTrueId(numericId);
+    res.status(200).json(serializeUser({ ...fresh, email: user.email ?? fresh.email, name: user.name ?? fresh.name, admin: user.admin ?? fresh.admin }));
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({ message: 'Internal server error' });

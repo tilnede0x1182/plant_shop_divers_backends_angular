@@ -2,13 +2,25 @@ const {
   findOrderUuidByTrueId,
   findOrderByUuid,
   listOrderItemsWithPlants,
-  serializeOrder
+  serializeOrder,
+  findUserIdByTrueId
 } = require('../auth/db');
+const { getUserFromToken } = require('../auth/tokenUtils');
 
 module.exports = async (req, res) => {
   try {
     const { id } = req.params;
-    const currentUser = req.authenticable;
+    const currentUser = getUserFromToken(req);
+    if (!currentUser) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Convertir true_id en id INTEGER
+    const userId = await findUserIdByTrueId(currentUser.id);
+    if (!userId) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
     const numericId = Number(id);
     if (!Number.isInteger(numericId)) {
       return res.status(400).json({ message: 'Invalid order id' });
@@ -27,7 +39,7 @@ module.exports = async (req, res) => {
     }
 
     // Check if user owns the order or is admin
-    if (orderRow.userId !== currentUser.id && !currentUser.admin) {
+    if (orderRow.userId !== userId && !currentUser.admin) {
       return res.status(403).json({ message: 'Forbidden' });
     }
 

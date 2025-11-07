@@ -1,9 +1,11 @@
 const {
+  pool,
   findPlantByTrueId,
   findPlantUuidByTrueId,
   findOrderByUuid,
   listOrderItemsWithPlants,
-  serializeOrder
+  serializeOrder,
+  findUserIdByTrueId
 } = require('../auth/db');
 const { getUserFromToken } = require('../auth/tokenUtils');
 
@@ -12,6 +14,12 @@ module.exports = async (req, res, manifest) => {
     const currentUser = getUserFromToken(req);
     if (!currentUser) {
       return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Convertir true_id en id INTEGER pour la table user
+    const userId = await findUserIdByTrueId(currentUser.id);
+    if (!userId) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
     const { items } = req.body;
@@ -27,12 +35,12 @@ module.exports = async (req, res, manifest) => {
       }
     }
 
-    // Create the order
-    const order = await manifest.from('orders').create({
-      userId: currentUser.id,
-      status: 'pending',
-      totalPrice: 0
-    });
+    // Create the order directement en SQL car Manifest ne gère pas userId correctement
+    const { rows: orderRows } = await pool.query(
+      'INSERT INTO "order" ("userId", status, "totalPrice", "createdAt", "updatedAt") VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id',
+      [userId, 'pending', 0]
+    );
+    const orderId = orderRows[0].id;
 
     let totalPrice = 0;
     const orderItems = [];
@@ -41,7 +49,7 @@ module.exports = async (req, res, manifest) => {
     for (const item of items) {
       const plantUuid = await findPlantUuidByTrueId(item.plantId);
       if (!plantUuid) {
-        await manifest.from('orders').delete(order.id);
+        await pool.query('DELETE FROM "order" WHERE id = $1', [orderId]);
         return res.status(400).json({ message: `Plant with ID ${item.plantId} not found` });
       }
 
@@ -49,7 +57,7 @@ module.exports = async (req, res, manifest) => {
 
       if (!plant) {
         // Rollback: delete the order
-        await manifest.from('orders').delete(order.id);
+        await pool.query('DELETE FROM "order" WHERE id = $1', [orderId]);
         return res.status(400).json({ message: `Plant with ID ${item.plantId} not found` });
       }
 
@@ -58,14 +66,14 @@ module.exports = async (req, res, manifest) => {
 
       if (plantStock < item.quantity) {
         // Rollback: delete the order
-        await manifest.from('orders').delete(order.id);
+        await pool.query('DELETE FROM "order" WHERE id = $1', [orderId]);
         return res.status(400).json({ message: `Insufficient stock for plant: ${plant.name}` });
       }
 
       // Create order item
       const orderItem = await manifest.from('order-items').create({
-        orderId: order.id,
-        plantId: plantUuid,
+        order: orderId,
+        plant: plantUuid,
         quantity: item.quantity
       });
 
@@ -79,13 +87,14 @@ module.exports = async (req, res, manifest) => {
     }
 
     // Update order with total price
-    await manifest.from('orders').patch(order.id, {
-      totalPrice
-    });
+    await pool.query(
+      'UPDATE "order" SET "totalPrice" = $1, "updatedAt" = NOW() WHERE id = $2',
+      [totalPrice, orderId]
+    );
 
     // Get complete order with items and plants via SQL helpers
-    const orderRow = await findOrderByUuid(order.id);
-    const itemsRows = await listOrderItemsWithPlants(order.id);
+    const orderRow = await findOrderByUuid(orderId);
+    const itemsRows = await listOrderItemsWithPlants(orderId);
     const completeOrder = serializeOrder(orderRow, itemsRows);
 
     res.status(201).json(completeOrder);

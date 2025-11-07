@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { pool } = require('../auth/db');
+const { pool, findUserByUuid, serializeUser } = require('../auth/db');
 
 module.exports = async (req, res, manifest) => {
   try {
@@ -30,13 +30,8 @@ module.exports = async (req, res, manifest) => {
       admin: admin === true
     });
 
-    // Return user info (without password)
-    res.status(201).json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      admin: user.admin
-    });
+    const userRow = await findUserByUuid(user.id);
+    res.status(201).json(serializeUser({ ...userRow, email: user.email, name: user.name, admin: user.admin }));
   } catch (error) {
     console.error('Create user error:', error);
     res.status(500).json({ message: 'Internal server error' });

@@ -88,6 +88,13 @@ async function listPlantsWithTrueId() {
   return rows;
 }
 
+async function listUsersWithTrueId() {
+  const { rows } = await pool.query(
+    'SELECT id, true_id, email, name, admin, "createdAt", "updatedAt" FROM "user" ORDER BY true_id'
+  );
+  return rows;
+}
+
 async function findOrderUuidByTrueId(trueId) {
   const { rows } = await pool.query(
     'SELECT id FROM "order" WHERE true_id = $1 LIMIT 1',
@@ -136,6 +143,30 @@ async function deleteOrderItemsByPlant(plantUuid) {
   await pool.query('DELETE FROM "order_item" WHERE "plantId" = $1', [plantUuid]);
 }
 
+async function findUserUuidByTrueId(trueId) {
+  const { rows } = await pool.query(
+    'SELECT id FROM "user" WHERE true_id = $1 LIMIT 1',
+    [trueId]
+  );
+  return rows[0]?.id || null;
+}
+
+async function findUserByTrueId(trueId) {
+  const { rows } = await pool.query(
+    'SELECT id, true_id, email, name, admin, "createdAt", "updatedAt" FROM "user" WHERE true_id = $1 LIMIT 1',
+    [trueId]
+  );
+  return rows[0] || null;
+}
+
+async function findUserByUuid(uuid) {
+  const { rows } = await pool.query(
+    'SELECT id, true_id, email, name, admin, "createdAt", "updatedAt" FROM "user" WHERE id = $1 LIMIT 1',
+    [uuid]
+  );
+  return rows[0] || null;
+}
+
 function serializePlant(row) {
   if (!row) return null;
   return {
@@ -182,16 +213,31 @@ function serializeOrder(orderRow, itemsRows = []) {
   };
 }
 
+function serializeUser(row) {
+  if (!row) return null;
+  return {
+    id: row.true_id,
+    uuid: row.id,
+    email: row.email,
+    name: row.name,
+    admin: row.admin,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt
+  };
+}
+
 module.exports = {
   pool,
   findUserByEmail,
   findUserByTrueId,
   findUserIdByTrueId,
+  findUserByUuid,
   findAdminByEmail,
   findPlantByUuid,
   findPlantByTrueId,
   findPlantUuidByTrueId,
   listPlantsWithTrueId,
+  listUsersWithTrueId,
   serializePlant,
   findOrderUuidByTrueId,
   findOrderByUuid,
@@ -200,5 +246,6 @@ module.exports = {
   listOrdersForUser,
   deleteOrderItemsByOrder,
   deleteOrderItemsByPlant,
-  serializeOrder
+  serializeOrder,
+  serializeUser
 };

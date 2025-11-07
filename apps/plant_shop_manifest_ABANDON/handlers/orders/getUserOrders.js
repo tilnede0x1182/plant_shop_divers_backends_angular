@@ -1,9 +1,20 @@
-const { listOrdersForUser, listOrderItemsWithPlants, serializeOrder } = require('../auth/db');
+const { listOrdersForUser, listOrderItemsWithPlants, serializeOrder, findUserIdByTrueId } = require('../auth/db');
+const { getUserFromToken } = require('../auth/tokenUtils');
 
 module.exports = async (req, res) => {
   try {
-    const currentUser = req.authenticable;
-    const ordersRows = await listOrdersForUser(currentUser.id);
+    const currentUser = getUserFromToken(req);
+    if (!currentUser) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    // Convertir true_id en id INTEGER
+    const userId = await findUserIdByTrueId(currentUser.id);
+    if (!userId) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const ordersRows = await listOrdersForUser(userId);
 
     const orders = [];
     for (const orderRow of ordersRows) {

@@ -5,9 +5,15 @@ module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;
     const numericId = Number(id);
+
+    console.log('🔧 updateUser called for user ID:', numericId);
+    console.log('🔧 Request headers:', JSON.stringify(req.headers, null, 2));
+
     const currentUser = getUserFromToken(req);
+    console.log('🔧 Current user from token:', currentUser);
 
     if (!currentUser) {
+      console.log('❌ No current user found - returning 401');
       return res.status(401).json({ message: 'Unauthorized' });
     }
 

@@ -201,6 +201,22 @@ endpoints:
       - access: admin
     description: Get all users (admin panel)
 
+  updateAdminUser:
+    path: /api/admin/users/:id
+    method: PATCH
+    handler: users/updateUser
+    policies:
+      - access: admin
+    description: Update user (admin)
+
+  deleteAdminUser:
+    path: /api/admin/users/:id
+    method: DELETE
+    handler: users/deleteUser
+    policies:
+      - access: admin
+    description: Delete user (admin)
+
   # ============ ORDER ENDPOINTS ============
   getUserOrders:
     path: /api/orders

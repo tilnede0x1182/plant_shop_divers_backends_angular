@@ -4,6 +4,10 @@ module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;
     const numericId = Number(id);
+
+    console.log('🗑️ deleteUser called for user ID:', numericId);
+    console.log('🗑️ Request headers:', JSON.stringify(req.headers, null, 2));
+
     if (!Number.isInteger(numericId)) {
       return res.status(400).json({ message: 'Invalid user id' });
     }

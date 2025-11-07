@@ -8,11 +8,12 @@ DB_NAME = plant_shop_manifest
 patch-manifest:
 	./patch_manifest/patch_manifest.sh
 
-run: patch-manifest
-	npm run dev
+# run: patch-manifest
+# 	npm run dev
 
-prod: patch-manifest
-	npm run start
+prod: run
+
+build: run
 
 seed: patch-manifest
 	npm run seed
@@ -20,6 +21,25 @@ seed: patch-manifest
 
 proxy:
 	node proxy.js
+
+PM2_CTL = node ./pm2_custom.js
+
+pm2-start-server: patch-manifest
+	$(PM2_CTL) start server
+
+pm2-stop-server:
+	$(PM2_CTL) stop server
+
+pm2-stop-proxy:
+	$(PM2_CTL) stop proxy
+
+run: pm2-start-all
+
+pm2-start-all: patch-manifest
+	$(PM2_CTL) start all
+
+pm2-stop-all:
+	$(PM2_CTL) stop all
 
 # Créer la base de données
 db-create:

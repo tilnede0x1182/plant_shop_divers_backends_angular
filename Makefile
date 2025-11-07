@@ -34,6 +34,12 @@ seed-backend-manifest:
 proxy-backend-manifest:
 	make -C apps/plant_shop_manifest proxy
 
+pm2-start-backend-manifest:
+	make -C apps/plant_shop_manifest pm2-start-all
+
+pm2-stop-backend-manifest:
+	make -C apps/plant_shop_manifest pm2-stop-all
+
 # ======================================================
 # 🐹 Backend Go
 # ======================================================

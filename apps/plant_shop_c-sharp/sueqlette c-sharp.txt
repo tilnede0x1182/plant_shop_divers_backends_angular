@@ -1,0 +1,259 @@
+# plant_shop_asp_dapper/appsettings.json
+
+
+# plant_shop_asp_dapper/Controllers/AuthController.cs
+
+
+# plant_shop_asp_dapper/Controllers/BaseController.cs
+
+
+# plant_shop_asp_dapper/Controllers/OrderController.cs
+
+
+# plant_shop_asp_dapper/Controllers/OrdersController.cs
+
+
+# plant_shop_asp_dapper/Controllers/PlantController.cs
+
+
+# plant_shop_asp_dapper/Controllers/PlantsController.cs
+
+
+# plant_shop_asp_dapper/Controllers/UserController.cs
+
+
+# plant_shop_asp_dapper/Controllers/UsersController.cs
+
+
+# plant_shop_asp_dapper/Data/DbConnectionFactory.cs
+
+
+# plant_shop_asp_dapper/Models/Order.cs
+
+
+# plant_shop_asp_dapper/Models/OrderItem.cs
+
+
+# plant_shop_asp_dapper/Models/Plant.cs
+
+
+# plant_shop_asp_dapper/Models/User.cs
+
+
+# plant_shop_asp_dapper/Program.cs
+
+
+# plant_shop_asp_dapper/Repositories/BaseRepository.cs
+
+
+# plant_shop_asp_dapper/Repositories/OrderItemRepository.cs
+
+
+# plant_shop_asp_dapper/Repositories/OrderRepository.cs
+
+
+# plant_shop_asp_dapper/Repositories/PlantRepository.cs
+
+
+# plant_shop_asp_dapper/Repositories/UserRepository.cs
+
+
+# plant_shop_asp_dapper/Routes.cs
+
+
+# plant_shop_asp_dapper/Utils/JwtUtil.cs
+
+
+# plant_shop_asp_dapper/Utils/PasswordUtil.cs
+
+
+# plant_shop_asp_dapper/Utils/RequestUtil.cs
+
+
+# plant_shop_asp_dapper/Utils/ResponseUtil.cs
+
+
+# plant_shop_asp_EF_core/appsettings.json
+
+
+# plant_shop_asp_EF_core/Controllers/AuthController.cs
+
+
+# plant_shop_asp_EF_core/Controllers/OrdersController.cs
+
+
+# plant_shop_asp_EF_core/Controllers/PlantsController.cs
+
+
+# plant_shop_asp_EF_core/Controllers/UsersController.cs
+
+
+# plant_shop_asp_EF_core/Data/AppDbContext.cs
+
+
+# plant_shop_asp_EF_core/Models/Order.cs
+
+
+# plant_shop_asp_EF_core/Models/OrderItem.cs
+
+
+# plant_shop_asp_EF_core/Models/Plant.cs
+
+
+# plant_shop_asp_EF_core/Models/User.cs
+
+
+# plant_shop_asp_EF_core/Program.cs
+
+
+# plant_shop_asp_EF_core/Services/AuthService.cs
+
+
+# plant_shop_asp_EF_core/Services/UserService.cs
+
+
+# plant_shop_asp_EF_core/Utils/JwtUtil.cs
+
+
+# plant_shop_asp_EF_core/Utils/PasswordUtil.cs
+
+
+# plant_shop_c-sharp/Controllers/AuthController.cs
+
+
+# plant_shop_c-sharp/Controllers/BaseController.cs
+
+
+# plant_shop_c-sharp/Controllers/OrderController.cs
+
+
+# plant_shop_c-sharp/Controllers/PlantController.cs
+
+
+# plant_shop_c-sharp/Controllers/UserController.cs
+
+
+# plant_shop_c-sharp/Models/Order.cs
+
+
+# plant_shop_c-sharp/Models/OrderItem.cs
+
+
+# plant_shop_c-sharp/Models/Plant.cs
+
+
+# plant_shop_c-sharp/Models/User.cs
+
+
+# plant_shop_c-sharp/Program.cs
+
+
+# plant_shop_c-sharp/Repositories/BaseRepository.cs
+
+
+# plant_shop_c-sharp/Repositories/OrderItemRepository.cs
+
+
+# plant_shop_c-sharp/Repositories/OrderRepository.cs
+
+
+# plant_shop_c-sharp/Repositories/PlantRepository.cs
+
+
+# plant_shop_c-sharp/Repositories/UserRepository.cs
+
+
+# plant_shop_c-sharp/Routes.cs
+
+
+# plant_shop_c-sharp/Utils/PasswordUtil.cs
+
+
+# plant_shop_c-sharp/Utils/RequestUtil.cs
+
+
+# plant_shop_c-sharp/Utils/ResponseUtil.cs
+
+
+# Tree du dossier
+
+.
+├── plant_shop_asp_dapper
+│   ├── appsettings.json
+│   ├── Controllers
+│   │   ├── AuthController.cs
+│   │   ├── BaseController.cs
+│   │   ├── OrderController.cs
+│   │   ├── OrdersController.cs
+│   │   ├── PlantController.cs
+│   │   ├── PlantsController.cs
+│   │   ├── UserController.cs
+│   │   └── UsersController.cs
+│   ├── Data
+│   │   └── DbConnectionFactory.cs
+│   ├── Models
+│   │   ├── Order.cs
+│   │   ├── OrderItem.cs
+│   │   ├── Plant.cs
+│   │   └── User.cs
+│   ├── Program.cs
+│   ├── Repositories
+│   │   ├── BaseRepository.cs
+│   │   ├── OrderItemRepository.cs
+│   │   ├── OrderRepository.cs
+│   │   ├── PlantRepository.cs
+│   │   └── UserRepository.cs
+│   ├── Routes.cs
+│   └── Utils
+│       ├── JwtUtil.cs
+│       ├── PasswordUtil.cs
+│       ├── RequestUtil.cs
+│       └── ResponseUtil.cs
+├── plant_shop_asp_EF_core
+│   ├── appsettings.json
+│   ├── Controllers
+│   │   ├── AuthController.cs
+│   │   ├── OrdersController.cs
+│   │   ├── PlantsController.cs
+│   │   └── UsersController.cs
+│   ├── Data
+│   │   └── AppDbContext.cs
+│   ├── Models
+│   │   ├── Order.cs
+│   │   ├── OrderItem.cs
+│   │   ├── Plant.cs
+│   │   └── User.cs
+│   ├── Program.cs
+│   ├── Services
+│   │   ├── AuthService.cs
+│   │   └── UserService.cs
+│   └── Utils
+│       ├── JwtUtil.cs
+│       └── PasswordUtil.cs
+├── plant_shop_c-sharp
+│   ├── Controllers
+│   │   ├── AuthController.cs
+│   │   ├── BaseController.cs
+│   │   ├── OrderController.cs
+│   │   ├── PlantController.cs
+│   │   └── UserController.cs
+│   ├── Models
+│   │   ├── Order.cs
+│   │   ├── OrderItem.cs
+│   │   ├── Plant.cs
+│   │   └── User.cs
+│   ├── Program.cs
+│   ├── Repositories
+│   │   ├── BaseRepository.cs
+│   │   ├── OrderItemRepository.cs
+│   │   ├── OrderRepository.cs
+│   │   ├── PlantRepository.cs
+│   │   └── UserRepository.cs
+│   ├── Routes.cs
+│   └── Utils
+│       ├── PasswordUtil.cs
+│       ├── RequestUtil.cs
+│       └── ResponseUtil.cs
+└── projet.txt
+
+18 directories, 60 files

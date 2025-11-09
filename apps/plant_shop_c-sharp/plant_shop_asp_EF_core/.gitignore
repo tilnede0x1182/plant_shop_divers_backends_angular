@@ -1,0 +1,27 @@
+# Build
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.db
+
+# Base de données locale
+*.sqlite
+*.db
+
+# Fichiers secrets
+appsettings.Development.json
+.env
+*.user
+*.suo
+
+# IDE / outils
+.vscode/
+.idea/
+*.csproj.user
+*.swp
+
+# Logs
+logs/
+*.log

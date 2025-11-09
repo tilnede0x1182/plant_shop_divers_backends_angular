@@ -1,0 +1,22 @@
+# Sorties de build
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Fichiers de config sensibles
+.env
+appsettings.Development.json
+*.user
+*.suo
+
+# IDE et outils
+.vscode/
+.idea/
+*.swp
+*.csproj.user
+
+# Logs et caches
+logs/
+*.log

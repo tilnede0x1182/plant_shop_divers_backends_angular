@@ -1,0 +1,19 @@
+# Fichiers binaires et temporaires
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+*.log
+*.db
+
+# Fichiers de configuration locaux
+.env
+*.user
+*.suo
+
+# IDE
+.vscode/
+.idea/
+*.csproj.user
+*.swp

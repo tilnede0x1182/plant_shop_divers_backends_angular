@@ -24,48 +24,49 @@ public sealed class Test
     private static Dictionary<string, string> Env()
     {
         var m = new Dictionary<string, string>();
+        string? envPath = ResolveEnvPath();
+        if (envPath == null)
+        {
+            Console.WriteLine("⚠️ Fichier .env non trouvé (test). Valeurs par défaut utilisées.");
+            return m;
+        }
+
         try
         {
-            using (var br = new StreamReader(".env"))
+            using var br = new StreamReader(envPath);
+            string? l;
+            while ((l = br.ReadLine()) != null)
             {
-                string? l;
-                while ((l = br.ReadLine()) != null)
-                {
-                    int i = l.IndexOf('=');
-                    if (i > 0)
-                        m[l.Substring(0, i).Trim()] = l.Substring(i + 1).Trim();
-                }
+                int i = l.IndexOf('=');
+                if (i > 0)
+                    m[l.Substring(0, i).Trim()] = l.Substring(i + 1).Trim();
             }
-        }
-        catch (FileNotFoundException)
-        {
-            // Ignorer si .env n'existe pas, les valeurs par défaut seront utilisées
         }
         catch (IOException e)
         {
-            // Gérer d'autres erreurs IO si nécessaire
             Console.WriteLine($"Erreur lecture .env: {e.Message}");
         }
         return m;
     }
 
-    /* -------- Config -------- */
-    private static readonly Dictionary<string, string> CFG;
-
-    static Test()
+    private static string? ResolveEnvPath()
     {
-        try
+        string? current = Directory.GetCurrentDirectory();
+        for (int i = 0; i < 8 && current != null; i++)
         {
-            CFG = Env();
+            string candidate = Path.Combine(current, ".env");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+            current = Directory.GetParent(current)?.FullName;
         }
-        catch (Exception e)
-        {
-            throw new ApplicationException("Erreur lors du chargement de la config", e);
-        }
+        return null;
     }
 
-    private static readonly string PORT = CFG.GetValueOrDefault("SERVER_ADDRESS", "4100")!;
-    private static readonly string BASE = $"http://localhost:{PORT}/api";
+    /* -------- Config -------- */
+    private static readonly Dictionary<string, string> CFG = Env();
+    private static readonly string BASE = ResolveBaseUrl();
     private static readonly string ADMIN_EMAIL = "admin1@planteshop.com";
     private static readonly string ADMIN_PWD = "password";
 
@@ -100,6 +101,34 @@ public sealed class Test
         for (int i = 0; i < n; i++)
             sb.Append(a[r.Next(a.Length)]);
         return sb.ToString();
+    }
+
+    private static string ResolveBaseUrl()
+    {
+        if (CFG.TryGetValue("SERVER_PORT", out var port) && !string.IsNullOrWhiteSpace(port))
+        {
+            return $"http://localhost:{port}/api";
+        }
+
+        if (CFG.TryGetValue("SERVER_ADDRESS", out var addr) && !string.IsNullOrWhiteSpace(addr))
+        {
+            if (addr.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            {
+                return addr.TrimEnd('/') + "/api";
+            }
+            return $"http://localhost:{addr}/api";
+        }
+
+        return "http://localhost:4100/api";
+    }
+
+    private static int ResolvePort(string baseUrl)
+    {
+        if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && uri.Port > 0)
+        {
+            return uri.Port;
+        }
+        return 4100;
     }
 
     private static bool WaitForServer(string host, int port, int timeoutMs)
@@ -321,7 +350,7 @@ public sealed class Test
         AssertNum(plant, "id");
         int id = (int)plant["id"]!;
         JObject get = await Call("GET", $"/plants/{id}", 200, null, "admin");
-        AssertEq(get, "name", plant_data["name"]!.Value<object>()); // 'get' en Java retourne Object
+        AssertEq(get, "name", plant_data["name"]!.Value<string>());
         var price_update = new JObject { ["price"] = 15 };
         await Call("PATCH", $"/admin/plants/{id}", 200, price_update, "admin");
         JObject check = await Call("GET", $"/plants/{id}", 200, null, "admin");
@@ -521,10 +550,11 @@ public sealed class Test
     {
         try
         {
-            if (!WaitForServer("127.0.0.1", int.Parse(PORT), 5000))
+            int serverPort = ResolvePort(BASE);
+            if (!WaitForServer("127.0.0.1", serverPort, 5000))
             {
                 // System.err.println -> Console.Error.WriteLine
-                Console.Error.WriteLine($"❌ Serveur http://localhost:{PORT} injoignable");
+                Console.Error.WriteLine($"❌ Serveur http://localhost:{serverPort} injoignable");
                 // System.exit(2) -> Environment.Exit(2)
                 Environment.Exit(2);
             }
@@ -535,7 +565,7 @@ public sealed class Test
             string userEmail = $"utilisateur_de_test_{t.timestamp}_{random_tag}@example.com";
             string userPassword = "pass123";
 
-            Console.WriteLine($"🧪 Démarrage des tests: http://localhost:{PORT}/api\n");
+            Console.WriteLine($"🧪 Démarrage des tests: {BASE}\n");
 
             // Connexion des utilisateurs de base pour les tests
             await t.Login(ADMIN_EMAIL, ADMIN_PWD, "admin");

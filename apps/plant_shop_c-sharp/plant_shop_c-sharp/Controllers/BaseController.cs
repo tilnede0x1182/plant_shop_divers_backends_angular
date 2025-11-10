@@ -27,7 +27,7 @@ namespace plant_shop_c_sharp.Controllers
         public abstract Task HandleRequest(HttpListenerContext context, User? currentUser);
 
         // Helper pour récupérer l'utilisateur
-        protected async Task<User?> GetCurrentUser(HttpListenerRequest request)
+        public async Task<User?> GetCurrentUser(HttpListenerRequest request)
         {
             return await RequestUtil.GetUserFromAuth(request, UserRepo);
         }

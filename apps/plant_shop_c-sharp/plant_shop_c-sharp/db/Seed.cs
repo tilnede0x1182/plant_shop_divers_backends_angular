@@ -31,11 +31,11 @@ public sealed class Seed
     private static Dictionary<string, string> Env()
     {
         var outDict = new Dictionary<string, string>();
-        string envPath = ".env";
+        string? envPath = ResolveEnvPath();
 
-        if (!File.Exists(envPath))
+        if (envPath == null)
         {
-            Console.WriteLine("⚠️ Fichier .env non trouvé.");
+            Console.WriteLine("⚠️ Fichier .env non trouvé en remontant depuis " + Directory.GetCurrentDirectory());
             return outDict;
         }
 
@@ -59,6 +59,21 @@ public sealed class Seed
             Console.WriteLine($"Erreur lors de la lecture du .env: {e.Message}");
         }
         return outDict;
+    }
+
+    private static string? ResolveEnvPath()
+    {
+        string? current = Directory.GetCurrentDirectory();
+        for (int i = 0; i < 8 && current != null; i++)
+        {
+            string candidate = Path.Combine(current, ".env");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+            current = Directory.GetParent(current)?.FullName;
+        }
+        return null;
     }
 
     /* ---------- Constantes ---------- */
@@ -135,11 +150,11 @@ public sealed class Seed
             return;
         }
 
-        // Construction de la chaîne de connexion Npgsql.
-        // NOTE IMPORTANTE : Le Java JDBC 'DATABASE_URL' est différent de Npgsql.
-        // Nous supposons ici que DATABASE_URL contient "Host=...;Database=...;"
-        // et nous ajoutons l'utilisateur/mot de passe.
-        string connString = $"{cfg["DATABASE_URL"]};Username={cfg["DATABASE_USER"]};Password={cfg["DATABASE_PASS"]}";
+        string connString = BuildConnectionString(
+            cfg["DATABASE_URL"],
+            cfg["DATABASE_USER"],
+            cfg["DATABASE_PASS"]
+        );
 
         // 'using var' gère automatiquement la fermeture de la connexion (db.Close())
         using var db = new NpgsqlConnection(connString);
@@ -333,5 +348,51 @@ public sealed class Seed
 
         // db.Close() est géré automatiquement par 'using var db'
         Console.WriteLine("🎉 Seed terminée !");
+    }
+
+    private static string BuildConnectionString(string rawUrl, string user, string pass)
+    {
+        if (string.IsNullOrWhiteSpace(rawUrl))
+        {
+            throw new ArgumentException("DATABASE_URL manquant ou vide");
+        }
+
+        string normalized = rawUrl.StartsWith("jdbc:", StringComparison.OrdinalIgnoreCase)
+            ? rawUrl.Substring("jdbc:".Length)
+            : rawUrl;
+
+        if (normalized.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        {
+            var uri = new Uri(normalized);
+            var builder = new NpgsqlConnectionStringBuilder
+            {
+                Host = uri.Host,
+                Port = uri.IsDefaultPort ? 5432 : uri.Port,
+                Database = uri.AbsolutePath.Trim('/')
+            };
+
+            if (!string.IsNullOrEmpty(uri.UserInfo))
+            {
+                var parts = uri.UserInfo.Split(':');
+                builder.Username = parts.Length > 0 && !string.IsNullOrEmpty(parts[0]) ? parts[0] : user;
+                builder.Password = parts.Length > 1 ? parts[1] : pass;
+            }
+            else
+            {
+                builder.Username = user;
+                builder.Password = pass;
+            }
+
+            return builder.ConnectionString;
+        }
+        else
+        {
+            var builder = new NpgsqlConnectionStringBuilder(normalized)
+            {
+                Username = user,
+                Password = pass
+            };
+            return builder.ConnectionString;
+        }
     }
 }

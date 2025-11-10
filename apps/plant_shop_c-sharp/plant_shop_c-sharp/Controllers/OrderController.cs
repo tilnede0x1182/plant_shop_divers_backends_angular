@@ -131,13 +131,23 @@ namespace plant_shop_c_sharp.Controllers
                     plant.Stock -= itemDto.Quantity;
                     await PlantRepo.UpdateAsync(plant); // Ce repo doit utiliser la connexion/transaction
 
-                    var price = plant.Price * itemDto.Quantity;
-                    totalPrice += price;
-                    orderItems.Add(new OrderItem(0, itemDto.PlantId, itemDto.Quantity, plant.Price));
+                    totalPrice += plant.Price * itemDto.Quantity;
+
+                    orderItems.Add(new OrderItem
+                    {
+                        PlantId = itemDto.PlantId,
+                        Quantity = itemDto.Quantity,
+                        Price = plant.Price
+                    });
                 }
 
                 // Créer la commande
-                var order = new Order(user.Id, totalPrice, "confirmed"); // Statut "confirmed" (comme Nest)
+                var order = new Order
+                {
+                    UserId = user.Id,
+                    TotalPrice = totalPrice,
+                    Status = "confirmed"
+                };
                 var createdOrder = await OrderRepo.CreateAsync(order);
 
                 // Créer les OrderItems

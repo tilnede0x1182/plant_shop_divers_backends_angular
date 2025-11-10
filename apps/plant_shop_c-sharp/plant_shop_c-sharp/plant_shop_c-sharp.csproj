@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Compile Remove="db/Seed.cs" />
+    <Compile Remove="test/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>

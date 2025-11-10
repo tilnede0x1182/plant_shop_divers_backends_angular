@@ -1,7 +1,8 @@
 using Npgsql;
 using NpgsqlTypes;
+using System.Linq;
 using System.Text;
-using Util; // Correspond au 'package util' de PasswordUtil
+using plant_shop_asp_dapper.Utils; // Accès au PasswordUtil local
 
 namespace Db; // Correspond au 'package db'
 
@@ -9,6 +10,20 @@ namespace Db; // Correspond au 'package db'
     décrémentation du stock, génération users.txt                           */
 public sealed class Seed
 {
+    private sealed class PlantInfo
+    {
+        public int Id { get; }
+        public int Price { get; }
+        public int Stock { get; set; }
+
+        public PlantInfo(int id, int price, int stock)
+        {
+            Id = id;
+            Price = price;
+            Stock = stock;
+        }
+    }
+
     /* ---------- Lecture .env ---------- */
     // Note : C# utilise souvent des variables d'environnement chargées
     // ou des fichiers JSON (appsettings.json). Cette méthode imite
@@ -211,15 +226,6 @@ public sealed class Seed
 
 
         Console.WriteLine("🌱 Création des plantes…");
-        // Une classe locale C# pour imiter la classe interne Java
-        // Les noms de champs sont en minuscules pour correspondre à la demande de "copie directe"
-        class PlantInfo
-        {
-            public int id;
-            public int price; // Le prix est stocké en int dans la logique Java
-            public int stock;
-            public PlantInfo(int id, int p, int s) { this.id = id; price = p; stock = s; }
-        }
         var plants = new List<PlantInfo>();
 
         for (int i = 0; i < NB_PLANTS; i++)
@@ -277,26 +283,26 @@ public sealed class Seed
                 for (int it = 0; it < 2; it++) // Logique Java conservée (2 items max)
                 {
                     // Utilisation de LINQ (Where().ToList()) en C#
-                    var avail = plants.Where(p => p.stock > 0).ToList();
+                    var avail = plants.Where(p => p.Stock > 0).ToList();
                     if (avail.Count == 0) break; // .isEmpty() -> .Count == 0
 
                     PlantInfo p = avail[Rnd(0, avail.Count - 1)];
-                    int qty = Math.Min(Rnd(1, 5), p.stock);
+                    int qty = Math.Min(Rnd(1, 5), p.Stock);
 
                     insItem.Parameters["@order_id"].Value = orderId;
-                    insItem.Parameters["@plant_id"].Value = p.id;
+                    insItem.Parameters["@plant_id"].Value = p.Id;
                     insItem.Parameters["@qty"].Value = qty;
-                    insItem.Parameters["@price"].Value = (decimal)p.price; // cast
+                    insItem.Parameters["@price"].Value = (decimal)p.Price; // cast
                     insItem.ExecuteNonQuery();
 
                     // stock --
-                    p.stock -= qty;
+                    p.Stock -= qty;
                     updPlantStock.Parameters["@qty"].Value = qty;
-                    updPlantStock.Parameters["@id"].Value = p.id;
+                    updPlantStock.Parameters["@id"].Value = p.Id;
                     updPlantStock.ExecuteNonQuery();
 
                     // L'opérateur '+=' fonctionne avec 'decimal'
-                    total += (p.price * qty);
+                    total += (p.Price * qty);
                 }
 
                 // Mise à jour du total de la commande

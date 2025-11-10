@@ -25,13 +25,13 @@ build-dev: clean compile_run
 # Seed
 ## ────────────────
 
-compile-seed:
-	dotnet build Data
+build-seed:
+	dotnet build Data/plant_shop_asp_dapper.Seed.csproj
 
 seed:
-	dotnet run --project Data
+	dotnet run --project Data/plant_shop_asp_dapper.Seed.csproj
 
-seed-dev: clean compile-seed seed
+seed-dev: clean build-seed seed
 
 ## ────────────────
 # DB
@@ -56,8 +56,10 @@ db-reset: db-drop db-create db-migrate db-seed
 # Test
 ## ────────────────
 
-compile-test:
-	dotnet build test
+test-build:
+	dotnet build test/plant_shop_asp_dapper.Tests.csproj
 
 tests:
-	dotnet run --project test
+	dotnet run --project test/plant_shop_asp_dapper.Tests.csproj
+
+test-dev: clean test-build tests

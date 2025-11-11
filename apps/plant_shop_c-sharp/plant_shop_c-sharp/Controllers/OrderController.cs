@@ -73,11 +73,7 @@ namespace plant_shop_c_sharp.Controllers
             // Enrichir les commandes avec leurs items et les détails des plantes
             foreach (var order in orders)
             {
-                order.OrderItems = await OrderItemRepo.FindByOrderIdAsync(order.Id);
-                foreach (var item in order.OrderItems)
-                {
-                    item.Plant = await PlantRepo.FindByIdAsync(item.PlantId);
-                }
+                order.OrderItems = await LoadRenderableItems(order.Id);
             }
             await SendJsonResponse(response, 200, orders);
         }
@@ -92,11 +88,7 @@ namespace plant_shop_c_sharp.Controllers
                 return;
             }
 
-            order.OrderItems = await OrderItemRepo.FindByOrderIdAsync(order.Id);
-            foreach (var item in order.OrderItems)
-            {
-                item.Plant = await PlantRepo.FindByIdAsync(item.PlantId);
-            }
+            order.OrderItems = await LoadRenderableItems(order.Id);
 
             await SendJsonResponse(response, 200, order);
         }
@@ -162,7 +154,7 @@ namespace plant_shop_c_sharp.Controllers
 
                 // Re-charger la commande complète pour la réponse
                 var finalOrder = await OrderRepo.FindByIdAsync(createdOrder.Id);
-                finalOrder.OrderItems = orderItems; // Attacher les items créés
+                finalOrder.OrderItems = await LoadRenderableItems(createdOrder.Id);
                 await SendJsonResponse(response, 201, finalOrder);
             }
             catch (Exception ex)
@@ -200,6 +192,31 @@ namespace plant_shop_c_sharp.Controllers
              // Supposer que la BDD a un CASCADE DELETE sur order_items
             await OrderRepo.DeleteAsync(id);
             SendEmptyResponse(response, 200);
+        }
+
+        private async Task<List<OrderItem>> LoadRenderableItems(int orderId)
+        {
+            var rawItems = await OrderItemRepo.FindByOrderIdAsync(orderId);
+            var enriched = new List<OrderItem>();
+
+            foreach (var item in rawItems)
+            {
+                if (!item.PlantId.HasValue)
+                {
+                    continue;
+                }
+
+                var plant = await PlantRepo.FindByIdAsync(item.PlantId.Value);
+                if (plant == null)
+                {
+                    continue;
+                }
+
+                item.Plant = plant;
+                enriched.Add(item);
+            }
+
+            return enriched;
         }
 
     }

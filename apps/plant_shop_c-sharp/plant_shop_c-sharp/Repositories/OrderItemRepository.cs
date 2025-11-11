@@ -1,5 +1,6 @@
 using Npgsql;
 using plant_shop_c_sharp.Models;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -45,7 +46,7 @@ namespace plant_shop_c_sharp.Repositories
             await using var cmd = new NpgsqlCommand(sql, conn);
 
             cmd.Parameters.AddWithValue("orderId", item.OrderId);
-            cmd.Parameters.AddWithValue("plantId", item.PlantId);
+            cmd.Parameters.AddWithValue("plantId", item.PlantId.HasValue ? item.PlantId.Value : DBNull.Value);
             cmd.Parameters.AddWithValue("qty", item.Quantity);
             cmd.Parameters.AddWithValue("price", item.Price);
 
@@ -68,7 +69,7 @@ namespace plant_shop_c_sharp.Repositories
             {
                 Id = reader.GetInt32(reader.GetOrdinal("id")),
                 OrderId = reader.GetInt32(reader.GetOrdinal("order_id")),
-                PlantId = reader.GetInt32(reader.GetOrdinal("plant_id")),
+                PlantId = reader.IsDBNull(reader.GetOrdinal("plant_id")) ? null : reader.GetInt32(reader.GetOrdinal("plant_id")),
                 Quantity = reader.GetInt32(reader.GetOrdinal("quantity")),
                 Price = reader.GetDecimal(reader.GetOrdinal("price"))
             };

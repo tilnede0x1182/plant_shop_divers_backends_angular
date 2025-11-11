@@ -6,7 +6,7 @@ namespace plant_shop_c_sharp.Models
     {
         public int Id { get; set; }
         public int OrderId { get; set; }
-        public int PlantId { get; set; }
+        public int? PlantId { get; set; }
         public int Quantity { get; set; }
 
         [Column(TypeName = "decimal(18, 2)")]

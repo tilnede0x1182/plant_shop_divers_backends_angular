@@ -1,4 +1,5 @@
 using Npgsql;
+using System;
 using System.Data;
 
 namespace plant_shop_asp_dapper.Data
@@ -8,10 +9,9 @@ namespace plant_shop_asp_dapper.Data
     {
         private readonly string _connectionString;
 
-        public DbConnectionFactory(IConfiguration configuration)
+        public DbConnectionFactory(string connectionString)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection")
-                                ?? throw new InvalidOperationException("Connection string 'DefaultConnection' non trouvée.");
+            _connectionString = connectionString ?? throw new ArgumentNullException(nameof(connectionString));
         }
 
         public IDbConnection CreateConnection()

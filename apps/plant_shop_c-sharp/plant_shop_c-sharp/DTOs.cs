@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using plant_shop_c_sharp.Models;
 
 namespace plant_shop_c_sharp.DTOs
@@ -30,6 +31,7 @@ namespace plant_shop_c_sharp.DTOs
         public string? Name { get; set; }
         public required string Email { get; set; }
         public required string Password { get; set; }
+        [JsonProperty("admin")]
         public bool IsAdmin { get; set; } = false;
     }
 
@@ -37,6 +39,7 @@ namespace plant_shop_c_sharp.DTOs
     {
         public string? Name { get; set; }
         public string? Email { get; set; }
+        [JsonProperty("admin")]
         public bool? IsAdmin { get; set; }
     }
 

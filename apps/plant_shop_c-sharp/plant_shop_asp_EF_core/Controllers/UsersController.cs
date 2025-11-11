@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using plant_shop_asp_EF_core.Services;
+using plant_shop_asp_EF_core.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -28,6 +29,18 @@ namespace plant_shop_asp_EF_core.Controllers
              return User.IsInRole("Admin");
         }
 
+        // GET: api/users (liste)
+        [HttpGet("api/users")]
+        public async Task<IActionResult> GetUsers()
+        {
+            if (!IsAdmin())
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { error = "L'accès à la liste /api/users est interdit" });
+            }
+
+            return Ok(await _userService.GetAllUsers());
+        }
+
         // GET: api/users/5 (Route profil ET admin)
         [HttpGet("api/users/{id}")]
         public async Task<IActionResult> GetUser(int id)
@@ -50,12 +63,9 @@ namespace plant_shop_asp_EF_core.Controllers
         [HttpPatch("api/users/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateRequestDto dto)
         {
-            var currentUserModel = await _userService.GetUserById(GetCurrentUserId());
-            if (currentUserModel == null) return Unauthorized();
-
             try
             {
-                var updatedUser = await _userService.UpdateUser(id, dto, currentUserModel);
+                var updatedUser = await _userService.UpdateUser(id, dto, GetCurrentUserId(), IsAdmin());
                 if (updatedUser == null) return NotFound();
                 return Ok(updatedUser);
             }
@@ -66,6 +76,19 @@ namespace plant_shop_asp_EF_core.Controllers
         }
 
         // --- Routes Admin ---
+
+        [HttpPost("api/users")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateUser([FromBody] UserCreateRequestDto dto)
+        {
+            var created = await _userService.CreateUser(dto);
+            return Created($"/api/users/{created.Id}", created);
+        }
+
+        [HttpPost("api/admin/users")]
+        [Authorize(Roles = "Admin")]
+        public Task<IActionResult> CreateAdminUser([FromBody] UserCreateRequestDto dto)
+            => CreateUser(dto);
 
         // GET: api/admin/users
         [HttpGet("api/admin/users")]

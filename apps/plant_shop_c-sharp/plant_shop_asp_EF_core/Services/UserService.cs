@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using plant_shop_asp_EF_core.Data;
 using plant_shop_asp_EF_core.Models;
+using plant_shop_asp_EF_core.Utils;
 
 namespace plant_shop_asp_EF_core.Services
 {
@@ -13,29 +14,48 @@ namespace plant_shop_asp_EF_core.Services
             _context = context;
         }
 
-        public async Task<IEnumerable<User>> GetAllUsers()
+        public async Task<IEnumerable<UserResponseDto>> GetAllUsers()
         {
             return await _context.Users
                 .OrderByDescending(u => u.IsAdmin)
                 .ThenBy(u => u.Name)
-                .Select(u => SanitizeUser(u)) // Exclure les hashs
+                .Select(u => SanitizeUser(u))
                 .ToListAsync();
         }
 
-        public async Task<User?> GetUserById(int id)
+        public async Task<UserResponseDto?> GetUserById(int id)
         {
             var user = await _context.Users.FindAsync(id);
             return user != null ? SanitizeUser(user) : null;
         }
 
-        public async Task<User?> UpdateUser(int id, UserUpdateRequestDto dto, User currentUser)
+        public async Task<UserResponseDto> CreateUser(UserCreateRequestDto dto)
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+            {
+                throw new ApplicationException("Cet email existe déjà");
+            }
+
+            var user = new User
+            {
+                Name = string.IsNullOrWhiteSpace(dto.Name) ? "Utilisateur" : dto.Name,
+                Email = dto.Email,
+                PasswordHash = PasswordUtil.HashPassword(dto.Password),
+                IsAdmin = dto.IsAdmin
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            return SanitizeUser(user);
+        }
+
+        public async Task<UserResponseDto?> UpdateUser(int id, UserUpdateRequestDto dto, int currentUserId, bool isAdmin)
         {
             var userToUpdate = await _context.Users.FindAsync(id);
             if (userToUpdate == null) return null;
 
-            // Logique de permission
-            bool isOwner = currentUser.Id == id;
-            bool isAdmin = currentUser.IsAdmin;
+            bool isOwner = currentUserId == id;
 
             if (!isOwner && !isAdmin)
             {
@@ -45,7 +65,6 @@ namespace plant_shop_asp_EF_core.Services
             userToUpdate.Name = dto.Name ?? userToUpdate.Name;
             userToUpdate.Email = dto.Email ?? userToUpdate.Email;
 
-            // Seul un admin peut changer le statut admin
             if (isAdmin && dto.IsAdmin.HasValue)
             {
                 userToUpdate.IsAdmin = dto.IsAdmin.Value;
@@ -65,19 +84,16 @@ namespace plant_shop_asp_EF_core.Services
             return true;
         }
 
-        // Exclut le hash du mot de passe des objets retournés
-        public static User SanitizeUser(User user)
+        public static UserResponseDto SanitizeUser(User user)
         {
-            user.PasswordHash = ""; // Vide le hash pour la sécurité
-            return user;
+            return new UserResponseDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                IsAdmin = user.IsAdmin,
+                CreatedAt = user.CreatedAt
+            };
         }
-    }
-
-    // DTO pour les mises à jour
-    public class UserUpdateRequestDto
-    {
-        public string? Name { get; set; }
-        public string? Email { get; set; }
-        public bool? IsAdmin { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using plant_shop_asp_dapper.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Collections.Generic;
+using System.Linq;
 using Dapper;
 using plant_shop_asp_dapper.Data;
 
@@ -34,8 +35,6 @@ namespace plant_shop_asp_dapper.Controllers
         {
             var userId = GetCurrentUserId();
             var orders = (await _orderRepo.FindByUserIdAsync(userId)).ToList();
-
-            // Enrichissement (Dapper ne fait pas l'inclusion auto comme EF)
             foreach (var order in orders)
             {
                 order.OrderItems = (await _itemRepo.FindByOrderIdAsync(order.Id)).ToList();
@@ -43,17 +42,26 @@ namespace plant_shop_asp_dapper.Controllers
             return Ok(orders);
         }
 
+        // PATCH: api/orders/5 (admin-only)
+        [HttpPatch(Routes.OrderDetail)]
+        [Authorize(Roles = "Admin")]
+        public Task<ActionResult<Order>> UpdateOrderStatusPublic(int id, [FromBody] StatusUpdateDto dto) =>
+            UpdateOrderStatusInternal(id, dto);
+
         // PATCH: api/admin/orders/5
         [HttpPatch(Routes.AdminOrderUpdate)]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<Order>> UpdateOrderStatus(int id, [FromBody] StatusUpdateDto dto)
+        public Task<ActionResult<Order>> UpdateOrderStatus(int id, [FromBody] StatusUpdateDto dto) =>
+            UpdateOrderStatusInternal(id, dto);
+
+        private async Task<ActionResult<Order>> UpdateOrderStatusInternal(int id, StatusUpdateDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Status))
             {
                 return BadRequest(new { error = "Statut requis" });
             }
 
-            var order = await _orderRepo.FindByIdAsync(id);
+            var order = await LoadOrderWithItemsAsync(id);
             if (order == null)
             {
                 return NotFound();
@@ -62,14 +70,20 @@ namespace plant_shop_asp_dapper.Controllers
             order.Status = dto.Status;
             await _orderRepo.UpdateAsync(order);
 
-            order.OrderItems = (await _itemRepo.FindByOrderIdAsync(order.Id)).ToList();
             return Ok(order);
         }
+
+        // DELETE: api/orders/5 (admin-only)
+        [HttpDelete(Routes.OrderDetail)]
+        [Authorize(Roles = "Admin")]
+        public Task<IActionResult> DeleteOrderPublic(int id) => DeleteOrderInternal(id);
 
         // DELETE: api/admin/orders/5
         [HttpDelete(Routes.AdminOrderDelete)]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteOrder(int id)
+        public Task<IActionResult> DeleteOrder(int id) => DeleteOrderInternal(id);
+
+        private async Task<IActionResult> DeleteOrderInternal(int id)
         {
             var order = await _orderRepo.FindByIdAsync(id);
             if (order == null)
@@ -87,12 +101,11 @@ namespace plant_shop_asp_dapper.Controllers
         public async Task<ActionResult<Order>> GetOrder(int id)
         {
             var userId = GetCurrentUserId();
-            var order = await _orderRepo.FindByIdAsync(id);
+            var order = await LoadOrderWithItemsAsync(id);
 
             if (order == null) return NotFound();
             if (order.UserId != userId && !User.IsInRole("Admin")) return Forbid();
 
-            order.OrderItems = (await _itemRepo.FindByOrderIdAsync(order.Id)).ToList();
             return Ok(order);
         }
 
@@ -164,9 +177,8 @@ namespace plant_shop_asp_dapper.Controllers
 
                 transaction.Commit();
 
-                // Recharger pour la réponse
-                var result = await GetOrder(order.Id);
-                return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, result.Value);
+                var finalOrder = await LoadOrderWithItemsAsync(order.Id);
+                return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, finalOrder);
             }
             catch (Exception ex)
             {
@@ -180,6 +192,14 @@ namespace plant_shop_asp_dapper.Controllers
                 }
                 return BadRequest(new { error = $"Échec de la création de la commande: {ex.Message}" });
             }
+        }
+
+        private async Task<Order?> LoadOrderWithItemsAsync(int id)
+        {
+            var order = await _orderRepo.FindByIdAsync(id);
+            if (order == null) return null;
+            order.OrderItems = (await _itemRepo.FindByOrderIdAsync(id)).ToList();
+            return order;
         }
     }
 

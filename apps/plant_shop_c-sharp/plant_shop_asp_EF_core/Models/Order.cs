@@ -14,7 +14,7 @@ namespace plant_shop_asp_EF_core.Models
         [Column("user_id")]
         public int UserId { get; set; }
 
-        [Column("total_price", TypeName = "decimal(18, 2)")]
+        [Column("total", TypeName = "decimal(18, 2)")]
         public decimal TotalPrice { get; set; }
 
         [Column("status")]

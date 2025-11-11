@@ -116,14 +116,19 @@ namespace plant_shop_asp_EF_core.Controllers
             return await UpdateUser(id, dto);
         }
 
-        // DELETE: api/admin/users/5
-        [HttpDelete("api/admin/users/{id}")]
+        // DELETE: api/users/5 (Admin)
+        [HttpDelete("api/users/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var success = await _userService.DeleteUser(id);
             if (!success) return NotFound();
-            return Ok(); // 200 OK
+            return Ok();
         }
+
+        // DELETE: api/admin/users/5 (alias)
+        [HttpDelete("api/admin/users/{id}")]
+        [Authorize(Roles = "Admin")]
+        public Task<IActionResult> DeleteAdminUser(int id) => DeleteUser(id);
     }
 }

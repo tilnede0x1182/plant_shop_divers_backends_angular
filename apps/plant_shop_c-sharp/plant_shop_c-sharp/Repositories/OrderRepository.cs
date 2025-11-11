@@ -42,7 +42,7 @@ namespace plant_shop_c_sharp.Repositories
         public async Task<Order> CreateAsync(Order order)
         {
             await using var conn = GetConnection();
-            var sql = "INSERT INTO orders (user_id, total_price, status, created_at) VALUES (@userId, @total, @status, @created) RETURNING id";
+            var sql = "INSERT INTO orders (user_id, total, status, created_at) VALUES (@userId, @total, @status, @created) RETURNING id";
             await using var cmd = new NpgsqlCommand(sql, conn);
 
             cmd.Parameters.AddWithValue("userId", order.UserId);
@@ -57,7 +57,7 @@ namespace plant_shop_c_sharp.Repositories
         public async Task UpdateAsync(Order order)
         {
             await using var conn = GetConnection();
-            var sql = "UPDATE orders SET total_price = @total, status = @status WHERE id = @id";
+            var sql = "UPDATE orders SET total = @total, status = @status WHERE id = @id";
             await using var cmd = new NpgsqlCommand(sql, conn);
 
             cmd.Parameters.AddWithValue("id", order.Id);
@@ -83,7 +83,7 @@ namespace plant_shop_c_sharp.Repositories
             {
                 Id = reader.GetInt32(reader.GetOrdinal("id")),
                 UserId = reader.GetInt32(reader.GetOrdinal("user_id")),
-                TotalPrice = reader.GetDecimal(reader.GetOrdinal("total_price")),
+                TotalPrice = reader.GetDecimal(reader.GetOrdinal("total")),
                 Status = reader.GetString(reader.GetOrdinal("status")),
                 CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
             };

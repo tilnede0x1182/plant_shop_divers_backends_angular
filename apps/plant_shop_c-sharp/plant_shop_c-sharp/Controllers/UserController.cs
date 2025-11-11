@@ -58,12 +58,26 @@ namespace plant_shop_c_sharp.Controllers
                 {
                     await CreateUser(request, response);
                 }
+                else if (method == "POST" && !isAdminRoute && id == -1)
+                {
+                    if (!currentUser.IsAdmin)
+                    {
+                        await SendError(response, 403, "Accès admin requis");
+                        return;
+                    }
+                    await CreateUser(request, response);
+                }
                 else if (method == "PATCH" && id != -1) // PATCH /api/users/:id OR /api/admin/users/:id
                 {
                     await UpdateUser(request, response, currentUser, id, isAdminRoute);
                 }
-                else if (method == "DELETE" && id != -1 && isAdminRoute) // DELETE /api/admin/users/:id
+                else if (method == "DELETE" && id != -1)
                 {
+                    if (!currentUser.IsAdmin)
+                    {
+                        await SendError(response, 403, "Accès admin requis");
+                        return;
+                    }
                     await DeleteUser(response, id);
                 }
                 else

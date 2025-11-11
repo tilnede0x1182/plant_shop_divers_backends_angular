@@ -34,7 +34,7 @@ namespace plant_shop_asp_dapper.Controllers
             var user = await _userRepo.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            return Ok(ToDto(user));
+            return Ok(UserDtoMapper.ToDto(user));
         }
 
         // PATCH: api/users/5
@@ -59,7 +59,7 @@ namespace plant_shop_asp_dapper.Controllers
             }
 
             await _userRepo.UpdateAsync(user);
-            return Ok(ToDto(user));
+            return Ok(UserDtoMapper.ToDto(user));
         }
 
         // DELETE: api/users/5 (admin)
@@ -71,13 +71,5 @@ namespace plant_shop_asp_dapper.Controllers
             return Ok();
         }
 
-        private static UserResponseDto ToDto(User user) => new()
-        {
-            Id = user.Id,
-            Name = user.Name,
-            Email = user.Email,
-            IsAdmin = user.IsAdmin,
-            CreatedAt = user.CreatedAt
-        };
     }
 }

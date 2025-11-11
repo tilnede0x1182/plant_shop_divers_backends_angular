@@ -32,4 +32,19 @@ namespace plant_shop_asp_dapper.Models
 
         public DateTime CreatedAt { get; set; }
     }
+
+    public static class UserDtoMapper
+    {
+        public static UserResponseDto ToDto(User user)
+        {
+            return new UserResponseDto
+            {
+                Id = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                IsAdmin = user.IsAdmin,
+                CreatedAt = user.CreatedAt
+            };
+        }
+    }
 }

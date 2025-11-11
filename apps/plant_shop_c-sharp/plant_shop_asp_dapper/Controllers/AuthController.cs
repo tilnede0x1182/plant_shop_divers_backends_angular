@@ -45,8 +45,8 @@ namespace plant_shop_asp_dapper.Controllers
             var token = _jwtUtil.GenerateToken(createdUser);
             AppendJwtCookie(token);
 
-            createdUser.PasswordHash = ""; // Nettoyage
-            return CreatedAtAction(nameof(Register), createdUser);
+            var dto = UserDtoMapper.ToDto(createdUser);
+            return CreatedAtAction(nameof(Register), dto);
         }
 
         [HttpPost(Routes.AuthLogin)]
@@ -63,8 +63,8 @@ namespace plant_shop_asp_dapper.Controllers
             var token = _jwtUtil.GenerateToken(user);
             AppendJwtCookie(token);
 
-            user.PasswordHash = ""; // Nettoyage
-            return Created(nameof(Login), user); // 201 comme Nest/Test
+            var dto = UserDtoMapper.ToDto(user);
+            return Created(nameof(Login), dto); // 201 comme Nest/Test
         }
 
         [HttpPost(Routes.AuthLogout)]
@@ -92,8 +92,8 @@ namespace plant_shop_asp_dapper.Controllers
             var user = await _userRepo.FindByIdAsync(int.Parse(userId));
             if (user == null) return Unauthorized();
 
-            user.PasswordHash = ""; // Nettoyage
-            return Ok(user);
+            var dto = UserDtoMapper.ToDto(user);
+            return Ok(dto);
         }
 
         private void AppendJwtCookie(string token)

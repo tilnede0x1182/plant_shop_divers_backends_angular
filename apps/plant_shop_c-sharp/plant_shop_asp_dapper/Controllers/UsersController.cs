@@ -29,7 +29,7 @@ namespace plant_shop_asp_dapper.Controllers
             }
 
             var users = await _userRepo.FindAllAsync();
-            return Ok(users.Select(ToDto));
+            return Ok(users.Select(UserDtoMapper.ToDto));
         }
 
         // GET: api/admin/users
@@ -37,7 +37,7 @@ namespace plant_shop_asp_dapper.Controllers
         public async Task<ActionResult<IEnumerable<UserResponseDto>>> GetAllUsers()
         {
             var users = await _userRepo.FindAllAsync();
-            return Ok(users.Select(ToDto));
+            return Ok(users.Select(UserDtoMapper.ToDto));
         }
 
         // POST: api/users
@@ -64,7 +64,7 @@ namespace plant_shop_asp_dapper.Controllers
             };
 
             var created = await _userRepo.CreateAsync(user);
-            return Created($"/api/users/{created.Id}", ToDto(created));
+            return Created($"/api/users/{created.Id}", UserDtoMapper.ToDto(created));
         }
 
         // POST: api/admin/users (alias)
@@ -77,7 +77,7 @@ namespace plant_shop_asp_dapper.Controllers
         {
             var user = await _userRepo.FindByIdAsync(id);
             if (user == null) return NotFound();
-            return Ok(ToDto(user));
+            return Ok(UserDtoMapper.ToDto(user));
         }
 
         // PATCH: api/admin/users/5
@@ -93,7 +93,7 @@ namespace plant_shop_asp_dapper.Controllers
             user.IsAdmin = dto.IsAdmin ?? user.IsAdmin;
 
             await _userRepo.UpdateAsync(user);
-            return Ok(ToDto(user));
+            return Ok(UserDtoMapper.ToDto(user));
         }
 
         // DELETE: api/admin/users/5
@@ -104,13 +104,5 @@ namespace plant_shop_asp_dapper.Controllers
             return Ok(); // 200 OK
         }
 
-        private static UserResponseDto ToDto(User user) => new()
-        {
-            Id = user.Id,
-            Name = user.Name,
-            Email = user.Email,
-            IsAdmin = user.IsAdmin,
-            CreatedAt = user.CreatedAt
-        };
     }
 }

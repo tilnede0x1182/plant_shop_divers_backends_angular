@@ -66,7 +66,7 @@ namespace plant_shop_c_sharp.Controllers
             };
 
             var createdUser = await UserRepo.CreateAsync(user);
-            await SendJsonResponse(context.Response, 201, createdUser);
+            await SendJsonResponse(context.Response, 201, UserDtoMapper.ToDto(createdUser));
         }
 
         private async Task Login(HttpListenerContext context)
@@ -96,7 +96,7 @@ namespace plant_shop_c_sharp.Controllers
             };
             context.Response.Cookies.Add(cookie);
 
-            await SendJsonResponse(context.Response, 201, new { token, user });
+            await SendJsonResponse(context.Response, 201, new { token, user = UserDtoMapper.ToDto(user) });
         }
 
         private async Task Logout(HttpListenerContext context)
@@ -119,7 +119,7 @@ namespace plant_shop_c_sharp.Controllers
                 await SendError(context.Response, 401, "Non authentifié");
                 return;
             }
-            await SendJsonResponse(context.Response, 200, currentUser);
+            await SendJsonResponse(context.Response, 200, UserDtoMapper.ToDto(currentUser));
         }
 
     }

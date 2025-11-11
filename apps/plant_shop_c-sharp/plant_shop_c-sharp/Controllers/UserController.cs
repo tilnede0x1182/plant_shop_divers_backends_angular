@@ -3,6 +3,7 @@ using plant_shop_c_sharp.DTOs;
 using plant_shop_c_sharp.Models;
 using plant_shop_c_sharp.Utils;
 using System.Net;
+using System.Linq;
 
 namespace plant_shop_c_sharp.Controllers
 {
@@ -48,17 +49,19 @@ namespace plant_shop_c_sharp.Controllers
                 if (method == "GET")
                 {
                     if (id != -1) // GET /api/users/:id OR /api/admin/users/:id
+                    {
                         await GetUser(response, currentUser, id);
-                    else if (isAdminRoute) // GET /api/admin/users
+                    }
+                    else if (currentUser.IsAdmin)
+                    {
                         await GetAllUsers(response);
+                    }
                     else
+                    {
                         await SendError(response, 403, "L'accès à la liste /api/users est interdit");
+                    }
                 }
-                else if (method == "POST" && isAdminRoute && id == -1)
-                {
-                    await CreateUser(request, response);
-                }
-                else if (method == "POST" && !isAdminRoute && id == -1)
+                else if (method == "POST" && id == -1)
                 {
                     if (!currentUser.IsAdmin)
                     {
@@ -95,7 +98,8 @@ namespace plant_shop_c_sharp.Controllers
         private async Task GetAllUsers(HttpListenerResponse response)
         {
             var users = await UserRepo.FindAllAsync();
-            await SendJsonResponse(response, 200, users);
+            var dto = users.Select(UserDtoMapper.ToDto).ToList();
+            await SendJsonResponse(response, 200, dto);
         }
 
         // GET /api/users/:id OR /api/admin/users/:id
@@ -113,7 +117,7 @@ namespace plant_shop_c_sharp.Controllers
                 await SendError(response, 404, "Utilisateur non trouvé");
                 return;
             }
-            await SendJsonResponse(response, 200, user);
+            await SendJsonResponse(response, 200, UserDtoMapper.ToDto(user));
         }
 
         // POST /api/admin/users
@@ -142,7 +146,7 @@ namespace plant_shop_c_sharp.Controllers
             };
 
             var created = await UserRepo.CreateAsync(user);
-            await SendJsonResponse(response, 201, created);
+            await SendJsonResponse(response, 201, UserDtoMapper.ToDto(created));
         }
 
         // PATCH /api/users/:id OR /api/admin/users/:id
@@ -178,7 +182,7 @@ namespace plant_shop_c_sharp.Controllers
             }
 
             await UserRepo.UpdateAsync(user);
-            await SendJsonResponse(response, 200, user);
+            await SendJsonResponse(response, 200, UserDtoMapper.ToDto(user));
         }
 
         // DELETE /api/admin/users/:id

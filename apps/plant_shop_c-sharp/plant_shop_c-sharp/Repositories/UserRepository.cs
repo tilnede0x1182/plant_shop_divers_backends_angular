@@ -57,13 +57,15 @@ namespace plant_shop_c_sharp.Repositories
             var sql = "INSERT INTO users (name, email, password_hash, is_admin, created_at) VALUES (@name, @email, @pass, @admin, @created) RETURNING id";
             await using var cmd = new NpgsqlCommand(sql, conn);
 
+            var createdAt = DateTime.UtcNow;
             cmd.Parameters.AddWithValue("name", (object)user.Name ?? DBNull.Value);
             cmd.Parameters.AddWithValue("email", user.Email);
             cmd.Parameters.AddWithValue("pass", user.PasswordHash);
             cmd.Parameters.AddWithValue("admin", user.IsAdmin);
-            cmd.Parameters.AddWithValue("created", DateTime.UtcNow);
+            cmd.Parameters.AddWithValue("created", createdAt);
 
             user.Id = (int)await cmd.ExecuteScalarAsync();
+            user.CreatedAt = createdAt;
             return user;
         }
 

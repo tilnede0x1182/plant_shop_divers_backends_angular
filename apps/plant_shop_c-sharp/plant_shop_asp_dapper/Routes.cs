@@ -14,6 +14,7 @@ namespace plant_shop_asp_dapper
         public const string AuthMe = "api/auth/me";
 
         // User (self)
+        public const string UsersList = "api/users";
         public const string UserDetail = "api/users/{id}";
         public const string UserUpdate = "api/users/{id}";
 

@@ -24,7 +24,7 @@ namespace plant_shop_asp_dapper.Controllers
 
         // GET: api/users/5
         [HttpGet(Routes.UserDetail)]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<UserResponseDto>> GetUser(int id)
         {
             if (GetCurrentUserId() != id && !User.IsInRole("Admin"))
             {
@@ -34,13 +34,12 @@ namespace plant_shop_asp_dapper.Controllers
             var user = await _userRepo.FindByIdAsync(id);
             if (user == null) return NotFound();
 
-            user.PasswordHash = ""; // Nettoyage
-            return Ok(user);
+            return Ok(ToDto(user));
         }
 
         // PATCH: api/users/5
         [HttpPatch(Routes.UserUpdate)]
-        public async Task<ActionResult<User>> UpdateUser(int id, [FromBody] UserUpdateDto dto)
+        public async Task<ActionResult<UserResponseDto>> UpdateUser(int id, [FromBody] UserUpdateDto dto)
         {
             if (GetCurrentUserId() != id && !User.IsInRole("Admin"))
             {
@@ -60,8 +59,25 @@ namespace plant_shop_asp_dapper.Controllers
             }
 
             await _userRepo.UpdateAsync(user);
-            user.PasswordHash = ""; // Nettoyage
-            return Ok(user);
+            return Ok(ToDto(user));
         }
+
+        // DELETE: api/users/5 (admin)
+        [HttpDelete(Routes.UserDetail)]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            await _userRepo.DeleteAsync(id);
+            return Ok();
+        }
+
+        private static UserResponseDto ToDto(User user) => new()
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            IsAdmin = user.IsAdmin,
+            CreatedAt = user.CreatedAt
+        };
     }
 }

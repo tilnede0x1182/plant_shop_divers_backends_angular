@@ -83,7 +83,7 @@ namespace plant_shop_asp_dapper.Controllers
                 };
 
                 // 1. Créer la commande pour obtenir l'ID
-                var sqlOrder = @"INSERT INTO orders (user_id, total_price, status, created_at)
+                var sqlOrder = @"INSERT INTO orders (user_id, total, status, created_at)
                                  VALUES (@UserId, @TotalPrice, @Status, @CreatedAt) RETURNING id";
                 order.CreatedAt = DateTime.UtcNow;
                 order.Id = await connection.ExecuteScalarAsync<int>(sqlOrder, order, transaction);
@@ -119,7 +119,7 @@ namespace plant_shop_asp_dapper.Controllers
                 // 3. Mettre à jour le prix total
                 order.TotalPrice = totalPrice;
                 await connection.ExecuteAsync(
-                    "UPDATE orders SET total_price = @TotalPrice WHERE id = @Id",
+                    "UPDATE orders SET total = @TotalPrice WHERE id = @Id",
                     new { order.TotalPrice, order.Id },
                     transaction);
 

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Collections.Generic;
 using Dapper;
+using plant_shop_asp_dapper.Data;
 
 namespace plant_shop_asp_dapper.Controllers
 {

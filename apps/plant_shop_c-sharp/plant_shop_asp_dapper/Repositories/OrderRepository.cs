@@ -13,7 +13,7 @@ namespace plant_shop_asp_dapper.Repositories
         private const string SelectSql = @"
             SELECT id AS Id,
                    user_id AS UserId,
-                   total_price AS TotalPrice,
+                   total AS TotalPrice,
                    status AS Status,
                    created_at AS CreatedAt
             FROM orders";
@@ -44,7 +44,7 @@ namespace plant_shop_asp_dapper.Repositories
         {
             using var connection = CreateConnection();
             var sql = @"
-                INSERT INTO orders (user_id, total_price, status, created_at)
+                INSERT INTO orders (user_id, total, status, created_at)
                 VALUES (@UserId, @TotalPrice, @Status, @CreatedAt)
                 RETURNING id";
 
@@ -58,7 +58,7 @@ namespace plant_shop_asp_dapper.Repositories
             using var connection = CreateConnection();
             var sql = @"
                 UPDATE orders
-                SET total_price = @TotalPrice,
+                SET total = @TotalPrice,
                     status = @Status
                 WHERE id = @Id";
             await connection.ExecuteAsync(sql, order);

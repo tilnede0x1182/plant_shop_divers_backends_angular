@@ -7,6 +7,7 @@ using plant_shop_asp_dapper.Utils;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Npgsql;
 
@@ -37,6 +38,8 @@ builder.Services.AddControllers()
     {
         // Ignorer les cycles de référence
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
     });
 
 // 2. Configuration de l'authentification JWT

@@ -43,6 +43,45 @@ namespace plant_shop_asp_dapper.Controllers
             return Ok(orders);
         }
 
+        // PATCH: api/admin/orders/5
+        [HttpPatch(Routes.AdminOrderUpdate)]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<Order>> UpdateOrderStatus(int id, [FromBody] StatusUpdateDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Status))
+            {
+                return BadRequest(new { error = "Statut requis" });
+            }
+
+            var order = await _orderRepo.FindByIdAsync(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            order.Status = dto.Status;
+            await _orderRepo.UpdateAsync(order);
+
+            order.OrderItems = (await _itemRepo.FindByOrderIdAsync(order.Id)).ToList();
+            return Ok(order);
+        }
+
+        // DELETE: api/admin/orders/5
+        [HttpDelete(Routes.AdminOrderDelete)]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteOrder(int id)
+        {
+            var order = await _orderRepo.FindByIdAsync(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            await _itemRepo.DeleteByOrderIdAsync(id);
+            await _orderRepo.DeleteAsync(id);
+            return Ok();
+        }
+
         // GET: api/orders/5
         [HttpGet(Routes.OrderDetail)]
         public async Task<ActionResult<Order>> GetOrder(int id)
@@ -131,7 +170,14 @@ namespace plant_shop_asp_dapper.Controllers
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                try
+                {
+                    transaction.Rollback();
+                }
+                catch
+                {
+                    // transaction peut être déjà annulée par Npgsql
+                }
                 return BadRequest(new { error = $"Échec de la création de la commande: {ex.Message}" });
             }
         }
@@ -140,4 +186,5 @@ namespace plant_shop_asp_dapper.Controllers
     // DTOs
     public class OrderItemRequestDto { public int PlantId { get; set; } public int Quantity { get; set; } }
     public class OrderRequestDto { public List<OrderItemRequestDto>? Items { get; set; } }
+    public class StatusUpdateDto { public string? Status { get; set; } }
 }

@@ -13,6 +13,8 @@ using Npgsql;
 
 const int ServerPort = 4100;
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 // 1. Configuration des services
 var configuration = builder.Configuration;

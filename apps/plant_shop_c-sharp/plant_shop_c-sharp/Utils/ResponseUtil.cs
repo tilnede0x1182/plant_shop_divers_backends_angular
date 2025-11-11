@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace plant_shop_c_sharp.Utils
 {
@@ -9,7 +10,11 @@ namespace plant_shop_c_sharp.Utils
         public static async Task SendJson(HttpListenerResponse response, int statusCode, object payload)
         {
             string json = JsonConvert.SerializeObject(payload, Formatting.Indented,
-                new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+                new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                });
 
             response.ContentType = "application/json; charset=utf-8";
             response.StatusCode = statusCode;

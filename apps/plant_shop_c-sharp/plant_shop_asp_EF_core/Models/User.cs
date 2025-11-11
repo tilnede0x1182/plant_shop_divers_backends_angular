@@ -22,7 +22,7 @@ namespace plant_shop_asp_EF_core.Models
         [Required]
         [Column("password_hash")]
         [JsonIgnore] // Ne jamais exposer le hash
-        public required string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
 
         [Column("is_admin")]
         public bool IsAdmin { get; set; } = false;

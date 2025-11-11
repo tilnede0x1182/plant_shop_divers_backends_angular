@@ -2,6 +2,7 @@ using Dapper;
 using plant_shop_asp_dapper.Data;
 using plant_shop_asp_dapper.Models;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace plant_shop_asp_dapper.Repositories
@@ -60,15 +61,28 @@ namespace plant_shop_asp_dapper.Repositories
             return items;
         }
 
-        public async Task<OrderItem> CreateAsync(OrderItem item)
+        public async Task<OrderItem> CreateAsync(OrderItem item, IDbConnection? connection = null, IDbTransaction? transaction = null)
         {
-            using var connection = CreateConnection();
+            var ownsConnection = connection == null;
+            connection ??= CreateConnection();
+
             var sql = @"
                 INSERT INTO order_items (order_id, plant_id, quantity, price)
                 VALUES (@OrderId, @PlantId, @Quantity, @Price)
                 RETURNING id";
 
-            item.Id = await connection.ExecuteScalarAsync<int>(sql, item);
+            try
+            {
+                item.Id = await connection.ExecuteScalarAsync<int>(sql, item, transaction);
+            }
+            finally
+            {
+                if (ownsConnection)
+                {
+                    connection.Dispose();
+                }
+            }
+
             return item;
         }
 

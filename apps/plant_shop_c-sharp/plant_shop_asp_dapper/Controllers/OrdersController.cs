@@ -70,7 +70,7 @@ namespace plant_shop_asp_dapper.Controllers
             // Dapper gère mieux les transactions manuellement
             using var connection = _factory.CreateConnection();
             connection.Open();
-            await using var transaction = connection.BeginTransaction();
+            using var transaction = connection.BeginTransaction();
 
             try
             {
@@ -113,7 +113,7 @@ namespace plant_shop_asp_dapper.Controllers
                         Price = itemPrice
                     };
 
-                    await _itemRepo.CreateAsync(orderItem); // Utilise sa propre connexion
+                    await _itemRepo.CreateAsync(orderItem, connection, transaction);
                 }
 
                 // 3. Mettre à jour le prix total
@@ -123,7 +123,7 @@ namespace plant_shop_asp_dapper.Controllers
                     new { order.TotalPrice, order.Id },
                     transaction);
 
-                await transaction.CommitAsync();
+                transaction.Commit();
 
                 // Recharger pour la réponse
                 var result = await GetOrder(order.Id);
@@ -131,7 +131,7 @@ namespace plant_shop_asp_dapper.Controllers
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
+                transaction.Rollback();
                 return BadRequest(new { error = $"Échec de la création de la commande: {ex.Message}" });
             }
         }

@@ -175,8 +175,8 @@ namespace plant_shop_c_sharp.Controllers
             user.Name = body.Name ?? user.Name;
             user.Email = body.Email ?? user.Email;
 
-            // Seul un admin (via la route admin) peut changer le statut admin
-            if (isAdminCall && currentUser.IsAdmin && body.IsAdmin.HasValue)
+            // Un admin peut changer le statut admin, peu importe la route utilisée
+            if (currentUser.IsAdmin && body.IsAdmin.HasValue)
             {
                 user.IsAdmin = body.IsAdmin.Value;
             }

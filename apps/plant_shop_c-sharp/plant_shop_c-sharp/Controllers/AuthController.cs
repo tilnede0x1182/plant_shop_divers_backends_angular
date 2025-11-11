@@ -86,19 +86,28 @@ namespace plant_shop_c_sharp.Controllers
 
             string token = JwtUtil.GenerateToken(user);
 
-            // L'API Nest/Angular renvoie l'utilisateur et place le token dans un cookie httpOnly
-            // La version C# basique ne peut pas facilement définir un cookie httpOnly via JWT,
-            // elle renvoie le token dans le corps, comme le ferait une API mobile.
-            // Pour la compatibilité avec le test Java, nous renvoyons 201 (comme le fait le Nest)
-            // et pour la compatibilité Angular, nous renvoyons le token.
-            await SendJsonResponse(context.Response, 201, new { token = token, user = user });
+            // Cookie httpOnly pour reproduire le backend Java/Nest
+            var cookie = new Cookie("jwt", token)
+            {
+                HttpOnly = true,
+                Secure = false,
+                Path = "/"
+            };
+            context.Response.Cookies.Add(cookie);
+
+            await SendJsonResponse(context.Response, 201, new { token, user });
         }
 
         private async Task Logout(HttpListenerContext context)
         {
-            // La déconnexion JWT est côté client (suppression du token).
-            // L'API Nest/Java vide un cookie, ce qui n'est pas pertinent ici.
-            // Nous renvoyons 200 OK pour la compatibilité.
+            var cookie = new Cookie("jwt", "")
+            {
+                HttpOnly = true,
+                Secure = false,
+                Path = "/",
+                Expires = DateTime.UtcNow.AddDays(-1)
+            };
+            context.Response.Cookies.Add(cookie);
             await SendJsonResponse(context.Response, 200, new { message = "Déconnecté" });
         }
 

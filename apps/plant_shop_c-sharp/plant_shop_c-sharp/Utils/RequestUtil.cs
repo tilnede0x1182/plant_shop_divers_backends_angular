@@ -35,13 +35,14 @@ namespace plant_shop_c_sharp.Utils
 
         public static async Task<User?> GetUserFromAuth(HttpListenerRequest request, UserRepository userRepo, string authScheme = "Bearer ")
         {
-            string? authHeader = request.Headers["Authorization"];
-            if (authHeader == null || !authHeader.StartsWith(authScheme))
+            string? token = ExtractTokenFromAuthorization(request, authScheme)
+                              ?? ExtractTokenFromCookies(request);
+
+            if (string.IsNullOrEmpty(token))
             {
                 return null;
             }
 
-            string token = authHeader.Substring(authScheme.Length).Trim();
             var principal = JwtUtil.ValidateToken(token);
             if (principal == null)
             {
@@ -56,6 +57,50 @@ namespace plant_shop_c_sharp.Utils
 
             // Récupérer l'utilisateur complet depuis la BDD pour s'assurer qu'il est à jour
             return await userRepo.FindByIdAsync(userId);
+        }
+
+        private static string? ExtractTokenFromAuthorization(HttpListenerRequest request, string authScheme)
+        {
+            string? authHeader = request.Headers["Authorization"];
+            if (authHeader != null && authHeader.StartsWith(authScheme, StringComparison.OrdinalIgnoreCase))
+            {
+                return authHeader.Substring(authScheme.Length).Trim();
+            }
+            return null;
+        }
+
+        private static string? ExtractTokenFromCookies(HttpListenerRequest request)
+        {
+            // HttpListenerRequest.Cookies n'est pas toujours renseigné suivant l'hôte, on gère donc les deux cas
+            if (request.Cookies["jwt"] != null)
+            {
+                string? value = request.Cookies["jwt"]!.Value;
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    return value;
+                }
+            }
+
+            string? cookieHeader = request.Headers["Cookie"];
+            if (string.IsNullOrEmpty(cookieHeader))
+            {
+                return null;
+            }
+
+            var cookies = cookieHeader.Split(';');
+            foreach (var raw in cookies)
+            {
+                var kv = raw.Split('=', 2);
+                if (kv.Length == 2 && kv[0].Trim() == "jwt")
+                {
+                    string token = kv[1].Trim();
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        return token;
+                    }
+                }
+            }
+            return null;
         }
     }
 }

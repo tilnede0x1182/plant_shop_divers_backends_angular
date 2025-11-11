@@ -2,7 +2,7 @@ using Npgsql;
 using NpgsqlTypes;
 using System.Linq;
 using System.Text;
-using plant_shop_asp_EF_core.Utils; // Accès au PasswordUtil local
+using plant_shop_asp_dapper.Utils; // Accès au PasswordUtil local
 
 namespace Db; // Correspond au 'package db'
 

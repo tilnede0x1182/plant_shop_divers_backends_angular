@@ -1,4 +1,5 @@
 using Npgsql;
+using plant_shop_c_sharp.DTOs;
 using plant_shop_c_sharp.Models;
 using plant_shop_c_sharp.Utils;
 using System.Net;
@@ -121,8 +122,5 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(context.Response, 200, currentUser);
         }
 
-        // DTOs locaux pour le parsing
-        private class RegisterRequest { public string? Email { get; set; } public string? Password { get; set; } public string? Name { get; set; } }
-        private class LoginRequest { public string? Email { get; set; } public string? Password { get; set; } }
     }
 }

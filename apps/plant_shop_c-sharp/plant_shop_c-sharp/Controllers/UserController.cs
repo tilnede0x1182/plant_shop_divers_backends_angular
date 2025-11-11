@@ -1,5 +1,7 @@
 using Npgsql;
+using plant_shop_c_sharp.DTOs;
 using plant_shop_c_sharp.Models;
+using plant_shop_c_sharp.Utils;
 using System.Net;
 
 namespace plant_shop_c_sharp.Controllers
@@ -52,6 +54,10 @@ namespace plant_shop_c_sharp.Controllers
                     else
                         await SendError(response, 403, "L'accès à la liste /api/users est interdit");
                 }
+                else if (method == "POST" && isAdminRoute && id == -1)
+                {
+                    await CreateUser(request, response);
+                }
                 else if (method == "PATCH" && id != -1) // PATCH /api/users/:id OR /api/admin/users/:id
                 {
                     await UpdateUser(request, response, currentUser, id, isAdminRoute);
@@ -94,6 +100,35 @@ namespace plant_shop_c_sharp.Controllers
                 return;
             }
             await SendJsonResponse(response, 200, user);
+        }
+
+        // POST /api/admin/users
+        private async Task CreateUser(HttpListenerRequest request, HttpListenerResponse response)
+        {
+            var body = ParseBody<UserCreateRequest>(request);
+            if (body == null || string.IsNullOrWhiteSpace(body.Email) || string.IsNullOrWhiteSpace(body.Password))
+            {
+                await SendError(response, 400, "Nom, email et mot de passe sont requis");
+                return;
+            }
+
+            var existing = await UserRepo.FindByEmailAsync(body.Email);
+            if (existing != null)
+            {
+                await SendError(response, 400, "Cet email existe déjà");
+                return;
+            }
+
+            var user = new User
+            {
+                Name = string.IsNullOrWhiteSpace(body.Name) ? "Utilisateur" : body.Name,
+                Email = body.Email,
+                PasswordHash = PasswordUtil.HashPassword(body.Password),
+                IsAdmin = body.IsAdmin
+            };
+
+            var created = await UserRepo.CreateAsync(user);
+            await SendJsonResponse(response, 201, created);
         }
 
         // PATCH /api/users/:id OR /api/admin/users/:id
@@ -139,12 +174,5 @@ namespace plant_shop_c_sharp.Controllers
             SendEmptyResponse(response, 200);
         }
 
-        // DTO pour la mise à jour
-        private class UserUpdateRequest
-        {
-            public string? Name { get; set; }
-            public string? Email { get; set; }
-            public bool? IsAdmin { get; set; } // Nullable bool
-        }
     }
 }

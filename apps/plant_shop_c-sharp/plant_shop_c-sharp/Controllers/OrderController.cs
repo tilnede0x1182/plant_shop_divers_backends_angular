@@ -1,4 +1,5 @@
 using Npgsql;
+using plant_shop_c_sharp.DTOs;
 using plant_shop_c_sharp.Models;
 using System.Net;
 using System.Threading.Tasks;
@@ -201,9 +202,5 @@ namespace plant_shop_c_sharp.Controllers
             SendEmptyResponse(response, 200);
         }
 
-        // DTOs locaux
-        private class OrderItemRequest { public int PlantId { get; set; } public int Quantity { get; set; } }
-        private class OrderRequest { public List<OrderItemRequest>? Items { get; set; } }
-        private class StatusUpdateRequest { public string? Status { get; set; } }
     }
 }

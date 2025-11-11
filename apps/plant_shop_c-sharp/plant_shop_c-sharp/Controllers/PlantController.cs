@@ -1,4 +1,5 @@
 using Npgsql;
+using plant_shop_c_sharp.DTOs;
 using plant_shop_c_sharp.Models;
 using System.Net;
 using Newtonsoft.Json;
@@ -144,13 +145,5 @@ namespace plant_shop_c_sharp.Controllers
             SendEmptyResponse(response, 200); // 200 OK (comme dans le test Java)
         }
 
-        // DTO pour le body
-        private class PlantRequest
-        {
-            public string? Name { get; set; }
-            public string? Description { get; set; }
-            public decimal Price { get; set; } = -1; // Utiliser -1 pour détecter l'absence
-            public int Stock { get; set; } = -1;
-        }
     }
 }

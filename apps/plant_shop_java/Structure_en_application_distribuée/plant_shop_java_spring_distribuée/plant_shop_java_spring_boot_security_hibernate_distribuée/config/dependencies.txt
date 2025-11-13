@@ -1,0 +1,28 @@
+# --- Spring Boot (Web + Security, Hibernate) ---
+org.springframework.boot:spring-boot:3.3.5
+org.springframework.boot:spring-boot-autoconfigure:3.3.5
+org.springframework.boot:spring-boot-starter-web:3.3.5
+org.springframework.boot:spring-boot-starter-security:3.3.5
+org.springframework.boot:spring-boot-starter-data-jpa:3.3.5
+
+# --- Servlet API (compile) - Tomcat embarqué fournit l'impl à l'exécution ---
+jakarta.servlet:jakarta.servlet-api:6.0.0
+
+# --- JSON / Jackson (compléments explicites) ---
+com.fasterxml.jackson.core:jackson-core:2.17.2
+com.fasterxml.jackson.core:jackson-annotations:2.17.2
+com.fasterxml.jackson.core:jackson-databind:2.17.2
+com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2
+
+# --- JDBC driver ---
+org.postgresql:postgresql:42.7.8
+
+# --- Auth / BCrypt ---
+org.mindrot:jbcrypt:0.4
+
+# --- Logs (simples et suffisants) ---
+org.slf4j:slf4j-api:2.0.17
+org.slf4j:slf4j-simple:2.0.17
+
+# --- Pour les tests (ton Test.java utilise org.json) ---
+org.json:json:20210307

@@ -1,0 +1,28 @@
+J'ai une opération complexe à faire.
+
+Je dois porter mon projet Spring Boot avec et sans Hibernate en architecture distribuée et microservices.
+
+La différence entre distribuée et microservice sera que la version microservice n'a qu'une seed et qu'un schéma SQL, là où la version microservices a 1 schéma SQL par service et 1 seed par service.
+
+Aussi porter les projets Micronaut, Quarkus et Javalin dans la version architecture distribuée et microservice.
+
+La charge de travail est conséquente.
+
+1. Créer un schéma tree pour chaque projet
+2. Le mettre dans un fichier schéma ici
+
+~/code/tilnede0x1182/Personnel/2025/Entrainement/plant_shop/DiversBackends/apps/plant_shop_java/schémas.txt
+
+3. Attendre ma validation pour le schéma
+4. Créer une commande avec touch et mkdir -p qui instancie tout le schéma dossier et fichier compris dans le dossier directement, en se positionnant dans le dossier avec cd -> pour chaque dossier, et les mettre dans creation_tree.sh (il ne sera pas exécuté, c'est juste pour avoir un fichier où les mettre et le .sh veut simplement dire que c'est du bash ici, mais ce n'est pas un script exécutable)
+5. Exécuter les commandes touch et mkdir dans chaque dossier séparément en prenant la commande du fichier
+6. Pour chacun des schémas, si possible réutiliser des fichiers existants au maximum, ce qui permettra de les copier-coller dans les différents nouveaux projets à partir des projets existants avant de commencer à modifier, donc moins de modifications à faire -> moins de tokens.
+7. On va ensuite créer les Makefile sur le modèle des Makefile des autres projets Java (mêmes cibles).
+   On utilisera le téléchargeur maison plutôt que Gradle ou Maven, car c'est plus simple.
+   La structure de dossier, bien que divisée en services, doit rester minimaliste mais vraiment utiliser le framework en question pour chacun des dossiers.
+   La version microservice doit vraiment avoir des services les plus indépendants possible en gardant cependant la même BDD, alors que la version distribuée est juste une transposition directe du monolithe en différents services sans aucune recherche de réelle indépendance. On cherche juste une division basique avec même BDD et même schéma SQL, même seed, même test.
+   Même dans la version microservice, on garde cependant un seul test unique (copié-collé depuis les autres versions).
+
+Encore une fois, on réutilise un maximum les fichiers et la structure existante. Cependant : on doit coller au framework tout en restant minimaliste, comme dans les projets existants.
+
+8. On verra ensuite ce qu'on fait après le Makefile (je reprends la main).

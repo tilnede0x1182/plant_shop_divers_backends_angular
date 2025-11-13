@@ -101,6 +101,27 @@ public final class PlantController {
         ctx.status(HttpStatus.OK).json(Map.of("deleted", true));
     }
 
+    /**
+     * Endpoint interne pour la mise à jour du stock par les autres microservices.
+     * Route : PATCH /internal/plants/:id/stock
+     */
+    public void updateStock(Context ctx) throws Exception {
+        int id = Integer.parseInt(ctx.pathParam("id"));
+        Plant plant = repo.find(id);
+        if (plant == null) {
+            ctx.status(HttpStatus.NOT_FOUND);
+            return;
+        }
+        JSONObject body = new JSONObject(ctx.body());
+        if (!body.has("stock")) {
+            ctx.status(HttpStatus.BAD_REQUEST).json(Map.of("error", "Champ stock requis"));
+            return;
+        }
+        int newStock = body.getInt("stock");
+        repo.updateStock(id, newStock);
+        ctx.status(HttpStatus.OK).json(Map.of("success", true, "stock", newStock));
+    }
+
     private List<Map<String, Object>> mapPlants(List<Plant> plants) {
         List<Map<String, Object>> mapped = new ArrayList<>(plants.size());
         for (Plant plant : plants) {

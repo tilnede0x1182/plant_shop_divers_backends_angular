@@ -102,4 +102,22 @@ public class PlantController {
         repo.delete(id);
         return Response.ok().build();
     }
+
+    @PATCH
+    @Path("/internal/plants/{id}/stock")
+    @Transactional
+    public Response updateStock(@PathParam("id") int id, java.util.Map<String, Integer> body) throws Exception {
+        Plant plant = repo.find(id);
+        if (plant == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        if (!body.containsKey("stock")) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                           .entity(java.util.Map.of("error", "Champ stock requis"))
+                           .build();
+        }
+        int newStock = body.get("stock");
+        repo.updateStock(id, newStock);
+        return Response.ok(java.util.Map.of("success", true, "stock", newStock)).build();
+    }
 }

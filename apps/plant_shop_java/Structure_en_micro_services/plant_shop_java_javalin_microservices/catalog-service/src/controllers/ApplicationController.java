@@ -35,6 +35,11 @@ public final class ApplicationController {
      */
     public EndpointGroup getRoutes() {
         return () -> {
+            // Routes internes pour communication inter-services
+            path("/internal/plants", () -> {
+                patch("/{id}/stock", plantController::updateStock);
+            });
+
             path("/api", () -> {
                 // Routes d'authentification
                 path("/auth", () -> {

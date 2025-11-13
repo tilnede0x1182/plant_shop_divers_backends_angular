@@ -9,17 +9,20 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import model.Order;
 import model.OrderItem;
-import model.Plant;
+import model.PlantStock;
 import model.User;
 import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
 import security.Guards;
-import util.ApiMapper;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.time.Duration;
 
 @Controller("/api/orders")
 public class OrderController {
@@ -28,6 +31,8 @@ public class OrderController {
     private final OrderItemRepository itemRepo;
     private final PlantRepository plantRepo;
     private final Connection db;
+    private final HttpClient httpClient;
+    private final String catalogServiceUrl;
 
     @Inject
     public OrderController(Connection db) {
@@ -35,6 +40,10 @@ public class OrderController {
         this.repo = new OrderRepository(db);
         this.itemRepo = new OrderItemRepository(db);
         this.plantRepo = new PlantRepository(db);
+        this.catalogServiceUrl = System.getenv().getOrDefault("CATALOG_SERVICE_URL", "http://localhost:4202");
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
     }
 
     @Get
@@ -45,8 +54,7 @@ public class OrderController {
 
         List<Map<String, Object>> payload = new ArrayList<>();
         for (Order order : orders) {
-            List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(order.id), plantRepo::find);
-            payload.add(ApiMapper.toOrder(order, items));
+            payload.add(toOrderJson(order, itemRepo.listByOrder(order.id)));
         }
         return payload;
     }
@@ -72,8 +80,7 @@ public class OrderController {
             db.commit();
 
             Order finalOrder = repo.find(orderId);
-            List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(orderId), plantRepo::find);
-            return HttpResponse.created(ApiMapper.toOrder(finalOrder, items));
+            return HttpResponse.created(toOrderJson(finalOrder, itemRepo.listByOrder(orderId)));
         } catch (IllegalArgumentException ex) {
             db.rollback();
             return HttpResponse.badRequest(Map.of("error", ex.getMessage()));
@@ -93,8 +100,7 @@ public class OrderController {
             repo.updateStatus(id, body.get("status"));
         }
         Order updated = repo.find(id);
-        List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(id), plantRepo::find);
-        return HttpResponse.ok(ApiMapper.toOrder(updated, items));
+        return HttpResponse.ok(toOrderJson(updated, itemRepo.listByOrder(id)));
     }
 
     @Delete("/{id}")
@@ -108,13 +114,71 @@ public class OrderController {
     private BigDecimal createOrderItem(int orderId, Map<String, Integer> itemMap) throws Exception {
         int plantId = itemMap.get("plantId");
         int quantity = itemMap.get("quantity");
-        Plant plant = plantRepo.find(plantId);
+        PlantStock plant = plantRepo.find(plantId);
         if (plant == null) throw new IllegalArgumentException("Plante " + plantId + " introuvable");
         if (plant.stock < quantity) throw new IllegalArgumentException("Stock insuffisant pour " + plant.name);
 
-        plantRepo.updateStock(plant.id, plant.stock - quantity);
+        int newStock = plant.stock - quantity;
+        boolean stockUpdated = updateCatalogStock(plantId, newStock);
+        if (!stockUpdated) {
+            throw new RuntimeException("Échec de la mise à jour du stock pour " + plant.name);
+        }
+
         OrderItem item = new OrderItem(orderId, plantId, quantity, plant.price);
         itemRepo.create(item);
         return plant.price.multiply(BigDecimal.valueOf(quantity));
+    }
+
+    private boolean updateCatalogStock(int plantId, int newStock) {
+        try {
+            String json = String.format("{\"stock\":%d}", newStock);
+            String uri = String.format("%s/internal/plants/%d/stock", this.catalogServiceUrl, plantId);
+
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(URI.create(uri))
+                    .header("Content-Type", "application/json")
+                    .method("PATCH", java.net.http.HttpRequest.BodyPublishers.ofString(json))
+                    .build();
+
+            java.net.http.HttpResponse<String> response = httpClient.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+
+            return response.statusCode() >= 200 && response.statusCode() < 300;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private Map<String, Object> toOrderJson(Order order, List<OrderItem> items) throws Exception {
+        List<Map<String, Object>> itemsJson = new ArrayList<>(items.size());
+        for (OrderItem item : items) {
+            Map<String, Object> itemMap = new LinkedHashMap<>();
+            itemMap.put("id", item.id);
+            itemMap.put("orderId", item.orderId);
+            itemMap.put("plantId", item.plantId);
+            itemMap.put("quantity", item.quantity);
+            itemMap.put("price", item.price.doubleValue());
+
+            PlantStock plant = plantRepo.find(item.plantId);
+            if (plant != null) {
+                Map<String, Object> plantMap = new LinkedHashMap<>();
+                plantMap.put("id", plant.id);
+                plantMap.put("name", plant.name);
+                plantMap.put("price", plant.price.doubleValue());
+                plantMap.put("stock", plant.stock);
+                itemMap.put("plant", plantMap);
+            }
+            itemsJson.add(itemMap);
+        }
+
+        Map<String, Object> orderMap = new LinkedHashMap<>();
+        orderMap.put("id", order.id);
+        orderMap.put("userId", order.userId);
+        orderMap.put("totalPrice", order.total.doubleValue());
+        orderMap.put("status", order.status);
+        orderMap.put("createdAt", order.createdAt == null ? null : order.createdAt.toInstant().atOffset(java.time.ZoneOffset.UTC).toString());
+        orderMap.put("orderItems", itemsJson);
+        return orderMap;
     }
 }

@@ -83,6 +83,18 @@ public class PlantController {
         return HttpResponse.ok();
     }
 
+    @Patch("/internal/plants/{id}/stock")
+    public HttpResponse<?> updateStock(@PathVariable int id, @Body java.util.Map<String, Integer> body) throws Exception {
+        Plant plant = repo.find(id);
+        if (plant == null) return HttpResponse.notFound();
+        if (!body.containsKey("stock")) {
+            return HttpResponse.badRequest(java.util.Map.of("error", "Champ stock requis"));
+        }
+        int newStock = body.get("stock");
+        repo.updateStock(id, newStock);
+        return HttpResponse.ok(java.util.Map.of("success", true, "stock", newStock));
+    }
+
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }

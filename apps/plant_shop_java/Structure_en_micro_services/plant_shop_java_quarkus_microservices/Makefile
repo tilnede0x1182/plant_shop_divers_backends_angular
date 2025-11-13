@@ -1,9 +1,24 @@
+ROOT := $(CURDIR)
+LIB_DIR := $(ROOT)/lib
+UTILS_DIR := $(ROOT)/utils
+AUTH_DIR := $(ROOT)/auth-service
+CATALOG_DIR := $(ROOT)/catalog-service
+ORDER_DIR := $(ROOT)/order-service
+USER_DIR := $(ROOT)/user-service
+GATEWAY_DIR := $(ROOT)/gateway
+TEST_DIR := $(ROOT)/test
+
+LIB_CP := $(LIB_DIR)/*
+UTILS_CP := $(LIB_DIR)/*
+UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
+SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
+
+DB_NAME=plant_shop_java_quarkus_microservices
+CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
 
 ## ────────────────
 # Dépendances
 ## ────────────────
-
-DB_NAME=plant_shop_java_quarkus
 
 compile-install-libs:
 	mkdir -p bin
@@ -13,70 +28,113 @@ install: compile-install-libs
 	java -cp bin config.InstallCoursier
 
 clean:
-	rm -rf bin/*
+	rm -rf \
+		$(UTILS_DIR)/bin \
+		$(AUTH_DIR)/bin \
+		$(CATALOG_DIR)/bin \
+		$(ORDER_DIR)/bin \
+		$(USER_DIR)/bin \
+		$(GATEWAY_DIR)/bin \
+		$(TEST_DIR)/bin \
+		$(ROOT)/bin \
+		$(ROOT)/build
 
 ## ────────────────
 # Serveur - Développement
 ## ────────────────
 
-# Variables de base
-CLASSPATH = bin:lib/*
+compile-utils:
+	@echo "🔧 Compilation utilitaires"
+	@mkdir -p $(UTILS_DIR)/bin
+	@javac -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
 
-compile:
-	mkdir -p bin
-	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
-		src/utils/*.java \
-		src/models/*.java \
-		src/repositories/*.java \
-		src/security/*.java \
-		src/controllers/*.java \
-		src/Main.java
-run:
-	java -cp "$(CLASSPATH)" Main
+compile-auth: compile-utils
+	@echo "🔐 Compilation AuthService"
+	@mkdir -p $(AUTH_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+		$(wildcard $(AUTH_DIR)/src/controllers/*.java) \
+		$(wildcard $(AUTH_DIR)/src/models/*.java) \
+		$(wildcard $(AUTH_DIR)/src/repositories/*.java) \
+		$(wildcard $(AUTH_DIR)/src/security/*.java)
+
+compile-catalog: compile-utils
+	@echo "🌱 Compilation CatalogService"
+	@mkdir -p $(CATALOG_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/repositories/*.java)
+
+compile-order: compile-utils
+	@echo "🧾 Compilation OrderService"
+	@mkdir -p $(ORDER_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
+		$(wildcard $(ORDER_DIR)/src/models/*.java) \
+		$(wildcard $(ORDER_DIR)/src/repositories/*.java)
+
+compile-user: compile-utils
+	@echo "👥 Compilation UserService"
+	@mkdir -p $(USER_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+		$(wildcard $(USER_DIR)/src/controllers/*.java) \
+		$(wildcard $(USER_DIR)/src/models/*.java) \
+		$(wildcard $(USER_DIR)/src/repositories/*.java)
+
+compile-gateway: compile-utils
+	@echo "🚪 Compilation Gateway"
+	@mkdir -p $(GATEWAY_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
+		$(wildcard $(GATEWAY_DIR)/src/*.java)
+
+compile: compile-auth compile-catalog compile-order compile-user compile-gateway
+
+## ────────────────
+# Run services
+## ────────────────
+
+run-auth: compile-auth
+	java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService
+
+run-catalog: compile-catalog
+	java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService
+
+run-order: compile-order
+	java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService
+
+run-user: compile-user
+	java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService
+
+run-gateway: compile-gateway
+	java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
+
+## ────────────────
+# PM2 Management
+## ────────────────
+
+pm2-start-all:
+	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all
+
+pm2-stop-all:
+	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all
+
+pm2-start:
+ifndef SERVICE
+	$(error Usage: make pm2-start SERVICE=<nom>)
+endif
+	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start $(SERVICE)
+
+pm2-stop:
+ifndef SERVICE
+	$(error Usage: make pm2-stop SERVICE=<nom>)
+endif
+	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
+
+run: pm2-start-all
 
 compile_run: compile run
 
-build-dev: clean compile_run
-
-## ────────────────
-# # Serveur - Production
-## ────────────────
-
-SRCS := $(shell find src -type f -name '*.java')
-
-build-prod: clean
-	mkdir -p bin build
-	@echo "Compiling $$(echo $(SRCS) | wc -w) sources..."
-	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "lib/*" $(SRCS)
-	jar --create --file build/app-prod.jar --main-class=Main -C bin .
-
-run-prod:
-	# JVM optimisée pour prod (démarrage plus rapide, heap fixe, GC G1)
-	java \
-	  -XX:+TieredCompilation \
-	  -XX:TieredStopAtLevel=1 \
-	  -Dmicronaut.env=prod \
-	  -Djava.security.egd=file:/dev/./urandom \
-	  -Xms512m -Xmx1g \
-	  -XX:+UseG1GC -XX:MaxGCPauseMillis=200 \
-	  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=build/heap.hprof \
-	  -cp "bin:lib/*" Main
-
-prod: build-prod run-prod
-
-## ────────────────
-# Seed
-## ────────────────
-
-compile-seed:
-	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
-
-seed:
-	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
-	java -cp $(CLASSPATH) db.Seed
-
-seed-dev: clean compile-seed seed
+build-dev: clean compile
 
 ## ────────────────
 # Test
@@ -93,18 +151,73 @@ tests:
 test-dev: clean compile-test tests
 
 ## ────────────────
-# DB
+# DB (MICROSERVICES)
 ## ────────────────
 
 db-create:
 	sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME);"
 
-db-migrate:
-	sudo -u postgres psql -d $(DB_NAME) -f src/db/schema.sql
-
 db-drop:
 	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
 
-db-seed: seed
+db-migrate-auth:
+	@echo "🐘 Migration auth-service..."
+	@sudo -u postgres psql -d $(DB_NAME) -f auth-service/db/schema.sql
 
-db-reset: db-drop db-create db-migrate db-seed
+db-migrate-catalog:
+	@echo "🐘 Migration catalog-service..."
+	@sudo -u postgres psql -d $(DB_NAME) -f catalog-service/db/schema.sql
+
+db-migrate-order:
+	@echo "🐘 Migration order-service..."
+	@sudo -u postgres psql -d $(DB_NAME) -f order-service/db/schema.sql
+
+db-migrate-user:
+	@echo "🐘 Migration user-service..."
+	@sudo -u postgres psql -d $(DB_NAME) -f user-service/db/schema.sql
+
+db-migrate: db-migrate-auth db-migrate-catalog db-migrate-order db-migrate-user
+	@echo "✅ Toutes les migrations sont terminées."
+
+compile-seed-auth: compile-utils
+	@echo "🔧 Compilation Seed auth-service"
+	@mkdir -p $(AUTH_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin auth-service/db/Seed.java
+
+compile-seed-catalog: compile-utils
+	@echo "🔧 Compilation Seed catalog-service"
+	@mkdir -p $(CATALOG_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin catalog-service/db/Seed.java
+
+compile-seed-order: compile-utils
+	@echo "🔧 Compilation Seed order-service"
+	@mkdir -p $(ORDER_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin order-service/db/Seed.java
+
+compile-seed-user: compile-utils
+	@echo "🔧 Compilation Seed user-service"
+	@mkdir -p $(USER_DIR)/bin
+	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java
+
+seed-auth: compile-seed-auth
+	@echo "🌱 Seed auth-service..."
+	@java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+
+seed-catalog: compile-seed-catalog
+	@echo "🌱 Seed catalog-service..."
+	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+
+seed-order: compile-seed-order
+	@echo "🌱 Seed order-service..."
+	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+
+seed-user: compile-seed-user
+	@echo "🌱 Seed user-service..."
+	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+
+seed: seed-auth seed-catalog seed-order seed-user
+	@echo "✅ Seed global terminé."
+
+seed-dev: clean seed
+
+db-reset: db-drop db-create db-migrate seed

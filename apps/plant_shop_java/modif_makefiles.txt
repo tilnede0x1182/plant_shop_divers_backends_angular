@@ -1,0 +1,247 @@
+MODIFICATIONS DES MAKEFILE - ARCHITECTURES DISTRIBUÉES ET MICROSERVICES
+========================================================================
+
+BASE: ~/code/tilnede0x1182/Personnel/2025/Entrainement/plant_shop/DiversBackends/apps/plant_shop_java
+
+================================================================================
+1. Structure_en_application_distribuée/plant_shop_java_spring_distribuée/plant_shop_java_spring_boot_security_hibernate_distribuée/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security_hibernate/Makefile
+MODÈLE: Structure_en_application_distribuée/plant_shop_java_distribuée/Makefile
+
+MODIFICATIONS:
+- Ajouter variables ROOT, LIB_DIR, UTILS_DIR, AUTH_DIR, CATALOG_DIR, ORDER_DIR, USER_DIR, GATEWAY_DIR
+- Changer DB_NAME en plant_shop_java_spring_boot_security_hibernate_distribuee
+- Remplacer cible "install" pour utiliser config/InstallCoursier.java (pas InstallLibs.java)
+- Ajouter compile-utils: compile utils/*.java dans utils/bin
+- Ajouter compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+  - Chaque service compile src/controllers/*.java, src/models/*.java, src/repositories/*.java
+  - auth-service compile aussi src/security/*.java
+  - Utiliser flags Spring Boot: -J-Dorg.jboss.logging.provider=jul
+- Remplacer compile globale par: compile-auth compile-catalog compile-order compile-user compile-gateway
+- Ajouter run-auth, run-catalog, run-order, run-user, run-gateway (lance chaque service)
+- Ajouter pm2-start-all, pm2-stop-all pour gestion des services
+- Modifier clean: rm -rf tous les bin des services + utils/bin + root/bin
+- Garder seed-dev, test-dev, build-dev (avec clean)
+- Garder db-create, db-drop, db-migrate (1 seule DB partagée: db/schema.sql)
+- Garder compile-seed: compile utils/PasswordUtil.java + db/Seed.java
+- Garder seed, db-seed, db-reset (DB unique distribuée)
+
+================================================================================
+2. Structure_en_application_distribuée/plant_shop_java_spring_distribuée/plant_shop_java_spring_boot_security_distribuée/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security/Makefile
+MODÈLE: Structure_en_application_distribuée/plant_shop_java_distribuée/Makefile
+
+MODIFICATIONS:
+- Identiques au projet #1
+- Changer DB_NAME en plant_shop_java_spring_boot_security_distribuee
+- Utiliser config/InstallCoursier.java
+- Pas de src/security/*.java dans les projets sans Hibernate (sauf auth-service)
+- Flags Spring Boot: -J-Dorg.jboss.logging.provider=jul
+
+================================================================================
+3. Structure_en_application_distribuée/plant_shop_java_micronaut_distribuée/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_java_micronaut/Makefile
+MODÈLE: Structure_en_application_distribuée/plant_shop_java_distribuée/Makefile
+
+MODIFICATIONS:
+- Ajouter variables ROOT, LIB_DIR, UTILS_DIR, AUTH_DIR, CATALOG_DIR, ORDER_DIR, USER_DIR, GATEWAY_DIR
+- Changer DB_NAME en plant_shop_java_micronaut_distribuee
+- Utiliser config/InstallCoursier.java
+- Ajouter compile-utils
+- Ajouter compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+  - Utiliser flags Micronaut spécifiques si présents dans le monolithe
+- Ajouter run-auth, run-catalog, run-order, run-user, run-gateway
+- Ajouter pm2-start-all, pm2-stop-all
+- Modifier clean pour tous les services
+- Garder seed-dev, test-dev, build-dev
+- Garder db-create, db-drop, db-migrate (DB unique: db/schema.sql)
+- Garder compile-seed, seed, db-seed, db-reset
+
+================================================================================
+4. Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_java_quarkus/Makefile
+MODÈLE: Structure_en_application_distribuée/plant_shop_java_distribuée/Makefile
+
+MODIFICATIONS:
+- Ajouter variables ROOT, LIB_DIR, UTILS_DIR, AUTH_DIR, CATALOG_DIR, ORDER_DIR, USER_DIR, GATEWAY_DIR
+- Changer DB_NAME en plant_shop_java_quarkus_distribuee
+- Utiliser config/InstallCoursier.java
+- Ajouter compile-utils
+- Ajouter compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+  - Inclure compilation des fichiers META-INF si nécessaires pour Quarkus
+  - Utiliser flags Quarkus spécifiques si présents dans le monolithe
+- Ajouter run-auth, run-catalog, run-order, run-user, run-gateway
+- Ajouter pm2-start-all, pm2-stop-all
+- Modifier clean pour tous les services
+- Garder seed-dev, test-dev, build-dev
+- Garder db-create, db-drop, db-migrate (DB unique: db/schema.sql)
+- Garder compile-seed, seed, db-seed, db-reset
+
+================================================================================
+5. Structure_en_application_distribuée/plant_shop_java_javalin_distribuée/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_javalin/Makefile
+MODÈLE: Structure_en_application_distribuée/plant_shop_java_distribuée/Makefile
+
+MODIFICATIONS:
+- Ajouter variables ROOT, LIB_DIR, UTILS_DIR, AUTH_DIR, CATALOG_DIR, ORDER_DIR, USER_DIR, GATEWAY_DIR
+- Changer DB_NAME en plant_shop_java_javalin_distribuee
+- Utiliser config/InstallLibs.java (Javalin utilise libs.yaml, pas Coursier)
+- Ajouter compile-utils
+- Ajouter compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+  - Chaque service compile aussi src/controllers/ApplicationController.java (spécifique Javalin)
+- Ajouter run-auth, run-catalog, run-order, run-user, run-gateway
+- Ajouter pm2-start-all, pm2-stop-all
+- Modifier clean pour tous les services
+- Garder seed-dev, test-dev, build-dev
+- Garder db-create, db-drop, db-migrate (DB unique: db/schema.sql)
+- Garder compile-seed, seed, db-seed, db-reset
+
+================================================================================
+6. Structure_en_micro_services/plant_shop_java_spring_microservices/plant_shop_java_spring_boot_security_hibernate_microservices/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security_hibernate/Makefile
+MODÈLE: Structure_en_micro_services/plant_shop_java_microservices/Makefile
+
+MODIFICATIONS:
+- Ajouter variables ROOT, LIB_DIR, UTILS_DIR, AUTH_DIR, CATALOG_DIR, ORDER_DIR, USER_DIR, GATEWAY_DIR
+- Changer DB_NAME en plant_shop_java_spring_boot_security_hibernate_microservices
+- Utiliser config/InstallCoursier.java
+- Ajouter compile-utils
+- Ajouter compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+  - auth-service compile src/security/*.java
+  - Flags Spring Boot: -J-Dorg.jboss.logging.provider=jul
+- Ajouter run-auth, run-catalog, run-order, run-user, run-gateway
+- Ajouter pm2-start-all, pm2-stop-all
+- Modifier clean pour tous les services
+- Garder seed-dev, test-dev, build-dev
+- Garder db-create, db-drop (1 DB physique partagée)
+- MICROSERVICES SPÉCIFIQUE:
+  - Ajouter db-migrate-auth, db-migrate-catalog, db-migrate-order, db-migrate-user
+  - Chaque cible migre service-name/db/schema.sql
+  - Ajouter db-migrate: db-migrate-auth db-migrate-catalog db-migrate-order db-migrate-user
+  - Ajouter compile-seed-auth, compile-seed-catalog, compile-seed-order, compile-seed-user
+  - Ajouter seed-auth, seed-catalog, seed-order, seed-user
+  - Chaque seed lance java -cp service/bin:utils/bin:lib/* db.Seed
+  - Ajouter seed: seed-auth seed-catalog seed-order seed-user
+  - db-reset: db-drop db-create db-migrate seed
+
+================================================================================
+7. Structure_en_micro_services/plant_shop_java_spring_microservices/plant_shop_java_spring_boot_security_microservices/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_java_spring/plant_shop_java_spring_boot_security/Makefile
+MODÈLE: Structure_en_micro_services/plant_shop_java_microservices/Makefile
+
+MODIFICATIONS:
+- Identiques au projet #6
+- Changer DB_NAME en plant_shop_java_spring_boot_security_microservices
+- Utiliser config/InstallCoursier.java
+- Pas de src/security/*.java sauf dans auth-service
+- Flags Spring Boot: -J-Dorg.jboss.logging.provider=jul
+- MICROSERVICES: db-migrate par service, seed par service
+
+================================================================================
+8. Structure_en_micro_services/plant_shop_java_micronaut_microservices/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_java_micronaut/Makefile
+MODÈLE: Structure_en_micro_services/plant_shop_java_microservices/Makefile
+
+MODIFICATIONS:
+- Ajouter variables ROOT, LIB_DIR, UTILS_DIR, AUTH_DIR, CATALOG_DIR, ORDER_DIR, USER_DIR, GATEWAY_DIR
+- Changer DB_NAME en plant_shop_java_micronaut_microservices
+- Utiliser config/InstallCoursier.java
+- Ajouter compile-utils
+- Ajouter compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+  - Flags Micronaut spécifiques si présents
+- Ajouter run-auth, run-catalog, run-order, run-user, run-gateway
+- Ajouter pm2-start-all, pm2-stop-all
+- Modifier clean pour tous les services
+- Garder seed-dev, test-dev, build-dev
+- Garder db-create, db-drop
+- MICROSERVICES: db-migrate par service, seed par service (comme #6)
+
+================================================================================
+9. Structure_en_micro_services/plant_shop_java_quarkus_microservices/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_java_quarkus/Makefile
+MODÈLE: Structure_en_micro_services/plant_shop_java_microservices/Makefile
+
+MODIFICATIONS:
+- Ajouter variables ROOT, LIB_DIR, UTILS_DIR, AUTH_DIR, CATALOG_DIR, ORDER_DIR, USER_DIR, GATEWAY_DIR
+- Changer DB_NAME en plant_shop_java_quarkus_microservices
+- Utiliser config/InstallCoursier.java
+- Ajouter compile-utils
+- Ajouter compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+  - Inclure META-INF si nécessaires pour Quarkus
+  - Flags Quarkus spécifiques si présents
+- Ajouter run-auth, run-catalog, run-order, run-user, run-gateway
+- Ajouter pm2-start-all, pm2-stop-all
+- Modifier clean pour tous les services
+- Garder seed-dev, test-dev, build-dev
+- Garder db-create, db-drop
+- MICROSERVICES: db-migrate par service, seed par service (comme #6)
+
+================================================================================
+10. Structure_en_micro_services/plant_shop_java_javalin_microservices/Makefile
+================================================================================
+
+SOURCE: Structure_monolithique/plant_shop_javalin/Makefile
+MODÈLE: Structure_en_micro_services/plant_shop_java_microservices/Makefile
+
+MODIFICATIONS:
+- Ajouter variables ROOT, LIB_DIR, UTILS_DIR, AUTH_DIR, CATALOG_DIR, ORDER_DIR, USER_DIR, GATEWAY_DIR
+- Changer DB_NAME en plant_shop_java_javalin_microservices
+- Utiliser config/InstallLibs.java (Javalin utilise libs.yaml)
+- Ajouter compile-utils
+- Ajouter compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+  - Compiler aussi ApplicationController.java dans chaque service
+- Ajouter run-auth, run-catalog, run-order, run-user, run-gateway
+- Ajouter pm2-start-all, pm2-stop-all
+- Modifier clean pour tous les services
+- Garder seed-dev, test-dev, build-dev
+- Garder db-create, db-drop
+- MICROSERVICES: db-migrate par service, seed par service (comme #6)
+
+================================================================================
+RÉSUMÉ DES PATTERNS
+================================================================================
+
+TOUS LES PROJETS:
+- Variables ROOT, LIB_DIR, UTILS_DIR, *_DIR pour chaque service
+- compile-utils, compile-auth, compile-catalog, compile-order, compile-user, compile-gateway
+- run-auth, run-catalog, run-order, run-user, run-gateway
+- pm2-start-all, pm2-stop-all
+- clean modifié pour tous les bin
+- seed-dev, test-dev, build-dev conservés
+
+DISTRIBUÉE (5 projets):
+- DB unique: db/schema.sql, db/Seed.java
+- db-migrate, seed, db-seed, db-reset standards
+
+MICROSERVICES (5 projets):
+- DB par service: service-name/db/schema.sql, service-name/db/Seed.java
+- db-migrate-auth, db-migrate-catalog, db-migrate-order, db-migrate-user
+- db-migrate: appelle toutes les migrations
+- compile-seed-auth, compile-seed-catalog, compile-seed-order, compile-seed-user
+- seed-auth, seed-catalog, seed-order, seed-user
+- seed: appelle tous les seeds
+- db-reset: db-drop db-create db-migrate seed
+
+SPÉCIFICITÉS PAR FRAMEWORK:
+- Spring Boot: flags -J-Dorg.jboss.logging.provider=jul, InstallCoursier.java
+- Micronaut: InstallCoursier.java, flags spécifiques framework
+- Quarkus: InstallCoursier.java, META-INF si nécessaire
+- Javalin: InstallLibs.java (libs.yaml), ApplicationController.java dans chaque service

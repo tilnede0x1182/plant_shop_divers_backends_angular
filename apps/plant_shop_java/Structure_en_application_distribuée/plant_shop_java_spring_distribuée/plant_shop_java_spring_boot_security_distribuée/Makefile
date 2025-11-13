@@ -144,7 +144,7 @@ build-dev: clean compile
 
 compile-seed:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin utils/src/PasswordUtil.java db/Seed.java
+	javac -cp $(CLASSPATH) -d bin utils/PasswordUtil.java db/Seed.java
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi

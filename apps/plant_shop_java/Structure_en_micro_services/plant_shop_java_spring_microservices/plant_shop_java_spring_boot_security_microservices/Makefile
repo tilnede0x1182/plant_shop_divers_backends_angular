@@ -10,7 +10,7 @@ TEST_DIR := $(ROOT)/test
 
 LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
-UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
+UTILS_SRC := $(wildcard $(UTILS_DIR)/*.java)
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 
 DB_NAME=plant_shop_java_spring_boot_security_microservices

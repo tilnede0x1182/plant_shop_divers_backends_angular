@@ -1,4 +1,4 @@
-package util;
+package utils;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -7,17 +7,17 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import model.Order;
-import model.OrderItem;
-import model.Plant;
-import model.User;
+import models.Order;
+import models.OrderItem;
+import models.Plant;
+import models.User;
 
 public final class ApiMapper {
 
     private ApiMapper() {}
 
     public static Map<String, Object> toUser(User user) {
-        Map<String, Object> map = base();
+        Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", user.id);
         map.put("name", user.name);
         map.put("email", user.email);
@@ -27,7 +27,7 @@ public final class ApiMapper {
     }
 
     public static Map<String, Object> toPlant(Plant plant) {
-        Map<String, Object> map = base();
+        Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", plant.id);
         map.put("name", plant.name);
         map.put("description", plant.description);
@@ -38,7 +38,7 @@ public final class ApiMapper {
     }
 
     public static Map<String, Object> toOrder(Order order, List<Map<String, Object>> items) {
-        Map<String, Object> map = base();
+        Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", order.id);
         map.put("userId", order.userId);
         map.put("totalPrice", toDecimal(order.total));
@@ -49,7 +49,7 @@ public final class ApiMapper {
     }
 
     public static Map<String, Object> toOrderItem(OrderItem item, Plant plant) {
-        Map<String, Object> map = base();
+        Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", item.id);
         map.put("orderId", item.orderId);
         map.put("plantId", item.plantId);
@@ -79,10 +79,6 @@ public final class ApiMapper {
 
     private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
-    }
-
-    private static Map<String, Object> base() {
-        return new LinkedHashMap<>();
     }
 
     @FunctionalInterface

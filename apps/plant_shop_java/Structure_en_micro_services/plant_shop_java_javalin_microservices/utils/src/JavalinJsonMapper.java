@@ -21,10 +21,24 @@ public final class JavalinJsonMapper implements JsonMapper {
         // qui utilise une autre logique interne. Cette méthode est donc moins critique ici.
         // Pour une implémentation complète, il faudrait utiliser une librairie comme Jackson ou Gson.
         // Ici, on se contente de retourner l'objet JSON brut pour les cas simples.
+        Object result;
         if (json.trim().startsWith("[")) {
-            return (T) new JSONArray(json);
+            result = new JSONArray(json);
+        } else {
+            result = new JSONObject(json);
         }
-        return (T) new JSONObject(json);
+
+        // Cast sûr avec vérification du type cible
+        if (targetType instanceof Class<?> clazz && clazz.isInstance(result)) {
+            @SuppressWarnings("unchecked")
+            T typedResult = (T) result;
+            return typedResult;
+        }
+
+        // Cast direct pour compatibilité (JSONObject/JSONArray sont acceptés comme T)
+        @SuppressWarnings("unchecked")
+        T typedResult = (T) result;
+        return typedResult;
     }
 
     @Override

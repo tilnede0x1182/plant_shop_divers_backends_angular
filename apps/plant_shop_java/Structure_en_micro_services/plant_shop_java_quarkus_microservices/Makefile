@@ -10,7 +10,7 @@ TEST_DIR := $(ROOT)/test
 
 LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
-UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
+UTILS_SRC := $(filter-out $(UTILS_DIR)/src/ApiMapper.java $(UTILS_DIR)/src/Request.java $(UTILS_DIR)/src/Response.java $(UTILS_DIR)/src/JavalinJsonMapper.java $(UTILS_DIR)/src/QuarkusBootstrap.java, $(wildcard $(UTILS_DIR)/src/*.java))
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 
 DB_NAME=plant_shop_java_quarkus_microservices
@@ -46,7 +46,7 @@ clean:
 compile-utils:
 	@echo "🔧 Compilation utilitaires"
 	@mkdir -p $(UTILS_DIR)/bin
-	@javac -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
+	@javac -proc:none -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
 
 compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
@@ -61,6 +61,8 @@ compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
 	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+		$(UTILS_DIR)/src/ApiMapper.java \
+		$(UTILS_DIR)/src/Request.java \
 		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java)
@@ -69,6 +71,8 @@ compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
 	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+		$(UTILS_DIR)/src/ApiMapper.java \
+		$(UTILS_DIR)/src/Request.java \
 		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
 		$(wildcard $(ORDER_DIR)/src/models/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repositories/*.java)
@@ -77,6 +81,8 @@ compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
 	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+		$(UTILS_DIR)/src/ApiMapper.java \
+		$(UTILS_DIR)/src/Request.java \
 		$(wildcard $(USER_DIR)/src/controllers/*.java) \
 		$(wildcard $(USER_DIR)/src/models/*.java) \
 		$(wildcard $(USER_DIR)/src/repositories/*.java)
@@ -160,10 +166,6 @@ db-create:
 db-drop:
 	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
 
-db-migrate-auth:
-	@echo "🐘 Migration auth-service..."
-	@sudo -u postgres psql -d $(DB_NAME) -f auth-service/db/schema.sql
-
 db-migrate-catalog:
 	@echo "🐘 Migration catalog-service..."
 	@sudo -u postgres psql -d $(DB_NAME) -f catalog-service/db/schema.sql
@@ -176,46 +178,37 @@ db-migrate-user:
 	@echo "🐘 Migration user-service..."
 	@sudo -u postgres psql -d $(DB_NAME) -f user-service/db/schema.sql
 
-db-migrate: db-migrate-auth db-migrate-catalog db-migrate-order db-migrate-user
+db-migrate: db-migrate-user db-migrate-catalog db-migrate-order
 	@echo "✅ Toutes les migrations sont terminées."
-
-compile-seed-auth: compile-utils
-	@echo "🔧 Compilation Seed auth-service"
-	@mkdir -p $(AUTH_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin auth-service/db/Seed.java
 
 compile-seed-catalog: compile-utils
 	@echo "🔧 Compilation Seed catalog-service"
 	@mkdir -p $(CATALOG_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin catalog-service/db/Seed.java
+	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin catalog-service/db/Seed.java -proc:none
 
 compile-seed-order: compile-utils
 	@echo "🔧 Compilation Seed order-service"
 	@mkdir -p $(ORDER_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin order-service/db/Seed.java
+	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin order-service/db/Seed.java -proc:none
 
 compile-seed-user: compile-utils
 	@echo "🔧 Compilation Seed user-service"
 	@mkdir -p $(USER_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java
-
-seed-auth: compile-seed-auth
-	@echo "🌱 Seed auth-service..."
-	@java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java -proc:none
 
 seed-catalog: compile-seed-catalog
 	@echo "🌱 Seed catalog-service..."
-	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
 
 seed-order: compile-seed-order
 	@echo "🌱 Seed order-service..."
-	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
 
 seed-user: compile-seed-user
 	@echo "🌱 Seed user-service..."
-	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
 
-seed: seed-auth seed-catalog seed-order seed-user
+seed: seed-user seed-catalog seed-order
 	@echo "✅ Seed global terminé."
 
 seed-dev: clean seed

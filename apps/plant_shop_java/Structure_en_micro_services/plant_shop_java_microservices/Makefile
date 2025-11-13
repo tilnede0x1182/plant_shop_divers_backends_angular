@@ -181,17 +181,17 @@ db-migrate: db-migrate-users db-migrate-catalog db-migrate-orders
 compile-seed-users: compile-utils
 	@echo "🔧 Compilation Seed user-service"
 	@mkdir -p $(USER_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java
+	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java -proc:none
 
 compile-seed-catalog: compile-utils
 	@echo "🔧 Compilation Seed catalog-service"
 	@mkdir -p $(CATALOG_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin catalog-service/db/Seed.java
+	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin catalog-service/db/Seed.java -proc:none
 
 compile-seed-orders: compile-utils
 	@echo "🔧 Compilation Seed order-service"
 	@mkdir -p $(ORDER_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin order-service/db/Seed.java
+	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin order-service/db/Seed.java -proc:none
 
 # --- Cibles de Seed par service ---
 seed-users: compile-seed-users

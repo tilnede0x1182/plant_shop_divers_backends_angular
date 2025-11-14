@@ -30,9 +30,6 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     SessionService sessionService;
 
     @Autowired
-    AuthenticatedUser authenticatedUser;
-
-    @Autowired
     UserRepository userRepo; // Le repo est @RequestScope, Spring injecte le bon proxy
 
     @Override
@@ -41,7 +38,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         SecurityContextHolder.clearContext();
-        authenticatedUser.setUser(null); // Réinitialise l'utilisateur pour cette requête
+        AuthContext.set(null); // Réinitialise l'utilisateur pour cette requête
 
         Cookie sessionCookie = extractSessionCookie(request);
         if (sessionCookie != null) {
@@ -77,7 +74,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         try {
             User user = userRepo.findById(userId).orElse(null);
             if (user != null) {
-                authenticatedUser.setUser(user); // Stocke l'utilisateur pour la requête
+                AuthContext.set(user); // Stocke l'utilisateur pour la requête
                 UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                         user,

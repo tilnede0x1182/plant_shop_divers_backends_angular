@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import security.Guards;
-import util.ApiMapper;
+import user.security.Guards;
+import user.util.ApiMapper;
 import util.PasswordUtil;
 import repository.UserRepository;
 

@@ -1,4 +1,4 @@
-package security;
+package auth.security;
 
 import jakarta.enterprise.context.control.RequestContextController;
 import jakarta.inject.Inject;

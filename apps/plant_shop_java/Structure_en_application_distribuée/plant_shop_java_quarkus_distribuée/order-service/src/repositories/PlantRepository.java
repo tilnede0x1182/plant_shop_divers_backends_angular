@@ -4,7 +4,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import java.sql.*;
 import model.Plant;
-import repository.BaseRepository;
+import order.repositories.BaseRepository;
 
 @RequestScoped
 public class PlantRepository extends BaseRepository<Plant> {

@@ -1,4 +1,4 @@
-package utils;
+package util;
 
 import controllers.AuthController;
 import controllers.OrderController;

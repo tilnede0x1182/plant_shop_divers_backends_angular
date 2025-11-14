@@ -18,8 +18,8 @@ import model.User;
 import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
-import security.Guards;
-import utils.ApiMapper;
+import order.security.Guards;
+import order.util.ApiMapper;
 
 @Path("/api/orders")
 @Produces(MediaType.APPLICATION_JSON)

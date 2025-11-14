@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import model.Plant;
 import repository.PlantRepository;
-import utils.ApiMapper;
+import catalog.util.ApiMapper;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)

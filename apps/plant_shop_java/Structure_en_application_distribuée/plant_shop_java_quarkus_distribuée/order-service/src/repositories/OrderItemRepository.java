@@ -5,7 +5,7 @@ import jakarta.inject.Inject;
 import java.sql.*;
 import java.util.*;
 import model.OrderItem;
-import repository.BaseRepository;
+import order.repositories.BaseRepository;
 
 @RequestScoped
 public class OrderItemRepository extends BaseRepository<OrderItem> {

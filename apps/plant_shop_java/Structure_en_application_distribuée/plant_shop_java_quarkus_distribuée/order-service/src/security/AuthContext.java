@@ -1,4 +1,4 @@
-package auth.security;
+package order.security;
 
 import model.User;
 

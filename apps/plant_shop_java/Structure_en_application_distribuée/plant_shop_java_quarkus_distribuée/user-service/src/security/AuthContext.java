@@ -1,4 +1,4 @@
-package auth.security;
+package user.security;
 
 import model.User;
 

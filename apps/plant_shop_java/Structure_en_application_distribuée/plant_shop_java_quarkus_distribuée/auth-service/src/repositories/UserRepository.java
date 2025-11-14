@@ -4,7 +4,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import java.sql.*;
 import model.User;
-import repository.BaseRepository;
+import auth.repositories.BaseRepository;
 
 @RequestScoped
 public class UserRepository extends BaseRepository<User> {

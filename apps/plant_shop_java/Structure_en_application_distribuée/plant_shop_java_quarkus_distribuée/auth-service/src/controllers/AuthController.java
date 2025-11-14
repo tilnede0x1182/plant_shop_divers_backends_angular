@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.UUID;
 import model.User;
 import repository.UserRepository;
-import security.Guards;
-import security.SessionService;
-import utils.ApiMapper;
-import utils.PasswordUtil;
+import auth.security.Guards;
+import auth.security.SessionService;
+import auth.util.ApiMapper;
+import util.PasswordUtil;
 
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)

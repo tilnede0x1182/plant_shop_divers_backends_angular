@@ -1,4 +1,4 @@
-package utils;
+package util;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;

@@ -1,4 +1,4 @@
-package security;
+package auth.security;
 
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;

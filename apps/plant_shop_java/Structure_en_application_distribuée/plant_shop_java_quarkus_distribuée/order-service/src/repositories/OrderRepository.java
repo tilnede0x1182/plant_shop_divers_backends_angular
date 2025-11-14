@@ -7,7 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import model.Order;
-import repository.BaseRepository;
+import order.repositories.BaseRepository;
 
 @RequestScoped
 public class OrderRepository extends BaseRepository<Order> {

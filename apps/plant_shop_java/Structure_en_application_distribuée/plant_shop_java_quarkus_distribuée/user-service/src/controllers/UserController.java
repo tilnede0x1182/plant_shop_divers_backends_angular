@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import model.User;
 import repository.UserRepository;
-import security.Guards;
-import utils.ApiMapper;
-import utils.PasswordUtil;
+import user.security.Guards;
+import user.util.ApiMapper;
+import util.PasswordUtil;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)

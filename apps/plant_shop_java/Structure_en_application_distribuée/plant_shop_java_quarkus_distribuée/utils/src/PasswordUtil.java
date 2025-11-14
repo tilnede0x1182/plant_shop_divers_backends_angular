@@ -1,4 +1,4 @@
-package utils;
+package util;
 
 // Import de la librairie jBCrypt.
 // Assurez-vous que le fichier jbcrypt-0.4.jar est dans votre dossier /lib

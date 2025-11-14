@@ -18,13 +18,13 @@ public final class JavalinJsonMapper implements JsonMapper {
     @Override
     public <T> T fromJsonString(String json, Type targetType) {
         // La désérialisation est gérée directement dans les contrôleurs avec ctx.bodyAsClass()
-        // qui utilise une autre logique interne. Cette méthode est donc moins critique ici.
-        // Pour une implémentation complète, il faudrait utiliser une librairie comme Jackson ou Gson.
-        // Ici, on se contente de retourner l'objet JSON brut pour les cas simples.
-        if (json.trim().startsWith("[")) {
-            return (T) new JSONArray(json);
-        }
-        return (T) new JSONObject(json);
+        // qui utilise une autre logique interne et ne passe pas par cette méthode.
+        // Pour une implémentation complète et type-safe, il faudrait utiliser Jackson ou Gson.
+        throw new UnsupportedOperationException(
+            "La désérialisation JSON est gérée par ctx.bodyAsClass(). " +
+            "Cette méthode n'est pas implémentée car elle nécessiterait une bibliothèque " +
+            "comme Jackson ou Gson pour être type-safe."
+        );
     }
 
     @Override

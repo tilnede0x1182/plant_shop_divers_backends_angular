@@ -6,7 +6,7 @@ public final class User {
     public int      id;
     public String   name;
     public String   email;
-    public String   passwordHash;   // null si non chargé
+    public String   passwordHash;   // null si non chargÃ©
     public boolean  isAdmin;
     public Timestamp createdAt;     // null lors de l'insertion
 
@@ -21,7 +21,7 @@ public final class User {
         this.createdAt = createdAt;
     }
 
-    /* constructeur pour insertion (id et createdAt générés par la DB) */
+    /* constructeur pour insertion (id et createdAt gÃ©nÃ©rÃ©s par la DB) */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }

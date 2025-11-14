@@ -10,8 +10,8 @@ import java.text.Collator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
-import model.Plant;
-import repository.PlantRepository;
+import models.Plant;
+import repositories.PlantRepository;
 import security.Guards;
 import util.ApiMapper;
 

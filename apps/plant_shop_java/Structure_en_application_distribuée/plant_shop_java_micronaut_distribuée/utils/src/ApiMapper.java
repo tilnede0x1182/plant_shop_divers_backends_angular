@@ -7,11 +7,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import model.Order;
-import model.OrderItem;
-import model.Plant;
-import model.User;
-import repository.PlantRepository;
+import models.Order;
+import models.OrderItem;
+import models.Plant;
+import models.User;
+import repositories.PlantRepository;
 
 public final class ApiMapper {
 

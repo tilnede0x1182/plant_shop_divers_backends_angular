@@ -8,9 +8,9 @@ import java.sql.Connection;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import model.User;
+import models.User;
 import org.json.JSONObject;
-import repository.UserRepository;
+import repositories.UserRepository;
 import util.ApiMapper;
 import util.PasswordUtil;
 

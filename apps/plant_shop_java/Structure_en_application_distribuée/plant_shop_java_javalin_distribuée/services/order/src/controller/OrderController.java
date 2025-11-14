@@ -9,15 +9,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import model.Order;
-import model.OrderItem;
-import model.Plant;
-import model.User;
+import models.Order;
+import models.OrderItem;
+import models.Plant;
+import models.User;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import repository.OrderItemRepository;
-import repository.OrderRepository;
-import repository.PlantRepository;
+import repositories.OrderItemRepository;
+import repositories.OrderRepository;
+import repositories.PlantRepository;
 import util.ApiMapper;
 
 public final class OrderController {

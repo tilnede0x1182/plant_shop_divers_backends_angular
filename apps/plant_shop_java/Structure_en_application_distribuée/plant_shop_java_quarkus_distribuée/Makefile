@@ -12,7 +12,7 @@ TEST_DIR := $(ROOT)/test
 
 LIB_CP := $(LIB_DIR)/*
 SHARED_CP := $(LIB_DIR)/*
-SHARED_SRC := $(wildcard $(SHARED_DIR)/model/*.java) $(wildcard $(SHARED_DIR)/utils/*.java) $(wildcard $(SHARED_DIR)/repository/*.java)
+SHARED_SRC := $(wildcard $(SHARED_DIR)/model/*.java) $(wildcard $(SHARED_DIR)/utils/*.java) $(wildcard $(SHARED_DIR)/repository/*.java) $(wildcard $(SHARED_DIR)/security/*.java)
 UTILS_CP := $(LIB_DIR)/*:$(SHARED_DIR)/bin
 UTILS_SRC := $(filter-out %/QuarkusBootstrap.java, $(wildcard $(UTILS_DIR)/src/*.java))
 SERVICE_CP := $(LIB_CP):$(SHARED_DIR)/bin:$(UTILS_DIR)/bin
@@ -153,7 +153,7 @@ compile-seed:
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
-	@java -cp $(CLASSPATH) db.Seed
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp $(CLASSPATH) db.Seed
 
 seed-dev: clean compile-seed seed
 
@@ -167,7 +167,7 @@ compile-test:
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
-	@java -cp $(CLASSPATH) Tests.Test
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp $(CLASSPATH) Tests.Test
 
 test-dev: clean compile-test tests
 

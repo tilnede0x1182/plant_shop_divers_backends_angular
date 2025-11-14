@@ -1,10 +1,11 @@
-package repositories;
+package repository;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import java.sql.*;
 import java.util.*;
 import model.OrderItem;
+import repository.BaseRepository;
 
 @RequestScoped
 public class OrderItemRepository extends BaseRepository<OrderItem> {

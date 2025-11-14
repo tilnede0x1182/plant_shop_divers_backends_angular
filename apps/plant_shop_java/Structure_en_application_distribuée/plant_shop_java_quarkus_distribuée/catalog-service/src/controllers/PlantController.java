@@ -12,7 +12,6 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import model.Plant;
 import repository.PlantRepository;
-import security.Guards;
 import utils.ApiMapper;
 
 @Path("/api")
@@ -23,9 +22,6 @@ public class PlantController {
 
     @Inject
     PlantRepository repo;
-
-    @Inject
-    Guards guards;
 
     private static final Collator COLLATOR;
     static {
@@ -49,7 +45,6 @@ public class PlantController {
     @GET
     @Path("/admin/plants")
     public Response listAdmin() throws Exception {
-        guards.requireAdmin(); // Sécurise la route
         return listPublic(); // Réutilise la logique publique
     }
 
@@ -66,7 +61,6 @@ public class PlantController {
     @Path("/admin/plants")
     @Transactional
     public Response create(Plant plant) throws Exception {
-        guards.requireAdmin();
         int id = repo.create(plant);
         Plant created = repo.find(id);
         return Response.status(Response.Status.CREATED)
@@ -78,7 +72,6 @@ public class PlantController {
     @Path("/admin/plants/{id}")
     @Transactional
     public Response update(@PathParam("id") int id, Plant updatedData) throws Exception {
-        guards.requireAdmin();
         Plant existing = repo.find(id);
         if (existing == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -98,7 +91,6 @@ public class PlantController {
     @Path("/admin/plants/{id}")
     @Transactional
     public Response destroy(@PathParam("id") int id) throws Exception {
-        guards.requireAdmin();
         repo.delete(id);
         return Response.ok().build();
     }

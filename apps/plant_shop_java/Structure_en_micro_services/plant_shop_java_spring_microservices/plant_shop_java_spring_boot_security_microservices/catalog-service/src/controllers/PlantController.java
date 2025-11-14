@@ -1,13 +1,13 @@
 package controllers;
 
-import models.Plant;
+import model.Plant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import repositories.PlantRepository;
+import repository.PlantRepository;
 import security.Guards;
-import utils.ApiMapper;
+import util.ApiMapper;
 
 import java.text.Collator;
 import java.util.Comparator;

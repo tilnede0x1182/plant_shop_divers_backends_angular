@@ -11,7 +11,6 @@ import model.Order;
 import model.OrderItem;
 import model.Plant;
 import model.User;
-import repository.PlantRepository;
 
 public final class ApiMapper {
 

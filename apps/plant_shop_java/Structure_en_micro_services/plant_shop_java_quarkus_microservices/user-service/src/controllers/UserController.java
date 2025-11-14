@@ -10,11 +10,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import models.User;
-import repositories.UserRepository;
+import model.User;
+import repository.UserRepository;
 import security.Guards;
-import utils.ApiMapper;
-import utils.PasswordUtil;
+import util.ApiMapper;
+import util.PasswordUtil;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)

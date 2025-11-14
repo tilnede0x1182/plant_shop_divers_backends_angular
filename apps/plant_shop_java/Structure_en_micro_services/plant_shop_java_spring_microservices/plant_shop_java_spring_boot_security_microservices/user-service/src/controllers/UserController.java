@@ -1,14 +1,14 @@
 package controllers;
 
-import models.User;
+import model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import repositories.UserRepository;
+import repository.UserRepository;
 import security.Guards;
-import utils.ApiMapper;
-import utils.PasswordUtil;
+import util.ApiMapper;
+import util.PasswordUtil;
 
 import java.util.Comparator;
 import java.util.List;

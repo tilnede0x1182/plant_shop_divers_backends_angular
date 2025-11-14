@@ -1,7 +1,7 @@
 package security;
 
 import jakarta.enterprise.context.RequestScoped;
-import models.User;
+import model.User;
 
 /**
  * Un bean @RequestScoped qui contient l'utilisateur

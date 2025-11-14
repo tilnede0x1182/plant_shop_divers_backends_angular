@@ -1,9 +1,9 @@
-package repositories;
+package repository;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import java.sql.*;
-import models.Plant;
+import model.Plant;
 
 @RequestScoped
 public class PlantRepository extends BaseRepository<Plant> {

@@ -10,10 +10,10 @@ import java.text.Collator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
-import models.Plant;
-import repositories.PlantRepository;
+import model.Plant;
+import repository.PlantRepository;
 import security.Guards;
-import utils.ApiMapper;
+import util.ApiMapper;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)

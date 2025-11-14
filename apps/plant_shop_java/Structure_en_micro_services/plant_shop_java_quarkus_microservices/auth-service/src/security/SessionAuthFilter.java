@@ -7,8 +7,8 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
-import models.User;
-import repositories.UserRepository;
+import model.User;
+import repository.UserRepository;
 
 /**
  * Filtre JAX-RS pour l'authentification par session.

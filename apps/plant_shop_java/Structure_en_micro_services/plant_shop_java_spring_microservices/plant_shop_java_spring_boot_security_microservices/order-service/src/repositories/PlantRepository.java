@@ -1,6 +1,6 @@
-package repositories;
+package repository;
 
-import models.PlantStock;
+import model.PlantStock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 

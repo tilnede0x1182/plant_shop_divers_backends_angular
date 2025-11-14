@@ -9,12 +9,12 @@ import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
 import java.util.UUID;
-import models.User;
-import repositories.UserRepository;
+import model.User;
+import repository.UserRepository;
 import security.Guards;
 import security.SessionService;
-import utils.ApiMapper;
-import utils.PasswordUtil;
+import util.ApiMapper;
+import util.PasswordUtil;
 
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)

@@ -3,6 +3,7 @@ package repository;
 
 import java.sql.*;
 import model.Plant;
+import order.repositories.BaseRepository;
 import java.math.BigDecimal;
 
 public final class PlantRepository extends BaseRepository<Plant> {

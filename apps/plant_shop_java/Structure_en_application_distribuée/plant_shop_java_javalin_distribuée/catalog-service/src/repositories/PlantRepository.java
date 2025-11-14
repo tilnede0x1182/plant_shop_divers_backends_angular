@@ -4,6 +4,7 @@ package repository;
 import java.sql.*;
 import model.Plant;
 import java.math.BigDecimal;
+import catalog.repositories.BaseRepository;
 
 public final class PlantRepository extends BaseRepository<Plant> {
 

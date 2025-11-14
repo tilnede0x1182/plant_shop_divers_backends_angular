@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import model.User;
 import org.json.JSONObject;
 import repository.UserRepository;
-import util.ApiMapper;
+import auth.util.ApiMapper;
 import util.PasswordUtil;
 
 public final class AuthController {

@@ -2,6 +2,7 @@ package repository;
 
 import java.sql.*;
 import model.User;
+import user.repositories.BaseRepository;
 
 public final class UserRepository extends BaseRepository<User> {
 

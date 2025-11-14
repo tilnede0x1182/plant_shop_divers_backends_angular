@@ -14,7 +14,7 @@ import java.util.Locale;
 import model.Plant;
 import org.json.JSONObject;
 import repository.PlantRepository;
-import util.ApiMapper;
+import catalog.util.ApiMapper;
 
 public final class PlantController {
 

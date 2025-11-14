@@ -13,7 +13,7 @@ import java.util.Map;
 import model.User;
 import org.json.JSONObject;
 import repository.UserRepository;
-import util.ApiMapper;
+import user.util.ApiMapper;
 import util.PasswordUtil;
 
 public final class UserController {

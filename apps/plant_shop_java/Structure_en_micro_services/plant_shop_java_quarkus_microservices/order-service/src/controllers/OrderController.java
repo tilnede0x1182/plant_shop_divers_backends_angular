@@ -15,13 +15,13 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import models.Order;
-import models.OrderItem;
-import models.PlantStock;
-import models.User;
-import repositories.OrderItemRepository;
-import repositories.OrderRepository;
-import repositories.PlantRepository;
+import model.Order;
+import model.OrderItem;
+import model.PlantStock;
+import model.User;
+import repository.OrderItemRepository;
+import repository.OrderRepository;
+import repository.PlantRepository;
 import security.Guards;
 
 @Path("/api/orders")

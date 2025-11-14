@@ -1,9 +1,9 @@
-package repositories;
+package repository;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.sql.*;
-import models.PlantStock;
+import model.PlantStock;
 
 @ApplicationScoped
 public final class PlantRepository {

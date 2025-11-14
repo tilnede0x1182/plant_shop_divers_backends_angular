@@ -3,6 +3,7 @@ package repository;
 import java.sql.*;
 import java.util.*;
 import model.OrderItem;
+import order.repositories.BaseRepository;
 
 public final class OrderItemRepository extends BaseRepository<OrderItem> {
 

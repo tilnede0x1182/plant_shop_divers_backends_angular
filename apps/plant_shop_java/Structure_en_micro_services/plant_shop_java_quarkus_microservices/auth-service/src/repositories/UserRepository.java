@@ -1,9 +1,9 @@
-package repositories;
+package repository;
 
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import java.sql.*;
-import models.User;
+import model.User;
 
 @RequestScoped // Ce repository vivra le temps d'une requête HTTP
 public class UserRepository extends BaseRepository<User> {

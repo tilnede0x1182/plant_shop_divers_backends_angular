@@ -1,4 +1,4 @@
-package utils;
+package util;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -7,10 +7,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import models.Order;
-import models.OrderItem;
-import models.Plant;
-import models.User;
+import model.Order;
+import model.OrderItem;
+import model.Plant;
+import model.User;
 
 public final class ApiMapper {
 

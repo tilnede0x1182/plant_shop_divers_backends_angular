@@ -1,6 +1,6 @@
-package repositories;
+package repository;
 
-import models.Plant;
+import model.Plant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.context.annotation.RequestScope;

@@ -1,5 +1,6 @@
 ROOT := $(CURDIR)
 LIB_DIR := $(ROOT)/lib
+SHARED_DIR := $(ROOT)/shared
 UTILS_DIR := $(ROOT)/utils
 AUTH_DIR := $(ROOT)/auth-service
 CATALOG_DIR := $(ROOT)/catalog-service
@@ -10,9 +11,11 @@ DB_DIR := $(ROOT)/db
 TEST_DIR := $(ROOT)/test
 
 LIB_CP := $(LIB_DIR)/*
-UTILS_CP := $(LIB_DIR)/*
+SHARED_CP := $(LIB_DIR)/*
+SHARED_SRC := $(wildcard $(SHARED_DIR)/model/*.java) $(wildcard $(SHARED_DIR)/utils/*.java) $(wildcard $(SHARED_DIR)/repository/*.java) $(wildcard $(SHARED_DIR)/security/*.java)
+UTILS_CP := $(LIB_DIR)/*:$(SHARED_DIR)/bin
 UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
-SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
+SERVICE_CP := $(LIB_CP):$(SHARED_DIR)/bin:$(UTILS_DIR)/bin
 
 DB_NAME=plant_shop_java_spring_boot_security_distribuee
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
@@ -30,6 +33,7 @@ install: compile-install-libs
 
 clean:
 	@rm -rf \
+		$(SHARED_DIR)/bin \
 		$(UTILS_DIR)/bin \
 		$(AUTH_DIR)/bin \
 		$(CATALOG_DIR)/bin \
@@ -45,10 +49,15 @@ clean:
 # Serveur - Développement
 ## ────────────────
 
-compile-utils:
+compile-shared:
+	@echo "📦 Compilation shared models & utils"
+	@mkdir -p $(SHARED_DIR)/bin
+	@javac -proc:none -cp "$(SHARED_CP)" -d $(SHARED_DIR)/bin $(SHARED_SRC)
+
+compile-utils: compile-shared
 	@echo "🔧 Compilation utilitaires"
 	@mkdir -p $(UTILS_DIR)/bin
-	@javac -J-Dorg.jboss.logging.provider=jul -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
+	@javac -proc:none -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
 
 compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
@@ -144,7 +153,7 @@ build-dev: clean compile
 
 compile-seed:
 	@mkdir -p bin
-	@javac -cp $(CLASSPATH) -d bin utils/PasswordUtil.java db/Seed.java
+	@javac -cp $(CLASSPATH) -d bin utils/src/PasswordUtil.java db/Seed.java
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi

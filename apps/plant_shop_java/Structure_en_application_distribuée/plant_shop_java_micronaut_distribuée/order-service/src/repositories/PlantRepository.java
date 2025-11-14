@@ -5,6 +5,7 @@ import jakarta.inject.Singleton;
 import java.sql.*;
 import model.Plant;
 import java.math.BigDecimal;
+import order.repositories.BaseRepository;
 
 @Singleton
 public final class PlantRepository extends BaseRepository<Plant> {

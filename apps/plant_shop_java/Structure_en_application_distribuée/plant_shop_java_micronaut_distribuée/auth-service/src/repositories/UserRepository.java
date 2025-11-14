@@ -4,6 +4,7 @@ import io.micronaut.context.annotation.Bean;
 import jakarta.inject.Singleton;
 import java.sql.*;
 import model.User;
+import auth.repositories.BaseRepository;
 
 @Singleton
 public final class UserRepository extends BaseRepository<User> {

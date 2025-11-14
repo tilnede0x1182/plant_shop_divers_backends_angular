@@ -7,6 +7,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import model.Order;
+import order.repositories.BaseRepository;
 
 @Singleton
 public final class OrderRepository extends BaseRepository<Order> {

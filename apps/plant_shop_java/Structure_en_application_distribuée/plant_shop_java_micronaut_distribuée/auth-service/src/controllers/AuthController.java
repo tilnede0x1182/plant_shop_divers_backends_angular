@@ -12,7 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import model.User;
 import repository.UserRepository;
-import util.ApiMapper;
+import auth.util.ApiMapper;
 import util.PasswordUtil;
 import io.micronaut.http.HttpRequest;
 

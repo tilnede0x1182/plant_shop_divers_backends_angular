@@ -12,7 +12,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import model.Plant;
 import repository.PlantRepository;
-import util.ApiMapper;
+import catalog.util.ApiMapper;
 
 @Controller("/api")
 public class PlantController {

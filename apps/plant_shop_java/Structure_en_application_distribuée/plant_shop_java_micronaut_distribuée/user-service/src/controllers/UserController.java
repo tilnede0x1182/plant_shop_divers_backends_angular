@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import model.User;
 import repository.UserRepository;
-import util.ApiMapper;
+import user.util.ApiMapper;
 import util.PasswordUtil;
 
 @Controller("/api")

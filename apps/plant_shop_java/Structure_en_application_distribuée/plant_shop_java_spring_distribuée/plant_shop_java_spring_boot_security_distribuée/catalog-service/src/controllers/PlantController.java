@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import repository.PlantRepository;
-import security.Guards;
-import util.ApiMapper;
+import catalog.security.Guards;
+import catalog.util.ApiMapper;
 
 import java.text.Collator;
 import java.util.Comparator;

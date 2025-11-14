@@ -1,4 +1,4 @@
-package util;
+package order.util;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -10,35 +10,15 @@ import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.Plant;
-import model.User;
 
 public final class ApiMapper {
 
-    private ApiMapper() {}
-
-    public static Map<String, Object> toUser(User user) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("id", user.id);
-        map.put("name", user.name);
-        map.put("email", user.email);
-        map.put("admin", user.isAdmin);
-        map.put("createdAt", toIso(user.createdAt));
-        return map;
-    }
-
-    public static Map<String, Object> toPlant(Plant plant) {
-        Map<String, Object> map = new LinkedHashMap<>();
-        map.put("id", plant.id);
-        map.put("name", plant.name);
-        map.put("description", plant.description);
-        map.put("price", toDecimal(plant.price));
-        map.put("stock", plant.stock);
-        map.put("createdAt", toIso(plant.createdAt));
-        return map;
+    private ApiMapper() {
+        // utilitaire statique
     }
 
     public static Map<String, Object> toOrder(Order order, List<Map<String, Object>> items) {
-        Map<String, Object> map = new LinkedHashMap<>();
+        Map<String, Object> map = base();
         map.put("id", order.id);
         map.put("userId", order.userId);
         map.put("totalPrice", toDecimal(order.total));
@@ -49,14 +29,21 @@ public final class ApiMapper {
     }
 
     public static Map<String, Object> toOrderItem(OrderItem item, Plant plant) {
-        Map<String, Object> map = new LinkedHashMap<>();
+        Map<String, Object> map = base();
         map.put("id", item.id);
         map.put("orderId", item.orderId);
         map.put("plantId", item.plantId);
         map.put("quantity", item.quantity);
         map.put("price", toDecimal(item.price));
         if (plant != null) {
-            map.put("plant", toPlant(plant));
+            Map<String, Object> plantMap = base();
+            plantMap.put("id", plant.id);
+            plantMap.put("name", plant.name);
+            plantMap.put("description", plant.description);
+            plantMap.put("price", toDecimal(plant.price));
+            plantMap.put("stock", plant.stock);
+            plantMap.put("createdAt", toIso(plant.createdAt));
+            map.put("plant", plantMap);
         }
         return map;
     }
@@ -79,6 +66,10 @@ public final class ApiMapper {
 
     private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
+    }
+
+    private static Map<String, Object> base() {
+        return new LinkedHashMap<>();
     }
 
     @FunctionalInterface

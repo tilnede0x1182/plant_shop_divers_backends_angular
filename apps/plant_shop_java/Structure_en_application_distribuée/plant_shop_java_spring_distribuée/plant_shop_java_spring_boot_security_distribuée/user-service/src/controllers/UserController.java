@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import repository.UserRepository;
-import security.Guards;
-import util.ApiMapper;
+import user.security.Guards;
+import user.util.ApiMapper;
 import util.PasswordUtil;
 
 import java.util.Comparator;

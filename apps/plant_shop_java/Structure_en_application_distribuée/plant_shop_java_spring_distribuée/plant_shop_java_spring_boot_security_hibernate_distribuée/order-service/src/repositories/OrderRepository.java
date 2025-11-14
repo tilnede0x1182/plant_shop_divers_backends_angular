@@ -1,6 +1,6 @@
-package repositories;
+package repository;
 
-import models.Order;
+import model.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

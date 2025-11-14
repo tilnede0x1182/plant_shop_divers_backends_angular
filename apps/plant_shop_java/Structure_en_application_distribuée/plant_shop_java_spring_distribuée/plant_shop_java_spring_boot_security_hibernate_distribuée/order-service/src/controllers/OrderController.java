@@ -1,18 +1,18 @@
 package controllers;
 
-import models.Order;
-import models.OrderItem;
-import models.Plant;
-import models.User;
+import model.Order;
+import model.OrderItem;
+import model.Plant;
+import model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import repositories.OrderItemRepository;
-import repositories.OrderRepository;
-import repositories.PlantRepository;
+import repository.OrderItemRepository;
+import repository.OrderRepository;
+import repository.PlantRepository;
 import security.Guards;
-import utils.ApiMapper;
+import util.ApiMapper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

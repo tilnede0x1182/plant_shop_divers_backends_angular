@@ -9,10 +9,10 @@ import jakarta.inject.Singleton;
 import java.sql.Connection;
 import java.util.Map;
 import controller.AuthController;
-import models.User;
+import model.User;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
-import repositories.UserRepository;
+import repository.UserRepository;
 
 @Singleton
 @Filter("/**")

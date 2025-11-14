@@ -3,7 +3,7 @@ package repository;
 import io.micronaut.context.annotation.Bean;
 import jakarta.inject.Singleton;
 import java.sql.*;
-import models.Plant;
+import model.Plant;
 import java.math.BigDecimal;
 
 @Singleton

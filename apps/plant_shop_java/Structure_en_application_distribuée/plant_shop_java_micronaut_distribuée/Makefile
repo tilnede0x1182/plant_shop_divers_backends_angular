@@ -1,5 +1,6 @@
 ROOT := $(CURDIR)
 LIB_DIR := $(ROOT)/lib
+SHARED_DIR := $(ROOT)/shared
 UTILS_DIR := $(ROOT)/utils
 AUTH_DIR := $(ROOT)/auth-service
 CATALOG_DIR := $(ROOT)/catalog-service
@@ -10,9 +11,11 @@ DB_DIR := $(ROOT)/db
 TEST_DIR := $(ROOT)/test
 
 LIB_CP := $(LIB_DIR)/*
-UTILS_CP := $(LIB_DIR)/*
+SHARED_CP := $(LIB_DIR)/*
+SHARED_SRC := $(wildcard $(SHARED_DIR)/model/*.java) $(wildcard $(SHARED_DIR)/utils/*.java) $(wildcard $(SHARED_DIR)/repository/*.java)
+UTILS_CP := $(LIB_DIR)/*:$(SHARED_DIR)/bin
 UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
-SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
+SERVICE_CP := $(LIB_CP):$(SHARED_DIR)/bin:$(UTILS_DIR)/bin
 
 DB_NAME=plant_shop_java_micronaut_distribuee
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
@@ -30,6 +33,7 @@ install: compile-install-libs
 
 clean:
 	rm -rf \
+		$(SHARED_DIR)/bin \
 		$(UTILS_DIR)/bin \
 		$(AUTH_DIR)/bin \
 		$(CATALOG_DIR)/bin \
@@ -45,15 +49,20 @@ clean:
 # Serveur - Développement
 ## ────────────────
 
-compile-utils:
+compile-shared:
+	@echo "📦 Compilation shared models & utils"
+	@mkdir -p $(SHARED_DIR)/bin
+	@javac -proc:none -cp "$(SHARED_CP)" -d $(SHARED_DIR)/bin $(SHARED_SRC)
+
+compile-utils: compile-shared
 	@echo "🔧 Compilation utilitaires"
 	@mkdir -p $(UTILS_DIR)/bin
-	@javac -J-Dorg.jboss.logging.provider=jul -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
+	@javac -proc:none -J-Dorg.jboss.logging.provider=jul -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
 
 compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
-	@javac -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+	@javac -proc:none -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
 		$(wildcard $(AUTH_DIR)/src/controllers/*.java) \
 		$(wildcard $(AUTH_DIR)/src/models/*.java) \
 		$(wildcard $(AUTH_DIR)/src/repositories/*.java) \
@@ -62,7 +71,7 @@ compile-auth: compile-utils
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
-	@javac -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+	@javac -proc:none -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
 		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java)
@@ -70,7 +79,7 @@ compile-catalog: compile-utils
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
-	@javac -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+	@javac -proc:none -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
 		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
 		$(wildcard $(ORDER_DIR)/src/models/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repositories/*.java)
@@ -78,7 +87,7 @@ compile-order: compile-utils
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
-	@javac -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+	@javac -proc:none -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
 		$(wildcard $(USER_DIR)/src/controllers/*.java) \
 		$(wildcard $(USER_DIR)/src/models/*.java) \
 		$(wildcard $(USER_DIR)/src/repositories/*.java)
@@ -86,7 +95,7 @@ compile-user: compile-utils
 compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin
-	@javac -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
+	@javac -proc:none -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
 		$(wildcard $(GATEWAY_DIR)/src/*.java)
 
 compile: compile-auth compile-catalog compile-order compile-user compile-gateway
@@ -144,7 +153,7 @@ build-dev: clean compile
 
 compile-seed:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin utils/src/PasswordUtil.java db/Seed.java
+	javac -proc:none -cp $(CLASSPATH) -d bin utils/src/PasswordUtil.java db/Seed.java
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi

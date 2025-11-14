@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import models.Order;
+import model.Order;
 
 @Singleton
 public final class OrderRepository extends BaseRepository<Order> {

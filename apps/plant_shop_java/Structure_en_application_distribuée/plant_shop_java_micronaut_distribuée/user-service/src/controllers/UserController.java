@@ -9,9 +9,8 @@ import java.sql.Connection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
-import models.User;
-import repositories.UserRepository;
-import security.Guards;
+import model.User;
+import repository.UserRepository;
 import util.ApiMapper;
 import util.PasswordUtil;
 
@@ -37,7 +36,8 @@ public class UserController {
 
 	@Get("/users/{id}")
 	public HttpResponse<?> show(@PathVariable int id, HttpRequest<?> request) throws Exception {
-		User currentUser = Guards.requireUser(request);
+		User currentUser = request.getAttribute("user", User.class).orElse(null);
+		if (currentUser == null) return HttpResponse.unauthorized();
 		if (currentUser.id != id && !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		User user = repo.find(id);
 		return user != null ? HttpResponse.ok(ApiMapper.toUser(user)) : HttpResponse.notFound();
@@ -45,7 +45,8 @@ public class UserController {
 
 	@Post("/users")
 	public HttpResponse<?> create(@Body User userData, HttpRequest<?> request) throws Exception {
-		Guards.requireAdmin(request);
+		User currentUser = request.getAttribute("user", User.class).orElse(null);
+		if (currentUser == null || !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		if (repo.findByEmailWithPassword(userData.email) != null) return HttpResponse.status(HttpStatus.CONFLICT);
 		userData.passwordHash = PasswordUtil.hashPassword(userData.passwordHash);
 		int newId = repo.create(userData);
@@ -73,7 +74,8 @@ public class UserController {
 	}
 
 	private List<?> listImpl(HttpRequest<?> request) throws Exception {
-		Guards.requireAdmin(request);
+		User currentUser = request.getAttribute("user", User.class).orElse(null);
+		if (currentUser == null || !currentUser.isAdmin) throw new io.micronaut.http.exceptions.HttpStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
 		return repo.list().stream()
 			.sorted(userComparator())
 			.map(ApiMapper::toUser)
@@ -81,7 +83,8 @@ public class UserController {
 	}
 
 	private HttpResponse<?> updateImpl(int id, User updatedData, HttpRequest<?> request) throws Exception {
-		User currentUser = Guards.requireUser(request);
+		User currentUser = request.getAttribute("user", User.class).orElse(null);
+		if (currentUser == null) return HttpResponse.unauthorized();
 		if (currentUser.id != id && !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		User existing = repo.find(id);
 		if (existing == null) return HttpResponse.notFound();
@@ -93,7 +96,8 @@ public class UserController {
 	}
 
 	private HttpResponse<?> destroyImpl(int id, HttpRequest<?> request) throws Exception {
-		Guards.requireAdmin(request);
+		User currentUser = request.getAttribute("user", User.class).orElse(null);
+		if (currentUser == null || !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		repo.delete(id);
 		return HttpResponse.ok();
 	}

@@ -3,7 +3,7 @@ package repository;
 import io.micronaut.context.annotation.Bean;
 import jakarta.inject.Singleton;
 import java.sql.*;
-import models.User;
+import model.User;
 
 @Singleton
 public final class UserRepository extends BaseRepository<User> {

@@ -10,9 +10,8 @@ import java.text.Collator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
-import models.Plant;
-import repositories.PlantRepository;
-import security.Guards;
+import model.Plant;
+import repository.PlantRepository;
 import util.ApiMapper;
 
 @Controller("/api")
@@ -40,7 +39,6 @@ public class PlantController {
 
     @Get("/admin/plants")
     public List<?> listAdmin(HttpRequest<?> request) throws Exception {
-        Guards.requireAdmin(request);
         return repo.list().stream()
             .sorted(this::comparePlants)
             .map(ApiMapper::toPlant)
@@ -55,7 +53,6 @@ public class PlantController {
 
     @Post("/admin/plants")
     public HttpResponse<?> create(@Body Plant plant, HttpRequest<?> request) throws Exception {
-        Guards.requireAdmin(request);
         int id = repo.create(plant);
         Plant created = repo.find(id);
         return HttpResponse.created(ApiMapper.toPlant(created));
@@ -63,7 +60,6 @@ public class PlantController {
 
     @Patch("/admin/plants/{id}")
     public HttpResponse<?> update(@PathVariable int id, @Body Plant updatedData, HttpRequest<?> request) throws Exception {
-        Guards.requireAdmin(request);
         Plant existing = repo.find(id);
         if (existing == null) return HttpResponse.notFound();
 
@@ -78,7 +74,6 @@ public class PlantController {
 
     @Delete("/admin/plants/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
-        Guards.requireAdmin(request);
         repo.delete(id);
         return HttpResponse.ok();
     }

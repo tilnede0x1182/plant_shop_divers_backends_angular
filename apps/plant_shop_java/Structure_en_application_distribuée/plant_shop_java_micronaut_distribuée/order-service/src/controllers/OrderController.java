@@ -11,14 +11,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import models.Order;
-import models.OrderItem;
-import models.Plant;
-import models.User;
-import repositories.OrderItemRepository;
-import repositories.OrderRepository;
-import repositories.PlantRepository;
-import security.Guards;
+import model.Order;
+import model.OrderItem;
+import model.Plant;
+import model.User;
+import repository.OrderItemRepository;
+import repository.OrderRepository;
+import repository.PlantRepository;
 import util.ApiMapper;
 
 @Controller("/api/orders")
@@ -38,8 +37,11 @@ public class OrderController {
     }
 
     @Get
-    public List<?> list(HttpRequest<?> request) throws Exception {
-        User currentUser = Guards.requireUser(request);
+    public HttpResponse<?> list(HttpRequest<?> request) throws Exception {
+        User currentUser = request.getAttribute("user", User.class).orElse(null);
+        if (currentUser == null) {
+            return HttpResponse.unauthorized().body(Map.of("error", "Non authentifié"));
+        }
         List<Order> orders = currentUser.isAdmin ? repo.list() : repo.listByUser(currentUser.id);
         orders.sort(Comparator.comparing(o -> o.createdAt, Comparator.reverseOrder()));
 
@@ -48,12 +50,15 @@ public class OrderController {
             List<Map<String, Object>> items = ApiMapper.toOrderItems(itemRepo.listByOrder(order.id), plantRepo::find);
             payload.add(ApiMapper.toOrder(order, items));
         }
-        return payload;
+        return HttpResponse.ok(payload);
     }
 
     @Post
     public HttpResponse<?> create(@Body Map<String, List<Map<String, Integer>>> body, HttpRequest<?> request) throws Exception {
-        User currentUser = Guards.requireUser(request);
+        User currentUser = request.getAttribute("user", User.class).orElse(null);
+        if (currentUser == null) {
+            return HttpResponse.unauthorized().body(Map.of("error", "Non authentifié"));
+        }
         List<Map<String, Integer>> itemsJson = body.get("items");
         if (itemsJson == null || itemsJson.isEmpty()) {
             return HttpResponse.badRequest(Map.of("error", "items requis"));
@@ -87,7 +92,10 @@ public class OrderController {
 
     @Patch("/{id}")
     public HttpResponse<?> patch(@PathVariable int id, @Body Map<String, String> body, HttpRequest<?> request) throws Exception {
-        Guards.requireAdmin(request);
+        User currentUser = request.getAttribute("user", User.class).orElse(null);
+        if (currentUser == null || !currentUser.isAdmin) {
+            return HttpResponse.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Accès administrateur requis"));
+        }
         if (repo.find(id) == null) return HttpResponse.notFound();
         if (body.containsKey("status")) {
             repo.updateStatus(id, body.get("status"));
@@ -99,7 +107,10 @@ public class OrderController {
 
     @Delete("/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
-        Guards.requireAdmin(request);
+        User currentUser = request.getAttribute("user", User.class).orElse(null);
+        if (currentUser == null || !currentUser.isAdmin) {
+            return HttpResponse.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Accès administrateur requis"));
+        }
         itemRepo.deleteByOrder(id);
         repo.delete(id);
         return HttpResponse.ok();

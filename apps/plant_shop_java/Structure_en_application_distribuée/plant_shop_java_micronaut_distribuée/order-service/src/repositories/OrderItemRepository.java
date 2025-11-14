@@ -4,7 +4,7 @@ import io.micronaut.context.annotation.Bean;
 import jakarta.inject.Singleton;
 import java.sql.*;
 import java.util.*;
-import models.OrderItem;
+import model.OrderItem;
 
 @Singleton
 public final class OrderItemRepository extends BaseRepository<OrderItem> {

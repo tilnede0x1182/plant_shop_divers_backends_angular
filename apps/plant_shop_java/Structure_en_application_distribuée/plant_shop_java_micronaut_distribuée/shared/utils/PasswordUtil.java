@@ -18,7 +18,7 @@ public final class PasswordUtil {
         try {
             return BCrypt.checkpw(plainTextPassword, hashedPassword);
         } catch (IllegalArgumentException e) {
-            System.err.println("Avertissement : Tentative de vérification d'un hash non-BCrypt.");
+            System.err.println("Avertissement : Tentative de vÃ©rification d'un hash non-BCrypt.");
             return false;
         }
     }

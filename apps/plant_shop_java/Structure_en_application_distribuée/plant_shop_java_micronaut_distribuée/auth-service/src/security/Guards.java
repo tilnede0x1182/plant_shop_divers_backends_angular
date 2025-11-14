@@ -3,7 +3,7 @@ package security;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.exceptions.HttpStatusException;
-import models.User;
+import model.User;
 
 public final class Guards {
 

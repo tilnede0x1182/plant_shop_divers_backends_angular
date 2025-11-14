@@ -1,16 +1,17 @@
-package models;
+package model;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 public final class Order {
-    public int id;
-    public int userId;
+    public int        id;
+    public int        userId;
     public BigDecimal total;
-    public String status;
-    public Timestamp createdAt; // null lors de l’insertion
+    public String     status;
+    public Timestamp  createdAt;   // null lors de l'insertion
 
-    public Order(int id, int userId, BigDecimal total, String status, Timestamp createdAt) {
+    public Order(int id, int userId, BigDecimal total,
+                 String status, Timestamp createdAt) {
         this.id = id;
         this.userId = userId;
         this.total = total;
@@ -21,7 +22,4 @@ public final class Order {
     public Order(int userId, BigDecimal total, String status) {
         this(0, userId, total, status, null);
     }
-
-    // Constructeur par défaut nécessaire pour la désérialisation JSON
-    public Order() {}
 }

@@ -21,14 +21,14 @@ CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
 ## ────────────────
 
 compile-install-libs:
-	mkdir -p bin
-	javac -d bin config/InstallCoursier.java
+	@mkdir -p bin
+	@javac -d bin config/InstallCoursier.java
 
 install: compile-install-libs
-	java -cp bin config.InstallCoursier
+	@java -cp bin config.InstallCoursier
 
 clean:
-	rm -rf \
+	@rm -rf \
 		$(UTILS_DIR)/bin \
 		$(AUTH_DIR)/bin \
 		$(CATALOG_DIR)/bin \
@@ -94,41 +94,41 @@ compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 ## ────────────────
 
 run-auth: compile-auth
-	java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService
+	@java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService
 
 run-catalog: compile-catalog
-	java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService
+	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService
 
 run-order: compile-order
-	java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService
+	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService
 
 run-user: compile-user
-	java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService
+	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService
 
 run-gateway: compile-gateway
-	java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
+	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
 
 ## ────────────────
 # PM2 Management
 ## ────────────────
 
 pm2-start-all:
-	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all
+	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all
 
 pm2-stop-all:
-	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all
+	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all
 
 pm2-start:
 ifndef SERVICE
-	$(error Usage: make pm2-start SERVICE=<nom>)
+	@$(error Usage: make pm2-start SERVICE=<nom>)
 endif
-	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start $(SERVICE)
+	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start $(SERVICE)
 
 pm2-stop:
 ifndef SERVICE
-	$(error Usage: make pm2-stop SERVICE=<nom>)
+	@$(error Usage: make pm2-stop SERVICE=<nom>)
 endif
-	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
+	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
 
 run: pm2-start-all
 
@@ -141,12 +141,12 @@ build-dev: clean compile
 ## ────────────────
 
 compile-test:
-	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin test/Test.java
+	@mkdir -p bin
+	@javac -cp $(CLASSPATH) -d bin test/Test.java
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
-	java -cp $(CLASSPATH) Tests.Test
+	@java -cp $(CLASSPATH) Tests.Test
 
 test-dev: clean compile-test tests
 
@@ -155,10 +155,10 @@ test-dev: clean compile-test tests
 ## ────────────────
 
 db-create:
-	sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME);"
+	@sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME);"
 
 db-drop:
-	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
+	@sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
 
 db-migrate-catalog:
 	@echo "🐘 Migration catalog-service..."

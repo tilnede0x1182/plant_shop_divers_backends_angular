@@ -1,6 +1,6 @@
 package security;
 
-import models.User;
+import model.User;
 
 /**
  * Conserve l'utilisateur authentifié dans le Thread courant.

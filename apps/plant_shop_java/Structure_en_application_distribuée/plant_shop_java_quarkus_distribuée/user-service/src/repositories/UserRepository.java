@@ -3,12 +3,12 @@ package repositories;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import java.sql.*;
-import models.User;
+import model.User;
 
-@RequestScoped // Ce repository vivra le temps d'une requête HTTP
+@RequestScoped
 public class UserRepository extends BaseRepository<User> {
 
-    @Inject // Injecte la connexion @RequestScoped fournie par DatabaseFactory
+    @Inject
     public UserRepository(Connection db) {
         super(db, "users");
     }
@@ -19,7 +19,7 @@ public class UserRepository extends BaseRepository<User> {
             rs.getInt("id"),
             rs.getString("name"),
             rs.getString("email"),
-            null, // passwordHash est volontairement laissé à null
+            null,
             rs.getBoolean("is_admin"),
             rs.getTimestamp("created_at")
         );
@@ -35,7 +35,7 @@ public class UserRepository extends BaseRepository<User> {
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getString("email"),
-                        rs.getString("password_hash"), // Le hash est inclus ici
+                        rs.getString("password_hash"),
                         rs.getBoolean("is_admin"),
                         rs.getTimestamp("created_at")
                     );

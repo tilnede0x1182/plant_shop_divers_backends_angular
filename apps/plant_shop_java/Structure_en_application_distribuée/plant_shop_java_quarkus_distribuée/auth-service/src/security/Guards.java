@@ -4,7 +4,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
-import models.User;
+import model.User;
 
 /**
  * Bean @RequestScoped qui fournit des méthodes pour

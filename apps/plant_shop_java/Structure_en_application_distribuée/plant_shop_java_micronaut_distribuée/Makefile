@@ -167,7 +167,7 @@ seed-dev: clean compile-seed seed
 
 compile-test:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin test/Test.java
+	javac -proc:none -cp $(CLASSPATH) -d bin test/Test.java
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi

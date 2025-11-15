@@ -2,6 +2,7 @@ package utils;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -51,7 +52,7 @@ public final class DatabaseFactory {
 
     /**
      * Méthode "Producer" qui fournit une connexion à la base de données.
-     * @Produces indique à Quarkus que cette méthode crée un bean.
+     * @Produces indique à CDI que cette méthode crée un bean.
      * @RequestScoped indique que ce bean (la Connexion) doit être créé
      * une fois par requête HTTP et détruit à la fin de la requête.
      */
@@ -67,5 +68,22 @@ public final class DatabaseFactory {
             throw new IllegalStateException("DATABASE_URL, DATABASE_USER et DATABASE_PASS doivent être définis dans config/.env");
         }
         return DriverManager.getConnection(url, user, pass);
+    }
+
+    /**
+     * Méthode "Disposer" qui ferme la connexion à la fin du scope de la requête.
+     * @Disposes indique à CDI d'appeler cette méthode lorsque le bean Connection
+     * produit par connection() est détruit (à la fin de la requête HTTP).
+     */
+    public void closeConnection(@Disposes Connection connection) {
+        if (connection != null) {
+            try {
+                if (!connection.isClosed()) {
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                System.err.println("⚠️  Erreur lors de la fermeture de la connexion : " + e.getMessage());
+            }
+        }
     }
 }

@@ -3,6 +3,7 @@
 ## Introduction
 
 Ce rapport analyse les violations du principe DRY (Don't Repeat Yourself) **à l'intérieur de chaque projet** Rust :
+
 - `plant_shop_rust_see_orm` (utilisant SeaORM)
 - `plant_shop_rust_sqlx` (utilisant SQLx)
 
@@ -15,12 +16,14 @@ Les deux projets sont des implémentations du même backend avec des ORMs diffé
 ### 1. **Extraction et validation JWT dupliquée (8+ fois)** - 🔴 CRITIQUE
 
 **Fichiers concernés :**
+
 - `src/users/handlers.rs:44-49`
 - `src/plants/handlers.rs:40-45`
 - `src/orders/handlers.rs:51-58` et `110-117`
 - `src/auth/handlers.rs:117-122`
 
 **Code répété :**
+
 ```rust
 let token = jar
     .get("auth_token")
@@ -39,6 +42,7 @@ let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
 ### 2. **Structures User/UserAuth avec 5 champs redondants** - 🟠 HAUTE
 
 **Fichiers concernés :**
+
 - `src/users/models.rs:4-13` (User)
 - `src/auth/models.rs:17-28` (UserAuth)
 
@@ -47,6 +51,7 @@ let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
 **Code dupliqué :**
 
 Structure `User` (users/models.rs) :
+
 ```rust
 #[derive(Serialize, Deserialize, Clone)]
 pub struct User {
@@ -61,6 +66,7 @@ pub struct User {
 ```
 
 Structure `UserAuth` (auth/models.rs) :
+
 ```rust
 #[derive(Serialize, Deserialize, Clone)]
 pub struct UserAuth {
@@ -85,6 +91,7 @@ pub struct UserAuth {
 ### 3. **Conversions Entity → DTO répétées (3+ fois)** - 🟠 HAUTE
 
 **Fichiers concernés :**
+
 - `src/users/handlers.rs:110-116` (get_user)
 - `src/users/handlers.rs:69-77` (list_users)
 - `src/auth/handlers.rs:130-135` (me)
@@ -92,6 +99,7 @@ pub struct UserAuth {
 **Code répété :**
 
 Conversion en users/handlers.rs (get_user) :
+
 ```rust
 let dto = UserDto {
     id: user.id,
@@ -103,6 +111,7 @@ let dto = UserDto {
 ```
 
 Conversion en users/handlers.rs (list_users) :
+
 ```rust
 let mapped: Vec<_> = users.into_iter().map(|u| {
     json!({
@@ -116,6 +125,7 @@ let mapped: Vec<_> = users.into_iter().map(|u| {
 ```
 
 Conversion en auth/handlers.rs (me) :
+
 ```rust
 let response = AuthMeResponse {
     id: user.id,
@@ -134,12 +144,14 @@ let response = AuthMeResponse {
 ### 4. **Validation admin dupliquée (3 handlers)** - 🟡 MOYENNE
 
 **Fichiers concernés :**
+
 - `src/users/handlers.rs:51-60` (via DB query)
 - `src/plants/handlers.rs:46` (via JWT claims)
 
 **Code dupliqué :**
 
 Users handlers (via DB) :
+
 ```rust
 let current = User::find_by_id(claims.sub)
     .one(db)
@@ -153,6 +165,7 @@ if !current.is_admin {
 ```
 
 Plants handlers (via JWT) :
+
 ```rust
 if !claims.is_admin {
     return Err(AppError::Forbidden.into());
@@ -168,12 +181,14 @@ if !claims.is_admin {
 ### 5. **Pattern de construction PlantBasic répété** - 🟡 MOYENNE
 
 **Fichiers concernés :**
+
 - `src/orders/models.rs:16-22` (définition)
 - `src/orders/handlers.rs:150-160` (construction manuelle)
 
 **Code dupliqué :**
 
 Structure définie :
+
 ```rust
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PlantBasic {
@@ -186,6 +201,7 @@ pub struct PlantBasic {
 ```
 
 Mais recréée manuellement en JSON :
+
 ```rust
 item_details.push(json!({
     "id": item.id,
@@ -211,12 +227,14 @@ item_details.push(json!({
 ### 1. **Extraction et validation JWT dupliquée (7+ fois)** - 🔴 CRITIQUE
 
 **Fichiers concernés :**
+
 - `src/users/handlers.rs:15-21` et `100-104`
 - `src/plants/handlers.rs:18-20`
 - `src/orders/handlers.rs:37-41` et `126-130`
 - `src/auth/handlers.rs:115-120`
 
 **Code répété :**
+
 ```rust
 let token = jar
     .get("auth_token")
@@ -235,10 +253,12 @@ let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
 ### 2. **Extraction user_id dupliquée 2 fois dans le même fichier** - 🔴 HAUTE
 
 **Fichiers concernés :**
+
 - `src/orders/handlers.rs:37-49` (create_order)
 - `src/orders/handlers.rs:126-137` (list_orders)
 
 **Code répété (13 lignes identiques) :**
+
 ```rust
 let user_id = if let Some(c) = jar.get("auth_token") {
     let token = c.value_str();
@@ -263,6 +283,7 @@ let user_id = if let Some(c) = jar.get("auth_token") {
 ### 3. **Structures User/UserAuth avec 5 champs redondants** - 🟠 HAUTE
 
 **Fichiers concernés :**
+
 - `src/users/models.rs:4-13`
 - `src/auth/models.rs:17-28`
 
@@ -271,6 +292,7 @@ let user_id = if let Some(c) = jar.get("auth_token") {
 **Code dupliqué :**
 
 Structure `User` :
+
 ```rust
 #[derive(Serialize, Deserialize, sqlx::FromRow, Clone)]
 pub struct User {
@@ -285,6 +307,7 @@ pub struct User {
 ```
 
 Structure `UserAuth` :
+
 ```rust
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserAuth {
@@ -309,6 +332,7 @@ pub struct UserAuth {
 ### 4. **Construction OrderItemWithPlant répétée 3 fois** - 🟠 HAUTE
 
 **Fichiers concernés :**
+
 - `src/orders/handlers.rs:97-111` (create_order)
 - `src/orders/handlers.rs:175-189` (list_orders)
 - `src/orders/handlers.rs:231-243` (get_order)
@@ -316,6 +340,7 @@ pub struct UserAuth {
 **Code répété :**
 
 create_order :
+
 ```rust
 for order_item in &created_items {
     let plant = sqlx::query_as!(
@@ -338,6 +363,7 @@ for order_item in &created_items {
 ```
 
 list_orders :
+
 ```rust
 let items: Vec<_> = items_rows
     .into_iter()
@@ -368,12 +394,14 @@ get_order (pattern identique à list_orders).
 ### 5. **Pattern UPDATE avec COALESCE répété** - 🟡 MOYENNE
 
 **Fichiers concernés :**
+
 - `src/users/handlers.rs:127-139`
 - `src/plants/handlers.rs:75-89`
 
 **Pattern répété :**
 
 Users :
+
 ```rust
 let user = sqlx::query_as!(
     User,
@@ -391,6 +419,7 @@ let user = sqlx::query_as!(
 ```
 
 Plants :
+
 ```rust
 let plant = sqlx::query_as!(
     Plant,
@@ -418,12 +447,14 @@ let plant = sqlx::query_as!(
 ### 6. **Validation admin avec 2 approches différentes** - 🟡 MOYENNE
 
 **Fichiers concernés :**
+
 - `src/users/handlers.rs:24-34` (via DB query)
 - `src/plants/handlers.rs:18-23` (via JWT claims)
 
 **Code dupliqué :**
 
 Users (via DB) :
+
 ```rust
 let user = sqlx::query!(
     "SELECT id, is_admin FROM users WHERE id = $1",
@@ -439,6 +470,7 @@ if !user.is_admin {
 ```
 
 Plants (via JWT) :
+
 ```rust
 let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
 if !claims.is_admin {
@@ -455,12 +487,14 @@ if !claims.is_admin {
 ### 7. **Conversion User → DTO répétée** - 🟡 MOYENNE
 
 **Fichiers concernés :**
+
 - `src/auth/handlers.rs:130-135`
 - `src/auth/handlers.rs:140-146` (définition de la structure de réponse)
 
 **Code dupliqué :**
 
 Structure de réponse :
+
 ```rust
 #[derive(serde::Serialize)]
 struct AuthMeResponse {
@@ -472,6 +506,7 @@ struct AuthMeResponse {
 ```
 
 Construction :
+
 ```rust
 let response = AuthMeResponse {
     id: user.id,
@@ -489,15 +524,15 @@ let response = AuthMeResponse {
 
 ## RÉSUMÉ COMPARATIF
 
-| Violation DRY | see_orm | sqlx | Sévérité |
-|---|:---:|:---:|:---:|
-| **Extraction JWT répétée** | 8+ fois | 7+ fois | 🔴 **CRITIQUE** |
-| **User/UserAuth redondants** | 5 champs | 5 champs | 🟠 **HAUTE** |
-| **Conversions User → DTO** | 3+ fois | 2+ fois | 🟠 **HAUTE** |
-| **Construction PlantBasic/OrderItem** | 2+ fois | 3 fois | 🟠 **HAUTE** |
-| **Extraction user_id identique** | - | 2 fois (même fichier) | 🔴 **HAUTE** |
-| **Validation admin** | 3 handlers | 2 approches | 🟡 **MOYENNE** |
-| **Pattern UPDATE COALESCE** | - | 2 fois | 🟡 **MOYENNE** |
+| Violation DRY                         |  see_orm   |         sqlx          |    Sévérité     |
+| ------------------------------------- | :--------: | :-------------------: | :-------------: |
+| **Extraction JWT répétée**            |  8+ fois   |        7+ fois        | 🔴 **CRITIQUE** |
+| **User/UserAuth redondants**          |  5 champs  |       5 champs        |  🟠 **HAUTE**   |
+| **Conversions User → DTO**            |  3+ fois   |        2+ fois        |  🟠 **HAUTE**   |
+| **Construction PlantBasic/OrderItem** |  2+ fois   |        3 fois         |  🟠 **HAUTE**   |
+| **Extraction user_id identique**      |     -      | 2 fois (même fichier) |  🔴 **HAUTE**   |
+| **Validation admin**                  | 3 handlers |      2 approches      | 🟡 **MOYENNE**  |
+| **Pattern UPDATE COALESCE**           |     -      |        2 fois         | 🟡 **MOYENNE**  |
 
 ---
 
@@ -574,6 +609,7 @@ async fn list_users(auth: AuthUser, pool: Data<DbConn>) -> Result<impl Responder
 ```
 
 **Bénéfices :**
+
 - Élimine 8+ duplications dans see_orm
 - Élimine 7+ duplications dans sqlx
 - Code de handler 90% plus court
@@ -615,6 +651,7 @@ pub struct UserAuth {
 ```
 
 **Bénéfices :**
+
 - Élimine la duplication de 5 champs
 - Changement de structure en un seul endroit
 - Meilleure cohérence du modèle
@@ -648,6 +685,7 @@ let dto: UserDto = user.into();  // Au lieu de mapper manuellement
 ```
 
 **Bénéfices :**
+
 - Élimine 3+ conversions manuelles
 - Code plus idiomatique Rust
 - Centralisation des règles de conversion
@@ -683,6 +721,7 @@ web::resource("/users")
 ```
 
 **Bénéfices :**
+
 - Centralisation de la logique admin
 - Cohérence dans l'approche
 - Code de handler plus propre
@@ -724,6 +763,7 @@ let user_id = get_user_id_from_request(&jar, pool).await?;
 ```
 
 **Bénéfices :**
+
 - Élimine 13 lignes dupliquées
 - Améliore la lisibilité des handlers
 
@@ -766,6 +806,7 @@ fn build_order_item_with_plant(
 ```
 
 **Bénéfices :**
+
 - Centralisation du mapping
 - Réduction de code dans handlers
 
@@ -773,14 +814,14 @@ fn build_order_item_with_plant(
 
 ## IMPACT ESTIMÉ DES REFACTORINGS
 
-| Refactoring | Lignes de code économisées | Fichiers impactés | Complexité |
-|---|:---:|:---:|:---:|
-| Extracteur JWT | ~50-60 lignes | 4-5 fichiers | Faible |
-| User/UserAuth factorisation | ~10-15 lignes | 2 fichiers | Moyenne |
-| Traits de conversion | ~20-30 lignes | 3 fichiers | Faible |
-| Middleware admin | ~15-20 lignes | 3 fichiers | Moyenne |
-| Helper user_id (sqlx) | ~13 lignes | 1 fichier | Très faible |
-| Helper OrderItem (sqlx) | ~30-40 lignes | 1 fichier | Faible |
+| Refactoring                 | Lignes de code économisées | Fichiers impactés | Complexité  |
+| --------------------------- | :------------------------: | :---------------: | :---------: |
+| Extracteur JWT              |       ~50-60 lignes        |   4-5 fichiers    |   Faible    |
+| User/UserAuth factorisation |       ~10-15 lignes        |    2 fichiers     |   Moyenne   |
+| Traits de conversion        |       ~20-30 lignes        |    3 fichiers     |   Faible    |
+| Middleware admin            |       ~15-20 lignes        |    3 fichiers     |   Moyenne   |
+| Helper user_id (sqlx)       |         ~13 lignes         |     1 fichier     | Très faible |
+| Helper OrderItem (sqlx)     |       ~30-40 lignes        |     1 fichier     |   Faible    |
 
 **Total estimé : ~140-180 lignes de code en moins, amélioration de la maintenabilité**
 
@@ -800,5 +841,24 @@ La refactorisation prioritaire est la **centralisation de l'authentification JWT
 
 **Rapport généré le :** 2025-11-13
 **Projets analysés :**
+
 - `plant_shop_rust_see_orm`
 - `plant_shop_rust_sqlx`
+
+## A faire
+
+1. Extraire l’extraction/validation du JWT dans un middleware (Actix extracteur ou service partagé) et l’utiliser partout (`users`, `orders`, `auth`, `plants`) pour arrêter la duplication du bloc `jar -> token -> verify_jwt`. Ainsi toute modification du cookie ou du secret se fait en un seul endroit.
+2. Fusionner les structures utilisateur (`User`, `UserAuth`, `UserDto`) en une base commune, ou définir un trait partagé, afin d’éviter de répéter les champs (`id`, `email`, `username`, `is_admin`, `created_at`) dans trois modules différents.
+3. Centraliser les conversions Entity → DTO/JSON dans des helpers partagés (par exemple `User::into_response`) pour supprimer les mappages identiques dans `users::handlers`, `auth::handlers`, `plants::handlers`.
+4. Pour SQLx, extraire les helpers `get_user_id_from_request` et `build_order_item_with_plant` dans un module `orders/helpers.rs` afin qu’ils soient utilisés par tous les handlers et qu’on ne reproduise pas la logique 2-3 fois.
+5. Factoriser la logique ADMIN (`AdminGuard`, middleware) et les entêtes CORS en composants réutilisables (`admin_guard.rs`, `cors.rs`) accessibles par tous les handlers.
+
+## 3. Audit Rust & solutions sans écrire de code
+
+### 3.1 Performance (Rust vs C)
+
+Les deux projets Rust arrivent à être plus lents que la version Java/C principalement parce que :
+
+1. La couche HTTP Actix utilise un tokio runtime par service sans ajustement, alors que les services C sont compilés en binaires mono-thread optimisés et profitent de `-O3`.
+2. Les bases SeaORM/SQLx ajoutent une surcharge (pooling, mapping) qui n’est pas amortie par la compilation car beaucoup de conversions sont réécrites localement.
+3. Il manque un benchmarking systématique (profiling) pour repérer les goulets (clonage de structures, conversions JSON, validations JWT).

@@ -1,53 +1,21 @@
 package utils;
 
-import controllers.AuthController;
-import controllers.OrderController;
-import controllers.PlantController;
-import controllers.UserController;
 import io.undertow.Undertow;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import jakarta.ws.rs.core.Application;
 import org.jboss.resteasy.core.ResteasyDeploymentImpl;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 import org.jboss.resteasy.spi.ResteasyDeployment;
-import security.CorsConfig;
-import security.CdiRequestScopeFilter;
-import security.SessionAuthFilter;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 @Singleton
 public class QuarkusBootstrap {
-
-    @Inject
-    AuthController authController;
-
-    @Inject
-    PlantController plantController;
-
-    @Inject
-    UserController userController;
-
-    @Inject
-    OrderController orderController;
-
-    @Inject
-    SessionAuthFilter sessionAuthFilter;
-
-    @Inject
-    CorsConfig corsConfig;
-
-    @Inject
-    CdiRequestScopeFilter requestScopeFilter;
 
     public void run(String[] args, CountDownLatch shutdownLatch) throws Exception {
         Map<String, String> env = loadEnv();
@@ -65,22 +33,8 @@ public class QuarkusBootstrap {
         UndertowJaxrsServer server = new UndertowJaxrsServer();
         server.start(Undertow.builder().addHttpListener(port, "0.0.0.0"));
 
-        Set<Object> singletons = new HashSet<>();
-        singletons.add(authController);
-        singletons.add(plantController);
-        singletons.add(userController);
-        singletons.add(orderController);
-        singletons.add(sessionAuthFilter);
-        singletons.add(corsConfig);
-        singletons.add(requestScopeFilter);
-
         ResteasyDeployment deployment = new ResteasyDeploymentImpl();
-        deployment.setApplication(new Application() {
-            @Override
-            public Set<Object> getSingletons() {
-                return singletons;
-            }
-        });
+        deployment.setApplication(new RestApplication());
 
         server.deploy(deployment);
 

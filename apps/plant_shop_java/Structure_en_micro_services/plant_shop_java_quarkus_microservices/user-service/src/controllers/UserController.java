@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import model.User;
+import model.UserDTO;
 import repository.UserRepository;
 import security.Guards;
 import util.ApiMapper;
@@ -82,7 +83,7 @@ public class UserController {
     @GET
     @Path("/users/{id}")
     public Response show(@PathParam("id") int id) throws Exception {
-        User currentUser = guards.requireUser();
+        UserDTO currentUser = guards.requireUser();
 
         // Un utilisateur ne peut voir que son profil, un admin peut voir tout le monde
         if (currentUser.id != id && !currentUser.isAdmin) {
@@ -126,7 +127,7 @@ public class UserController {
     }
 
     private Response updateImpl(int id, Map<String, Object> body) throws Exception {
-        User currentUser = guards.requireUser();
+        UserDTO currentUser = guards.requireUser();
 
         // Un utilisateur ne peut modifier que lui-même, un admin peut modifier tout le monde
         if (currentUser.id != id && !currentUser.isAdmin) {

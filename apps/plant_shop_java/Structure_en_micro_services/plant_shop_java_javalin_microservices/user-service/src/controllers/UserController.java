@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import model.User;
+import model.UserDTO;
 import org.json.JSONObject;
 import repository.UserRepository;
 import util.ApiMapper;
@@ -32,7 +33,7 @@ public final class UserController {
 
     public void show(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
-        User currentUser = ctx.attribute("user");
+        UserDTO currentUser = ctx.attribute("user");
         if (currentUser.id != id && !currentUser.isAdmin) {
             throw new ForbiddenResponse();
         }
@@ -65,7 +66,7 @@ public final class UserController {
 
     public void update(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
-        User currentUser = ctx.attribute("user");
+        UserDTO currentUser = ctx.attribute("user");
         if (currentUser.id != id && !currentUser.isAdmin) {
             throw new ForbiddenResponse();
         }

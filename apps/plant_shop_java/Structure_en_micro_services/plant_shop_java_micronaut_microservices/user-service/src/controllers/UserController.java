@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import model.User;
+import model.UserDTO;
 import repository.UserRepository;
 import security.Guards;
 import util.ApiMapper;
@@ -37,7 +38,7 @@ public class UserController {
 
 	@Get("/users/{id}")
 	public HttpResponse<?> show(@PathVariable int id, HttpRequest<?> request) throws Exception {
-		User currentUser = Guards.requireUser(request);
+		UserDTO currentUser = Guards.requireUser(request);
 		if (currentUser.id != id && !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		User user = repo.find(id);
 		return user != null ? HttpResponse.ok(ApiMapper.toUser(user)) : HttpResponse.notFound();
@@ -81,7 +82,7 @@ public class UserController {
 	}
 
 	private HttpResponse<?> updateImpl(int id, User updatedData, HttpRequest<?> request) throws Exception {
-		User currentUser = Guards.requireUser(request);
+		UserDTO currentUser = Guards.requireUser(request);
 		if (currentUser.id != id && !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		User existing = repo.find(id);
 		if (existing == null) return HttpResponse.notFound();

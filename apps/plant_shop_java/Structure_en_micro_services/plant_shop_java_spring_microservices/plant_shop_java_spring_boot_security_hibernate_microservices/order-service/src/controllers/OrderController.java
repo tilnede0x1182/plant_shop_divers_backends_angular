@@ -3,7 +3,7 @@ package controllers;
 import model.Order;
 import model.OrderItem;
 import model.PlantStock;
-import model.User;
+import model.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +48,7 @@ public class OrderController {
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> list() throws Exception {
-        User currentUser = guards.requireUser();
+        UserDTO currentUser = guards.requireUser();
         List<Order> orders = repo.findByUserIdOrderByCreatedAtDesc(currentUser.id);
 
         List<Map<String, Object>> payload = new ArrayList<>();
@@ -61,7 +61,7 @@ public class OrderController {
     @PostMapping
     @Transactional
     public ResponseEntity<Object> create(@RequestBody Map<String, List<Map<String, Integer>>> body) throws Exception {
-        User currentUser = guards.requireUser();
+        UserDTO currentUser = guards.requireUser();
         List<Map<String, Integer>> itemsJson = body.get("items");
 
         if (itemsJson == null || itemsJson.isEmpty()) {

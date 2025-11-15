@@ -17,16 +17,10 @@ import static io.javalin.apibuilder.ApiBuilder.*;
 public final class ApplicationController {
 
     private final AuthController authController;
-    private final PlantController plantController;
-    private final UserController userController;
-    private final OrderController orderController;
     private final UserRepository userRepoForAuth;
 
     public ApplicationController(Connection db) {
         this.authController = new AuthController(db);
-        this.plantController = new PlantController(db);
-        this.userController = new UserController(db);
-        this.orderController = new OrderController(db);
         this.userRepoForAuth = new UserRepository(db);
     }
 
@@ -36,51 +30,12 @@ public final class ApplicationController {
     public EndpointGroup getRoutes() {
         return () -> {
             path("/api", () -> {
-                // Routes d'authentification
+                // Routes d'authentification uniquement
                 path("/auth", () -> {
                     post("/register", authController::register);
                     post("/login", authController::login);
                     post("/logout", requireUser(authController::logout));
                     get("/me", requireUser(authController::me));
-                });
-
-                // Routes publiques pour les plantes
-                path("/plants", () -> {
-                    get(plantController::listPublic);
-                    get("/{id}", plantController::show);
-                });
-
-                // Routes admin pour les plantes
-                path("/admin/plants", () -> {
-                    get(requireAdmin(plantController::listAdmin));
-                    post(requireAdmin(plantController::create));
-                    patch("/{id}", requireAdmin(plantController::update));
-                    delete("/{id}", requireAdmin(plantController::destroy));
-                });
-
-                // Routes pour les utilisateurs
-                path("/users", () -> {
-                    get(requireAdmin(userController::list));
-                    post(requireAdmin(userController::create));
-                    get("/{id}", requireUser(userController::show));
-                    patch("/{id}", requireUser(userController::update));
-                    delete("/{id}", requireAdmin(userController::destroy));
-                });
-
-                // Routes admin pour les utilisateurs
-                path("/admin/users", () -> {
-                    get(requireAdmin(userController::list));
-                    get("/{id}", requireAdmin(userController::show));
-                    patch("/{id}", requireAdmin(userController::update));
-                    delete("/{id}", requireAdmin(userController::destroy));
-                });
-
-                // Routes pour les commandes
-                path("/orders", () -> {
-                    get(requireUser(orderController::list));
-                    post(requireUser(orderController::create));
-                    patch("/{id}", requireAdmin(orderController::patch));
-                    delete("/{id}", requireAdmin(orderController::destroy));
                 });
             });
         };

@@ -6,6 +6,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.NewCookie.SameSite;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
 import java.util.UUID;
@@ -72,6 +73,7 @@ public class AuthController {
             .path("/")
             .maxAge(3600) // 1 heure
             .httpOnly(true)
+            .sameSite(SameSite.LAX)
             .build();
 
         return Response.status(Response.Status.CREATED)
@@ -93,6 +95,7 @@ public class AuthController {
             .path("/")
             .maxAge(0) // Expire immédiatement
             .httpOnly(true)
+            .sameSite(SameSite.LAX)
             .build();
 
         // 204 No Content

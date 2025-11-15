@@ -61,7 +61,11 @@ public class AuthController {
         cookie.setMaxAge(3600); // 1 heure
         cookie.setHttpOnly(true);
         // cookie.setSecure(true); // À activer en production (HTTPS)
-        response.addCookie(cookie);
+
+        // Ajouter SameSite via header Set-Cookie
+        String cookieValue = String.format("%s=%s; Path=%s; Max-Age=%d; HttpOnly; SameSite=Lax",
+            "session_id", sessionId, "/", 3600);
+        response.setHeader("Set-Cookie", cookieValue);
         authenticateUser(user);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -74,12 +78,10 @@ public class AuthController {
             sessionService.removeSession(sessionId);
         }
 
-        // Crée un cookie expiré pour l'effacer
-        Cookie expiredCookie = new Cookie("session_id", "");
-        expiredCookie.setPath("/");
-        expiredCookie.setMaxAge(0); // Expire immédiatement
-        expiredCookie.setHttpOnly(true);
-        response.addCookie(expiredCookie);
+        // Crée un cookie expiré pour l'effacer avec SameSite
+        String expiredCookieValue = String.format("%s=; Path=%s; Max-Age=%d; HttpOnly; SameSite=Lax",
+            "session_id", "/", 0);
+        response.setHeader("Set-Cookie", expiredCookieValue);
 
         SecurityContextHolder.clearContext();
 

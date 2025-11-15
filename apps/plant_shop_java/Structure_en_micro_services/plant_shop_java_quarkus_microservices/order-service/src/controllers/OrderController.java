@@ -18,7 +18,7 @@ import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.PlantStock;
-import model.User;
+import model.UserDTO;
 import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
@@ -51,7 +51,7 @@ public class OrderController {
 
     @GET
     public Response list() throws Exception {
-        User currentUser = guards.requireUser();
+        UserDTO currentUser = guards.requireUser();
         List<Order> orders = repo.listByUser(currentUser.id);
 
         orders.sort(Comparator.comparing(o -> o.createdAt, Comparator.reverseOrder()));
@@ -66,7 +66,7 @@ public class OrderController {
     @POST
     @Transactional // Gère la transaction (commit/rollback)
     public Response create(Map<String, List<Map<String, Integer>>> body) throws Exception {
-        User currentUser = guards.requireUser();
+        UserDTO currentUser = guards.requireUser();
         List<Map<String, Integer>> itemsJson = body.get("items");
 
         if (itemsJson == null || itemsJson.isEmpty()) {

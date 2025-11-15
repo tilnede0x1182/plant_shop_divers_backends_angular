@@ -14,7 +14,7 @@ import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.PlantStock;
-import model.User;
+import model.UserDTO;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import repository.OrderItemRepository;
@@ -51,7 +51,7 @@ public final class OrderController {
     }
 
     public void list(Context ctx) throws Exception {
-        User currentUser = ctx.attribute("user");
+        UserDTO currentUser = ctx.attribute("user");
         if (currentUser == null) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
             return;
@@ -68,7 +68,7 @@ public final class OrderController {
     }
 
     public void create(Context ctx) throws Exception {
-        User currentUser = ctx.attribute("user");
+        UserDTO currentUser = ctx.attribute("user");
         if (currentUser == null) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
             return;

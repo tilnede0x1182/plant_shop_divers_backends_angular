@@ -15,7 +15,7 @@ import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.PlantStock;
-import model.User;
+import model.UserDTO;
 import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
@@ -48,7 +48,7 @@ public class OrderController {
 
     @Get
     public List<?> list(HttpRequest<?> request) throws Exception {
-        User currentUser = Guards.requireUser(request);
+        UserDTO currentUser = Guards.requireUser(request);
         List<Order> orders = currentUser.isAdmin ? repo.list() : repo.listByUser(currentUser.id);
         orders.sort(Comparator.comparing(o -> o.createdAt, Comparator.reverseOrder()));
 
@@ -61,7 +61,7 @@ public class OrderController {
 
     @Post
     public HttpResponse<?> create(@Body Map<String, List<Map<String, Integer>>> body, HttpRequest<?> request) throws Exception {
-        User currentUser = Guards.requireUser(request);
+        UserDTO currentUser = Guards.requireUser(request);
         List<Map<String, Integer>> itemsJson = body.get("items");
         if (itemsJson == null || itemsJson.isEmpty()) {
             return HttpResponse.badRequest(Map.of("error", "items requis"));

@@ -5,6 +5,7 @@ import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MutableHttpResponse;
 import io.micronaut.http.annotation.*;
 import io.micronaut.http.cookie.Cookie;
+import io.micronaut.http.cookie.SameSite;
 import jakarta.inject.Inject;
 import java.sql.Connection;
 import java.util.Map;
@@ -60,7 +61,8 @@ public class AuthController {
         Cookie cookie = Cookie.of("session_id", sessionId)
             .path("/")
             .httpOnly(true)
-            .maxAge(3600);
+            .maxAge(3600)
+            .sameSite(SameSite.Lax);
 
         return HttpResponse.status(HttpStatus.CREATED)
             .cookie(cookie)
@@ -72,7 +74,10 @@ public class AuthController {
         if (sessionId != null) {
             sessions.remove(sessionId);
         }
-        Cookie expiredCookie = Cookie.of("session_id", "").path("/").maxAge(0);
+        Cookie expiredCookie = Cookie.of("session_id", "")
+            .path("/")
+            .maxAge(0)
+            .sameSite(SameSite.Lax);
         return HttpResponse.noContent().cookie(expiredCookie);
     }
 

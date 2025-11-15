@@ -43,36 +43,38 @@ compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
 	@javac -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
-		$(UTILS_DIR)/src/ApiMapper.java \
-		$(UTILS_DIR)/src/Request.java \
+		$(wildcard $(AUTH_DIR)/src/util/*.java) \
+		$(wildcard $(AUTH_DIR)/src/model/*.java) \
+		$(wildcard $(AUTH_DIR)/src/repository/*.java) \
+		$(wildcard $(AUTH_DIR)/src/security/*.java) \
 		$(wildcard $(AUTH_DIR)/src/controllers/*.java)
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
 	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
-		$(UTILS_DIR)/src/ApiMapper.java \
-		$(UTILS_DIR)/src/Request.java \
-		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
-		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
-		$(wildcard $(CATALOG_DIR)/src/repositories/*.java)
+		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/model/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/repository/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/security/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/controllers/*.java)
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
 	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
-		$(UTILS_DIR)/src/ApiMapper.java \
-		$(UTILS_DIR)/src/Request.java \
-		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
-		$(wildcard $(ORDER_DIR)/src/models/*.java) \
-		$(wildcard $(ORDER_DIR)/src/repositories/*.java)
+		$(wildcard $(ORDER_DIR)/src/util/*.java) \
+		$(wildcard $(ORDER_DIR)/src/model/*.java) \
+		$(wildcard $(ORDER_DIR)/src/repository/*.java) \
+		$(wildcard $(ORDER_DIR)/src/security/*.java) \
+		$(wildcard $(ORDER_DIR)/src/controllers/*.java)
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
 	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
-		$(UTILS_DIR)/src/ApiMapper.java \
-		$(UTILS_DIR)/src/Request.java \
-		$(wildcard $(USER_DIR)/src/controllers/*.java) \
-		$(wildcard $(USER_DIR)/src/models/*.java) \
-		$(wildcard $(USER_DIR)/src/repositories/*.java)
+		$(wildcard $(USER_DIR)/src/util/*.java) \
+		$(wildcard $(USER_DIR)/src/model/*.java) \
+		$(wildcard $(USER_DIR)/src/repository/*.java) \
+		$(wildcard $(USER_DIR)/src/security/*.java) \
+		$(wildcard $(USER_DIR)/src/controllers/*.java)
 compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin

@@ -73,3 +73,9 @@ Vous avez rappelé que les monolithes Javalin et Micronaut ont été conçus san
 2. Ajouter des annotations Quarkus (`@ApplicationScoped`, `@Inject`) dans tous les controllers et repositories existants afin qu’il n’y ait plus de simples utilitaires Weld, et que la version monolithique repose sur le même modèle CDI que la version distribuée.
 3. Inclure un fichier `config/application.properties` minimal (via Makefile) pour activer les extensions Quarkus nécessaires (resteasy, hibernate, jdbc) afin que `QuarkusBootstrap` puisse être remplacé par `io.quarkus.runtime.Quarkus.run`.
 4. Valider en lançant `make run` que les logs signalent bien l’initialisation de Quarkus/Undertow et que `@Path`/`@Transactional` sont invocables ; cette série de modifications garantit un usage 100 % Quarkus dans le monolithe comme dans la version distribuée.
+
+## Réaudit DRY – usage des frameworks
+
+1. **Javalin (monolithe)** : la version sans Maven/Gradle maintient environ 80 % de couverture (Main, ApplicationController, contrôleurs), donc l’usage restera proche de 100 % tant que les utilitaires réutilisent la même instance Javalin indiquée dans la section précédente.
+2. **Micronaut (monolithe)** : les controllers, filtres et `DatabaseFactory` s’exécutent sous `Micronaut.build(args)` et représentent la quasi-totalité des fichiers métier : 100 % d’usage réel est atteint pour la version sans Maven/Gradle, comme indiqué dans la section 3.1.
+3. **Quarkus (monolithe)** : le point d’entrée `Structure_monolithique/plant_shop_java_quarkus/src/Application.java` lance désormais `Quarkus.run(Application.class, args)` (voir les imports `io.quarkus.runtime.*`) et tous les contrôleurs/repos sont annotés en `@Path`/`@Inject`, ce qui garantit un usage à 100 %. C’est bien cette version Maven/Gradle (celle qui inclut `Application.java`) qui sert de référence : chaque route/bean est géré par le conteneur Quarkus, il n’y a plus d’appel direct à Weld/Undertow hors Quarkus.

@@ -47,7 +47,8 @@ compile-auth: compile-utils
 		$(wildcard $(AUTH_DIR)/src/model/*.java) \
 		$(wildcard $(AUTH_DIR)/src/repository/*.java) \
 		$(wildcard $(AUTH_DIR)/src/security/*.java) \
-		$(wildcard $(AUTH_DIR)/src/controllers/*.java)
+		$(wildcard $(AUTH_DIR)/src/controllers/*.java) \
+		$(AUTH_DIR)/src/AuthService.java
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
@@ -56,7 +57,8 @@ compile-catalog: compile-utils
 		$(wildcard $(CATALOG_DIR)/src/model/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repository/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/security/*.java) \
-		$(wildcard $(CATALOG_DIR)/src/controllers/*.java)
+		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
+		$(CATALOG_DIR)/src/CatalogService.java
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
@@ -65,7 +67,8 @@ compile-order: compile-utils
 		$(wildcard $(ORDER_DIR)/src/model/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repository/*.java) \
 		$(wildcard $(ORDER_DIR)/src/security/*.java) \
-		$(wildcard $(ORDER_DIR)/src/controllers/*.java)
+		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
+		$(ORDER_DIR)/src/OrderService.java
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
@@ -74,7 +77,8 @@ compile-user: compile-utils
 		$(wildcard $(USER_DIR)/src/model/*.java) \
 		$(wildcard $(USER_DIR)/src/repository/*.java) \
 		$(wildcard $(USER_DIR)/src/security/*.java) \
-		$(wildcard $(USER_DIR)/src/controllers/*.java)
+		$(wildcard $(USER_DIR)/src/controllers/*.java) \
+		$(USER_DIR)/src/UserService.java
 compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin

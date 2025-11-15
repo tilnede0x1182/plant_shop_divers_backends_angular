@@ -9,7 +9,7 @@ CLASSPATH:=$(CLASSPATH):lib/jbcrypt-0.4.jar
 compile:
 	mkdir -p bin
 	find src -type f -name "*.java" ! -name "Seed.java" ! -name "Test.java" | \
-	xargs javac -cp $(CLASSPATH) -d bin
+	xargs javac -proc:full -cp $(CLASSPATH) -d bin
 
 run:
 	@if [ ! -f bin/Main.class ]; then make compile; fi
@@ -30,7 +30,7 @@ build-dev: clean compile_run
 
 compile-seed:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
+	javac -proc:full -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
@@ -61,7 +61,7 @@ db-reset: db-drop db-create db-migrate db-seed
 
 compile-test:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin Tests/Test.java
+	javac -proc:full -cp $(CLASSPATH) -d bin Tests/Test.java
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi

@@ -3,7 +3,6 @@ package gateway.core;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import org.json.JSONObject;
-import util.Request;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,6 +13,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 final class GatewayHandler implements HttpHandler {
 
@@ -110,7 +110,7 @@ final class GatewayHandler implements HttpHandler {
     }
 
     private SessionContext resolveSession(HttpExchange ex) throws Exception {
-        String sessionId = Request.extractSessionId(ex);
+        String sessionId = extractSessionId(ex);
         if (sessionId == null) {
             return SessionContext.anonymous();
         }
@@ -128,6 +128,20 @@ final class GatewayHandler implements HttpHandler {
 
         JSONObject json = new JSONObject(response.body());
         return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
+    }
+
+    private static String extractSessionId(HttpExchange ex) {
+        String cookieHeader = ex.getRequestHeaders().getFirst("Cookie");
+        if (cookieHeader == null) {
+            return null;
+        }
+
+        return Stream.of(cookieHeader.split(";"))
+            .map(String::trim)
+            .filter(cookie -> cookie.startsWith("session_id="))
+            .map(cookie -> cookie.substring("session_id=".length()))
+            .findFirst()
+            .orElse(null);
     }
 
     private static void sendJson(HttpExchange ex, int status, String body) throws IOException {

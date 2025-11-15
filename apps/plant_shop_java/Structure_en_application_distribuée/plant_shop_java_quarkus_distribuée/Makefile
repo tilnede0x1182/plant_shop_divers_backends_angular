@@ -19,7 +19,7 @@ CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
 ## ────────────────
 compile-install-libs:
 	@mkdir -p bin
-	@javac -d bin config/InstallCoursier.java
+	@javac -proc:full -d bin config/InstallCoursier.java
 install: compile-install-libs
 	@java -cp bin config.InstallCoursier
 clean:
@@ -40,11 +40,11 @@ clean:
 compile-utils:
 	@echo "🔧 Compilation utilitaires"
 	@mkdir -p $(UTILS_DIR)/bin
-	@javac -proc:none -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
+	@javac -proc:full -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
 compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
 		$(wildcard $(AUTH_DIR)/src/models/*.java) \
 		$(wildcard $(AUTH_DIR)/src/repositories/*.java) \
 		$(wildcard $(AUTH_DIR)/src/util/*.java) \
@@ -53,7 +53,7 @@ compile-auth: compile-utils
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
@@ -61,7 +61,7 @@ compile-catalog: compile-utils
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
 		$(wildcard $(ORDER_DIR)/src/models/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repositories/*.java) \
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
@@ -70,7 +70,7 @@ compile-order: compile-utils
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
 		$(wildcard $(USER_DIR)/src/models/*.java) \
 		$(wildcard $(USER_DIR)/src/repositories/*.java) \
 		$(wildcard $(USER_DIR)/src/util/*.java) \
@@ -79,7 +79,7 @@ compile-user: compile-utils
 compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
 		$(wildcard $(GATEWAY_DIR)/src/*.java)
 compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 ## ────────────────
@@ -120,7 +120,7 @@ build-dev: clean compile
 ## ────────────────
 compile-seed:
 	@mkdir -p bin
-	@javac -proc:none -cp $(CLASSPATH) -d bin utils/src/PasswordUtil.java db/Seed.java
+	@javac -proc:full -cp $(CLASSPATH) -d bin utils/src/PasswordUtil.java db/Seed.java
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
 	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp $(CLASSPATH) db.Seed
@@ -130,7 +130,7 @@ seed-dev: clean compile-seed seed
 ## ────────────────
 compile-test:
 	@mkdir -p bin
-	@javac -proc:none -cp $(CLASSPATH) -d bin test/Test.java
+	@javac -proc:full -cp $(CLASSPATH) -d bin test/Test.java
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
 	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp $(CLASSPATH) Tests.Test

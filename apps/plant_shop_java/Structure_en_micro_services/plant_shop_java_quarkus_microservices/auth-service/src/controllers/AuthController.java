@@ -15,7 +15,7 @@ import repository.UserRepository;
 import security.Guards;
 import security.SessionService;
 import util.ApiMapper;
-import util.PasswordUtil;
+import utils.PasswordUtil;
 
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)

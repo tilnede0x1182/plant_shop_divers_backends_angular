@@ -11,14 +11,16 @@ import model.User;
  */
 public final class ApiMapper {
 
-    private ApiMapper() {}
+    private ApiMapper() {
+        // utilitaire statique
+    }
 
     public static Map<String, Object> toUser(User user) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", user.id);
         map.put("name", user.name);
         map.put("email", user.email);
-        map.put("admin", user.isAdmin);
+        map.put("isAdmin", user.isAdmin);
         map.put("createdAt", toIso(user.createdAt));
         return map;
     }

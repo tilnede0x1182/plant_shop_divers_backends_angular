@@ -1,7 +1,7 @@
 package controllers;
 
 import model.User;
-import model.UserDTO;
+import model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +30,7 @@ public class UserController {
     public ResponseEntity<List<?>> listUsers() throws Exception {
         guards.requireAdmin(); // Seul un admin peut lister
 
-        List<?> payload = repo.list().stream()
+        List<?> payload = repo.findAll().stream()
             .sorted(userComparator())
             .map(ApiMapper::toUser)
             .collect(Collectors.toList());
@@ -39,7 +39,7 @@ public class UserController {
 
     @PatchMapping({"/admin/users/{id}", "/users/{id}"})
     public ResponseEntity<Object> updateUser(@PathVariable("id") int id, @RequestBody Map<String, Object> body) throws Exception {
-        UserDTO currentUser = guards.requireUser();
+        User currentUser = guards.requireUser();
 
         // Un utilisateur ne peut modifier que lui-même, un admin peut modifier tout le monde
         if (currentUser.id != id && !currentUser.isAdmin) {
@@ -53,31 +53,30 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
 
-        if (body.containsKey("name")) {
-            existing.name = (String) body.get("name");
-        }
-        if (body.containsKey("email")) {
-            existing.email = (String) body.get("email");
-        }
+        String newName = body.containsKey("name") ? (String) body.get("name") : existing.name;
+        String newEmail = body.containsKey("email") ? (String) body.get("email") : existing.email;
 
         // **Logique critique : Seul un admin peut changer le statut admin**
         // Si un user normal (currentUser.isAdmin == false) patche son profil
         // avec "admin: true", cette condition sera fausse et le statut ignoré.
+        boolean newIsAdmin = existing.isAdmin;
         if (currentUser.isAdmin && body.containsKey("admin")) {
             Object adminValue = body.get("admin");
-            existing.isAdmin = adminValue instanceof Boolean
+            newIsAdmin = adminValue instanceof Boolean
                 ? (Boolean) adminValue
                 : Boolean.parseBoolean(String.valueOf(adminValue));
         }
 
+        String newPasswordHash = existing.passwordHash;
         if (body.containsKey("password")) {
             Object pwd = body.get("password");
             if (pwd instanceof String password && !password.isBlank()) {
-                existing.passwordHash = PasswordUtil.hashPassword(password);
+                newPasswordHash = PasswordUtil.hashPassword(password);
             }
         }
 
-        repo.update(existing);
+        User updated = new User(existing.id, newName, newEmail, newPasswordHash, newIsAdmin, existing.createdAt);
+        repo.update(updated);
         return ResponseEntity.ok(ApiMapper.toUser(repo.find(id)));
     }
 
@@ -92,7 +91,7 @@ public class UserController {
 
     @GetMapping("/users/{id}")
     public ResponseEntity<Object> show(@PathVariable("id") int id) throws Exception {
-        UserDTO currentUser = guards.requireUser();
+        User currentUser = guards.requireUser();
 
         // Un utilisateur ne peut voir que son profil, un admin peut voir tout le monde
         if (currentUser.id != id && !currentUser.isAdmin) {
@@ -124,7 +123,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        User userData = new User(name, email, PasswordUtil.hashPassword(password), adminFlag);
+        User userData = User.forCreation(name, email, PasswordUtil.hashPassword(password), adminFlag);
         int newId = repo.create(userData);
 
         return ResponseEntity.status(HttpStatus.CREATED)

@@ -1,36 +1,38 @@
 package security;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import jakarta.servlet.http.HttpServletRequest;
+import model.User;
 
-/**
- * Guards local pour catalog-service
- * Lit les headers X-User-Id et X-User-Admin propagés par la gateway
- */
 @Component
 public class Guards {
 
+    public void requireAuth(User user) {
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+    }
+
+    public void requireAdmin(User user) {
+        requireAuth(user);
+        if (!user.isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+        }
+    }
+
     public void requireAdmin() {
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentification requise");
-        }
+        // Surcharge sans paramètre pour Spring Security
+        User user = getCurrentUser();
+        requireAdmin(user);
+    }
 
-        HttpServletRequest request = attrs.getRequest();
-        String userIdHeader = request.getHeader("X-User-Id");
-        String adminHeader = request.getHeader("X-User-Admin");
-
-        if (userIdHeader == null || userIdHeader.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentification requise");
+    private User getCurrentUser() {
+        var authentication = org.springframework.security.core.context.SecurityContextHolder
+            .getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User) {
+            return (User) authentication.getPrincipal();
         }
-
-        boolean isAdmin = "true".equalsIgnoreCase(adminHeader);
-        if (!isAdmin) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
-        }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
     }
 }

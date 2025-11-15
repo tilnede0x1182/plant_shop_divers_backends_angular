@@ -6,9 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import model.User;
 
-/**
- * ApiMapper local pour auth-service avec uniquement les méthodes nécessaires
- */
 public final class ApiMapper {
 
     private ApiMapper() {}
@@ -23,7 +20,8 @@ public final class ApiMapper {
         return map;
     }
 
-    private static String toIso(Timestamp timestamp) {
-        return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
+    private static String toIso(Timestamp ts) {
+        return (ts != null) ?
+            ts.toInstant().atOffset(ZoneOffset.UTC).toString() : null;
     }
 }

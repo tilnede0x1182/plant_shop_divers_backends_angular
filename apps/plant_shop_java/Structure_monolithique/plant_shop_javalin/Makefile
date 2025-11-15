@@ -9,7 +9,7 @@ DB_NAME=plant_shop_javalin
 # Ne pas toucher à cette section, elle gère le téléchargement des libs.
 compile-install-libs:
 	mkdir -p bin
-	javac -d bin config/InstallLibs.java
+	javac -proc:full -d bin config/InstallLibs.java
 
 install: compile-install-libs
 	java -cp bin config/InstallLibs
@@ -21,7 +21,7 @@ install: compile-install-libs
 compile:
 	mkdir -p bin
 	find src -type f -name "*.java" ! -path "*/db/Seed.java" ! -path "*/test/Test.java" | \
-	xargs javac -cp $(CLASSPATH) -d bin
+	xargs javac -proc:full -cp $(CLASSPATH) -d bin
 
 run:
 	@if [ ! -f bin/Main.class ]; then make compile; fi
@@ -42,7 +42,7 @@ build-dev: clean compile_run
 
 compile-seed:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
+	javac -proc:full -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
@@ -56,7 +56,7 @@ seed-dev: clean compile-seed seed
 
 compile-test:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin test/Test.java
+	javac -proc:full -cp $(CLASSPATH) -d bin test/Test.java
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi

@@ -1,7 +1,7 @@
 package controllers;
 
 import model.User;
-import model.UserDTO;
+import model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +39,7 @@ public class UserController {
 
     @PatchMapping({"/admin/users/{id}", "/users/{id}"})
     public ResponseEntity<Object> updateUser(@PathVariable("id") int id, @RequestBody Map<String, Object> body) throws Exception {
-        UserDTO currentUser = guards.requireUser();
+        User currentUser = guards.requireUser();
 
         // Un utilisateur ne peut modifier que lui-même, un admin peut modifier tout le monde
         if (currentUser.id != id && !currentUser.isAdmin) {
@@ -92,7 +92,7 @@ public class UserController {
 
     @GetMapping("/users/{id}")
     public ResponseEntity<Object> show(@PathVariable("id") int id) throws Exception {
-        UserDTO currentUser = guards.requireUser();
+        User currentUser = guards.requireUser();
 
         // Un utilisateur ne peut voir que son profil, un admin peut voir tout le monde
         if (currentUser.id != id && !currentUser.isAdmin) {

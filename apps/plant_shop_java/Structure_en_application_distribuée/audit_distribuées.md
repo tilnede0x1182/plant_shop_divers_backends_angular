@@ -59,7 +59,7 @@ Le monolithe `plant_shop_javalin` tourne avec un `Main` enrichi qui configure le
 
 #### Rapport détaillé monolithique plant_shop_java_micronaut
 
-Dans le monolithe Micronaut, 82 % des fichiers importent `io.micronaut`, ce qui montre une adoption déjà responsable. Le point d’entrée `Main` et les modules `controllers`, `repositories`, `security` partagent la même configuration, donc la migration distribuée lisse surtout la décomposition des services tout en conservant le même moteur de DI/AOP. Le monolithe gère l’authentification, les filtres CORS, les repositories JDBC et les DTOs dans un seul processus, ce qui rendait les tests parfois plus lourds. La transition vers l’architecture distribuée a gardé les annotations Micronaut mais a distribué les classes en services autonomes (auth, catalog, order, user). Il reste possible de réconcilier les deux approches en partageant les utilitaires `ApiMapper` entre modules sans dupliquer de code.
+Dans le monolithe Micronaut, 82 % des fichiers importent `io.micronaut`, ce qui montre une adoption déjà responsable. Le point d’entrée `Main` et les modules `controllers`, `repositories`, `security` partagent la même configuration, donc la migration distribuée lisse surtout la décomposition des services tout en conservant le même moteur de DI/AOP. Le monolithe gère l’authentification, les filtres CORS, les repositories JDBC et les DTOs dans un seul processus, ce qui rendait les opérations plus lourdes à maintenir. La transition vers l’architecture distribuée a gardé les annotations Micronaut mais a distribué les classes en services autonomes (auth, catalog, order, user). Il reste possible de réconcilier les deux approches en partageant les utilitaires `ApiMapper` entre modules sans dupliquer de code.
 
 #### Rapport détaillé monolithique plant_shop_java_quarkus
 
@@ -96,7 +96,7 @@ Vous avez rappelé que les monolithes Javalin et Micronaut ont été conçus san
 ### Javalin
 1. Extraire la configuration commune (JSON mapper, gestion CORS, filtre d’authentification) dans une classe `JavalinConfigProvider` instanciée dans `Main` et injectée dans `ApplicationController` + controllers afin que chaque méthode métier accède explicitement au serveur Javalin.  
 2. Réécrire `Main` pour que la méthode `createRoutes` reçoive la configuration et que chaque `controller::action` soit enregistré dans le même bloc `Javalin.create(...)`, ce qui permet d’affirmer que 100 % des fichiers HTTP dépendent d’une instance active.
-3. Ajouter un utilitaire `JavalinLifecycle` qui publie `start/stop` et qui est référencé par tous les modules (config, controllers, utils) pour rendre explicite la démultiplication du serveur dans les tests.
+3. Ajouter un utilitaire `JavalinLifecycle` qui publie `start/stop` et qui est référencé par tous les modules (config, controllers, utils) pour rendre explicite la démultiplication du serveur.
 4. Tester en lançant `make run` et vérifier que les controllers utilisent bien le `Context` qui vient du même `Javalin` global ; cela donne une couverture de 100 % de l’usage du framework par les fichiers appelés depuis `Main`.
 
 ### Micronaut

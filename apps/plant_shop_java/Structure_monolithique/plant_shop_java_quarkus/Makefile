@@ -7,7 +7,7 @@ DB_NAME=plant_shop_java_quarkus
 
 compile-install-libs:
 	mkdir -p bin
-	javac -d bin config/InstallCoursier.java
+	javac -proc:full -d bin config/InstallCoursier.java
 
 install: compile-install-libs
 	java -cp bin config.InstallCoursier
@@ -24,7 +24,7 @@ CLASSPATH = bin:lib/*
 
 compile:
 	mkdir -p bin
-	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
+	javac -proc:full -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
 		src/models/*.java \
 		src/repositories/*.java \
@@ -47,7 +47,7 @@ SRCS := $(shell find src -type f -name '*.java')
 build-prod: clean
 	mkdir -p bin build
 	@echo "Compiling $$(echo $(SRCS) | wc -w) sources..."
-	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "lib/*" $(SRCS)
+	javac -proc:full -J-Dorg.jboss.logging.provider=jul -d bin -cp "lib/*" $(SRCS)
 	jar --create --file build/app-prod.jar --main-class=Main -C bin .
 
 run-prod:
@@ -70,7 +70,7 @@ prod: build-prod run-prod
 
 compile-seed:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
+	javac -proc:full -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
@@ -84,7 +84,7 @@ seed-dev: clean compile-seed seed
 
 compile-test:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin test/Test.java
+	javac -proc:full -cp $(CLASSPATH) -d bin test/Test.java
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi

@@ -3,7 +3,7 @@ package db;
 import java.io.*;
 import java.sql.*;
 import java.util.*;
-import util.PasswordUtil;
+import utils.PasswordUtil;
 import java.nio.file.*;
 
 /** Seed pour User Service - Création des utilisateurs */

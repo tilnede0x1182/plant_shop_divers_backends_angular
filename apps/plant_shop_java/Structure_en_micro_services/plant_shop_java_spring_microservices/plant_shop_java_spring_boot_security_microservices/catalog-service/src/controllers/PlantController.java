@@ -38,7 +38,7 @@ public class PlantController {
 
     @GetMapping("/plants")
     public ResponseEntity<List<?>> listPublic() throws Exception {
-        List<?> payload = repo.list().stream()
+        List<?> payload = repo.findAll().stream()
             .sorted(this::comparePlants)
             .map(ApiMapper::toPlant)
             .collect(Collectors.toList());

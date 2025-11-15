@@ -7,7 +7,7 @@ DB_NAME=plant_shop_java_lite_active_web
 
 compile-install-libs:
 	mkdir -p bin
-	javac -d bin config/InstallCoursier.java
+	javac -proc:full -d bin config/InstallCoursier.java
 
 install: compile-install-libs
 	java -cp bin config.InstallCoursier
@@ -25,7 +25,7 @@ compile:
 	mkdir -p bin
 	cp src/activeweb.properties bin/
 	cp src/activejdbc_models.properties bin/
-	javac -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
+	javac -proc:full -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
 		src/launch/*.java \
 		src/models/*.java \
@@ -53,7 +53,7 @@ build-dev: clean compile_run
 
 compile-seed:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
+	javac -proc:full -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
@@ -67,7 +67,7 @@ seed-dev: clean compile-seed seed
 
 compile-test:
 	mkdir -p bin
-	javac -cp $(CLASSPATH) -d bin test/Test.java
+	javac -proc:full -cp $(CLASSPATH) -d bin test/Test.java
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi

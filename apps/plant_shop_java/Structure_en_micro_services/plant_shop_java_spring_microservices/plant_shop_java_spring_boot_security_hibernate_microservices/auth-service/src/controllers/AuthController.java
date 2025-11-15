@@ -54,7 +54,7 @@ public class AuthController {
                                  .body(Map.of("error", "Identifiants invalides"));
         }
         String sessionId = UUID.randomUUID().toString();
-        sessionService.getSessions().put(sessionId, user.id);
+        sessionService.getSessions().put(sessionId, user);
 
         Cookie cookie = new Cookie("session_id", sessionId);
         cookie.setPath("/");

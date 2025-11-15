@@ -18,7 +18,7 @@ CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
 ## ────────────────
 compile-install-libs:
 	@mkdir -p bin
-	@javac -d bin config/InstallCoursier.java
+	@javac -proc:full -d bin config/InstallCoursier.java
 install: compile-install-libs
 	@java -cp bin config.InstallCoursier
 clean:
@@ -38,11 +38,11 @@ clean:
 compile-utils:
 	@echo "🔧 Compilation utilitaires"
 	@mkdir -p $(UTILS_DIR)/bin
-	@javac -proc:none -J-Dorg.jboss.logging.provider=jul -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
+	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
 compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
 		$(wildcard $(AUTH_DIR)/src/util/*.java) \
 		$(wildcard $(AUTH_DIR)/src/controllers/*.java) \
 		$(wildcard $(AUTH_DIR)/src/model/*.java) \
@@ -51,7 +51,7 @@ compile-auth: compile-utils
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/security/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
@@ -60,7 +60,7 @@ compile-catalog: compile-utils
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
 		$(wildcard $(ORDER_DIR)/src/security/*.java) \
 		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
@@ -69,7 +69,7 @@ compile-order: compile-utils
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
 		$(wildcard $(USER_DIR)/src/util/*.java) \
 		$(wildcard $(USER_DIR)/src/security/*.java) \
 		$(wildcard $(USER_DIR)/src/controllers/*.java) \
@@ -78,7 +78,7 @@ compile-user: compile-utils
 compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin
-	@javac -proc:none -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
 		$(wildcard $(GATEWAY_DIR)/src/*.java)
 compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 ## ────────────────
@@ -119,7 +119,7 @@ build-dev: clean compile
 ## ────────────────
 compile-test:
 	@mkdir -p bin
-	@javac -cp $(CLASSPATH) -d bin test/Test.java
+	@javac -proc:full -cp $(CLASSPATH) -d bin test/Test.java
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
 	@java -cp $(CLASSPATH) Tests.Test
@@ -145,15 +145,15 @@ db-migrate: db-migrate-user db-migrate-catalog db-migrate-order
 compile-seed-catalog: compile-utils
 	@echo "🔧 Compilation Seed catalog-service"
 	@mkdir -p $(CATALOG_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin catalog-service/db/Seed.java -proc:none
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin catalog-service/db/Seed.java -proc:none
 compile-seed-order: compile-utils
 	@echo "🔧 Compilation Seed order-service"
 	@mkdir -p $(ORDER_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin order-service/db/Seed.java -proc:none
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin order-service/db/Seed.java -proc:none
 compile-seed-user: compile-utils
 	@echo "🔧 Compilation Seed user-service"
 	@mkdir -p $(USER_DIR)/bin
-	@javac -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java -proc:none
+	@javac -proc:full -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java -proc:none
 seed-catalog: compile-seed-catalog
 	@echo "🌱 Seed catalog-service..."
 	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed

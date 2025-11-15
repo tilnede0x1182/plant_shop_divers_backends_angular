@@ -15,7 +15,7 @@ import model.UserDTO;
 import repository.UserRepository;
 import security.Guards;
 import util.ApiMapper;
-import util.PasswordUtil;
+import utils.PasswordUtil;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)

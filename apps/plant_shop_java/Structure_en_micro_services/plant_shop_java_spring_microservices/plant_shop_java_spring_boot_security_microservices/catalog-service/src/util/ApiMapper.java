@@ -3,13 +3,12 @@ package util;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import model.Plant;
 
-/**
- * ApiMapper local pour catalog-service avec uniquement les méthodes nécessaires
- */
 public final class ApiMapper {
 
     private ApiMapper() {}
@@ -25,11 +24,20 @@ public final class ApiMapper {
         return map;
     }
 
-    private static Double toDecimal(BigDecimal value) {
-        return value == null ? null : value.doubleValue();
+    public static List<Map<String, Object>> toPlantList(List<Plant> plants) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (Plant p : plants) {
+            list.add(toPlant(p));
+        }
+        return list;
     }
 
-    private static String toIso(Timestamp timestamp) {
-        return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
+    private static String toDecimal(BigDecimal bd) {
+        return bd != null ? bd.toPlainString() : "0";
+    }
+
+    private static String toIso(Timestamp ts) {
+        return (ts != null) ?
+            ts.toInstant().atOffset(ZoneOffset.UTC).toString() : null;
     }
 }

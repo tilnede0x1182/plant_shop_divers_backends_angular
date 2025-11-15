@@ -25,8 +25,8 @@ public class RestApplication extends Application {
             UserController.class,
             OrderController.class,
             SessionAuthFilter.class,
-            CorsConfig.class,
-            CdiRequestScopeFilter.class
+            CdiRequestScopeFilter.class,
+            CorsConfig.class
         );
     }
 }

@@ -11,7 +11,6 @@ import repositories.PlantRepository;
 import repositories.UserRepository;
 import security.AuthenticatedUser;
 import security.CorsConfig;
-import security.CdiRequestScopeFilter;
 import security.Guards;
 import security.SessionAuthFilter;
 import security.SessionService;
@@ -26,26 +25,7 @@ public class Main {
     public static void main(String[] args) {
         System.setProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager");
 
-        Weld weld = new Weld()
-            .disableDiscovery()
-            .beanClasses(
-                QuarkusBootstrap.class,
-                DatabaseFactory.class,
-                SessionService.class,
-                AuthenticatedUser.class,
-                Guards.class,
-                SessionAuthFilter.class,
-                CdiRequestScopeFilter.class,
-                CorsConfig.class,
-                AuthController.class,
-                PlantController.class,
-                UserController.class,
-                OrderController.class,
-                UserRepository.class,
-                PlantRepository.class,
-                OrderRepository.class,
-                OrderItemRepository.class
-            );
+        Weld weld = new Weld();
 
         WeldContainer container = weld.initialize();
         CountDownLatch shutdownLatch = new CountDownLatch(1);

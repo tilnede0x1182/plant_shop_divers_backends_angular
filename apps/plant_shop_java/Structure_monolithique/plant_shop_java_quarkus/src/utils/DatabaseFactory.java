@@ -16,19 +16,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Fournit la connexion JDBC via CDI (Contexts and Dependency Injection).
+ * Fournit la connexion JDBC via CDI.
  * Crée une nouvelle connexion pour chaque requête HTTP (@RequestScoped).
  */
-@ApplicationScoped // Le Factory lui-même est un singleton
+@ApplicationScoped
 public final class DatabaseFactory {
 
-    // Note: L'emplacement "config/.env" est utilisé par le Seed.java
     private static final Path ENV_FILE = Path.of("config", ".env");
     private static Map<String, String> envCache;
 
-    /**
-     * Charge le fichier .env une seule fois.
-     */
     private synchronized Map<String, String> loadEnv() throws IOException {
         if (envCache == null) {
             if (!Files.exists(ENV_FILE)) {
@@ -50,12 +46,6 @@ public final class DatabaseFactory {
         return envCache;
     }
 
-    /**
-     * Méthode "Producer" qui fournit une connexion à la base de données.
-     * @Produces indique à CDI que cette méthode crée un bean.
-     * @RequestScoped indique que ce bean (la Connexion) doit être créé
-     * une fois par requête HTTP et détruit à la fin de la requête.
-     */
     @Produces
     @RequestScoped
     public Connection connection() throws SQLException, IOException {
@@ -70,11 +60,6 @@ public final class DatabaseFactory {
         return DriverManager.getConnection(url, user, pass);
     }
 
-    /**
-     * Méthode "Disposer" qui ferme la connexion à la fin du scope de la requête.
-     * @Disposes indique à CDI d'appeler cette méthode lorsque le bean Connection
-     * produit par connection() est détruit (à la fin de la requête HTTP).
-     */
     public void closeConnection(@Disposes Connection connection) {
         if (connection != null) {
             try {

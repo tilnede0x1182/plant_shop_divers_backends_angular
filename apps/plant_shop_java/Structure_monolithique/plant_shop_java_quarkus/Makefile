@@ -23,7 +23,8 @@ clean:
 CLASSPATH = bin:lib/*
 
 compile:
-	@mkdir -p bin
+	@mkdir -p bin/META-INF
+	@cp src/META-INF/beans.xml bin/META-INF/
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
 		src/models/*.java \

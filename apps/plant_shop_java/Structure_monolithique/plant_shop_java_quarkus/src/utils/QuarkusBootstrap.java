@@ -1,10 +1,13 @@
 package utils;
 
 import io.undertow.Undertow;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.jboss.resteasy.cdi.CdiInjectorFactory;
 import org.jboss.resteasy.core.ResteasyDeploymentImpl;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 import org.jboss.resteasy.spi.ResteasyDeployment;
+import org.jboss.weld.environment.se.WeldContainer;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,6 +19,9 @@ import java.util.concurrent.CountDownLatch;
 
 @Singleton
 public class QuarkusBootstrap {
+
+    @Inject
+    WeldContainer weldContainer;
 
     public void run(String[] args, CountDownLatch shutdownLatch) throws Exception {
         Map<String, String> env = loadEnv();
@@ -35,6 +41,7 @@ public class QuarkusBootstrap {
 
         ResteasyDeployment deployment = new ResteasyDeploymentImpl();
         deployment.setApplication(new RestApplication());
+        deployment.setInjectorFactoryClass(CdiInjectorFactory.class.getName());
 
         server.deploy(deployment);
 

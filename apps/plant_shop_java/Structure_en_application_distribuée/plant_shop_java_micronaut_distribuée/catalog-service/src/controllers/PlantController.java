@@ -4,6 +4,7 @@ import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.*;
+import io.micronaut.http.exceptions.HttpStatusException;
 import jakarta.inject.Inject;
 import java.sql.Connection;
 import java.text.Collator;
@@ -13,8 +14,9 @@ import java.util.stream.Collectors;
 import model.Plant;
 import repository.PlantRepository;
 import catalog.util.ApiMapper;
+import util.AuthContext;
 
-@Controller("/api")
+@Controller("/")
 public class PlantController {
 
     private final PlantRepository repo;
@@ -39,6 +41,7 @@ public class PlantController {
 
     @Get("/admin/plants")
     public List<?> listAdmin(HttpRequest<?> request) throws Exception {
+        ensureAdmin(request);
         return repo.list().stream()
             .sorted(this::comparePlants)
             .map(ApiMapper::toPlant)
@@ -53,6 +56,7 @@ public class PlantController {
 
     @Post("/admin/plants")
     public HttpResponse<?> create(@Body Plant plant, HttpRequest<?> request) throws Exception {
+        ensureAdmin(request);
         int id = repo.create(plant);
         Plant created = repo.find(id);
         return HttpResponse.created(ApiMapper.toPlant(created));
@@ -60,6 +64,7 @@ public class PlantController {
 
     @Patch("/admin/plants/{id}")
     public HttpResponse<?> update(@PathVariable int id, @Body Plant updatedData, HttpRequest<?> request) throws Exception {
+        ensureAdmin(request);
         Plant existing = repo.find(id);
         if (existing == null) return HttpResponse.notFound();
 
@@ -74,11 +79,19 @@ public class PlantController {
 
     @Delete("/admin/plants/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
+        ensureAdmin(request);
         repo.delete(id);
         return HttpResponse.ok();
     }
 
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
+    }
+
+    private void ensureAdmin(HttpRequest<?> request) {
+        AuthContext context = AuthContext.fromHeaders(request);
+        if (!context.isAdmin()) {
+            throw new HttpStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
+        }
     }
 }

@@ -14,21 +14,23 @@ final class GatewayRuntime {
 
     private final GatewayConfig config;
     private final HttpClient http;
+    private final SessionRegistry sessions;
 
-    private GatewayRuntime(GatewayConfig config, HttpClient http) {
+    private GatewayRuntime(GatewayConfig config, HttpClient http, SessionRegistry sessions) {
         this.config = config;
         this.http = http;
+        this.sessions = sessions;
     }
 
     static GatewayRuntime create() throws Exception {
         GatewayConfig config = GatewayConfig.load();
         HttpClient http = HttpClient.newBuilder().build();
-        return new GatewayRuntime(config, http);
+        return new GatewayRuntime(config, http, new SessionRegistry());
     }
 
     void start() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port()), 0);
-        server.createContext("/api", new GatewayHandler(config, http));
+        server.createContext("/api", new GatewayHandler(config, http, sessions));
         server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(16));
         server.start();
         System.out.printf("🚪 Gateway en écoute sur http://localhost:%d/api%n", config.port());

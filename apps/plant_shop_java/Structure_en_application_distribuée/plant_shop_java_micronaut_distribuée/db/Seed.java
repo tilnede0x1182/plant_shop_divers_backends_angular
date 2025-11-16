@@ -4,6 +4,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
+import util.EnvLoader;
 import util.PasswordUtil;
 
 /** Seed aligné sur la version C++ : noms réalistes, descriptions, prix cohérents,
@@ -11,16 +12,8 @@ import util.PasswordUtil;
 public final class Seed {
 
 	/* ---------- Lecture .env ---------- */
-	private static Map<String,String> env() throws IOException {
-		Map<String,String> out = new HashMap<>();
-			try (BufferedReader br = new BufferedReader(new FileReader("../config/.env"))) {
-			String l;
-			while ((l = br.readLine()) != null) {
-				int i = l.indexOf('=');
-				if (i > 0) out.put(l.substring(0, i).trim(), l.substring(i + 1).trim());
-			}
-		}
-		return out;
+	private static Map<String,String> env() {
+		return EnvLoader.load();
 	}
 
 	/* ---------- Constantes ---------- */

@@ -4,6 +4,7 @@ import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.annotation.*;
+import io.micronaut.http.exceptions.HttpStatusException;
 import jakarta.inject.Inject;
 import java.sql.Connection;
 import java.util.Comparator;
@@ -12,9 +13,10 @@ import java.util.stream.Collectors;
 import model.User;
 import repository.UserRepository;
 import user.util.ApiMapper;
+import util.AuthContext;
 import util.PasswordUtil;
 
-@Controller("/api")
+@Controller("/")
 public class UserController {
 
 	private final UserRepository repo;
@@ -36,17 +38,17 @@ public class UserController {
 
 	@Get("/users/{id}")
 	public HttpResponse<?> show(@PathVariable int id, HttpRequest<?> request) throws Exception {
-		User currentUser = request.getAttribute("user", User.class).orElse(null);
-		if (currentUser == null) return HttpResponse.unauthorized();
-		if (currentUser.id != id && !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
+		AuthContext auth = AuthContext.fromHeaders(request);
+		if (!auth.isAuthenticated()) return HttpResponse.unauthorized();
+		if (auth.userId() != id && !auth.isAdmin()) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		User user = repo.find(id);
 		return user != null ? HttpResponse.ok(ApiMapper.toUser(user)) : HttpResponse.notFound();
 	}
 
 	@Post("/users")
 	public HttpResponse<?> create(@Body User userData, HttpRequest<?> request) throws Exception {
-		User currentUser = request.getAttribute("user", User.class).orElse(null);
-		if (currentUser == null || !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
+		AuthContext auth = AuthContext.fromHeaders(request);
+		if (!auth.isAuthenticated() || !auth.isAdmin()) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		if (repo.findByEmailWithPassword(userData.email) != null) return HttpResponse.status(HttpStatus.CONFLICT);
 		userData.passwordHash = PasswordUtil.hashPassword(userData.passwordHash);
 		int newId = repo.create(userData);
@@ -74,8 +76,8 @@ public class UserController {
 	}
 
 	private List<?> listImpl(HttpRequest<?> request) throws Exception {
-		User currentUser = request.getAttribute("user", User.class).orElse(null);
-		if (currentUser == null || !currentUser.isAdmin) throw new io.micronaut.http.exceptions.HttpStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
+		AuthContext auth = AuthContext.fromHeaders(request);
+		if (!auth.isAuthenticated() || !auth.isAdmin()) throw new HttpStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
 		return repo.list().stream()
 			.sorted(userComparator())
 			.map(ApiMapper::toUser)
@@ -83,21 +85,21 @@ public class UserController {
 	}
 
 	private HttpResponse<?> updateImpl(int id, User updatedData, HttpRequest<?> request) throws Exception {
-		User currentUser = request.getAttribute("user", User.class).orElse(null);
-		if (currentUser == null) return HttpResponse.unauthorized();
-		if (currentUser.id != id && !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
+		AuthContext auth = AuthContext.fromHeaders(request);
+		if (!auth.isAuthenticated()) return HttpResponse.unauthorized();
+		if (auth.userId() != id && !auth.isAdmin()) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		User existing = repo.find(id);
 		if (existing == null) return HttpResponse.notFound();
 		if (updatedData.name != null) existing.name = updatedData.name;
 		if (updatedData.email != null) existing.email = updatedData.email;
-		if (currentUser.isAdmin && updatedData.isAdmin != existing.isAdmin) existing.isAdmin = updatedData.isAdmin;
+		if (auth.isAdmin() && updatedData.isAdmin != existing.isAdmin) existing.isAdmin = updatedData.isAdmin;
 		repo.update(existing);
 		return HttpResponse.ok(ApiMapper.toUser(repo.find(id)));
 	}
 
 	private HttpResponse<?> destroyImpl(int id, HttpRequest<?> request) throws Exception {
-		User currentUser = request.getAttribute("user", User.class).orElse(null);
-		if (currentUser == null || !currentUser.isAdmin) return HttpResponse.status(HttpStatus.FORBIDDEN);
+		AuthContext auth = AuthContext.fromHeaders(request);
+		if (!auth.isAuthenticated() || !auth.isAdmin()) return HttpResponse.status(HttpStatus.FORBIDDEN);
 		repo.delete(id);
 		return HttpResponse.ok();
 	}

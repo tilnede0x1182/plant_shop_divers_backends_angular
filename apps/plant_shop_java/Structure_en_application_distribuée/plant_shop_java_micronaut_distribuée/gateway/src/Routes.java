@@ -11,21 +11,31 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
     private final HttpClient http;
 
-    GatewayHandler(GatewayConfig config, HttpClient http) {
+    private final SessionRegistry sessions;
+    private final CorsSupport cors = new CorsSupport();
+
+    GatewayHandler(GatewayConfig config, HttpClient http, SessionRegistry sessions) {
         this.config = config;
         this.http = http;
+        this.sessions = sessions;
     }
 
     @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
+            if (cors.handlePreflight(ex)) {
+                return;
+            }
             forward(ex);
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,7 +71,7 @@ final class GatewayHandler implements HttpHandler {
         SessionContext session = SessionContext.anonymous();
         boolean needAuth = config.requiresAuth(target.service(), ex.getRequestMethod(), target.path());
         if (!"auth".equals(target.service())) {
-            session = resolveSession(ex);
+            session = resolveSession(Request.extractSessionId(ex));
             if (needAuth && !session.authenticated()) {
                 sendJson(ex, 401, "{\"error\":\"Authentification requise\"}");
                 return;
@@ -91,27 +101,25 @@ final class GatewayHandler implements HttpHandler {
         }
 
         HttpResponse<byte[]> response = http.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
+        byte[] responseBody = response.body();
 
-        ex.getResponseHeaders().set("Content-Type",
-            response.headers().firstValue("Content-Type").orElse("application/json"));
-        response.headers().map().forEach((key, values) -> {
-            if ("set-cookie".equalsIgnoreCase(key)) {
-                for (String value : values) {
-                    ex.getResponseHeaders().add("Set-Cookie", value);
-                }
-            }
-        });
+        mirrorResponseHeaders(ex, response);
+        handleSessionSideEffects(ex, target, response, responseBody);
+        cors.apply(ex);
 
-        ex.sendResponseHeaders(response.statusCode(), response.body().length);
+        ex.sendResponseHeaders(response.statusCode(), responseBody.length);
         try (OutputStream os = ex.getResponseBody()) {
-            os.write(response.body());
+            os.write(responseBody);
         }
     }
 
-    private SessionContext resolveSession(HttpExchange ex) throws Exception {
-        String sessionId = Request.extractSessionId(ex);
+    private SessionContext resolveSession(String sessionId) throws Exception {
         if (sessionId == null) {
             return SessionContext.anonymous();
+        }
+        SessionContext cached = sessions.get(sessionId);
+        if (cached != null) {
+            return cached;
         }
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -126,12 +134,64 @@ final class GatewayHandler implements HttpHandler {
         }
 
         JSONObject json = new JSONObject(response.body());
-        return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
+        SessionContext context = SessionContext.authenticated(json.getInt("id"), json.optBoolean("admin", false));
+        sessions.put(sessionId, context);
+        return context;
     }
 
-    private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
+    private void mirrorResponseHeaders(HttpExchange ex, HttpResponse<byte[]> response) {
+        ex.getResponseHeaders().set("Content-Type",
+            response.headers().firstValue("Content-Type").orElse("application/json"));
+        response.headers().map().forEach((key, values) -> {
+            if ("set-cookie".equalsIgnoreCase(key)) {
+                for (String value : values) {
+                    ex.getResponseHeaders().add("Set-Cookie", value);
+                }
+            }
+        });
+    }
+
+    private void handleSessionSideEffects(HttpExchange ex, RouteTarget target, HttpResponse<byte[]> response, byte[] body) {
+        if (!"auth".equals(target.service())) {
+            return;
+        }
+        if (response.statusCode() == 201 && target.path().startsWith("/auth/login")) {
+            registerSessionFromLogin(response, body);
+            return;
+        }
+        if (response.statusCode() <= 204 && target.path().startsWith("/auth/logout")) {
+            Optional.ofNullable(Request.extractSessionId(ex)).ifPresent(sessions::remove);
+        }
+    }
+
+    private void registerSessionFromLogin(HttpResponse<byte[]> response, byte[] body) {
+        String sessionId = extractSessionId(response.headers().allValues("set-cookie"));
+        if (sessionId == null) {
+            return;
+        }
+        try {
+            JSONObject json = new JSONObject(new String(body, StandardCharsets.UTF_8));
+            sessions.put(sessionId, SessionContext.authenticated(json.getInt("id"), json.optBoolean("admin", false)));
+        } catch (Exception e) {
+            System.err.println("⚠️  Impossible d'enregistrer la session gateway: " + e.getMessage());
+        }
+    }
+
+    private String extractSessionId(List<String> setCookies) {
+        for (String header : setCookies) {
+            String trimmed = header.trim();
+            if (trimmed.startsWith("session_id=")) {
+                int end = trimmed.indexOf(';');
+                return end > 0 ? trimmed.substring("session_id=".length(), end) : trimmed.substring("session_id=".length());
+            }
+        }
+        return null;
+    }
+
+    private void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+        cors.apply(ex);
         ex.sendResponseHeaders(status, bytes.length);
         try (OutputStream os = ex.getResponseBody()) {
             os.write(bytes);
@@ -161,5 +221,71 @@ record RouteTarget(String service, String path) {
 record SessionContext(boolean authenticated, int userId, boolean admin) {
     static SessionContext anonymous() {
         return new SessionContext(false, -1, false);
+    }
+
+    static SessionContext authenticated(int userId, boolean admin) {
+        return new SessionContext(true, userId, admin);
+    }
+}
+
+final class SessionRegistry {
+    private final Map<String, SessionContext> sessions = new ConcurrentHashMap<>();
+
+    SessionContext get(String sessionId) {
+        return sessions.get(sessionId);
+    }
+
+    void put(String sessionId, SessionContext context) {
+        sessions.put(sessionId, context);
+    }
+
+    void remove(String sessionId) {
+        sessions.remove(sessionId);
+    }
+}
+
+final class CorsSupport {
+    private static final Set<String> ALLOWED = Set.of(
+        "http://localhost:8300",
+        "http://127.0.0.1:8300"
+    );
+
+    boolean handlePreflight(HttpExchange ex) throws IOException {
+        if (!"OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+            return false;
+        }
+        String origin = origin(ex);
+        if (!isAllowed(origin)) {
+            return false;
+        }
+        applyCommon(ex, origin);
+        String requested = ex.getRequestHeaders().getFirst("Access-Control-Request-Headers");
+        ex.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+        ex.getResponseHeaders().set("Access-Control-Allow-Headers", requested != null ? requested : "Content-Type, Cookie");
+        ex.sendResponseHeaders(204, -1);
+        ex.close();
+        return true;
+    }
+
+    void apply(HttpExchange ex) {
+        String origin = origin(ex);
+        if (!isAllowed(origin)) {
+            return;
+        }
+        applyCommon(ex, origin);
+    }
+
+    private void applyCommon(HttpExchange ex, String origin) {
+        ex.getResponseHeaders().set("Access-Control-Allow-Origin", origin);
+        ex.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
+        ex.getResponseHeaders().add("Vary", "Origin");
+    }
+
+    private String origin(HttpExchange ex) {
+        return ex.getRequestHeaders().getFirst("Origin");
+    }
+
+    private boolean isAllowed(String origin) {
+        return origin != null && ALLOWED.contains(origin);
     }
 }

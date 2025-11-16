@@ -45,6 +45,7 @@ compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+		$(wildcard $(AUTH_DIR)/src/*.java) \
 		$(wildcard $(AUTH_DIR)/src/models/*.java) \
 		$(wildcard $(AUTH_DIR)/src/repositories/*.java) \
 		$(wildcard $(AUTH_DIR)/src/util/*.java) \
@@ -54,6 +55,7 @@ compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+		$(wildcard $(CATALOG_DIR)/src/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
@@ -62,6 +64,7 @@ compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+		$(wildcard $(ORDER_DIR)/src/*.java) \
 		$(wildcard $(ORDER_DIR)/src/models/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repositories/*.java) \
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
@@ -70,6 +73,7 @@ compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+		$(wildcard $(USER_DIR)/src/*.java) \
 		$(wildcard $(USER_DIR)/src/models/*.java) \
 		$(wildcard $(USER_DIR)/src/repositories/*.java) \
 		$(wildcard $(USER_DIR)/src/util/*.java) \
@@ -118,7 +122,7 @@ build-dev: clean compile
 ## ────────────────
 compile-seed:
 	@mkdir -p bin
-	@javac -proc:full -cp $(CLASSPATH) -d bin utils/src/PasswordUtil.java db/Seed.java
+	@javac -proc:full -cp $(CLASSPATH) -d bin utils/src/EnvLoader.java utils/src/PasswordUtil.java db/Seed.java
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
 	@java -cp $(CLASSPATH) db.Seed

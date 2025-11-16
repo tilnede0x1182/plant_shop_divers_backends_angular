@@ -14,11 +14,11 @@ import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.Plant;
-import model.User;
 import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
 import order.util.ApiMapper;
+import util.AuthContext;
 
 @Controller("/api/orders")
 public class OrderController {
@@ -38,11 +38,11 @@ public class OrderController {
 
     @Get
     public HttpResponse<?> list(HttpRequest<?> request) throws Exception {
-        User currentUser = request.getAttribute("user", User.class).orElse(null);
-        if (currentUser == null) {
+        AuthContext auth = AuthContext.fromHeaders(request);
+        if (!auth.isAuthenticated()) {
             return HttpResponse.unauthorized().body(Map.of("error", "Non authentifié"));
         }
-        List<Order> orders = currentUser.isAdmin ? repo.list() : repo.listByUser(currentUser.id);
+        List<Order> orders = auth.isAdmin() ? repo.list() : repo.listByUser(auth.userId());
         orders.sort(Comparator.comparing(o -> o.createdAt, Comparator.reverseOrder()));
 
         List<Map<String, Object>> payload = new ArrayList<>();
@@ -55,8 +55,8 @@ public class OrderController {
 
     @Post
     public HttpResponse<?> create(@Body Map<String, List<Map<String, Integer>>> body, HttpRequest<?> request) throws Exception {
-        User currentUser = request.getAttribute("user", User.class).orElse(null);
-        if (currentUser == null) {
+        AuthContext auth = AuthContext.fromHeaders(request);
+        if (!auth.isAuthenticated()) {
             return HttpResponse.unauthorized().body(Map.of("error", "Non authentifié"));
         }
         List<Map<String, Integer>> itemsJson = body.get("items");
@@ -66,7 +66,7 @@ public class OrderController {
 
         db.setAutoCommit(false);
         try {
-            Order newOrder = new Order(currentUser.id, BigDecimal.ZERO, "pending");
+            Order newOrder = new Order(auth.userId(), BigDecimal.ZERO, "pending");
             int orderId = repo.create(newOrder);
             BigDecimal total = BigDecimal.ZERO;
 
@@ -92,8 +92,8 @@ public class OrderController {
 
     @Patch("/{id}")
     public HttpResponse<?> patch(@PathVariable int id, @Body Map<String, String> body, HttpRequest<?> request) throws Exception {
-        User currentUser = request.getAttribute("user", User.class).orElse(null);
-        if (currentUser == null || !currentUser.isAdmin) {
+        AuthContext auth = AuthContext.fromHeaders(request);
+        if (!auth.isAuthenticated() || !auth.isAdmin()) {
             return HttpResponse.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Accès administrateur requis"));
         }
         if (repo.find(id) == null) return HttpResponse.notFound();
@@ -107,8 +107,8 @@ public class OrderController {
 
     @Delete("/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
-        User currentUser = request.getAttribute("user", User.class).orElse(null);
-        if (currentUser == null || !currentUser.isAdmin) {
+        AuthContext auth = AuthContext.fromHeaders(request);
+        if (!auth.isAuthenticated() || !auth.isAdmin()) {
             return HttpResponse.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Accès administrateur requis"));
         }
         itemRepo.deleteByOrder(id);

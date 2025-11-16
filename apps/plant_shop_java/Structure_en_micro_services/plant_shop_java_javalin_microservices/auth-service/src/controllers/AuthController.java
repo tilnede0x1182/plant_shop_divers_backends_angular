@@ -95,4 +95,27 @@ public final class AuthController {
         }
         ctx.json(ApiMapper.toUser(user));
     }
+
+    /**
+     * Endpoint interne utilisé par la gateway pour valider les sessions.
+     */
+    public void sessionStatus(Context ctx) throws Exception {
+        String sessionId = ctx.cookie("session_id");
+        if (sessionId == null || sessionId.isBlank()) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Session absente"));
+            return;
+        }
+        Integer userId = sessions.get(sessionId);
+        if (userId == null) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Session invalide"));
+            return;
+        }
+        User user = userRepo.find(userId);
+        if (user == null) {
+            sessions.remove(sessionId);
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Utilisateur introuvable"));
+            return;
+        }
+        ctx.json(ApiMapper.toUser(user));
+    }
 }

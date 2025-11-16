@@ -36,6 +36,7 @@ public final class ApplicationController {
                     post("/login", authController::login);
                     post("/logout", requireUser(authController::logout));
                     get("/me", requireUser(authController::me));
+                    get("/_session", authController::sessionStatus);
                 });
             });
         };

@@ -2,11 +2,9 @@
 package controller;
 
 import io.javalin.apibuilder.EndpointGroup;
-import io.javalin.http.Context;
 import io.javalin.http.Handler;
-import io.javalin.http.ForbiddenResponse;
-import io.javalin.http.UnauthorizedResponse;
 import java.sql.Connection;
+import util.AuthMiddleware;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
@@ -47,21 +45,6 @@ public final class ApplicationController {
     }
 
     private Handler requireAdmin(Handler handler) {
-        return ctx -> {
-            // Lire les headers propagés par la gateway
-            String userIdHeader = ctx.header("X-User-Id");
-            String adminHeader = ctx.header("X-User-Admin");
-
-            if (userIdHeader == null || userIdHeader.isBlank()) {
-                throw new UnauthorizedResponse("Non authentifié");
-            }
-
-            boolean isAdmin = "true".equalsIgnoreCase(adminHeader);
-            if (!isAdmin) {
-                throw new ForbiddenResponse("Accès administrateur requis");
-            }
-
-            handler.handle(ctx);
-        };
+        return AuthMiddleware.requireAdmin(handler);
     }
 }

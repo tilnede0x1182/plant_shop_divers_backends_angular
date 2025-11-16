@@ -1,6 +1,7 @@
 package util;
 
 import io.javalin.Javalin;
+import io.javalin.apibuilder.EndpointGroup;
 import io.javalin.config.JavalinConfig;
 
 import java.io.BufferedReader;
@@ -18,7 +19,7 @@ public final class ServiceRuntime {
 
     @FunctionalInterface
     public interface RouteRegistrar {
-        void configure(Javalin app, Connection db, Map<String, String> env) throws Exception;
+        EndpointGroup build(Connection db, Map<String, String> env) throws Exception;
     }
 
     public record ServiceDescriptor(String serviceName, String portKey, int defaultPort) {
@@ -35,11 +36,14 @@ public final class ServiceRuntime {
         Map<String, String> env = loadEnv();
         Connection connection = connect(env);
 
+        EndpointGroup routes = registrar.build(connection, env);
         Javalin app = null;
         boolean success = false;
         try {
-            app = Javalin.create(ServiceRuntime::configureJavalin);
-            registrar.configure(app, connection, env);
+            app = Javalin.create(config -> {
+                configureJavalin(config);
+                config.router.apiBuilder(routes);
+            });
             int port = resolvePort(descriptor, env);
             app.start(port);
             System.out.printf("🚀 %s en écoute sur http://localhost:%d%n", descriptor.serviceName(), port);

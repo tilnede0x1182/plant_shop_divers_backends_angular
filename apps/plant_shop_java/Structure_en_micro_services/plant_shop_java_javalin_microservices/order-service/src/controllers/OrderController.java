@@ -14,7 +14,7 @@ import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.PlantStock;
-import model.UserDTO;
+import util.AuthContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import repository.OrderItemRepository;
@@ -35,10 +35,6 @@ public final class OrderController {
     private final HttpClient httpClient;
     private final String catalogServiceUrl;
 
-    public OrderController(Connection db) {
-        this(db, System.getenv().getOrDefault("CATALOG_SERVICE_URL", "http://localhost:4102"));
-    }
-
     public OrderController(Connection db, String catalogUrl) {
         this.db = db;
         this.repo = new OrderRepository(db);
@@ -51,13 +47,13 @@ public final class OrderController {
     }
 
     public void list(Context ctx) throws Exception {
-        UserDTO currentUser = ctx.attribute("user");
-        if (currentUser == null) {
+        AuthContext currentUser = ctx.attribute("auth");
+        if (currentUser == null || !currentUser.isAuthenticated()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
             return;
         }
 
-        List<Order> orders = repo.listByUser(currentUser.id);
+        List<Order> orders = repo.listByUser(currentUser.userId());
         orders.sort(orderComparator());
 
         List<Map<String, Object>> payload = new ArrayList<>(orders.size());
@@ -68,8 +64,8 @@ public final class OrderController {
     }
 
     public void create(Context ctx) throws Exception {
-        UserDTO currentUser = ctx.attribute("user");
-        if (currentUser == null) {
+        AuthContext currentUser = ctx.attribute("auth");
+        if (currentUser == null || !currentUser.isAuthenticated()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
             return;
         }
@@ -88,7 +84,7 @@ public final class OrderController {
 
         db.setAutoCommit(false);
         try {
-            Order newOrder = new Order(currentUser.id, BigDecimal.ZERO, "pending");
+            Order newOrder = new Order(currentUser.userId(), BigDecimal.ZERO, "pending");
             int orderId = repo.create(newOrder);
             BigDecimal total = BigDecimal.ZERO;
 

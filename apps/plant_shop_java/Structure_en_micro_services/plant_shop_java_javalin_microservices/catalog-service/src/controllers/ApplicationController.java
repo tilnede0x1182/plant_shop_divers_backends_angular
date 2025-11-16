@@ -21,25 +21,20 @@ public final class ApplicationController {
      */
     public EndpointGroup getRoutes() {
         return () -> {
-            // Routes internes pour communication inter-services
             path("/internal/plants", () -> {
                 patch("/{id}/stock", plantController::updateStock);
             });
 
-            path("/api", () -> {
-                // Routes publiques pour les plantes
-                path("/plants", () -> {
-                    get(plantController::listPublic);
-                    get("/{id}", plantController::show);
-                });
+            path("/plants", () -> {
+                get(plantController::listPublic);
+                get("/{id}", plantController::show);
+            });
 
-                // Routes admin pour les plantes
-                path("/admin/plants", () -> {
-                    get(requireAdmin(plantController::listAdmin));
-                    post(requireAdmin(plantController::create));
-                    patch("/{id}", requireAdmin(plantController::update));
-                    delete("/{id}", requireAdmin(plantController::destroy));
-                });
+            path("/admin/plants", () -> {
+                get(requireAdmin(plantController::listAdmin));
+                post(requireAdmin(plantController::create));
+                patch("/{id}", requireAdmin(plantController::update));
+                delete("/{id}", requireAdmin(plantController::destroy));
             });
         };
     }

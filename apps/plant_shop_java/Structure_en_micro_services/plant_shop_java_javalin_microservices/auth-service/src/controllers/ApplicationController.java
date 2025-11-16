@@ -29,15 +29,13 @@ public final class ApplicationController {
      */
     public EndpointGroup getRoutes() {
         return () -> {
-            path("/api", () -> {
-                // Routes d'authentification uniquement
-                path("/auth", () -> {
-                    post("/register", authController::register);
-                    post("/login", authController::login);
-                    post("/logout", requireUser(authController::logout));
-                    get("/me", requireUser(authController::me));
-                    get("/_session", authController::sessionStatus);
-                });
+            // Routes d'authentification
+            path("/auth", () -> {
+                post("/register", authController::register);
+                post("/login", authController::login);
+                post("/logout", requireUser(authController::logout));
+                get("/me", requireUser(authController::me));
+                get("/_session", authController::sessionStatus);
             });
         };
     }

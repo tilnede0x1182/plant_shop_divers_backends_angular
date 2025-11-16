@@ -23,12 +23,16 @@ public class CdiRequestScopeFilter implements ContainerRequestFilter, ContainerR
 
     private static final String CDI_ACTIVE_KEY = CdiRequestScopeFilter.class.getName() + ".active";
 
+    private static final class RequestScopeStorage extends HashMap<String, Object> {
+        private static final long serialVersionUID = 1L;
+    }
+
     @Inject
     BoundRequestContext requestContext;
 
     @Override
     public void filter(ContainerRequestContext httpRequestContext) throws IOException {
-        Map<String, Object> requestMap = new HashMap<>();
+        RequestScopeStorage requestMap = new RequestScopeStorage();
         this.requestContext.associate(requestMap);
         this.requestContext.activate();
         httpRequestContext.setProperty(CDI_ACTIVE_KEY, requestMap);
@@ -37,14 +41,12 @@ public class CdiRequestScopeFilter implements ContainerRequestFilter, ContainerR
     @Override
     public void filter(ContainerRequestContext httpRequestContext, ContainerResponseContext responseContext) throws IOException {
         Object storage = httpRequestContext.getProperty(CDI_ACTIVE_KEY);
-        if (storage != null) {
+        if (storage instanceof RequestScopeStorage storageMap) {
             try {
                 this.requestContext.invalidate();
                 this.requestContext.deactivate();
             } finally {
-                if (storage instanceof Map) {
-                    this.requestContext.dissociate((Map<String, Object>) storage);
-                }
+                this.requestContext.dissociate(storageMap);
             }
         }
         httpRequestContext.removeProperty(CDI_ACTIVE_KEY);

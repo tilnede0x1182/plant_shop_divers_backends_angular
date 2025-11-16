@@ -121,7 +121,7 @@ public final class OrderController extends BaseController {
         AuthContext ctx = AuthContext.fromHeaders(ex);
 
         try {
-            if (ctx.userId() == 0) {
+            if (!ctx.isAuthenticated()) {
                 sendJson(ex, 401, "{\"error\":\"Non authentifié\"}");
                 return;
             }
@@ -130,6 +130,19 @@ public final class OrderController extends BaseController {
                 getAll(ex, ctx);
             } else if ("/orders".equals(path) && "POST".equals(method)) {
                 create(ex, ctx);
+            } else if (path.startsWith("/orders/")) {
+                Integer orderId = resolveOrderId(path);
+                if (orderId == null) {
+                    sendJson(ex, 404, "{\"error\":\"Route non trouvée\"}");
+                    return;
+                }
+                if ("PATCH".equals(method)) {
+                    updateStatus(ex, ctx, orderId);
+                } else if ("DELETE".equals(method)) {
+                    deleteOrder(ex, ctx, orderId);
+                } else {
+                    sendJson(ex, 404, "{\"error\":\"Route non trouvée\"}");
+                }
             } else {
                 sendJson(ex, 404, "{\"error\":\"Route non trouvée\"}");
             }
@@ -221,5 +234,52 @@ public final class OrderController extends BaseController {
             })
             .collect(Collectors.joining(",", "[", "]"));
         sendJson(ex, 200, json);
+    }
+
+    private Integer resolveOrderId(String path) {
+        String[] parts = path.split("/");
+        if (parts.length < 3) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(parts[2]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private void updateStatus(HttpExchange ex, AuthContext ctx, int orderId) throws Exception {
+        if (!ctx.isAdmin()) {
+            sendJson(ex, 403, "{\"error\":\"Accès administrateur requis\"}");
+            return;
+        }
+        Order order = orderRepo.find(orderId);
+        if (order == null) {
+            sendJson(ex, 404, "{\"error\":\"Commande introuvable\"}");
+            return;
+        }
+        JSONObject payload = parseJson(ex);
+        String status = payload.optString("status", "").trim();
+        if (status.isEmpty()) {
+            throw new IllegalArgumentException("Le statut est requis");
+        }
+        orderRepo.updateStatus(orderId, status);
+        Order updated = orderRepo.find(orderId);
+        var json = itemController.toJson(updated, itemRepo.findByOrder(orderId));
+        sendJson(ex, 200, json);
+    }
+
+    private void deleteOrder(HttpExchange ex, AuthContext ctx, int orderId) throws Exception {
+        if (!ctx.isAdmin()) {
+            sendJson(ex, 403, "{\"error\":\"Accès administrateur requis\"}");
+            return;
+        }
+        Order order = orderRepo.find(orderId);
+        if (order == null) {
+            sendJson(ex, 404, "{\"error\":\"Commande introuvable\"}");
+            return;
+        }
+        orderRepo.remove(orderId);
+        sendEmpty(ex, 200);
     }
 }

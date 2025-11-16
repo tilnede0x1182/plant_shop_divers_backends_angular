@@ -15,7 +15,7 @@ public final class Pm2Manager {
     static {
         SERVICES.put("auth-service", new Service("auth-service", "auth-service", "AuthService"));
         SERVICES.put("catalog-service", new Service("catalog-service", "catalog-service", "CatalogService"));
-        SERVICES.put("order-service", new Service("order-service", "order-service", "OrderService"));
+        SERVICES.put("order-service", new Service("order-service", "order-service", "order.OrderService"));
         SERVICES.put("user-service", new Service("user-service", "user-service", "UserService"));
         SERVICES.put("gateway", new Service("gateway", "gateway", "Gateway"));
     }

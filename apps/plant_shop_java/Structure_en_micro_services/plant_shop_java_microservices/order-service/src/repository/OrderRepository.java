@@ -101,4 +101,8 @@ public final class OrderRepository extends OrderBaseRepository<Order> {
         }
         return out;
     }
+
+    public void remove(int id) throws SQLException {
+        delete(id);
+    }
 }

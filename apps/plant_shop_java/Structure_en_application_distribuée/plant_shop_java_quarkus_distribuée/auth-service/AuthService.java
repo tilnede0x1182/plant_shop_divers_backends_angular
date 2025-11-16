@@ -6,16 +6,9 @@ import org.jboss.resteasy.core.ResteasyDeploymentImpl;
 import org.jboss.resteasy.cdi.CdiInjectorFactory;
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.environment.se.WeldContainer;
-import repository.UserRepository;
-import auth.repositories.BaseRepository;
 import auth.security.CdiRequestScopeFilter;
 import auth.security.CorsConfig;
-import auth.security.Guards;
-import auth.security.SessionService;
 import auth.security.SessionAuthFilter;
-import auth.security.AuthContext;
-import auth.util.ApiMapper;
-import util.DatabaseFactory;
 import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
@@ -70,6 +63,7 @@ public class AuthService {
             return Set.of(
                 AuthController.class,
                 SessionAuthFilter.class,
+                CdiRequestScopeFilter.class,
                 CorsConfig.class
             );
         }

@@ -14,6 +14,13 @@ UTILS_SRC := $(filter-out %/QuarkusBootstrap.java, $(wildcard $(UTILS_DIR)/src/*
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 DB_NAME=plant_shop_java_quarkus_distribuee
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
+
+define copy_beans
+	@if [ -f $(1)/src/META-INF/beans.xml ]; then \
+		mkdir -p $(1)/bin/META-INF; \
+		cp $(1)/src/META-INF/beans.xml $(1)/bin/META-INF/; \
+	fi
+endef
 ## ────────────────
 # Dépendances
 ## ────────────────
@@ -40,10 +47,12 @@ clean:
 compile-utils:
 	@echo "🔧 Compilation utilitaires"
 	@mkdir -p $(UTILS_DIR)/bin
+	$(call copy_beans,$(UTILS_DIR))
 	@javac -proc:full -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
 compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
+	$(call copy_beans,$(AUTH_DIR))
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
 		$(wildcard $(AUTH_DIR)/src/models/*.java) \
 		$(wildcard $(AUTH_DIR)/src/repositories/*.java) \
@@ -54,6 +63,7 @@ compile-auth: compile-utils
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
+	$(call copy_beans,$(CATALOG_DIR))
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java) \
@@ -63,6 +73,7 @@ compile-catalog: compile-utils
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
+	$(call copy_beans,$(ORDER_DIR))
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
 		$(wildcard $(ORDER_DIR)/src/models/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repositories/*.java) \
@@ -73,6 +84,7 @@ compile-order: compile-utils
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
+	$(call copy_beans,$(USER_DIR))
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
 		$(wildcard $(USER_DIR)/src/models/*.java) \
 		$(wildcard $(USER_DIR)/src/repositories/*.java) \

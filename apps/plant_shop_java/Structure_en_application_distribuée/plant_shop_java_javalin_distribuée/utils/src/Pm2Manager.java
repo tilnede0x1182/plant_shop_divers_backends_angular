@@ -76,6 +76,7 @@ public final class Pm2Manager {
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
         }
+        runCommandAllowFailure(List.of("pm2", "delete", name));
         runCommand(List.of(
             "pm2", "start", "java",
             "--name", service.name(),

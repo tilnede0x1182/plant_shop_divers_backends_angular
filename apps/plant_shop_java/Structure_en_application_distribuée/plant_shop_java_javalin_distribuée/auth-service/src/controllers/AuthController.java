@@ -3,8 +3,8 @@ package controller;
 
 import io.javalin.http.Context;
 import io.javalin.http.Cookie;
-import io.javalin.http.SameSite;
 import io.javalin.http.HttpStatus;
+import io.javalin.http.SameSite;
 import java.sql.Connection;
 import java.util.Map;
 import java.util.UUID;
@@ -13,6 +13,7 @@ import model.User;
 import org.json.JSONObject;
 import repository.UserRepository;
 import auth.util.ApiMapper;
+import util.AuthContext;
 import util.PasswordUtil;
 
 public final class AuthController {
@@ -87,10 +88,38 @@ public final class AuthController {
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
-    public void me(Context ctx) {
-        User user = ctx.attribute("user");
-        if (user == null) {
+    public void me(Context ctx) throws Exception {
+        AuthContext auth = ctx.attribute("auth");
+        if (auth == null || !auth.isAuthenticated()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
+            return;
+        }
+        User user = userRepo.find(auth.userId());
+        if (user == null) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Utilisateur introuvable"));
+            return;
+        }
+        ctx.json(ApiMapper.toUser(user));
+    }
+
+    /**
+     * Endpoint interne utilisé par la gateway pour valider les sessions.
+     */
+    public void sessionStatus(Context ctx) throws Exception {
+        String sessionId = ctx.cookie("session_id");
+        if (sessionId == null || sessionId.isBlank()) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Session absente"));
+            return;
+        }
+        Integer userId = sessions.get(sessionId);
+        if (userId == null) {
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Session invalide"));
+            return;
+        }
+        User user = userRepo.find(userId);
+        if (user == null) {
+            sessions.remove(sessionId);
+            ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Utilisateur introuvable"));
             return;
         }
         ctx.json(ApiMapper.toUser(user));

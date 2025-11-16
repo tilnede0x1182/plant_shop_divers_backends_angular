@@ -14,6 +14,7 @@ import model.User;
 import org.json.JSONObject;
 import repository.UserRepository;
 import user.util.ApiMapper;
+import util.AuthContext;
 import util.PasswordUtil;
 
 public final class UserController {
@@ -32,8 +33,8 @@ public final class UserController {
 
     public void show(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
-        User currentUser = ctx.attribute("user");
-        if (currentUser.id != id && !currentUser.isAdmin) {
+        AuthContext currentUser = ctx.attribute("auth");
+        if (currentUser == null || (currentUser.userId() != id && !currentUser.isAdmin())) {
             throw new ForbiddenResponse();
         }
         User user = repo.find(id);
@@ -65,8 +66,8 @@ public final class UserController {
 
     public void update(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
-        User currentUser = ctx.attribute("user");
-        if (currentUser.id != id && !currentUser.isAdmin) {
+        AuthContext currentUser = ctx.attribute("auth");
+        if (currentUser == null || (currentUser.userId() != id && !currentUser.isAdmin())) {
             throw new ForbiddenResponse();
         }
         User userToUpdate = repo.find(id);
@@ -85,10 +86,10 @@ public final class UserController {
             }
             userToUpdate.email = newEmail;
         }
-        if (body.has("admin") && currentUser.isAdmin) {
+        if (body.has("admin") && currentUser.isAdmin()) {
             userToUpdate.isAdmin = body.getBoolean("admin");
         }
-        if (body.has("password") && currentUser.id == id) {
+        if (body.has("password") && currentUser.userId() == id) {
             String password = body.getString("password");
             userToUpdate.passwordHash = PasswordUtil.hashPassword(password);
         }

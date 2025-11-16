@@ -5,10 +5,12 @@ import util.Request;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
@@ -90,7 +92,7 @@ final class GatewayHandler implements HttpHandler {
             builder.header("X-User-Admin", String.valueOf(session.admin()));
         }
 
-        HttpResponse<byte[]> response = http.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
+        HttpResponse<byte[]> response = sendWithRetry(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
 
         ex.getResponseHeaders().set("Content-Type",
             response.headers().firstValue("Content-Type").orElse("application/json"));
@@ -120,7 +122,7 @@ final class GatewayHandler implements HttpHandler {
             .GET()
             .build();
 
-        HttpResponse<String> response = http.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = sendWithRetry(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
             return SessionContext.anonymous();
         }
@@ -137,6 +139,25 @@ final class GatewayHandler implements HttpHandler {
             os.write(bytes);
         }
         ex.close();
+    }
+
+    private <T> HttpResponse<T> sendWithRetry(HttpRequest request, HttpResponse.BodyHandler<T> handler) throws Exception {
+        IOException lastError = null;
+        for (int attempt = 0; attempt < 5; attempt++) {
+            try {
+                return http.send(request, handler);
+            } catch (ConnectException | HttpTimeoutException e) {
+                lastError = e;
+                Thread.sleep(300);
+            } catch (IOException e) {
+                lastError = e;
+                Thread.sleep(300);
+            }
+        }
+        if (lastError != null) {
+            throw lastError;
+        }
+        throw new IOException("Impossible d'appeler " + request.uri());
     }
 }
 

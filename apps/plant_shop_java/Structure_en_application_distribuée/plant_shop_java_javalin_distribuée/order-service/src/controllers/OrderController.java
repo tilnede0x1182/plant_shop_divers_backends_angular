@@ -13,13 +13,13 @@ import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.Plant;
-import model.User;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
 import order.util.ApiMapper;
+import util.AuthContext;
 
 public final class OrderController {
 
@@ -36,13 +36,13 @@ public final class OrderController {
     }
 
     public void list(Context ctx) throws Exception {
-        User currentUser = ctx.attribute("user");
-        if (currentUser == null) {
+        AuthContext currentUser = ctx.attribute("auth");
+        if (currentUser == null || !currentUser.isAuthenticated()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
             return;
         }
 
-        List<Order> orders = repo.listByUser(currentUser.id);
+        List<Order> orders = repo.listByUser(currentUser.userId());
         orders.sort(orderComparator());
 
         List<Map<String, Object>> payload = new ArrayList<>(orders.size());
@@ -54,8 +54,8 @@ public final class OrderController {
     }
 
     public void create(Context ctx) throws Exception {
-        User currentUser = ctx.attribute("user");
-        if (currentUser == null) {
+        AuthContext currentUser = ctx.attribute("auth");
+        if (currentUser == null || !currentUser.isAuthenticated()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
             return;
         }
@@ -74,7 +74,7 @@ public final class OrderController {
 
         db.setAutoCommit(false);
         try {
-            Order newOrder = new Order(currentUser.id, BigDecimal.ZERO, "pending");
+            Order newOrder = new Order(currentUser.userId(), BigDecimal.ZERO, "pending");
             int orderId = repo.create(newOrder);
             BigDecimal total = BigDecimal.ZERO;
 

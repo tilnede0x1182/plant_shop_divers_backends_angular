@@ -1,6 +1,7 @@
 package util;
 
 import com.sun.net.httpserver.HttpExchange;
+import io.javalin.http.Context;
 
 /**
  * Représente l'identité propagée par la gateway vers les microservices.
@@ -20,14 +21,23 @@ public final class AuthContext {
     }
 
     public static AuthContext fromHeaders(HttpExchange ex) {
-        String idHeader = ex.getRequestHeaders().getFirst("X-User-Id");
+        return fromRawValues(
+            ex.getRequestHeaders().getFirst("X-User-Id"),
+            ex.getRequestHeaders().getFirst("X-User-Admin")
+        );
+    }
+
+    public static AuthContext fromHeaders(Context ctx) {
+        return fromRawValues(ctx.header("X-User-Id"), ctx.header("X-User-Admin"));
+    }
+
+    private static AuthContext fromRawValues(String idHeader, String adminHeader) {
         if (idHeader == null || idHeader.isBlank()) {
             return anonymous();
         }
         try {
             int id = Integer.parseInt(idHeader.trim());
-            boolean isAdmin = Boolean.parseBoolean(
-                ex.getRequestHeaders().getFirst("X-User-Admin"));
+            boolean isAdmin = Boolean.parseBoolean(adminHeader);
             return new AuthContext(id, isAdmin);
         } catch (NumberFormatException exn) {
             return anonymous();

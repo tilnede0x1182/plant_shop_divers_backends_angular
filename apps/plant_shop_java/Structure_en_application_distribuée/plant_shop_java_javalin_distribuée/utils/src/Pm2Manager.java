@@ -1,6 +1,8 @@
 package util;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -76,7 +78,7 @@ public final class Pm2Manager {
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
         }
-        runCommandAllowFailure(List.of("pm2", "delete", name));
+        deleteIfExists(service.name());
         runCommand(List.of(
             "pm2", "start", "java",
             "--name", service.name(),
@@ -92,17 +94,18 @@ public final class Pm2Manager {
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
         }
-        int exit = runCommandAllowFailure(List.of("pm2", "delete", service.name()));
-        if (exit != 0) {
-            System.out.printf("ℹ️  pm2 ne gérait pas le service %s (%d)%n", name, exit);
+        if (!processExists(service.name())) {
+            System.out.printf("ℹ️  pm2 ne gérait pas le service %s%n", name);
+            return;
         }
+        runCommand(List.of("pm2", "delete", service.name()));
     }
 
-    private static int runCommandAllowFailure(List<String> command) throws InterruptedException, IOException {
-        ProcessBuilder pb = new ProcessBuilder(command);
-        pb.inheritIO();
-        Process p = pb.start();
-        return p.waitFor();
+    private static void deleteIfExists(String name) throws Exception {
+        if (!processExists(name)) {
+            return;
+        }
+        runCommand(List.of("pm2", "delete", name));
     }
 
     private static void runCommand(List<String> command) throws Exception {
@@ -113,6 +116,25 @@ public final class Pm2Manager {
         if (exit != 0) {
             throw new RuntimeException("Commande échouée (" + String.join(" ", command) + "), code " + exit);
         }
+    }
+
+    private static boolean processExists(String name) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder("pm2", "pid", name);
+        pb.redirectError(ProcessBuilder.Redirect.DISCARD);
+        Process p = pb.start();
+        String output;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            output = reader.readLine();
+        }
+        int exit = p.waitFor();
+        if (exit != 0) {
+            return false;
+        }
+        if (output == null) {
+            return false;
+        }
+        output = output.trim();
+        return !output.isEmpty() && !"0".equals(output);
     }
 
     private record Service(String name, String relativeDir, String mainClass) {

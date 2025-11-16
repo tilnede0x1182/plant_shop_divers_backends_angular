@@ -1,7 +1,5 @@
 package auth.security;
 
-import jakarta.enterprise.context.control.RequestContextController;
-import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -11,7 +9,10 @@ import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.PreMatching;
 import jakarta.ws.rs.ext.Provider;
 import jakarta.annotation.Priority;
+import org.jboss.weld.context.bound.BoundRequestContext;
+import jakarta.inject.Inject;
 import java.io.IOException;
+import java.util.HashMap;
 
 @Provider
 @PreMatching
@@ -20,22 +21,32 @@ import java.io.IOException;
 public class CdiRequestScopeFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     private static final String CDI_ACTIVE_KEY = CdiRequestScopeFilter.class.getName() + ".active";
+    private static final class RequestScopeStorage extends HashMap<String, Object> {
+        private static final long serialVersionUID = 1L;
+    }
 
     @Inject
-    RequestContextController requestContextController;
+    BoundRequestContext requestContext;
 
     @Override
-    public void filter(ContainerRequestContext requestContext) throws IOException {
-        boolean activated = requestContextController.activate();
-        requestContext.setProperty(CDI_ACTIVE_KEY, activated);
+    public void filter(ContainerRequestContext httpRequestContext) throws IOException {
+        RequestScopeStorage requestMap = new RequestScopeStorage();
+        this.requestContext.associate(requestMap);
+        this.requestContext.activate();
+        httpRequestContext.setProperty(CDI_ACTIVE_KEY, requestMap);
     }
 
     @Override
-    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-        Object flag = requestContext.getProperty(CDI_ACTIVE_KEY);
-        if (flag instanceof Boolean && (Boolean) flag) {
-            requestContextController.deactivate();
+    public void filter(ContainerRequestContext httpRequestContext, ContainerResponseContext responseContext) throws IOException {
+        Object storage = httpRequestContext.getProperty(CDI_ACTIVE_KEY);
+        if (storage instanceof RequestScopeStorage storageMap) {
+            try {
+                this.requestContext.invalidate();
+                this.requestContext.deactivate();
+            } finally {
+                this.requestContext.dissociate(storageMap);
+            }
         }
-        requestContext.removeProperty(CDI_ACTIVE_KEY);
+        httpRequestContext.removeProperty(CDI_ACTIVE_KEY);
     }
 }

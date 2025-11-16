@@ -14,7 +14,7 @@ import model.Plant;
 import repository.PlantRepository;
 import catalog.util.ApiMapper;
 
-@Path("/api")
+@Path("")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped

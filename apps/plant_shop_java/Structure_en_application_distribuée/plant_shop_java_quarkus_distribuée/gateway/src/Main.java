@@ -64,17 +64,6 @@ final class GatewayConfig {
         };
     }
 
-    boolean requiresAuth(String service, String method, String path) {
-        if ("auth".equals(service)) {
-            return false;
-        }
-        if ("catalog".equals(service) && "GET".equals(method) && path.startsWith("/plants")
-            && !path.startsWith("/admin")) {
-            return false;
-        }
-        return true;
-    }
-
     private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;

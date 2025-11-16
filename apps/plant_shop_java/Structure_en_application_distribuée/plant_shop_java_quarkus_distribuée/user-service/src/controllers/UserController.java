@@ -16,7 +16,7 @@ import user.security.Guards;
 import user.util.ApiMapper;
 import util.PasswordUtil;
 
-@Path("/api")
+@Path("")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped

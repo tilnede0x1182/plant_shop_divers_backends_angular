@@ -12,11 +12,18 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
     private final HttpClient http;
+    private static final Set<String> ALLOWED_ORIGINS = Set.of(
+        "http://localhost:8300",
+        "http://127.0.0.1:8300",
+        "http://localhost:4200",
+        "http://127.0.0.1:4200"
+    );
 
     GatewayHandler(GatewayConfig config, HttpClient http) {
         this.config = config;
@@ -26,6 +33,10 @@ final class GatewayHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
+            if (isCorsPreflight(ex)) {
+                respondPreflight(ex);
+                return;
+            }
             forward(ex);
         } catch (Exception e) {
             e.printStackTrace();
@@ -52,18 +63,22 @@ final class GatewayHandler implements HttpHandler {
             targetPath = targetPath + "?" + uri.getRawQuery();
         }
 
-        RouteTarget target = RouteTarget.resolve(targetPath);
+        RouteTarget target = RouteTarget.resolve(targetPath, ex.getRequestMethod());
         if (target == null) {
             sendJson(ex, 404, "{\"error\":\"Route inconnue\"}");
             return;
         }
 
         SessionContext session = SessionContext.anonymous();
-        boolean needAuth = config.requiresAuth(target.service(), ex.getRequestMethod(), target.path());
-        if (!"auth".equals(target.service())) {
+        boolean needsSession = !"auth".equals(target.service()) && (target.requiresAuth() || target.requiresAdmin());
+        if (needsSession) {
             session = resolveSession(ex);
-            if (needAuth && !session.authenticated()) {
+            if (!session.authenticated()) {
                 sendJson(ex, 401, "{\"error\":\"Authentification requise\"}");
+                return;
+            }
+            if (target.requiresAdmin() && !session.admin()) {
+                sendJson(ex, 403, "{\"error\":\"Accès administrateur requis\"}");
                 return;
             }
         }
@@ -102,6 +117,7 @@ final class GatewayHandler implements HttpHandler {
             }
         });
 
+        applyCorsHeaders(ex);
         ex.sendResponseHeaders(response.statusCode(), response.body().length);
         try (OutputStream os = ex.getResponseBody()) {
             os.write(response.body());
@@ -129,8 +145,31 @@ final class GatewayHandler implements HttpHandler {
         return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
     }
 
-    private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
+    private boolean isCorsPreflight(HttpExchange ex) {
+        return "OPTIONS".equalsIgnoreCase(ex.getRequestMethod())
+            && ex.getRequestHeaders().getFirst("Origin") != null;
+    }
+
+    private void respondPreflight(HttpExchange ex) throws IOException {
+        applyCorsHeaders(ex);
+        ex.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+        ex.getResponseHeaders().set("Access-Control-Allow-Headers", "Content-Type, Cookie");
+        ex.sendResponseHeaders(204, -1);
+        ex.close();
+    }
+
+    private void applyCorsHeaders(HttpExchange ex) {
+        String origin = ex.getRequestHeaders().getFirst("Origin");
+        if (origin != null && ALLOWED_ORIGINS.contains(origin)) {
+            ex.getResponseHeaders().set("Access-Control-Allow-Origin", origin);
+            ex.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
+            ex.getResponseHeaders().set("Vary", "Origin");
+        }
+    }
+
+private void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
+        applyCorsHeaders(ex);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(status, bytes.length);
         try (OutputStream os = ex.getResponseBody()) {
@@ -140,19 +179,36 @@ final class GatewayHandler implements HttpHandler {
     }
 }
 
-record RouteTarget(String service, String path) {
-    static RouteTarget resolve(String path) {
+record RouteTarget(String service, String path, boolean requiresAuth, boolean requiresAdmin) {
+    static RouteTarget resolve(String path, String method) {
         if (path.startsWith("/auth")) {
-            return new RouteTarget("auth", path);
+            boolean needsAuth = path.startsWith("/auth/me")
+                || path.startsWith("/auth/logout")
+                || path.startsWith("/auth/_session");
+            return new RouteTarget("auth", path, needsAuth, false);
         }
-        if (path.startsWith("/plants") || path.startsWith("/admin/plants")) {
-            return new RouteTarget("catalog", path);
+        if (path.startsWith("/admin/plants")) {
+            return new RouteTarget("catalog", path, true, true);
         }
-        if (path.startsWith("/orders") || path.startsWith("/admin/orders")) {
-            return new RouteTarget("order", path);
+        if (path.startsWith("/plants")) {
+            boolean adminOnly = !"GET".equalsIgnoreCase(method);
+            return new RouteTarget("catalog", path, adminOnly, adminOnly);
         }
-        if (path.startsWith("/users") || path.startsWith("/admin/users")) {
-            return new RouteTarget("user", path);
+        if (path.startsWith("/orders")) {
+            boolean admin = "PATCH".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method);
+            return new RouteTarget("order", path, true, admin);
+        }
+        if (path.startsWith("/admin/orders")) {
+            return new RouteTarget("order", path, true, true);
+        }
+        if (path.startsWith("/admin/users")) {
+            return new RouteTarget("user", path, true, true);
+        }
+        if (path.equals("/users") || path.startsWith("/users?")) {
+            return new RouteTarget("user", path, true, true);
+        }
+        if (path.startsWith("/users/")) {
+            return new RouteTarget("user", path, true, false);
         }
         return null;
     }

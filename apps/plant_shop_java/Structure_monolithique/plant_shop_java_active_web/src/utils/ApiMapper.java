@@ -23,7 +23,6 @@ public final class ApiMapper {
         return m.toJson(false, attrs);
     }
 
-    @SuppressWarnings("unchecked")
     public static Map<String, Object> jsonToMap(String json) {
         if (json == null || json.isBlank()) {
             return Collections.emptyMap();
@@ -31,7 +30,6 @@ public final class ApiMapper {
         return (Map<String, Object>) JsonHelper.toMap(json);
     }
 
-    @SuppressWarnings("unchecked")
     public static List<Map<String, Object>> jsonToListOfMaps(Object value) {
         if (value instanceof List<?>) {
             return (List<Map<String, Object>>) value;

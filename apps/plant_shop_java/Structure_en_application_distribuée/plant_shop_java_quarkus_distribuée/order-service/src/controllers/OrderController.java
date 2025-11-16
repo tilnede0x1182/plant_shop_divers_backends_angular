@@ -21,7 +21,7 @@ import repository.PlantRepository;
 import order.security.Guards;
 import order.util.ApiMapper;
 
-@Path("/api/orders")
+@Path("/orders")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped

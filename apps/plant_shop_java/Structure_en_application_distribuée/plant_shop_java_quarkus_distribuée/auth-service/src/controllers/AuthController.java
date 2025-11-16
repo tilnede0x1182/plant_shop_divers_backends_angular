@@ -16,7 +16,7 @@ import auth.security.SessionService;
 import auth.util.ApiMapper;
 import util.PasswordUtil;
 
-@Path("/api/auth")
+@Path("/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped // Par défaut dans Quarkus, mais explicite c'est bien
@@ -103,6 +103,13 @@ public class AuthController {
     @Path("/me")
     public Response me() {
         // Le Guard lève une 401 si l'utilisateur n'est pas trouvé
+        User user = guards.requireUser();
+        return Response.ok(ApiMapper.toUser(user)).build();
+    }
+
+    @GET
+    @Path("/_session")
+    public Response sessionProbe() {
         User user = guards.requireUser();
         return Response.ok(ApiMapper.toUser(user)).build();
     }

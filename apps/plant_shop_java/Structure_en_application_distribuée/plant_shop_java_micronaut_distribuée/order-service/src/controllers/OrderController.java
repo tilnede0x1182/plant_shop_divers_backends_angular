@@ -20,7 +20,7 @@ import repository.PlantRepository;
 import order.util.ApiMapper;
 import util.AuthContext;
 
-@Controller("/api/orders")
+@Controller("/orders")
 public class OrderController {
 
     private final OrderRepository repo;

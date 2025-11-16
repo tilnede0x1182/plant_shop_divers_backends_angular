@@ -79,7 +79,6 @@ public final class ServiceRuntime {
         Path cwd = Path.of("").toAbsolutePath();
         readEnv(cwd.resolve("../config/.env"), values);
         readEnv(cwd.resolve("config/.env"), values);
-        readEnv(cwd.resolve(String.format("../config/%s.env", serviceName)), values);
         return values;
     }
 

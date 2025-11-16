@@ -1,17 +1,13 @@
-name: plant_shop_javalin
+name: plant_shop_java_quarkus_microservices
 dependencies:
-  - io.javalin:javalin:6.1.3
-  - org.eclipse.jetty:jetty-server:11.0.18
-  - org.eclipse.jetty:jetty-servlet:11.0.18
-  - org.eclipse.jetty:jetty-http:11.0.18
-  - org.eclipse.jetty:jetty-io:11.0.18
-  - org.eclipse.jetty:jetty-util:11.0.18
-  - org.eclipse.jetty:jetty-security:11.0.18
-  - org.slf4j:slf4j-api:2.0.9
-  - org.slf4j:slf4j-simple:2.0.9
-  - org.json:json:20210307
-  - jakarta.servlet:jakarta.servlet-api:5.0.0
+  - io.quarkus:quarkus-arc:3.10.0
+  - io.quarkus:quarkus-rest:3.10.0
+  - io.quarkus:quarkus-vertx-http:3.10.0
+  - io.quarkus:quarkus-netty:3.10.0
+  - io.quarkus:quarkus-hibernate-orm:3.10.0
+  - io.quarkus:quarkus-jdbc-mysql:3.10.0
+  - io.quarkus:quarkus-narayana-jta:3.10.0
+  - io.quarkus:quarkus-jackson:3.10.0
+  - io.quarkus:quarkus-security:3.10.0
   - org.postgresql:postgresql:42.7.8
-  - org.jetbrains.kotlin:kotlin-stdlib:1.9.24
-  - org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24
   - org.mindrot:jbcrypt:0.4

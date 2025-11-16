@@ -19,7 +19,7 @@ import java.util.Map;
 @Factory
 public final class DatabaseFactory {
 
-    private static final Path ENV_FILE = Path.of("config/.env");
+    private static final Path ENV_FILE = Path.of("..", "config", ".env");
 
     @Singleton
     public Connection connection() throws SQLException, IOException {

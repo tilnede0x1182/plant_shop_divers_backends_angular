@@ -45,7 +45,6 @@ final class GatewayConfig {
     static GatewayConfig load() throws IOException {
         Map<String, String> values = new HashMap<>();
         readEnv(Path.of("../config/.env"), values);
-        readEnv(Path.of(".env"), values);
         return new GatewayConfig(values);
     }
 

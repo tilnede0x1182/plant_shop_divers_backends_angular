@@ -19,11 +19,6 @@ org.postgresql:postgresql:42.7.8
  org.slf4j:slf4j-simple:2.0.17
 # org.slf4j:slf4j-nop:2.0.17
 
-# Ajout (Jackson)
-com.fasterxml.jackson.core:jackson-databind:2.14.2
-com.fasterxml.jackson.core:jackson-core:2.14.2
-com.fasterxml.jackson.core:jackson-annotations:2.14.2
-
 # Ajout (CDI Weld SE)
 org.jboss.weld.se:weld-se-core:5.1.0.Final
 jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1

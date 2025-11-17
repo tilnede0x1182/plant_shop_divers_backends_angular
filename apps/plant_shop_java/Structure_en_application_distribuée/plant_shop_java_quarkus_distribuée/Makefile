@@ -120,20 +120,21 @@ run-gateway: compile-gateway
 
 run-with-logs:
 	@TS=$$(date +"%Y%m%d_%H%M%S"); \
-	LOG_DIR="$(LOG_DIR)"; \
-	mkdir -p "$$LOG_DIR"; \
-	echo "🗂️  Logs dans $$LOG_DIR (suffixe _$$TS.log)"; \
-	nohup java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService > "$$LOG_DIR/auth-service_$${TS}.log" 2>&1 & \
-	echo "   ↳ AuthService → $$LOG_DIR/auth-service_$${TS}.log"; \
-	nohup java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService > "$$LOG_DIR/catalog-service_$${TS}.log" 2>&1 & \
-	echo "   ↳ CatalogService → $$LOG_DIR/catalog-service_$${TS}.log"; \
-	nohup java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService > "$$LOG_DIR/order-service_$${TS}.log" 2>&1 & \
-	echo "   ↳ OrderService → $$LOG_DIR/order-service_$${TS}.log"; \
-	nohup java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService > "$$LOG_DIR/user-service_$${TS}.log" 2>&1 & \
-	echo "   ↳ UserService → $$LOG_DIR/user-service_$${TS}.log"; \
-	nohup java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway > "$$LOG_DIR/gateway_$${TS}.log" 2>&1 & \
-	echo "   ↳ Gateway → $$LOG_DIR/gateway_$${TS}.log"; \
-	echo "🚀 Services démarrés (timestamp $$TS)"
+	BASE="$(LOG_DIR)"; \
+	DIR="$$BASE/$$TS"; \
+	mkdir -p "$$DIR"; \
+	echo "🗂️  Logs dans $$DIR"; \
+	nohup java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService > "$$DIR/auth-service.log" 2>&1 & \
+	echo "   ↳ AuthService → $$DIR/auth-service.log"; \
+	nohup java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService > "$$DIR/catalog-service.log" 2>&1 & \
+	echo "   ↳ CatalogService → $$DIR/catalog-service.log"; \
+	nohup java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService > "$$DIR/order-service.log" 2>&1 & \
+	echo "   ↳ OrderService → $$DIR/order-service.log"; \
+	nohup java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService > "$$DIR/user-service.log" 2>&1 & \
+	echo "   ↳ UserService → $$DIR/user-service.log"; \
+	nohup java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway > "$$DIR/gateway.log" 2>&1 & \
+	echo "   ↳ Gateway → $$DIR/gateway.log"; \
+	echo "🚀 Services démarrés (dossier $$DIR)"
 
 compile-run-with-logs: compile run-with-logs
 

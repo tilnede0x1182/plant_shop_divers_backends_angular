@@ -173,22 +173,24 @@ public class OrderController {
     private Map<String, Object> toOrderJson(Order order, List<OrderItem> items) throws Exception {
         List<Map<String, Object>> itemsJson = new ArrayList<>(items.size());
         for (OrderItem item : items) {
+            PlantStock plant = plantRepo.find(item.plantId);
+            if (plant == null) {
+                continue;
+            }
+
+            Map<String, Object> plantMap = new LinkedHashMap<>();
+            plantMap.put("id", plant.id);
+            plantMap.put("name", plant.name);
+            plantMap.put("price", plant.price.doubleValue());
+            plantMap.put("stock", plant.stock);
+
             Map<String, Object> itemMap = new LinkedHashMap<>();
             itemMap.put("id", item.id);
             itemMap.put("orderId", item.orderId);
             itemMap.put("plantId", item.plantId);
             itemMap.put("quantity", item.quantity);
             itemMap.put("price", item.price.doubleValue());
-
-            PlantStock plant = plantRepo.find(item.plantId);
-            if (plant != null) {
-                Map<String, Object> plantMap = new LinkedHashMap<>();
-                plantMap.put("id", plant.id);
-                plantMap.put("name", plant.name);
-                plantMap.put("price", plant.price.doubleValue());
-                plantMap.put("stock", plant.stock);
-                itemMap.put("plant", plantMap);
-            }
+            itemMap.put("plant", plantMap);
             itemsJson.add(itemMap);
         }
 

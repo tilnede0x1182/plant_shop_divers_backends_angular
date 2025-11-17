@@ -22,8 +22,7 @@ prod: run
 clean:
 	@rm -rf bin
 
-build-dev: clean compile_run
-
+build-dev: clean compile
 ## ────────────────
 # Seed
 ## ────────────────
@@ -69,4 +68,4 @@ tests:
 
 seed-dev: clean compile-seed seed
 
-build-dev: clean compile_run
+build-dev: clean compile

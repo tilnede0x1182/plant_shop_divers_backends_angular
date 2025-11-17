@@ -7,10 +7,11 @@ DB_NAME=plant_shop_java_quarkus
 
 compile-install-libs:
 	@mkdir -p bin
-	@javac -proc:full -d bin config/InstallCoursier.java
+	@javac -proc:full -d bin config/InstallCoursier.java src/utils/QuarkusBundleBuilder.java
 
 install: compile-install-libs
 	@java -cp bin config.InstallCoursier
+	@java -cp bin utils.QuarkusBundleBuilder
 
 clean:
 	@rm -rf bin/*
@@ -33,14 +34,15 @@ compile:
 		src/controllers/*.java \
 		src/Main.java
 	@if [ -d src/resources ]; then cp -R src/resources/. bin/; fi
+	@java -cp "$(CLASSPATH)" utils.QuarkusBundleBuilder
 
-run: compile
-	@java -cp "$(CLASSPATH)" Main
+run:
+	@if [ ! -f .quarkus/quarkus-app/quarkus-run.jar ]; then $(MAKE) compile; fi
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -jar .quarkus/quarkus-app/quarkus-run.jar
 
 compile_run: compile run
 
-build-dev: clean compile_run
-
+build-dev: clean compile
 ## ────────────────
 # # Serveur - Production
 ## ────────────────

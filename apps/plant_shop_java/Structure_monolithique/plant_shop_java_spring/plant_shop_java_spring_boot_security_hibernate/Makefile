@@ -37,8 +37,7 @@ run:
 
 compile_run: compile run
 
-build-dev: clean compile_run
-
+build-dev: clean compile
 ## ────────────────
 # # Serveur - Production
 ## ────────────────

@@ -2,6 +2,7 @@ package util;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.inject.Disposes;
 import jakarta.enterprise.inject.Produces;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -33,5 +34,15 @@ public final class DatabaseFactory {
             throw new IllegalStateException("DATABASE_URL, DATABASE_USER et DATABASE_PASS doivent être définis dans config/.env");
         }
         return DriverManager.getConnection(url, user, pass);
+    }
+
+    public void close(@Disposes Connection connection) {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            System.err.println("⚠️  Impossible de fermer la connexion JDBC: " + e.getMessage());
+        }
     }
 }

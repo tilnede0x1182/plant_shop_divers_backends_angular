@@ -16,8 +16,8 @@ org.json:json:20210307
 org.postgresql:postgresql:42.7.8
 
 # Logs serveur
- org.slf4j:slf4j-simple:2.0.17
-# org.slf4j:slf4j-nop:2.0.17
+#org.slf4j:slf4j-simple:2.0.17
+#org.slf4j:slf4j-nop:2.0.17
 
 # Ajout (CDI Weld SE)
 org.jboss.weld.se:weld-se-core:5.1.0.Final

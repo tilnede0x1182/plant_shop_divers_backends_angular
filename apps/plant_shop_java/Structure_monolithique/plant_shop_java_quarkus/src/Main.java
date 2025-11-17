@@ -4,11 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import utils.QuarkusBundleBuilder;
 
 public final class Main {
 
@@ -17,23 +14,21 @@ public final class Main {
     public static void main(String[] args) {
         System.setProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager");
 
-        try {
-            QuarkusBundleBuilder.buildBundle();
-        } catch (Exception e) {
-            System.err.println("❌ Échec de la génération du bundle Quarkus : " + e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
-        }
-
         Map<String, String> env = loadEnv();
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));
+
+        Path jarPath = Path.of(".quarkus", "quarkus-app", "quarkus-run.jar");
+        if (!Files.exists(jarPath)) {
+            System.err.println("❌ quarkus-run.jar introuvable. Lancez `make compile` au préalable.");
+            System.exit(1);
+        }
 
         if (!isPortAvailable(port)) {
             System.err.printf("❌ Le port %d est déjà utilisé. Impossible de démarrer Quarkus.%n", port);
             System.exit(1);
         }
 
-        runFastJar(port);
+        runFastJar(jarPath, port);
     }
 
     private static Map<String, String> loadEnv() {
@@ -82,22 +77,14 @@ public final class Main {
         }
     }
 
-    private static void runFastJar(int port) {
-        Path jarPath = Path.of(".quarkus", "quarkus-app", "quarkus-run.jar");
-        if (!Files.exists(jarPath)) {
-            System.err.println("❌ quarkus-run.jar introuvable dans " + jarPath.toAbsolutePath());
-            System.exit(1);
-            return;
-        }
-
-        List<String> command = new ArrayList<>();
-        command.add("java");
-        command.add("-Djava.util.logging.manager=org.jboss.logmanager.LogManager");
-        command.add("-Dquarkus.http.port=" + port);
-        command.add("-jar");
-        command.add(jarPath.toString());
-
-        ProcessBuilder pb = new ProcessBuilder(command);
+    private static void runFastJar(Path jarPath, int port) {
+        ProcessBuilder pb = new ProcessBuilder(
+            "java",
+            "-Djava.util.logging.manager=org.jboss.logmanager.LogManager",
+            "-Dquarkus.http.port=" + port,
+            "-jar",
+            jarPath.toString()
+        );
         pb.inheritIO();
         try {
             Process process = pb.start();

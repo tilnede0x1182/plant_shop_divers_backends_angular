@@ -50,23 +50,22 @@ build-dev: clean compile
 SRCS := $(shell find src -type f -name '*.java')
 
 build-prod: clean
-	@mkdir -p bin build
-	@echo "Compiling $$(echo $(SRCS) | wc -w) sources..."
-	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -d bin -cp "lib/*" $(SRCS)
-	@jar --create --file build/app-prod.jar --main-class=Main -C bin .
+			@mkdir -p bin build
+			@javac -proc:full -J-Dorg.jboss.logging.provider=jul -d bin -cp "lib/*" $(SRCS)
+			@java -cp "bin:lib/*" utils.QuarkusBundleBuilder
+			@jar --create --file build/app-prod.jar --main-class=Main -C bin .
 
-run-prod:
-	@java \
-	  -XX:+TieredCompilation \
-	  -XX:TieredStopAtLevel=1 \
-	  -Dmicronaut.env=prod \
-	  -Djava.security.egd=file:/dev/./urandom \
-	  -Xms512m -Xmx1g \
-	  -XX:+UseG1GC -XX:MaxGCPauseMillis=200 \
-	  -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=build/heap.hprof \
-	  -cp "bin:lib/*" Main
-
-prod: build-prod run-prod
+prod:
+			@if [ ! -f build/app-prod.jar ] || [ ! -f .quarkus/quarkus-app/quarkus-run.jar ]; then $(MAKE) build-prod; fi
+			@java \
+							-XX:+TieredCompilation \
+							-XX:TieredStopAtLevel=1 \
+							-Dmicronaut.env=prod \
+							-Djava.security.egd=file:/dev/./urandom \
+							-Xms512m -Xmx1g \
+							-XX:+UseG1GC -XX:MaxGCPauseMillis=200 \
+							-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=build/heap.hprof \
+							-jar build/app-prod.jar
 
 ## ────────────────
 # Seed

@@ -86,7 +86,8 @@ compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
-		$(wildcard $(GATEWAY_DIR)/src/*.java)
+		$(wildcard $(GATEWAY_DIR)/src/*.java) \
+		$(GATEWAY_DIR)/Gateway.java
 compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 ## ────────────────
 # Run services

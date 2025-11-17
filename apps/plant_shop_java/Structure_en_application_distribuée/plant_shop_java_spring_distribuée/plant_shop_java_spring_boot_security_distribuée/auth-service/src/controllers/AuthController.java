@@ -95,8 +95,21 @@ public class AuthController {
     }
 
     @GetMapping("/_session")
-    public ResponseEntity<Object> session() {
-        User user = guards.requireUser();
+    public ResponseEntity<Object> session(@CookieValue(name = "session_id", required = false) String sessionId) throws Exception {
+        if (sessionId == null || sessionId.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                 .body(Map.of("error", "Authentification requise"));
+        }
+        Integer userId = sessionService.getSessions().get(sessionId);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                 .body(Map.of("error", "Authentification requise"));
+        }
+        User user = userRepo.find(userId);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                 .body(Map.of("error", "Authentification requise"));
+        }
         return ResponseEntity.ok(Map.of(
             "id", user.id,
             "admin", user.isAdmin

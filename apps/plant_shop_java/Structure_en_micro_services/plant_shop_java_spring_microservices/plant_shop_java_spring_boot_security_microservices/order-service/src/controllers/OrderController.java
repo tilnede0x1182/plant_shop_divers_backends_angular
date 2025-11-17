@@ -176,14 +176,17 @@ public class OrderController {
             itemMap.put("price", item.price.doubleValue());
 
             PlantStock plant = plantRepo.find(item.plantId);
-            if (plant != null) {
-                Map<String, Object> plantMap = new LinkedHashMap<>();
-                plantMap.put("id", plant.id);
-                plantMap.put("name", plant.name);
-                plantMap.put("price", plant.price.doubleValue());
-                plantMap.put("stock", plant.stock);
-                itemMap.put("plant", plantMap);
+            if (plant == null) {
+                // Si la plante a été supprimée entre la commande et la lecture, on masque l'item.
+                continue;
             }
+
+            Map<String, Object> plantMap = new LinkedHashMap<>();
+            plantMap.put("id", plant.id);
+            plantMap.put("name", plant.name);
+            plantMap.put("price", plant.price.doubleValue());
+            plantMap.put("stock", plant.stock);
+            itemMap.put("plant", plantMap);
             itemsJson.add(itemMap);
         }
 

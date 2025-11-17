@@ -83,6 +83,7 @@ compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
+		$(GATEWAY_DIR)/Gateway.java \
 		$(wildcard $(GATEWAY_DIR)/src/*.java)
 compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 ## ────────────────

@@ -20,7 +20,7 @@ public final class ApiMapper {
         map.put("id", user.id);
         map.put("name", user.name);
         map.put("email", user.email);
-        map.put("isAdmin", user.isAdmin);
+        map.put("admin", user.isAdmin);
         map.put("createdAt", toIso(user.createdAt));
         return map;
     }

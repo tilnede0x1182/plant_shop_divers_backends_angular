@@ -84,6 +84,7 @@ public final class Seed {
 
 	/* ---------- Main ---------- */
 	public static void main(String[] args) throws Exception {
+		System.setProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager");
 
 		Map<String,String> cfg = env();
 		Connection db = DriverManager.getConnection(

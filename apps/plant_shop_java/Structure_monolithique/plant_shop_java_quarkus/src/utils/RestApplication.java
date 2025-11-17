@@ -5,7 +5,6 @@ import controllers.OrderController;
 import controllers.PlantController;
 import controllers.UserController;
 import jakarta.ws.rs.core.Application;
-import security.CdiRequestScopeFilter;
 import security.CorsConfig;
 import security.SessionAuthFilter;
 import java.util.Set;
@@ -25,7 +24,6 @@ public class RestApplication extends Application {
             UserController.class,
             OrderController.class,
             SessionAuthFilter.class,
-            CdiRequestScopeFilter.class,
             CorsConfig.class
         );
     }

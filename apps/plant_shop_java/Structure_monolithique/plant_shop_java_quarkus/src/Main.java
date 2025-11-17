@@ -30,6 +30,7 @@ public final class Main {
         }
 
         System.setProperty("quarkus.http.port", String.valueOf(port));
+        System.setProperty("quarkus.launch.project-dir", Path.of("").toAbsolutePath().toString());
         System.out.printf("🚀 Initialisation Quarkus sur http://localhost:%d%n", port);
 
         Quarkus.run(PlantShopQuarkusApp.class, args);

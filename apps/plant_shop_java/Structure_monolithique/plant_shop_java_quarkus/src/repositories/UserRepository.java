@@ -1,14 +1,14 @@
 package repositories;
 
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import java.sql.*;
 import models.User;
 
-@RequestScoped // Ce repository vivra le temps d'une requête HTTP
+@Dependent
 public class UserRepository extends BaseRepository<User> {
 
-    @Inject // Injecte la connexion @RequestScoped fournie par DatabaseFactory
+    @Inject
     public UserRepository(Connection db) {
         super(db, "users");
     }

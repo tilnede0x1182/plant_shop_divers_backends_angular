@@ -7,7 +7,7 @@ DB_NAME=plant_shop_java_quarkus
 
 compile-install-libs:
 	@mkdir -p bin
-	@javac -proc:full -d bin config/InstallCoursier.java config/AssembleQuarkusApp.java
+	@javac -proc:full -d bin config/InstallCoursier.java utils/src/QuarkusBundleBuilder.java
 
 install: compile-install-libs
 	@java -cp bin config.InstallCoursier
@@ -35,13 +35,13 @@ compile:
 	@if [ -d src/resources ]; then cp -R src/resources/. bin/; fi
 
 assemble-app: compile
-	@if [ ! -f bin/config/AssembleQuarkusApp.class ]; then \
-		javac -proc:full -d bin config/AssembleQuarkusApp.java; \
+	@if [ ! -f bin/utils/QuarkusBundleBuilder.class ]; then \
+		javac -proc:full -d bin utils/src/QuarkusBundleBuilder.java; \
 	fi
-	@java -cp bin config.AssembleQuarkusApp
+	@java -cp bin utils.QuarkusBundleBuilder
 
 run: assemble-app
-	@java -jar bin/quarkus-app/app.jar
+	@java -jar .quarkus/quarkus-app/quarkus-run.jar
 
 compile_run: compile run
 

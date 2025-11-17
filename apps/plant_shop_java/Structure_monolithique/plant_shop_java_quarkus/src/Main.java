@@ -1,25 +1,29 @@
-import io.quarkus.runtime.Quarkus;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import utils.PlantShopQuarkusApp;
+import utils.QuarkusBundleBuilder;
 
-/**
- * Point d'entrée principal qui démarre réellement Quarkus.
- * Il simule Maven en récupérant la configuration depuis config/.env
- * puis délègue au runtime Quarkus.
- */
 public final class Main {
 
     private Main() {}
 
     public static void main(String[] args) {
         System.setProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager");
+
+        try {
+            QuarkusBundleBuilder.buildBundle();
+        } catch (Exception e) {
+            System.err.println("❌ Échec de la génération du bundle Quarkus : " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         Map<String, String> env = loadEnv();
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS", "4100"));
@@ -29,11 +33,7 @@ public final class Main {
             System.exit(1);
         }
 
-        System.setProperty("quarkus.http.port", String.valueOf(port));
-        System.setProperty("quarkus.launch.project-dir", Path.of("").toAbsolutePath().toString());
-        System.out.printf("🚀 Initialisation Quarkus sur http://localhost:%d%n", port);
-
-        Quarkus.run(PlantShopQuarkusApp.class, args);
+        runFastJar(port);
     }
 
     private static Map<String, String> loadEnv() {
@@ -79,6 +79,36 @@ public final class Main {
             return true;
         } catch (IOException e) {
             return false;
+        }
+    }
+
+    private static void runFastJar(int port) {
+        Path jarPath = Path.of(".quarkus", "quarkus-app", "quarkus-run.jar");
+        if (!Files.exists(jarPath)) {
+            System.err.println("❌ quarkus-run.jar introuvable dans " + jarPath.toAbsolutePath());
+            System.exit(1);
+            return;
+        }
+
+        List<String> command = new ArrayList<>();
+        command.add("java");
+        command.add("-Djava.util.logging.manager=org.jboss.logmanager.LogManager");
+        command.add("-Dquarkus.http.port=" + port);
+        command.add("-jar");
+        command.add(jarPath.toString());
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.inheritIO();
+        try {
+            Process process = pb.start();
+            int exit = process.waitFor();
+            if (exit != 0) {
+                System.err.println("❌ Le serveur Quarkus a quitté avec le code " + exit);
+                System.exit(exit);
+            }
+        } catch (IOException | InterruptedException e) {
+            System.err.println("❌ Impossible de lancer Quarkus : " + e.getMessage());
+            System.exit(1);
         }
     }
 }

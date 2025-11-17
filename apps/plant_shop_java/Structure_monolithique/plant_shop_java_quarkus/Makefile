@@ -7,7 +7,7 @@ DB_NAME=plant_shop_java_quarkus
 
 compile-install-libs:
 	@mkdir -p bin
-	@javac -proc:full -d bin config/InstallCoursier.java
+	@javac -proc:full -d bin config/InstallCoursier.java config/AssembleQuarkusApp.java
 
 install: compile-install-libs
 	@java -cp bin config.InstallCoursier
@@ -32,8 +32,16 @@ compile:
 		src/security/*.java \
 		src/controllers/*.java \
 		src/Main.java
-run:
-	@java -cp "$(CLASSPATH)" Main
+	@if [ -d src/resources ]; then cp -R src/resources/. bin/; fi
+
+assemble-app: compile
+	@if [ ! -f bin/config/AssembleQuarkusApp.class ]; then \
+		javac -proc:full -d bin config/AssembleQuarkusApp.java; \
+	fi
+	@java -cp bin config.AssembleQuarkusApp
+
+run: assemble-app
+	@java -jar bin/quarkus-app/app.jar
 
 compile_run: compile run
 

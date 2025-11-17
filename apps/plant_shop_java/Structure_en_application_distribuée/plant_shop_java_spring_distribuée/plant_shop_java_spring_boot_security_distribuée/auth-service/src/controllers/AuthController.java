@@ -88,9 +88,12 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Object> me() {
-        // Le Guard lève une AuthException (401) si l'utilisateur n'est pas trouvé
-        User user = guards.requireUser();
+    public ResponseEntity<Object> me(@CookieValue(name = "session_id", required = false) String sessionId) throws Exception {
+        User user = resolveUserFromSession(sessionId);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                 .body(Map.of("error", "Authentification requise"));
+        }
         return ResponseEntity.ok(ApiMapper.toUser(user));
     }
 
@@ -100,12 +103,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                  .body(Map.of("error", "Authentification requise"));
         }
-        Integer userId = sessionService.getSessions().get(sessionId);
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                 .body(Map.of("error", "Authentification requise"));
-        }
-        User user = userRepo.find(userId);
+        User user = resolveUserFromSession(sessionId);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                  .body(Map.of("error", "Authentification requise"));
@@ -114,6 +112,17 @@ public class AuthController {
             "id", user.id,
             "admin", user.isAdmin
         ));
+    }
+
+    private User resolveUserFromSession(String sessionId) throws Exception {
+        if (sessionId == null || sessionId.isBlank()) {
+            return null;
+        }
+        Integer userId = sessionService.getSessions().get(sessionId);
+        if (userId == null) {
+            return null;
+        }
+        return userRepo.find(userId);
     }
 
     private void authenticateUser(User user) {

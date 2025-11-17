@@ -1,15 +1,17 @@
 package app;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import util.ServiceLauncher;
 
 @SpringBootApplication(
-    scanBasePackages = {"controllers", "repository", "model", "security", "util"},
+    scanBasePackages = {"controllers", "repository", "model", "user.security", "util"},
     exclude = {
         DataSourceAutoConfiguration.class,
-        HibernateJpaAutoConfiguration.class
+        HibernateJpaAutoConfiguration.class,
+        SecurityAutoConfiguration.class
     }
 )
 public class UserApplication {

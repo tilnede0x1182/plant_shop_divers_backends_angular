@@ -7,9 +7,10 @@ ORDER_DIR := $(ROOT)/order-service
 USER_DIR := $(ROOT)/user-service
 GATEWAY_DIR := $(ROOT)/gateway
 TEST_DIR := $(ROOT)/test
+LOG_DIR := $(ROOT)/logs
 LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
-UTILS_SRC := $(wildcard $(UTILS_DIR)/*.java)
+UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 DB_NAME=plant_shop_java_spring_boot_security_microservices
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
@@ -43,6 +44,7 @@ compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+		$(wildcard $(AUTH_DIR)/src/app/*.java) \
 		$(wildcard $(AUTH_DIR)/src/util/*.java) \
 		$(wildcard $(AUTH_DIR)/src/model/*.java) \
 		$(wildcard $(AUTH_DIR)/src/controllers/*.java) \
@@ -53,6 +55,7 @@ compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+		$(wildcard $(CATALOG_DIR)/src/app/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/model/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
@@ -63,6 +66,7 @@ compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+		$(wildcard $(ORDER_DIR)/src/app/*.java) \
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
 		$(wildcard $(ORDER_DIR)/src/model/*.java) \
 		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
@@ -73,6 +77,7 @@ compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+		$(wildcard $(USER_DIR)/src/app/*.java) \
 		$(wildcard $(USER_DIR)/src/util/*.java) \
 		$(wildcard $(USER_DIR)/src/model/*.java) \
 		$(wildcard $(USER_DIR)/src/controllers/*.java) \
@@ -83,35 +88,41 @@ compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
-		$(wildcard $(GATEWAY_DIR)/src/*.java)
+		$(wildcard $(GATEWAY_DIR)/src/*.java) \
+		$(GATEWAY_DIR)/Gateway.java
 compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 ## ────────────────
 # Run services
 ## ────────────────
 run-auth: compile-auth
-	@java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService
+	@java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.AuthApplication
 run-catalog: compile-catalog
-	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService
+	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.CatalogApplication
 run-order: compile-order
-	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService
+	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.OrderApplication
 run-user: compile-user
-	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService
+	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.UserApplication
 run-gateway: compile-gateway
 	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
 
-run-with-logs: pm2-stop-all-safe
+stop-java-services:
+	@for proc in AuthApplication CatalogApplication OrderApplication UserApplication Gateway; do \
+		pkill -f "$$proc" 2>/dev/null || true; \
+	done
+
+run-with-logs: pm2-stop-all-safe stop-java-services
 	@TS=$$(date +"%Y%m%d_%H%M%S"); \
 	BASE="$(LOG_DIR)"; \
 	DIR="$$BASE/$$TS"; \
 	mkdir -p "$$DIR"; \
 	echo "🗂️  Logs dans $$DIR"; \
-	nohup java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService > "$$DIR/auth-service.log" 2>&1 & \
+	nohup java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.AuthApplication > "$$DIR/auth-service.log" 2>&1 & \
 	echo "   ↳ AuthService → $$DIR/auth-service.log"; \
-	nohup java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService > "$$DIR/catalog-service.log" 2>&1 & \
+	nohup java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.CatalogApplication > "$$DIR/catalog-service.log" 2>&1 & \
 	echo "   ↳ CatalogService → $$DIR/catalog-service.log"; \
-	nohup java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService > "$$DIR/order-service.log" 2>&1 & \
+	nohup java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.OrderApplication > "$$DIR/order-service.log" 2>&1 & \
 	echo "   ↳ OrderService → $$DIR/order-service.log"; \
-	nohup java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService > "$$DIR/user-service.log" 2>&1 & \
+	nohup java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.UserApplication > "$$DIR/user-service.log" 2>&1 & \
 	echo "   ↳ UserService → $$DIR/user-service.log"; \
 	nohup java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway > "$$DIR/gateway.log" 2>&1 & \
 	echo "   ↳ Gateway → $$DIR/gateway.log"; \

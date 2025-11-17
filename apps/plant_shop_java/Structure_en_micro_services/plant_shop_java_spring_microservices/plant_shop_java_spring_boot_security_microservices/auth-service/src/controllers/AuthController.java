@@ -55,7 +55,7 @@ public class AuthController {
                                  .body(Map.of("error", "Identifiants invalides"));
         }
         String sessionId = UUID.randomUUID().toString();
-        sessionService.getSessions().put(sessionId, user);
+        sessionService.getSessions().put(sessionId, user.id);
 
         Cookie cookie = new Cookie("session_id", sessionId);
         cookie.setPath("/");
@@ -91,9 +91,25 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<Object> me() {
-        // Le Guard lève une AuthException (401) si l'utilisateur n'est pas trouvé
-        User user = guards.requireUser();
+        User user = resolveUserFromSession(sessionId);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                 .body(Map.of("error", "Authentification requise"));
+        }
         return ResponseEntity.ok(ApiMapper.toUser(user));
+    }
+
+    @GetMapping("/_session")
+    public ResponseEntity<Object> session(@CookieValue(name = "session_id", required = false) String sessionId) throws Exception {
+        User user = resolveUserFromSession(sessionId);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                 .body(Map.of("error", "Authentification requise"));
+        }
+        return ResponseEntity.ok(Map.of(
+            "id", user.id,
+            "admin", user.isAdmin
+        ));
     }
 
     private void authenticateUser(User user) {
@@ -108,5 +124,16 @@ public class AuthController {
             new UsernamePasswordAuthenticationToken(user, null, authorities);
         authentication.setDetails(user);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private User resolveUserFromSession(String sessionId) throws Exception {
+        if (sessionId == null || sessionId.isBlank()) {
+            return null;
+        }
+        Integer userId = sessionService.getSession(sessionId);
+        if (userId == null) {
+            return null;
+        }
+        return userRepo.find(userId);
     }
 }

@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import util.EnvLoader;
+
 public final class Main {
 
     private final GatewayConfig config;
@@ -42,14 +44,14 @@ final class GatewayConfig {
     }
 
     public static GatewayConfig load() throws IOException {
-        Map<String, String> values = new HashMap<>();
-        readEnv(Path.of("../config/.env"), values);
+        Map<String, String> values = new HashMap<>(EnvLoader.load());
         readEnv(Path.of(".env"), values);
         return new GatewayConfig(values);
     }
 
     public int port() {
-        return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS", "4100"));
+        return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS",
+            values.getOrDefault("SERVER_ADRRESS", "4100")));
     }
 
     public String serviceUrl(String service) {

@@ -1,42 +1,35 @@
 package security;
 
-import org.springframework.stereotype.Component;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 import model.User;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
+import util.ForwardedIdentity;
+import util.ForwardedIdentityHolder;
 
 @Component
 public class Guards {
 
-    public void requireAuth(User user) {
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-        }
-    }
-
-    public void requireAdmin(User user) {
-        requireAuth(user);
-        if (!user.isAdmin) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
-        }
-    }
-
-    public void requireAdmin() {
-        // Surcharge sans paramètre pour Spring Security
-        User user = getCurrentUser();
-        requireAdmin(user);
-    }
-
-    private User getCurrentUser() {
-        var authentication = org.springframework.security.core.context.SecurityContextHolder
-            .getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof User) {
-            return (User) authentication.getPrincipal();
-        }
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
-    }
-
     public User requireUser() {
-        return getCurrentUser();
+        ForwardedIdentity identity = ForwardedIdentityHolder.get();
+        if (!identity.authenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentification requise");
+        }
+        return toUser(identity);
+    }
+
+    public User requireAdmin() {
+        User user = requireUser();
+        if (!user.isAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
+        }
+        return user;
+    }
+
+    private User toUser(ForwardedIdentity identity) {
+        User user = new User();
+        user.id = identity.userId();
+        user.isAdmin = identity.admin();
+        return user;
     }
 }

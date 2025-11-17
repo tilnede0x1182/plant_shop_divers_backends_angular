@@ -70,8 +70,9 @@ final class GatewayHandler implements HttpHandler {
         }
 
         byte[] body = ex.getRequestBody().readAllBytes();
+        String forwardedPath = "/api" + target.path();
         HttpRequest.Builder builder = HttpRequest.newBuilder()
-            .uri(URI.create(config.serviceUrl(target.service()) + target.path()))
+            .uri(URI.create(config.serviceUrl(target.service()) + forwardedPath))
             .method(ex.getRequestMethod(),
                 body.length == 0
                     ? HttpRequest.BodyPublishers.noBody()
@@ -116,7 +117,7 @@ final class GatewayHandler implements HttpHandler {
         }
 
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(config.serviceUrl("auth") + "/auth/_session"))
+            .uri(URI.create(config.serviceUrl("auth") + "/api/auth/_session"))
             .header("Cookie", "session_id=" + sessionId)
             .GET()
             .build();

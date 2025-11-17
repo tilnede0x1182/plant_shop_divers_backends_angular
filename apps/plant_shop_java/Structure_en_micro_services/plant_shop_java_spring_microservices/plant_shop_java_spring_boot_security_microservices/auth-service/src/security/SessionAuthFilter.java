@@ -13,12 +13,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import model.User;
+import repository.UserRepository;
 
 @Component
 public class SessionAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private SessionService sessionService;
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -27,11 +30,13 @@ public class SessionAuthFilter extends OncePerRequestFilter {
 
         String sessionId = extractSessionId(request);
         if (sessionId != null) {
-            User user = sessionService.getSession(sessionId);
+            User user = resolveUser(sessionId);
             if (user != null) {
                 UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                SecurityContextHolder.clearContext();
             }
         }
 
@@ -48,5 +53,17 @@ public class SessionAuthFilter extends OncePerRequestFilter {
             }
         }
         return null;
+    }
+
+    private User resolveUser(String sessionId) {
+        try {
+            Integer userId = sessionService.getSession(sessionId);
+            if (userId == null) {
+                return null;
+            }
+            return userRepository.find(userId);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

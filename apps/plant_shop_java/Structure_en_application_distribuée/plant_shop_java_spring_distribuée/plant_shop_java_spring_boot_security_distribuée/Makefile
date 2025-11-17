@@ -148,7 +148,8 @@ ifndef SERVICE
 endif
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
 run: pm2-start-all
-
+clean-pm2:
+	@pm2 delete all
 compile_run: compile run
 build-dev: clean compile
 ## ────────────────

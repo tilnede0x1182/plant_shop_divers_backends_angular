@@ -28,6 +28,7 @@ public final class Pm2Manager {
         switch (args[0]) {
             case "start-all" -> startAll();
             case "stop-all" -> stopAll();
+            case "stop-all-safe" -> stopAllSafe();
             case "start" -> {
                 requireArgs(args, 2);
                 startOne(args[1]);
@@ -46,10 +47,11 @@ public final class Pm2Manager {
     private static void printUsage() {
         System.out.println("""
             Usage: java util.Pm2Manager <commande>
-              start-all    Démarre tous les services (via pm2)
-              stop-all     Arrête tous les services gérés par pm2
-              start <nom>  Démarre un service
-              stop <nom>   Arrête un service
+              start-all       Démarre tous les services (via pm2)
+              stop-all        Arrête tous les services gérés par pm2
+              stop-all-safe   Idem mais ignore les erreurs si un service est absent
+              start <nom>     Démarre un service
+              stop <nom>      Arrête un service
 
             Services disponibles: auth-service, catalog-service, order-service, user-service, gateway
             """);
@@ -70,6 +72,16 @@ public final class Pm2Manager {
     private static void stopAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             stopOne(name);
+        }
+    }
+
+    private static void stopAllSafe() {
+        for (String name : SERVICES.keySet()) {
+            try {
+                stopOne(name);
+            } catch (Exception e) {
+                System.out.printf("⚠️  Impossible d'arrêter %s proprement (%s)%n", name, e.getMessage());
+            }
         }
     }
 

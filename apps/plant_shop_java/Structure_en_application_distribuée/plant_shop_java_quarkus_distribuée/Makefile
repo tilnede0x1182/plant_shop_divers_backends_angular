@@ -14,6 +14,7 @@ UTILS_SRC := $(filter-out %/QuarkusBootstrap.java, $(wildcard $(UTILS_DIR)/src/*
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 DB_NAME=plant_shop_java_quarkus_distribuee
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
+LOG_DIR := $(ROOT)/logs
 
 define copy_beans
 	@if [ -f $(1)/src/META-INF/beans.xml ]; then \
@@ -41,6 +42,9 @@ clean:
 		$(TEST_DIR)/bin \
 		$(ROOT)/bin \
 		$(ROOT)/build
+
+clean-logs:
+	@rm -rf $(LOG_DIR)
 ## ────────────────
 # Serveur - Développement
 ## ────────────────
@@ -113,11 +117,33 @@ run-user: compile-user
 	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService
 run-gateway: compile-gateway
 	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
+
+run-with-logs:
+	@TS=$$(date +"%Y%m%d_%H%M%S"); \
+	LOG_DIR="$(LOG_DIR)"; \
+	mkdir -p "$$LOG_DIR"; \
+	echo "🗂️  Logs dans $$LOG_DIR (suffixe _$$TS.log)"; \
+	nohup java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService > "$$LOG_DIR/auth-service_$${TS}.log" 2>&1 & \
+	echo "   ↳ AuthService → $$LOG_DIR/auth-service_$${TS}.log"; \
+	nohup java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService > "$$LOG_DIR/catalog-service_$${TS}.log" 2>&1 & \
+	echo "   ↳ CatalogService → $$LOG_DIR/catalog-service_$${TS}.log"; \
+	nohup java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService > "$$LOG_DIR/order-service_$${TS}.log" 2>&1 & \
+	echo "   ↳ OrderService → $$LOG_DIR/order-service_$${TS}.log"; \
+	nohup java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService > "$$LOG_DIR/user-service_$${TS}.log" 2>&1 & \
+	echo "   ↳ UserService → $$LOG_DIR/user-service_$${TS}.log"; \
+	nohup java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway > "$$LOG_DIR/gateway_$${TS}.log" 2>&1 & \
+	echo "   ↳ Gateway → $$LOG_DIR/gateway_$${TS}.log"; \
+	echo "🚀 Services démarrés (timestamp $$TS)"
+
+compile-run-with-logs: compile run-with-logs
+
 ## ────────────────
 # PM2 Management
 ## ────────────────
 pm2-start-all:
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all
+pm2-stop-all-safe:
+	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all-safe
 pm2-stop-all:
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all
 pm2-start:
@@ -131,6 +157,7 @@ ifndef SERVICE
 endif
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
 run: pm2-start-all
+compile-run: compile pm2-stop-all-safe run
 compile_run: compile run
 build-dev: clean compile
 ## ────────────────

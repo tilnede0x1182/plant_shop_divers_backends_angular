@@ -60,6 +60,8 @@ public class OrderController {
         User currentUser = guards.requireUser();
         List<Map<String, Integer>> itemsJson = body.get("items");
 
+        System.out.printf("[OrderService] create() user=%d payload=%s%n", currentUser.id, body);
+
         if (itemsJson == null || itemsJson.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST)
                            .entity(Map.of("error", "items requis"))
@@ -72,6 +74,7 @@ public class OrderController {
             BigDecimal total = BigDecimal.ZERO;
 
             for (Map<String, Integer> it : itemsJson) {
+                System.out.printf("[OrderService] create() user=%d processing item=%s%n", currentUser.id, it);
                 total = total.add(createOrderItem(orderId, it));
             }
             repo.updateTotal(orderId, total);
@@ -87,10 +90,14 @@ public class OrderController {
                            .build();
 
         } catch (IllegalArgumentException ex) {
+            System.err.printf("[OrderService] create() user=%d rejected: %s%n", currentUser.id, ex.getMessage());
             // @Transactional gère le rollback, mais on envoie la 400
             return Response.status(Response.Status.BAD_REQUEST)
                            .entity(Map.of("error", ex.getMessage()))
                            .build();
+        } catch (Exception ex) {
+            System.err.printf("[OrderService] create() user=%d unexpected error: %s%n", currentUser.id, ex);
+            throw ex;
         }
         // Les autres exceptions lèveront une 500 et @Transactional gèrera le rollback
     }

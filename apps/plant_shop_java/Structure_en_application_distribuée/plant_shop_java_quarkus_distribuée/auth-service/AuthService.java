@@ -6,13 +6,13 @@ import org.jboss.resteasy.core.ResteasyDeploymentImpl;
 import org.jboss.resteasy.cdi.CdiInjectorFactory;
 import org.jboss.weld.environment.se.Weld;
 import org.jboss.weld.environment.se.WeldContainer;
-import auth.security.CdiRequestScopeFilter;
 import auth.security.CorsConfig;
 import auth.security.SessionAuthFilter;
 import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
 import util.EnvLoader;
+import util.CdiRequestScopeFilter;
 
 /**
  * Point d'entrée du microservice AuthService.

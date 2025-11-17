@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
 import util.EnvLoader;
+import util.CdiRequestScopeFilter;
 
 /**
  * Point d'entrée du microservice UserService.
@@ -73,7 +74,8 @@ public class UserService {
                 DatabaseFactory.class,
                 UserRepository.class,
                 GatewayAuthFilter.class,
-                BaseRepository.class
+                BaseRepository.class,
+                CdiRequestScopeFilter.class
             );
         }
     }

@@ -19,6 +19,7 @@ import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
 import util.EnvLoader;
+import util.CdiRequestScopeFilter;
 
 /**
  * Point d'entrée du microservice OrderService.
@@ -77,7 +78,8 @@ public class OrderService {
                 OrderItemRepository.class,
                 PlantRepository.class,
                 GatewayAuthFilter.class,
-                BaseRepository.class
+                BaseRepository.class,
+                CdiRequestScopeFilter.class
             );
         }
     }

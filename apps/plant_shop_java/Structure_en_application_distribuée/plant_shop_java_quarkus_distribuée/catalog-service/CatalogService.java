@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
 import util.EnvLoader;
+import util.CdiRequestScopeFilter;
 
 /**
  * Point d'entrée du microservice CatalogService.
@@ -73,7 +74,8 @@ public class CatalogService {
                 DatabaseFactory.class,
                 PlantRepository.class,
                 BaseRepository.class,
-                GatewayAuthFilter.class
+                GatewayAuthFilter.class,
+                CdiRequestScopeFilter.class
             );
         }
     }

@@ -1,5 +1,7 @@
-package auth.security;
+package util;
 
+import jakarta.annotation.Priority;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -8,19 +10,22 @@ import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import jakarta.ws.rs.container.PreMatching;
 import jakarta.ws.rs.ext.Provider;
-import jakarta.annotation.Priority;
-import org.jboss.weld.context.bound.BoundRequestContext;
-import jakarta.inject.Inject;
 import java.io.IOException;
 import java.util.HashMap;
+import org.jboss.weld.context.bound.BoundRequestContext;
 
+/**
+ * Active/désactive explicitement le contexte @RequestScoped pour chaque requête HTTP.
+ * Repris du monolithe afin d'éviter les erreurs "No active contexts" sur Resteasy/Undertow.
+ */
 @Provider
 @PreMatching
 @Priority(Priorities.AUTHENTICATION)
 @Singleton
-public class CdiRequestScopeFilter implements ContainerRequestFilter, ContainerResponseFilter {
+public final class CdiRequestScopeFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     private static final String CDI_ACTIVE_KEY = CdiRequestScopeFilter.class.getName() + ".active";
+
     private static final class RequestScopeStorage extends HashMap<String, Object> {
         private static final long serialVersionUID = 1L;
     }
@@ -30,10 +35,10 @@ public class CdiRequestScopeFilter implements ContainerRequestFilter, ContainerR
 
     @Override
     public void filter(ContainerRequestContext httpRequestContext) throws IOException {
-        RequestScopeStorage requestMap = new RequestScopeStorage();
-        this.requestContext.associate(requestMap);
-        this.requestContext.activate();
-        httpRequestContext.setProperty(CDI_ACTIVE_KEY, requestMap);
+        RequestScopeStorage storage = new RequestScopeStorage();
+        requestContext.associate(storage);
+        requestContext.activate();
+        httpRequestContext.setProperty(CDI_ACTIVE_KEY, storage);
     }
 
     @Override
@@ -41,10 +46,10 @@ public class CdiRequestScopeFilter implements ContainerRequestFilter, ContainerR
         Object storage = httpRequestContext.getProperty(CDI_ACTIVE_KEY);
         if (storage instanceof RequestScopeStorage storageMap) {
             try {
-                this.requestContext.invalidate();
-                this.requestContext.deactivate();
+                requestContext.invalidate();
+                requestContext.deactivate();
             } finally {
-                this.requestContext.dissociate(storageMap);
+                requestContext.dissociate(storageMap);
             }
         }
         httpRequestContext.removeProperty(CDI_ACTIVE_KEY);

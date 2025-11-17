@@ -102,7 +102,12 @@ run-user: compile-user
 run-gateway: compile-gateway
 	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
 
-run-with-logs: pm2-stop-all-safe
+stop-java-services:
+	@for proc in AuthApplication CatalogApplication OrderApplication UserApplication Gateway; do \
+		pkill -f "$$proc" 2>/dev/null || true; \
+	done
+
+run-with-logs: pm2-stop-all-safe stop-java-services
 	@TS=$$(date +"%Y%m%d_%H%M%S"); \
 	BASE="$(LOG_DIR)"; \
 	DIR="$$BASE/$$TS"; \

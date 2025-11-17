@@ -79,7 +79,7 @@ public final class Pm2Manager {
     private static void stopAllSafe() {
         for (String name : SERVICES.keySet()) {
             try {
-                stopOne(name);
+                stopOne(name, true);
             } catch (Exception e) {
                 System.out.printf("⚠️  Impossible d'arrêter %s proprement (%s)%n", name, e.getMessage());
             }
@@ -103,12 +103,18 @@ public final class Pm2Manager {
     }
 
     private static void stopOne(String name) throws Exception {
+        stopOne(name, false);
+    }
+
+    private static void stopOne(String name, boolean quiet) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
         }
         if (!processExists(service.name())) {
-            System.out.printf("ℹ️  pm2 ne gérait pas le service %s%n", name);
+            if (!quiet) {
+                System.out.printf("ℹ️  pm2 ne gérait pas le service %s%n", name);
+            }
             return;
         }
         runCommand(List.of("pm2", "delete", service.name()));

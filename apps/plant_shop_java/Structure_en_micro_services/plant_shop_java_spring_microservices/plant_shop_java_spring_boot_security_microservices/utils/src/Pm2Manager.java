@@ -28,6 +28,7 @@ public final class Pm2Manager {
         switch (args[0]) {
             case "start-all" -> startAll();
             case "stop-all" -> stopAll();
+            case "stop-all-safe" -> stopAllSafe();
             case "start" -> {
                 requireArgs(args, 2);
                 startOne(args[1]);
@@ -46,10 +47,11 @@ public final class Pm2Manager {
     private static void printUsage() {
         System.out.println("""
             Usage: java util.Pm2Manager <commande>
-              start-all    Démarre tous les services (via pm2)
-              stop-all     Arrête tous les services gérés par pm2
-              start <nom>  Démarre un service
-              stop <nom>   Arrête un service
+              start-all       Démarre tous les services (via pm2)
+              stop-all        Arrête tous les services gérés par pm2
+              stop-all-safe   Idem mais ignore les erreurs si un service est absent
+              start <nom>     Démarre un service
+              stop <nom>      Arrête un service
 
             Services disponibles: auth-service, catalog-service, order-service, user-service, gateway
             """);
@@ -73,6 +75,16 @@ public final class Pm2Manager {
         }
     }
 
+    private static void stopAllSafe() {
+        for (String name : SERVICES.keySet()) {
+            try {
+                stopOne(name, true);
+            } catch (Exception e) {
+                System.out.printf("⚠️  Impossible d'arrêter %s proprement (%s)%n", name, e.getMessage());
+            }
+        }
+    }
+
     private static void startOne(String name) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
@@ -90,12 +102,18 @@ public final class Pm2Manager {
     }
 
     private static void stopOne(String name) throws Exception {
+        stopOne(name, false);
+    }
+
+    private static void stopOne(String name, boolean quiet) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
         }
         if (!processExists(service.name())) {
-            System.out.printf("ℹ️  pm2 ne gérait pas le service %s%n", name);
+            if (!quiet) {
+                System.out.printf("ℹ️  pm2 ne gérait pas le service %s%n", name);
+            }
             return;
         }
         runCommand(List.of("pm2", "delete", service.name()));

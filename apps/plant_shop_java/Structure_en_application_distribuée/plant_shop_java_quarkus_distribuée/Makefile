@@ -15,6 +15,7 @@ SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 DB_NAME=plant_shop_java_quarkus_distribuee
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
 LOG_DIR := $(ROOT)/logs
+JAVA_PROCS := AuthService CatalogService OrderService UserService Gateway
 
 define copy_beans
 	@if [ -f $(1)/src/META-INF/beans.xml ]; then \
@@ -45,6 +46,7 @@ clean:
 
 clean-logs:
 	@rm -rf $(LOG_DIR)
+
 ## ────────────────
 # Serveur - Développement
 ## ────────────────
@@ -118,7 +120,7 @@ run-user: compile-user
 run-gateway: compile-gateway
 	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
 
-run-with-logs:
+run-with-logs: pm2-stop-all-safe
 	@TS=$$(date +"%Y%m%d_%H%M%S"); \
 	BASE="$(LOG_DIR)"; \
 	DIR="$$BASE/$$TS"; \
@@ -157,9 +159,8 @@ ifndef SERVICE
 	@$(error Usage: make pm2-stop SERVICE=<nom>)
 endif
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
-run: pm2-start-all
-compile-run: compile pm2-stop-all-safe run
-compile_run: compile run
+run: pm2-stop-all-safe pm2-start-all
+compile_run: compile pm2-stop-all-safe run
 build-dev: clean compile
 ## ────────────────
 # Seed

@@ -68,6 +68,7 @@ compile-catalog: compile-utils
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/security/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
 		$(CATALOG_DIR)/CatalogService.java
 compile-order: compile-utils

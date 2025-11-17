@@ -16,6 +16,7 @@ import util.DatabaseFactory;
 import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
+import util.EnvLoader;
 
 /**
  * Point d'entrée du microservice UserService.
@@ -31,7 +32,7 @@ public class UserService {
         CountDownLatch shutdownLatch = new CountDownLatch(1);
 
         try {
-            int port = Integer.parseInt(System.getenv().getOrDefault("USER_SERVICE_PORT", "6104"));
+            int port = Integer.parseInt(EnvLoader.get("USER_SERVICE_PORT", "6104"));
 
             UndertowJaxrsServer server = new UndertowJaxrsServer();
             Undertow.Builder builder = Undertow.builder().addHttpListener(port, "0.0.0.0");

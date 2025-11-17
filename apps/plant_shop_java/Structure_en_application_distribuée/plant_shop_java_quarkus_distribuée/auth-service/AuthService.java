@@ -12,6 +12,7 @@ import auth.security.SessionAuthFilter;
 import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
+import util.EnvLoader;
 
 /**
  * Point d'entrée du microservice AuthService.
@@ -27,7 +28,7 @@ public class AuthService {
         CountDownLatch shutdownLatch = new CountDownLatch(1);
 
         try {
-            int port = Integer.parseInt(System.getenv().getOrDefault("AUTH_SERVICE_PORT", "6101"));
+            int port = Integer.parseInt(EnvLoader.get("AUTH_SERVICE_PORT", "6101"));
 
             UndertowJaxrsServer server = new UndertowJaxrsServer();
             Undertow.Builder builder = Undertow.builder().addHttpListener(port, "0.0.0.0");

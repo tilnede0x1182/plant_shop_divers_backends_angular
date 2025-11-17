@@ -9,10 +9,14 @@ import org.jboss.weld.environment.se.WeldContainer;
 import repository.PlantRepository;
 import catalog.repositories.BaseRepository;
 import catalog.util.ApiMapper;
+import catalog.security.AuthContext;
+import catalog.security.GatewayAuthFilter;
+import catalog.security.Guards;
 import util.DatabaseFactory;
 import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
+import util.EnvLoader;
 
 /**
  * Point d'entrée du microservice CatalogService.
@@ -28,7 +32,7 @@ public class CatalogService {
         CountDownLatch shutdownLatch = new CountDownLatch(1);
 
         try {
-            int port = Integer.parseInt(System.getenv().getOrDefault("CATALOG_SERVICE_PORT", "6102"));
+            int port = Integer.parseInt(EnvLoader.get("CATALOG_SERVICE_PORT", "6102"));
 
             UndertowJaxrsServer server = new UndertowJaxrsServer();
             Undertow.Builder builder = Undertow.builder().addHttpListener(port, "0.0.0.0");
@@ -63,10 +67,13 @@ public class CatalogService {
         public Set<Class<?>> getClasses() {
             return Set.of(
                 PlantController.class,
+                Guards.class,
                 ApiMapper.class,
+                AuthContext.class,
                 DatabaseFactory.class,
                 PlantRepository.class,
-                BaseRepository.class
+                BaseRepository.class,
+                GatewayAuthFilter.class
             );
         }
     }

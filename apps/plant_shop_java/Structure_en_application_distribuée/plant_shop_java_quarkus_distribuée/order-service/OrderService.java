@@ -18,6 +18,7 @@ import util.DatabaseFactory;
 import jakarta.ws.rs.core.Application;
 import java.util.Set;
 import io.undertow.Undertow;
+import util.EnvLoader;
 
 /**
  * Point d'entrée du microservice OrderService.
@@ -33,7 +34,7 @@ public class OrderService {
         CountDownLatch shutdownLatch = new CountDownLatch(1);
 
         try {
-            int port = Integer.parseInt(System.getenv().getOrDefault("ORDER_SERVICE_PORT", "6103"));
+            int port = Integer.parseInt(EnvLoader.get("ORDER_SERVICE_PORT", "6103"));
 
             UndertowJaxrsServer server = new UndertowJaxrsServer();
             Undertow.Builder builder = Undertow.builder().addHttpListener(port, "0.0.0.0");

@@ -97,6 +97,27 @@ run-user: compile-user
 	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService
 run-gateway: compile-gateway
 	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
+
+run-with-logs: pm2-stop-all-safe
+	@TS=$$(date +"%Y%m%d_%H%M%S"); \
+	BASE="$(LOG_DIR)"; \
+	DIR="$$BASE/$$TS"; \
+	mkdir -p "$$DIR"; \
+	echo "🗂️  Logs dans $$DIR"; \
+	nohup java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService > "$$DIR/auth-service.log" 2>&1 & \
+	echo "   ↳ AuthService → $$DIR/auth-service.log"; \
+	nohup java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService > "$$DIR/catalog-service.log" 2>&1 & \
+	echo "   ↳ CatalogService → $$DIR/catalog-service.log"; \
+	nohup java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService > "$$DIR/order-service.log" 2>&1 & \
+	echo "   ↳ OrderService → $$DIR/order-service.log"; \
+	nohup java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService > "$$DIR/user-service.log" 2>&1 & \
+	echo "   ↳ UserService → $$DIR/user-service.log"; \
+	nohup java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway > "$$DIR/gateway.log" 2>&1 & \
+	echo "   ↳ Gateway → $$DIR/gateway.log"; \
+	echo "🚀 Services démarrés (dossier $$DIR)"
+
+compile-run-with-logs: compile run-with-logs
+
 ## ────────────────
 # PM2 Management
 ## ────────────────

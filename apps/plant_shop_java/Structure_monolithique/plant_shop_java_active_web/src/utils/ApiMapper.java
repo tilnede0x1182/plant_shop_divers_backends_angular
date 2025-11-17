@@ -3,9 +3,12 @@ package util;
 import org.javalite.activejdbc.Model;
 import org.javalite.common.JsonHelper;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Petit utilitaire pour conversion map <-> JSON ou Model <-> JSON.
@@ -27,13 +30,32 @@ public final class ApiMapper {
         if (json == null || json.isBlank()) {
             return Collections.emptyMap();
         }
-        return (Map<String, Object>) JsonHelper.toMap(json);
+        Map<?, ?> raw = JsonHelper.toMap(json);
+        if (raw == null || raw.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return copyToStringObjectMap(raw);
     }
 
     public static List<Map<String, Object>> jsonToListOfMaps(Object value) {
-        if (value instanceof List<?>) {
-            return (List<Map<String, Object>>) value;
+        if (!(value instanceof List<?> list) || list.isEmpty()) {
+            return Collections.emptyList();
         }
-        return Collections.emptyList();
+        List<Map<String, Object>> result = new ArrayList<>(list.size());
+        for (Object element : list) {
+            if (!(element instanceof Map<?, ?> raw)) {
+                return Collections.emptyList();
+            }
+            result.add(copyToStringObjectMap(raw));
+        }
+        return result;
+    }
+
+    private static Map<String, Object> copyToStringObjectMap(Map<?, ?> raw) {
+        Map<String, Object> copy = new LinkedHashMap<>(raw.size());
+        for (Entry<?, ?> entry : raw.entrySet()) {
+            copy.put(String.valueOf(entry.getKey()), entry.getValue());
+        }
+        return copy;
     }
 }

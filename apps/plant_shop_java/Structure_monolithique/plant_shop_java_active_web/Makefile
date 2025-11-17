@@ -6,11 +6,11 @@
 DB_NAME=plant_shop_java_lite_active_web
 
 compile-install-libs:
-	mkdir -p bin
-	javac -proc:full -d bin config/InstallCoursier.java
+	@mkdir -p bin
+	@javac -proc:full -d bin config/InstallCoursier.java
 
 install: compile-install-libs
-	java -cp bin config.InstallCoursier
+	@java -cp bin config.InstallCoursier
 
 install:
 
@@ -22,10 +22,10 @@ install:
 CLASSPATH = bin:lib/*
 
 compile:
-	mkdir -p bin
-	cp src/activeweb.properties bin/
-	cp src/activejdbc_models.properties bin/
-	javac -proc:full -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
+	@mkdir -p bin
+	@cp src/activeweb.properties bin/
+	@cp src/activejdbc_models.properties bin/
+	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -d bin -cp "$(CLASSPATH)" \
 		src/utils/*.java \
 		src/launch/*.java \
 		src/models/*.java \
@@ -33,17 +33,17 @@ compile:
 		src/Main.java -Xlint:unchecked
 
 	# Instrumentation des models
-	java -cp "bin:lib/activejdbc-instrumentation-2.3.1-j8.jar:lib/activejdbc-2.3.1-j8.jar:lib/slf4j-api-2.0.17.jar:lib/slf4j-simple-2.0.17.jar:lib/activeweb-2.3.1-j8.jar" \
+	@java -cp "bin:lib/activejdbc-instrumentation-2.3.1-j8.jar:lib/activejdbc-2.3.1-j8.jar:lib/slf4j-api-2.0.17.jar:lib/slf4j-simple-2.0.17.jar:lib/activeweb-2.3.1-j8.jar" \
 		-DoutputDirectory=bin \
 		org.javalite.instrumentation.Main src/models
 
 run:
-	java -cp "$(CLASSPATH)" Main
+	@java -cp "$(CLASSPATH)" Main
 
 compile_run: compile run
 
 clean:
-	rm -rf bin/*
+	@rm -rf bin/*
 
 build-dev: clean compile_run
 
@@ -52,12 +52,12 @@ build-dev: clean compile_run
 ## ────────────────
 
 compile-seed:
-	mkdir -p bin
-	javac -proc:full -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
+	@mkdir -p bin
+	@javac -proc:full -cp $(CLASSPATH) -d bin src/utils/PasswordUtil.java src/db/Seed.java
 
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
-	java -cp $(CLASSPATH) db.Seed
+	@java -cp $(CLASSPATH) db.Seed
 
 seed-dev: clean compile-seed seed
 
@@ -66,12 +66,12 @@ seed-dev: clean compile-seed seed
 ## ────────────────
 
 compile-test:
-	mkdir -p bin
-	javac -proc:full -cp $(CLASSPATH) -d bin test/Test.java
+	@mkdir -p bin
+	@javac -proc:full -cp $(CLASSPATH) -d bin test/Test.java
 
 tests:
 	@if [ ! -f bin/Tests/Test.class ]; then make compile-test; fi
-	java -cp $(CLASSPATH) Tests.Test
+	@java -cp $(CLASSPATH) Tests.Test
 
 test-dev: clean compile-test tests
 
@@ -80,13 +80,13 @@ test-dev: clean compile-test tests
 ## ────────────────
 
 db-create:
-	sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME);"
+	@sudo -u postgres psql -c "CREATE DATABASE $(DB_NAME);"
 
 db-migrate:
-	sudo -u postgres psql -d $(DB_NAME) -f src/db/schema.sql
+	@sudo -u postgres psql -d $(DB_NAME) -f src/db/schema.sql
 
 db-drop:
-	sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
+	@sudo -u postgres psql -c "DROP DATABASE IF EXISTS $(DB_NAME);"
 
 db-seed: seed
 

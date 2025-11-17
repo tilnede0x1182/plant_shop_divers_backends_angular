@@ -131,6 +131,8 @@ run-with-logs: pm2-stop-all-safe stop-java-services
 
 compile-run-with-logs: compile run-with-logs
 
+clean-pm2:
+	@pm2 delete all
 ## ────────────────
 # PM2 Management
 ## ────────────────

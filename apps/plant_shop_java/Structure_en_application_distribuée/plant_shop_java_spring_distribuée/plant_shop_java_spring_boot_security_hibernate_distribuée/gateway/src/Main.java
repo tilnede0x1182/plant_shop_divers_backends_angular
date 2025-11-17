@@ -50,7 +50,8 @@ final class GatewayConfig {
     }
 
     int port() {
-        return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS", "4100"));
+        return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS",
+            values.getOrDefault("SERVER_ADRRESS", "4100")));
     }
 
     String serviceUrl(String service) {

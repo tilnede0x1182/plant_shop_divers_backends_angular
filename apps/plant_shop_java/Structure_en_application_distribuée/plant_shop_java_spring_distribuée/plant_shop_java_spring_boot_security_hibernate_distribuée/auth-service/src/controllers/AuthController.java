@@ -1,6 +1,5 @@
 package controllers;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +22,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final int SESSION_TTL_SECONDS = 3600;
 
     @Autowired
     UserRepository userRepo;
@@ -56,12 +57,7 @@ public class AuthController {
         String sessionId = UUID.randomUUID().toString();
         sessionService.getSessions().put(sessionId, user.id);
 
-        Cookie cookie = new Cookie("session_id", sessionId);
-        cookie.setPath("/");
-        cookie.setMaxAge(3600); // 1 heure
-        cookie.setHttpOnly(true);
-        // cookie.setSecure(true); // À activer en production (HTTPS)
-        response.addCookie(cookie);
+        setSessionCookie(response, sessionId, SESSION_TTL_SECONDS);
         authenticateUser(user);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -75,11 +71,7 @@ public class AuthController {
         }
 
         // Crée un cookie expiré pour l'effacer
-        Cookie expiredCookie = new Cookie("session_id", "");
-        expiredCookie.setPath("/");
-        expiredCookie.setMaxAge(0); // Expire immédiatement
-        expiredCookie.setHttpOnly(true);
-        response.addCookie(expiredCookie);
+        setSessionCookie(response, "", 0);
 
         SecurityContextHolder.clearContext();
 
@@ -91,6 +83,19 @@ public class AuthController {
         // Le Guard lève une AuthException (401) si l'utilisateur n'est pas trouvé
         User user = guards.requireUser();
         return ResponseEntity.ok(ApiMapper.toUser(user));
+    }
+
+    @GetMapping("/_session")
+    public ResponseEntity<Object> session(@CookieValue(name = "session_id", required = false) String sessionId) throws Exception {
+        User user = resolveUserFromSession(sessionId);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                 .body(Map.of("error", "Authentification requise"));
+        }
+        return ResponseEntity.ok(Map.of(
+            "id", user.id,
+            "admin", user.isAdmin
+        ));
     }
 
     private void authenticateUser(User user) {
@@ -105,5 +110,23 @@ public class AuthController {
             new UsernamePasswordAuthenticationToken(user, null, authorities);
         authentication.setDetails(user);
         SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private User resolveUserFromSession(String sessionId) {
+        if (sessionId == null || sessionId.isBlank()) {
+            return null;
+        }
+        Integer userId = sessionService.getSessions().get(sessionId);
+        if (userId == null) {
+            return null;
+        }
+        return userRepo.findById(userId).orElse(null);
+    }
+
+    private void setSessionCookie(HttpServletResponse response, String value, int maxAgeSeconds) {
+        // SameSite=Lax pour correspondre au comportement attendu côté Angular
+        String cookieValue = String.format("session_id=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax",
+            value, Math.max(0, maxAgeSeconds));
+        response.setHeader("Set-Cookie", cookieValue);
     }
 }

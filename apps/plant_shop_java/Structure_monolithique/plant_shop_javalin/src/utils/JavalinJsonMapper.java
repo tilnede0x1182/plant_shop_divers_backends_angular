@@ -1,13 +1,17 @@
 package util;
 
 // src/utils/JavalinJsonMapper.java
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.json.JsonMapper;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import java.lang.reflect.Type;
+import java.io.IOException;
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Implémentation d'un JsonMapper pour Javalin utilisant la librairie org.json.
@@ -15,16 +19,21 @@ import java.util.Map;
  */
 public final class JavalinJsonMapper implements JsonMapper {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @Override
     public <T> T fromJsonString(String json, Type targetType) {
-        // La désérialisation est gérée directement dans les contrôleurs avec ctx.bodyAsClass()
-        // qui utilise une autre logique interne. Cette méthode est donc moins critique ici.
-        // Pour une implémentation complète, il faudrait utiliser une librairie comme Jackson ou Gson.
-        // Ici, on se contente de retourner l'objet JSON brut pour les cas simples.
-        if (json.trim().startsWith("[")) {
-            return (T) new JSONArray(json);
+        Objects.requireNonNull(json, "Le contenu JSON ne peut pas être null");
+        Objects.requireNonNull(targetType, "Le type cible est requis");
+
+        try {
+            JavaType javaType = OBJECT_MAPPER.getTypeFactory().constructType(targetType);
+            return OBJECT_MAPPER.readValue(json, javaType);
+        } catch (IOException e) {
+            throw new IllegalArgumentException(
+                "Impossible de désérialiser le JSON vers " + targetType.getTypeName(), e
+            );
         }
-        return (T) new JSONObject(json);
     }
 
     @Override

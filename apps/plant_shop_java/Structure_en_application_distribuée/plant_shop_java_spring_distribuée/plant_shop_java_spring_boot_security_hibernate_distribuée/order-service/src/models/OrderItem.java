@@ -20,7 +20,7 @@ public class OrderItem {
     public int orderId;
 
     @Column(name = "plant_id", nullable = false)
-    public int plantId;
+    public Integer plantId;
 
     @Column(nullable = false)
     public int quantity;
@@ -28,14 +28,14 @@ public class OrderItem {
     @Column(nullable = false)
     public BigDecimal price;
 
-    public OrderItem(int id, int orderId, int plantId, int quantity, BigDecimal price) {
+    public OrderItem(int id, int orderId, Integer plantId, int quantity, BigDecimal price) {
         this.id = id;
         this.orderId = orderId;
         this.plantId = plantId;
         this.quantity = quantity;
         this.price = price;
     }
-    public OrderItem(int orderId, int plantId, int quantity, BigDecimal price) {
+    public OrderItem(int orderId, Integer plantId, int quantity, BigDecimal price) {
         this(0, orderId, plantId, quantity, price);
     }
     public OrderItem() {} // Nécessaire pour la désérialisation JSON

@@ -51,6 +51,9 @@ public final class ApiMapper {
     public static List<Map<String, Object>> toOrderItems(List<OrderItem> items, PlantLookup lookup) throws Exception {
         List<Map<String, Object>> mapped = new ArrayList<>(items.size());
         for (OrderItem item : items) {
+            if (item.plantId == null) {
+                continue; // la plante a été supprimée, on n'expose pas l'item
+            }
             Plant plant = lookup.find(item.plantId);
             if (plant == null) {
                 continue;

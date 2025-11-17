@@ -94,6 +94,15 @@ public class AuthController {
         return ResponseEntity.ok(ApiMapper.toUser(user));
     }
 
+    @GetMapping("/_session")
+    public ResponseEntity<Object> session() {
+        User user = guards.requireUser();
+        return ResponseEntity.ok(Map.of(
+            "id", user.id,
+            "admin", user.isAdmin
+        ));
+    }
+
     private void authenticateUser(User user) {
         List<SimpleGrantedAuthority> authorities = user.isAdmin
             ? List.of(

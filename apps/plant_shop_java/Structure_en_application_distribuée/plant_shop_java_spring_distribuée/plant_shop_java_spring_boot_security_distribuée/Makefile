@@ -45,6 +45,7 @@ compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+		$(wildcard $(AUTH_DIR)/src/*.java) \
 		$(wildcard $(AUTH_DIR)/src/models/*.java) \
 		$(wildcard $(AUTH_DIR)/src/repositories/*.java) \
 		$(wildcard $(AUTH_DIR)/src/util/*.java) \
@@ -54,6 +55,7 @@ compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+		$(wildcard $(CATALOG_DIR)/src/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
@@ -63,6 +65,7 @@ compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+		$(wildcard $(ORDER_DIR)/src/*.java) \
 		$(wildcard $(ORDER_DIR)/src/models/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repositories/*.java) \
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
@@ -72,6 +75,7 @@ compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+		$(wildcard $(USER_DIR)/src/*.java) \
 		$(wildcard $(USER_DIR)/src/models/*.java) \
 		$(wildcard $(USER_DIR)/src/repositories/*.java) \
 		$(wildcard $(USER_DIR)/src/util/*.java) \
@@ -87,19 +91,19 @@ compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 # Run services
 ## ────────────────
 run-auth: compile-auth
-	@java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" AuthService
+	@java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.AuthApplication
 run-catalog: compile-catalog
-	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" CatalogService
+	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.CatalogApplication
 run-order: compile-order
-	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" OrderService
+	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.OrderApplication
 run-user: compile-user
-	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService
+	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.UserApplication
 run-gateway: compile-gateway
 	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
 ## ────────────────
 # PM2 Management
 ## ────────────────
-pm2-start-all:
+pm2-start-all: pm2-stop-all-safe
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all
 pm2-stop-all-safe:
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all-safe
@@ -116,7 +120,7 @@ ifndef SERVICE
 endif
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
 run: pm2-start-all
-compile-run: compile pm2-stop-all-safe run
+
 compile_run: compile run
 build-dev: clean compile
 ## ────────────────

@@ -80,7 +80,7 @@ run-gateway: compile-gateway
 ## ────────────────
 # Dépendances - pm2
 ## ────────────────
-pm2-start-all:
+pm2-start-all: pm2-stop-all-safe
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all
 pm2-stop-all-safe:
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all-safe
@@ -97,7 +97,7 @@ ifndef SERVICE
 endif
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
 run: pm2-start-all
-compile-run: compile pm2-stop-all-safe run
+
 compile_run: compile run
 clean:
 	@rm -rf \

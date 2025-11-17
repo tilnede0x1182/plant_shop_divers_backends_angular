@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+import util.EnvLoader;
+
 final class GatewayRuntime {
 
     private final GatewayConfig config;
@@ -43,14 +45,14 @@ final class GatewayConfig {
     }
 
     static GatewayConfig load() throws IOException {
-        Map<String, String> values = new HashMap<>();
-        readEnv(Path.of("../config/.env"), values);
-        readEnv(Path.of(".env"), values);
+        Map<String, String> values = new HashMap<>(EnvLoader.load());
+        readEnv(Path.of(".env"), values); // overrides locaux éventuels
         return new GatewayConfig(values);
     }
 
     int port() {
-        return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS", "4100"));
+        return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS",
+            values.getOrDefault("SERVER_ADRRESS", "4100")));
     }
 
     String serviceUrl(String service) {

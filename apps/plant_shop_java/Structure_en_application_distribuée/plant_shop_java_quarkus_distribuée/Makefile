@@ -143,7 +143,7 @@ compile-run-with-logs: compile run-with-logs
 ## ────────────────
 # PM2 Management
 ## ────────────────
-pm2-start-all:
+pm2-start-all: pm2-stop-all-safe
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all
 pm2-stop-all-safe:
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all-safe

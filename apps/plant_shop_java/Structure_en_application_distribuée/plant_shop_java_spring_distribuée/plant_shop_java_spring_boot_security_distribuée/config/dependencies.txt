@@ -19,6 +19,9 @@ org.postgresql:postgresql:42.7.8
 # --- Auth / BCrypt ---
 org.mindrot:jbcrypt:0.4
 
+# --- Connection Pool ---
+com.zaxxer:HikariCP:5.1.0
+
 # --- Logs (simples et suffisants) ---
 org.slf4j:slf4j-api:2.0.17
 org.slf4j:slf4j-simple:2.0.17

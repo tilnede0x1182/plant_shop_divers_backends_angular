@@ -13,10 +13,10 @@ public final class Pm2Manager {
     private static final Map<String, Service> SERVICES = new LinkedHashMap<>();
 
     static {
-        SERVICES.put("auth-service", new Service("auth-service", "auth-service", "AuthService"));
-        SERVICES.put("catalog-service", new Service("catalog-service", "catalog-service", "CatalogService"));
-        SERVICES.put("order-service", new Service("order-service", "order-service", "OrderService"));
-        SERVICES.put("user-service", new Service("user-service", "user-service", "UserService"));
+        SERVICES.put("auth-service", new Service("auth-service", "auth-service", "app.AuthApplication"));
+        SERVICES.put("catalog-service", new Service("catalog-service", "catalog-service", "app.CatalogApplication"));
+        SERVICES.put("order-service", new Service("order-service", "order-service", "app.OrderApplication"));
+        SERVICES.put("user-service", new Service("user-service", "user-service", "app.UserApplication"));
         SERVICES.put("gateway", new Service("gateway", "gateway", "Gateway"));
     }
 
@@ -28,7 +28,6 @@ public final class Pm2Manager {
         switch (args[0]) {
             case "start-all" -> startAll();
             case "stop-all" -> stopAll();
-            case "stop-all-safe" -> stopAllSafe();
             case "stop-all-safe" -> stopAllSafe();
             case "start" -> {
                 requireArgs(args, 2);

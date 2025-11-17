@@ -9,7 +9,7 @@ GATEWAY_DIR := $(ROOT)/gateway
 TEST_DIR := $(ROOT)/test
 LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
-UTILS_SRC := $(wildcard $(UTILS_DIR)/*.java)
+UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 DB_NAME=plant_shop_java_spring_boot_security_hibernate_microservices
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
@@ -43,6 +43,7 @@ compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+		$(wildcard $(AUTH_DIR)/src/app/*.java) \
 		$(wildcard $(AUTH_DIR)/src/controllers/*.java) \
 		$(wildcard $(AUTH_DIR)/src/model/*.java) \
 		$(wildcard $(AUTH_DIR)/src/util/*.java) \
@@ -52,6 +53,7 @@ compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+		$(wildcard $(CATALOG_DIR)/src/app/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/model/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
@@ -61,6 +63,7 @@ compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+		$(wildcard $(ORDER_DIR)/src/app/*.java) \
 		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
 		$(wildcard $(ORDER_DIR)/src/model/*.java) \
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
@@ -70,6 +73,7 @@ compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+		$(wildcard $(USER_DIR)/src/app/*.java) \
 		$(wildcard $(USER_DIR)/src/controllers/*.java) \
 		$(wildcard $(USER_DIR)/src/model/*.java) \
 		$(wildcard $(USER_DIR)/src/util/*.java) \
@@ -94,6 +98,11 @@ run-user: compile-user
 	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" UserService
 run-gateway: compile-gateway
 	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
+
+stop-java-services:
+	@for proc in AuthApplication CatalogApplication OrderApplication UserApplication Gateway; do \
+		pkill -f "$$proc" 2>/dev/null || true; \
+	done
 
 run-with-logs: pm2-stop-all-safe
 	@TS=$$(date +"%Y%m%d_%H%M%S"); \

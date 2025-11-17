@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.transaction.annotation.Transactional;
+import util.EnvLoader;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -40,7 +41,10 @@ public class OrderController {
     private final String catalogServiceUrl;
 
     public OrderController() {
-        this.catalogServiceUrl = System.getenv().getOrDefault("CATALOG_SERVICE_URL", "http://localhost:4502");
+        Map<String, String> env = EnvLoader.load();
+        String host = env.getOrDefault("SERVICE_HOST", "http://localhost");
+        String port = env.getOrDefault("CATALOG_SERVICE_PORT", "6102");
+        this.catalogServiceUrl = host + ":" + port + "/api";
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(3))
                 .build();
@@ -168,14 +172,15 @@ public class OrderController {
             itemMap.put("price", item.price.doubleValue());
 
             PlantStock plant = plantRepo.findById(item.plantId).orElse(null);
-            if (plant != null) {
-                Map<String, Object> plantMap = new LinkedHashMap<>();
-                plantMap.put("id", plant.id);
-                plantMap.put("name", plant.name);
-                plantMap.put("price", plant.price.doubleValue());
-                plantMap.put("stock", plant.stock);
-                itemMap.put("plant", plantMap);
+            if (plant == null) {
+                continue;
             }
+            Map<String, Object> plantMap = new LinkedHashMap<>();
+            plantMap.put("id", plant.id);
+            plantMap.put("name", plant.name);
+            plantMap.put("price", plant.price.doubleValue());
+            plantMap.put("stock", plant.stock);
+            itemMap.put("plant", plantMap);
             itemsJson.add(itemMap);
         }
 

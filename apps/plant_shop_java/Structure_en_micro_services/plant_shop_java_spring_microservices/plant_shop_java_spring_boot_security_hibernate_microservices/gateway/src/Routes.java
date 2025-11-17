@@ -116,7 +116,7 @@ final class GatewayHandler implements HttpHandler {
         }
 
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(config.serviceUrl("auth") + "/auth/_session"))
+            .uri(URI.create(config.serviceUrl("auth") + "/api/auth/_session"))
             .header("Cookie", "session_id=" + sessionId)
             .GET()
             .build();

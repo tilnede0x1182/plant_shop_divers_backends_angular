@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import model.Order;
 import model.OrderItem;
 import model.PlantStock;
@@ -20,11 +19,13 @@ import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
 import security.Guards;
+import util.EnvLoader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.Map;
 
-@Controller("/api/orders")
+@Controller("/orders")
 public class OrderController {
 
     private final OrderRepository repo;
@@ -40,7 +41,10 @@ public class OrderController {
         this.repo = new OrderRepository(db);
         this.itemRepo = new OrderItemRepository(db);
         this.plantRepo = new PlantRepository(db);
-        this.catalogServiceUrl = System.getenv().getOrDefault("CATALOG_SERVICE_URL", "http://localhost:4202");
+        Map<String, String> env = EnvLoader.load();
+        String host = env.getOrDefault("SERVICE_HOST", "http://localhost");
+        String catalogPort = env.getOrDefault("CATALOG_SERVICE_PORT", "6102");
+        this.catalogServiceUrl = env.getOrDefault("CATALOG_INTERNAL_URL", host + ":" + catalogPort);
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(3))
                 .build();
@@ -57,6 +61,12 @@ public class OrderController {
             payload.add(toOrderJson(order, itemRepo.listByOrder(order.id)));
         }
         return payload;
+    }
+
+    @Get("/admin/orders")
+    public List<?> listAdmin(HttpRequest<?> request) throws Exception {
+        Guards.requireAdmin(request);
+        return list(request);
     }
 
     @Post
@@ -103,12 +113,22 @@ public class OrderController {
         return HttpResponse.ok(toOrderJson(updated, itemRepo.listByOrder(id)));
     }
 
+    @Patch("/admin/orders/{id}")
+    public HttpResponse<?> patchAdmin(@PathVariable int id, @Body Map<String, String> body, HttpRequest<?> request) throws Exception {
+        return patch(id, body, request);
+    }
+
     @Delete("/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
         itemRepo.deleteByOrder(id);
         repo.delete(id);
         return HttpResponse.ok();
+    }
+
+    @Delete("/admin/orders/{id}")
+    public HttpResponse<?> destroyAdmin(@PathVariable int id, HttpRequest<?> request) throws Exception {
+        return destroy(id, request);
     }
 
     private BigDecimal createOrderItem(int orderId, Map<String, Integer> itemMap) throws Exception {

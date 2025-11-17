@@ -17,7 +17,7 @@ import util.ApiMapper;
 import util.PasswordUtil;
 import io.micronaut.http.HttpRequest;
 
-@Controller("/api/auth")
+@Controller("/auth")
 public class AuthController {
 
     private final UserRepository userRepo;
@@ -88,5 +88,25 @@ public class AuthController {
             return HttpResponse.unauthorized();
         }
         return HttpResponse.ok(ApiMapper.toUser(user));
+    }
+
+    @Get("/_session")
+    public HttpResponse<?> session(@CookieValue("session_id") String sessionId) throws Exception {
+        if (sessionId == null) {
+            return HttpResponse.unauthorized();
+        }
+        Integer userId = sessions.get(sessionId);
+        if (userId == null) {
+            return HttpResponse.unauthorized();
+        }
+    	User user = userRepo.find(userId);
+        if (user == null) {
+            sessions.remove(sessionId);
+            return HttpResponse.unauthorized();
+        }
+        return HttpResponse.ok(Map.of(
+            "id", user.id,
+            "admin", user.isAdmin
+        ));
     }
 }

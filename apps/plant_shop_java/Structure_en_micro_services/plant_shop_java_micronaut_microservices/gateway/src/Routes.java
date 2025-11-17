@@ -13,12 +13,14 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
     private final HttpClient http;
+    private final CorsSupport cors = new CorsSupport();
     GatewayHandler(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
@@ -27,6 +29,9 @@ final class GatewayHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
+            if (cors.handlePreflight(ex)) {
+                return;
+            }
             forward(ex);
         } catch (Exception e) {
             e.printStackTrace();
@@ -103,6 +108,7 @@ final class GatewayHandler implements HttpHandler {
             }
         });
 
+        cors.apply(ex);
         ex.sendResponseHeaders(response.statusCode(), response.body().length);
         try (OutputStream os = ex.getResponseBody()) {
             os.write(response.body());
@@ -144,9 +150,10 @@ final class GatewayHandler implements HttpHandler {
             .orElse(null);
     }
 
-    private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
+    private void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
+        cors.apply(ex);
         ex.sendResponseHeaders(status, bytes.length);
         try (OutputStream os = ex.getResponseBody()) {
             os.write(bytes);
@@ -176,5 +183,51 @@ record RouteTarget(String service, String path) {
 record SessionContext(boolean authenticated, int userId, boolean admin) {
     static SessionContext anonymous() {
         return new SessionContext(false, -1, false);
+    }
+}
+
+final class CorsSupport {
+    private static final Set<String> ALLOWED = Set.of(
+        "http://localhost:8300",
+        "http://127.0.0.1:8300"
+    );
+
+    boolean handlePreflight(HttpExchange ex) throws IOException {
+        if (!"OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+            return false;
+        }
+        String origin = origin(ex);
+        if (!isAllowed(origin)) {
+            return false;
+        }
+        applyCommon(ex, origin);
+        String requested = ex.getRequestHeaders().getFirst("Access-Control-Request-Headers");
+        ex.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
+        ex.getResponseHeaders().set("Access-Control-Allow-Headers", requested != null ? requested : "Content-Type, Cookie");
+        ex.sendResponseHeaders(204, -1);
+        ex.close();
+        return true;
+    }
+
+    void apply(HttpExchange ex) {
+        String origin = origin(ex);
+        if (!isAllowed(origin)) {
+            return;
+        }
+        applyCommon(ex, origin);
+    }
+
+    private void applyCommon(HttpExchange ex, String origin) {
+        ex.getResponseHeaders().set("Access-Control-Allow-Origin", origin);
+        ex.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
+        ex.getResponseHeaders().add("Vary", "Origin");
+    }
+
+    private String origin(HttpExchange ex) {
+        return ex.getRequestHeaders().getFirst("Origin");
+    }
+
+    private boolean isAllowed(String origin) {
+        return origin != null && ALLOWED.contains(origin);
     }
 }

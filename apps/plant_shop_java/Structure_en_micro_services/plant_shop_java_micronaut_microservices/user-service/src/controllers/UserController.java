@@ -16,7 +16,7 @@ import security.Guards;
 import util.ApiMapper;
 import util.PasswordUtil;
 
-@Controller("/api")
+@Controller("/")
 public class UserController {
 
 	private final UserRepository repo;

@@ -15,7 +15,7 @@ import repository.PlantRepository;
 import security.Guards;
 import util.ApiMapper;
 
-@Controller("/api")
+@Controller("/")
 public class PlantController {
 
     private final PlantRepository repo;

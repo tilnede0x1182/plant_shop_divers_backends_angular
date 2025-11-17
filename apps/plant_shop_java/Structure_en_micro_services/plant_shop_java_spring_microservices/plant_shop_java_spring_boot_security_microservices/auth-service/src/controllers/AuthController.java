@@ -90,7 +90,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Object> me() {
+    public ResponseEntity<Object> me(@CookieValue(name = "session_id", required = false) String sessionId) throws Exception {
         User user = resolveUserFromSession(sessionId);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

@@ -22,6 +22,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import util.EnvLoader;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -40,10 +41,13 @@ public class OrderController {
     private final String catalogServiceUrl;
 
     public OrderController() {
-        this.catalogServiceUrl = System.getenv().getOrDefault("CATALOG_SERVICE_URL", "http://localhost:4402");
+        Map<String, String> env = EnvLoader.load();
+        String host = env.getOrDefault("SERVICE_HOST", "http://localhost");
+        String port = env.getOrDefault("CATALOG_SERVICE_PORT", "6102");
+        this.catalogServiceUrl = host + ":" + port;
         this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(3))
-                .build();
+            .connectTimeout(Duration.ofSeconds(3))
+            .build();
     }
 
     @GetMapping
@@ -143,7 +147,7 @@ public class OrderController {
     private boolean updateCatalogStock(int plantId, int newStock) {
         try {
             String json = String.format("{\"stock\":%d}", newStock);
-            String uri = String.format("%s/internal/plants/%d/stock", this.catalogServiceUrl, plantId);
+            String uri = String.format("%s/api/internal/plants/%d/stock", this.catalogServiceUrl, plantId);
 
             java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
                     .uri(URI.create(uri))

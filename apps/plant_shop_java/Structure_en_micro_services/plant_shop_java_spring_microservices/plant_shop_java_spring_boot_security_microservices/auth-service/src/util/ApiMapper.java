@@ -6,9 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import model.User;
 
-/**
- * ApiMapper local pour auth-service avec uniquement les méthodes nécessaires
- */
 public final class ApiMapper {
 
     private ApiMapper() {}

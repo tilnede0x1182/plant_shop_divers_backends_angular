@@ -1,9 +1,7 @@
 package util;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,26 +16,17 @@ public final class ApiMapper {
         map.put("id", plant.id);
         map.put("name", plant.name);
         map.put("description", plant.description);
-        map.put("price", toDecimal(plant.price));
+        map.put("price", DecimalMapper.toDecimal(plant.price));
         map.put("stock", plant.stock);
         map.put("createdAt", toIso(plant.createdAt));
         return map;
     }
 
     public static List<Map<String, Object>> toPlantList(List<Plant> plants) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        for (Plant p : plants) {
-            list.add(toPlant(p));
-        }
-        return list;
-    }
-
-    private static String toDecimal(BigDecimal bd) {
-        return bd != null ? bd.toPlainString() : "0";
+        return plants.stream().map(ApiMapper::toPlant).toList();
     }
 
     private static String toIso(Timestamp ts) {
-        return (ts != null) ?
-            ts.toInstant().atOffset(ZoneOffset.UTC).toString() : null;
+        return ts == null ? null : ts.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 }

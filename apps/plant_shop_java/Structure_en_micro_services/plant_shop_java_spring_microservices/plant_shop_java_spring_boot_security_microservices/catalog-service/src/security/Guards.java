@@ -27,9 +27,13 @@ public class Guards {
     }
 
     private User toUser(ForwardedIdentity identity) {
-        User user = new User();
-        user.id = identity.userId();
-        user.isAdmin = identity.admin();
-        return user;
+        return new User(
+            identity.userId(),
+            null,
+            null,
+            null,
+            identity.admin(),
+            null
+        );
     }
 }

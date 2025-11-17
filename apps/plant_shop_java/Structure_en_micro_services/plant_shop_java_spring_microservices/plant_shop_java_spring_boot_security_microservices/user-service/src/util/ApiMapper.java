@@ -20,8 +20,7 @@ public final class ApiMapper {
         return map;
     }
 
-    private static String toIso(Timestamp ts) {
-        return (ts != null) ?
-            ts.toInstant().atOffset(ZoneOffset.UTC).toString() : null;
+    private static String toIso(Timestamp timestamp) {
+        return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 }

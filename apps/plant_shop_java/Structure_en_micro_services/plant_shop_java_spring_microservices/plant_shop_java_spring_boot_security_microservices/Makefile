@@ -10,7 +10,8 @@ TEST_DIR := $(ROOT)/test
 LOG_DIR := $(ROOT)/logs
 LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
-UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
+RAW_UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
+UTILS_SRC := $(wildcard $(UTILS_DIR)/*.java) $(RAW_UTILS_SRC)
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 DB_NAME=plant_shop_java_spring_boot_security_microservices
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
@@ -107,7 +108,7 @@ run-gateway: compile-gateway
 
 stop-java-services:
 	@for proc in AuthApplication CatalogApplication OrderApplication UserApplication Gateway; do \
-		pkill -f "$$proc" 2>/dev/null || true; \
+		pkill -f "java .*$$proc" 2>/dev/null || true; \
 	done
 
 run-with-logs: pm2-stop-all-safe stop-java-services

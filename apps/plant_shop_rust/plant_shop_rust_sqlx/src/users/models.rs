@@ -1,22 +1,22 @@
-use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Clone)]
 pub struct User {
-	pub id: i32,
-	pub email: String,
-	#[serde(rename = "name")]
-	pub username: String,
-	#[serde(rename = "admin")]
-	pub is_admin: bool,
-	pub created_at: DateTime<Utc>,
+    pub id: i32,
+    pub email: String,
+    #[serde(rename = "name")]
+    pub username: String,
+    #[serde(rename = "admin")]
+    pub is_admin: bool,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct UpdateUser {
-	pub name: Option<String>,
-	pub email: Option<String>,
-	pub admin: Option<bool>,
+    pub name: Option<String>,
+    pub email: Option<String>,
+    pub admin: Option<bool>,
 }
 
 #[derive(Deserialize)]

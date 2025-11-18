@@ -1,6 +1,6 @@
-use serde::{Serialize, Deserialize};
-use sqlx::types::BigDecimal;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
+use sqlx::types::BigDecimal;
 
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Order {
@@ -29,19 +29,19 @@ pub struct PlantBasic {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OrderItemWithPlant {
-	pub id: i32,
-	pub quantity: i32,
-	#[serde(serialize_with = "crate::plants::models::serialize_bigdecimal_as_i32")]
-	pub price: BigDecimal,
-	#[serde(rename = "plantId")]
-	pub plant_id: i32,
-	pub plant: PlantBasic,
+    pub id: i32,
+    pub quantity: i32,
+    #[serde(serialize_with = "crate::plants::models::serialize_bigdecimal_as_i32")]
+    pub price: BigDecimal,
+    #[serde(rename = "plantId")]
+    pub plant_id: i32,
+    pub plant: PlantBasic,
 }
 
 #[derive(Debug, Serialize)]
 pub struct OrderWithItems {
     pub id: i32,
-		#[allow(dead_code)]
+    #[allow(dead_code)]
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
     #[serde(
@@ -54,7 +54,7 @@ pub struct OrderWithItems {
     pub created_at: DateTime<Utc>,
     #[serde(rename = "orderItems")]
     pub items: Vec<OrderItemWithPlant>,
-		pub number: Option<i64>,
+    pub number: Option<i64>,
 }
 
 #[derive(Deserialize)]

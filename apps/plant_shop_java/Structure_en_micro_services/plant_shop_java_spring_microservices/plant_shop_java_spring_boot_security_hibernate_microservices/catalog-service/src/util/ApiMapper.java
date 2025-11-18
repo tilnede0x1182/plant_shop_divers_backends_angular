@@ -32,8 +32,8 @@ public final class ApiMapper {
         return list;
     }
 
-    private static String toDecimal(BigDecimal bd) {
-        return bd != null ? bd.toPlainString() : "0";
+    private static Double toDecimal(BigDecimal bd) {
+        return bd == null ? null : bd.doubleValue();
     }
 
     private static String toIso(Timestamp ts) {

@@ -173,13 +173,13 @@ compile-seed-user: compile-utils
 	@javac -proc:full -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin user-service/db/Seed.java -proc:none
 seed-catalog: compile-seed-catalog
 	@echo "🌱 Seed catalog-service..."
-	@java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
 seed-order: compile-seed-order
 	@echo "🌱 Seed order-service..."
-	@java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
 seed-user: compile-seed-user
 	@echo "🌱 Seed user-service..."
-	@java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" db.Seed
 seed: seed-user seed-catalog seed-order
 	@echo "✅ Seed global terminé."
 seed-dev: clean seed

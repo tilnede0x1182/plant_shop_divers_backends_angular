@@ -20,7 +20,8 @@ use crate::entity::{
     plants::Entity as Plant,
 };
 use crate::errors::AppError;
-use serde_json::json;
+use crate::orders::helpers::{build_order_item_response, build_order_summary};
+use crate::orders::models::OrderSummary;
 
 /// DTO pour création de commande (contient id plante + quantité)
 #[derive(Deserialize, Clone)]
@@ -108,13 +109,12 @@ pub async fn create_order(
 pub async fn list_orders(
     Data(db): Data<&DatabaseConnection>,
     auth: AuthSession,
-) -> Result<Json<Vec<serde_json::Value>>, AppError> {
+) -> Result<Json<Vec<OrderSummary>>, AppError> {
     // Auth
     let user_id = auth.user_id();
 
     use crate::entity::order_items;
     use sea_orm::prelude::*;
-    use serde_json::json;
 
     // Récupération commandes + items
     let orders_with_items: Vec<(OrderModel, Vec<order_items::Model>)> = Order::find()
@@ -143,26 +143,10 @@ pub async fn list_orders(
                 _ => continue,
             };
 
-            item_details.push(json!({
-                "id": item.id,
-                "plantId": pid,
-                "quantity": item.quantity,
-                "price": item.price,
-                "plant": {
-                    "id": plant.id,
-                    "name": plant.name,
-                    "price": plant.price,
-                }
-            }));
+            item_details.push(build_order_item_response(item, plant));
         }
 
-        response.push(json!({
-            "id": order.id,
-            "status": order.status,
-            "totalPrice": order.total,
-            "createdAt": order.created_at,
-            "orderItems": item_details
-        }));
+        response.push(build_order_summary(order, item_details));
     }
 
     Ok(Json(response))

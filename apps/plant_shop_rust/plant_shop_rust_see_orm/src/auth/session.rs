@@ -1,9 +1,13 @@
 use std::future::Future;
 
-use poem::web::cookie::CookieJar;
+use poem::web::{cookie::CookieJar, Data};
 use poem::{FromRequest, Request, RequestBody};
 
+use sea_orm::{DatabaseConnection, EntityTrait};
+
 use crate::errors::AppError;
+
+use crate::entity::users::Entity as Users;
 
 use super::jwt::{verify_jwt, Claims};
 
@@ -14,9 +18,15 @@ impl AuthSession {
     pub fn user_id(&self) -> i32 {
         self.0.sub
     }
+}
 
-    pub fn is_admin(&self) -> bool {
-        self.0.is_admin
+pub struct AdminGuard {
+    session: AuthSession,
+}
+
+impl AdminGuard {
+    pub fn user_id(&self) -> i32 {
+        self.session.user_id()
     }
 }
 
@@ -42,6 +52,30 @@ impl<'a> FromRequest<'a> for AuthSession {
                 .map_err(poem::Error::from)?;
 
             Ok(Self(claims))
+        }
+    }
+}
+
+impl<'a> FromRequest<'a> for AdminGuard {
+    fn from_request(
+        req: &'a Request,
+        body: &mut RequestBody,
+    ) -> impl Future<Output = poem::Result<Self>> + Send {
+        async move {
+            let auth = AuthSession::from_request(req, body).await?;
+            let Data(db) = Data::<&DatabaseConnection>::from_request(req, body).await?;
+
+            let user = Users::find_by_id(auth.user_id())
+                .one(db)
+                .await
+                .map_err(|_| poem::Error::from(AppError::Internal))?
+                .ok_or_else(|| poem::Error::from(AppError::Unauthorized))?;
+
+            if !user.is_admin {
+                return Err(poem::Error::from(AppError::Forbidden));
+            }
+
+            Ok(AdminGuard { session: auth })
         }
     }
 }

@@ -1,7 +1,8 @@
 use crate::auth::jwt::generate_jwt;
 use crate::auth::session::AuthSession;
-use crate::entity::users::{ActiveModel as ActiveUser, Column, Entity as User, Model as UserModel};
+use crate::entity::users::{ActiveModel as ActiveUser, Column, Entity as User};
 use crate::errors::AppError;
+use crate::users::models::User as UserDto;
 use argon2::password_hash::{rand_core::OsRng, PasswordHash, SaltString};
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
 /// Handlers Poem pour auth (login, register, me, logout) — version SeaORM
@@ -35,7 +36,7 @@ pub async fn login(
     Data(db): Data<&DatabaseConnection>,
     Json(payload): Json<LoginPayload>,
     jar: &CookieJar,
-) -> PoemResult<(StatusCode, Json<UserModel>)> {
+) -> PoemResult<(StatusCode, Json<UserDto>)> {
     let user = User::find()
         .filter(Column::Email.eq(payload.email.clone()))
         .one(db)
@@ -60,7 +61,7 @@ pub async fn login(
     cookie.set_secure(false);
     jar.add(cookie);
 
-    Ok((StatusCode::CREATED, Json(user)))
+    Ok((StatusCode::CREATED, Json(UserDto::from(user))))
 }
 
 #[handler]
@@ -68,7 +69,7 @@ pub async fn register(
     Data(db): Data<&DatabaseConnection>,
     Json(payload): Json<RegisterPayload>,
     jar: &CookieJar,
-) -> PoemResult<(StatusCode, Json<UserModel>)> {
+) -> PoemResult<(StatusCode, Json<UserDto>)> {
     let salt = SaltString::generate(&mut OsRng);
     let hash_str = Argon2::default()
         .hash_password(payload.password.as_bytes(), &salt)
@@ -82,7 +83,7 @@ pub async fn register(
         .await
         .map_err(|_| AppError::Internal)?
     {
-        return Ok((StatusCode::CREATED, Json(existing)));
+        return Ok((StatusCode::CREATED, Json(UserDto::from(existing))));
     }
 
     let new_user = ActiveUser {
@@ -104,36 +105,21 @@ pub async fn register(
     cookie.set_secure(false);
     jar.add(cookie);
 
-    Ok((StatusCode::CREATED, Json(inserted)))
-}
-
-#[derive(serde::Serialize)]
-pub struct AuthMeResponse {
-    pub id: i32,
-    pub email: String,
-    pub name: String,
-    pub admin: bool,
+    Ok((StatusCode::CREATED, Json(UserDto::from(inserted))))
 }
 
 #[handler]
 pub async fn me(
     Data(db): Data<&DatabaseConnection>,
     auth: AuthSession,
-) -> PoemResult<(StatusCode, Json<AuthMeResponse>)> {
+) -> PoemResult<(StatusCode, Json<UserDto>)> {
     let user = User::find_by_id(auth.user_id())
         .one(db)
         .await
         .map_err(|_| AppError::Internal)?
         .ok_or(AppError::Unauthorized)?;
 
-    let response = AuthMeResponse {
-        id: user.id,
-        email: user.email,
-        name: user.username,
-        admin: user.is_admin,
-    };
-
-    Ok((StatusCode::OK, Json(response)))
+    Ok((StatusCode::OK, Json(UserDto::from(user))))
 }
 
 #[handler]

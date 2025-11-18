@@ -1,7 +1,8 @@
-use crate::auth::session::AuthSession;
-use crate::entity::users::{ActiveModel as ActiveUser, Column, Entity as User, Model as UserModel};
+use crate::auth::session::{AdminGuard, AuthSession};
+use crate::entity::users::{ActiveModel as ActiveUser, Column, Entity as User};
 use crate::errors::AppError;
-use crate::users::models::User as UserDto;
+use crate::users::helpers::apply_user_updates;
+use crate::users::models::{NewUser, UpdateUser, User as UserDto};
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
 /// Handlers Poem pour gestion utilisateurs (SeaORM)
@@ -14,44 +15,13 @@ use poem::{
 use sea_orm::{
     ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryOrder, Set,
 };
-use serde::Deserialize;
-use serde_json::json;
-
-/// DTO pour création d'utilisateur
-#[derive(Deserialize)]
-pub struct CreateUserDto {
-    pub email: String,
-    #[serde(alias = "name")]
-    pub username: String,
-    pub password: String,
-}
-
-/// DTO pour update utilisateur (tous champs optionnels sauf id dans l’URL)
-#[derive(Deserialize)]
-pub struct UpdateUserDto {
-    #[serde(alias = "name")]
-    pub username: Option<String>,
-    pub email: Option<String>,
-    #[serde(alias = "admin")]
-    pub is_admin: Option<bool>,
-}
 
 #[handler]
 pub async fn list_users(
     Data(db): Data<&DatabaseConnection>,
-    auth: AuthSession,
-) -> Result<Json<Vec<serde_json::Value>>, AppError> {
-    // Vérifie que l'utilisateur courant est admin (via DB pour rester source de vérité)
-    let current = User::find_by_id(auth.user_id())
-        .one(db)
-        .await
-        .map_err(|_| AppError::Internal)?
-        .ok_or(AppError::Unauthorized)?;
-
-    if !current.is_admin {
-        return Err(AppError::Forbidden);
-    }
-
+    admin: AdminGuard,
+) -> Result<Json<Vec<UserDto>>, AppError> {
+    let _ = admin.user_id();
     // Récupère tous les utilisateurs (tri alphabétique par username)
     let users = User::find()
         .order_by_asc(Column::Username)
@@ -59,18 +29,7 @@ pub async fn list_users(
         .await
         .map_err(|_| AppError::Internal)?;
 
-    let mapped: Vec<_> = users
-        .into_iter()
-        .map(|u| {
-            json!({
-                    "id": u.id,
-                    "email": u.email,
-                    "name": u.username,   // <— renommage attendu par Angular
-                    "admin": u.is_admin,  // <— cohérent avec front
-                    "createdAt": u.created_at
-            })
-        })
-        .collect();
+    let mapped: Vec<_> = users.into_iter().map(UserDto::from).collect();
 
     Ok(Json(mapped))
 }
@@ -78,8 +37,8 @@ pub async fn list_users(
 #[handler]
 pub async fn create_user(
     Data(db): Data<&DatabaseConnection>,
-    Json(payload): Json<CreateUserDto>,
-) -> PoemResult<(StatusCode, Json<UserModel>)> {
+    Json(payload): Json<NewUser>,
+) -> PoemResult<(StatusCode, Json<UserDto>)> {
     let salt = SaltString::generate(&mut OsRng);
     let password_hash = Argon2::default()
         .hash_password(payload.password.as_bytes(), &salt)
@@ -87,7 +46,7 @@ pub async fn create_user(
         .to_string();
 
     let new_user = ActiveUser {
-        username: Set(payload.username.clone()),
+        username: Set(payload.name.clone()),
         email: Set(payload.email.clone()),
         password_hash: Set(password_hash),
         is_admin: Set(false),
@@ -95,7 +54,7 @@ pub async fn create_user(
     };
 
     let inserted = new_user.insert(db).await.map_err(|_| AppError::Internal)?;
-    Ok((StatusCode::CREATED, Json(inserted)))
+    Ok((StatusCode::CREATED, Json(UserDto::from(inserted))))
 }
 
 #[handler]
@@ -109,15 +68,7 @@ pub async fn get_user(
         .map_err(|_| AppError::Internal)?
         .ok_or(AppError::NotFound)?;
 
-    let dto = UserDto {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        is_admin: user.is_admin,
-        created_at: user.created_at.into(),
-    };
-
-    Ok(Json(dto))
+    Ok(Json(UserDto::from(user)))
 }
 
 #[handler]
@@ -125,8 +76,8 @@ pub async fn update_user(
     auth: AuthSession,
     Data(db): Data<&DatabaseConnection>,
     Path(user_id): Path<i32>,
-    Json(payload): Json<UpdateUserDto>,
-) -> PoemResult<Json<UserModel>> {
+    Json(payload): Json<UpdateUser>,
+) -> PoemResult<Json<UserDto>> {
     let current = User::find_by_id(auth.user_id())
         .one(db)
         .await
@@ -144,20 +95,10 @@ pub async fn update_user(
         .ok_or(AppError::NotFound)?;
 
     let mut active = existing.into_active_model();
-    if let Some(name) = payload.username.clone() {
-        active.username = Set(name);
-    }
-    if let Some(email) = payload.email.clone() {
-        active.email = Set(email);
-    }
-    if let Some(is_admin) = payload.is_admin {
-        if current.is_admin {
-            active.is_admin = Set(is_admin);
-        }
-    }
+    apply_user_updates(&mut active, &payload, current.is_admin);
 
     let updated = active.update(db).await.map_err(|_| AppError::Internal)?;
-    Ok(Json(updated))
+    Ok(Json(UserDto::from(updated)))
 }
 
 #[handler]

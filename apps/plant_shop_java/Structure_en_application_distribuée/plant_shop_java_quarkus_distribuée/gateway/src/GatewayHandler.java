@@ -40,13 +40,7 @@ public final class GatewayHandler implements HttpHandler {
             return;
         }
 
-        String targetPath = path.substring("/api".length());
-        if (targetPath.isEmpty()) {
-            targetPath = "/";
-        }
-        if (!targetPath.startsWith("/")) {
-            targetPath = "/" + targetPath;
-        }
+        String targetPath = path;
         if (uri.getRawQuery() != null && !uri.getRawQuery().isBlank()) {
             targetPath = targetPath + "?" + uri.getRawQuery();
         }
@@ -114,7 +108,7 @@ public final class GatewayHandler implements HttpHandler {
         }
 
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(config.serviceUrl("auth") + "/auth/_session"))
+            .uri(URI.create(config.serviceUrl("auth") + "/api/auth/_session"))
             .header("Cookie", "session_id=" + sessionId)
             .GET()
             .build();

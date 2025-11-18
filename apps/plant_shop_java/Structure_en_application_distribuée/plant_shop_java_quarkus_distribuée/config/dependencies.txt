@@ -3,7 +3,7 @@ io.quarkus:quarkus-rest:3.10.0
 io.quarkus:quarkus-rest-jackson:3.10.0
 io.quarkus:quarkus-jackson:3.10.0
 io.quarkus:quarkus-hibernate-orm:3.10.0
-io.quarkus:quarkus-jdbc-mysql:3.10.0
+io.quarkus:quarkus-jdbc-postgresql:3.10.0
 io.quarkus:quarkus-hibernate-validator:3.10.0
 
 # Sécurité

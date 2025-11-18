@@ -43,13 +43,13 @@ final class GatewayConfig {
 
     static GatewayConfig load() throws IOException {
         Map<String, String> values = new HashMap<>();
-        readEnv(Path.of("../config/.env"), values);
+        readEnv(locateProjectRoot().resolve("config/.env"), values);
         readEnv(Path.of(".env"), values);
         return new GatewayConfig(values);
     }
 
     int port() {
-        return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS", "4100"));
+        return Integer.parseInt(values.getOrDefault("GATEWAY_SERVICE_PORT", "4100"));
     }
 
     String serviceUrl(String service) {
@@ -69,8 +69,8 @@ final class GatewayConfig {
         }
         if ("catalog".equals(service)
             && "GET".equals(method)
-            && path.startsWith("/plants")
-            && !path.startsWith("/admin")) {
+            && path.startsWith("/api/plants")
+            && !path.startsWith("/api/admin")) {
             return false;
         }
         return true;
@@ -93,5 +93,16 @@ final class GatewayConfig {
                 }
             }
         }
+    }
+
+    private static Path locateProjectRoot() {
+        Path current = Path.of("").toAbsolutePath();
+        while (current != null) {
+            if (Files.exists(current.resolve("Makefile"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        return Path.of("").toAbsolutePath();
     }
 }

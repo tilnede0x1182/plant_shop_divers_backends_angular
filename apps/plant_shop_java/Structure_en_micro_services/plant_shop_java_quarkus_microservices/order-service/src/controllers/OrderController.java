@@ -17,8 +17,8 @@ import models.Plant;
 import models.User;
 import repositories.OrderItemRepository;
 import repositories.OrderRepository;
-import repositories.PlantRepository;
 import security.Guards;
+import services.PlantLookup;
 import util.ApiMapper;
 
 @Path("/api/orders")
@@ -32,7 +32,7 @@ public class OrderController {
     @Inject
     OrderItemRepository itemRepo;
     @Inject
-    PlantRepository plantRepo;
+    PlantLookup plantLookup;
     @Inject
     Guards guards;
 
@@ -47,7 +47,7 @@ public class OrderController {
         for (Order order : orders) {
             List<Map<String, Object>> items = ApiMapper.toOrderItems(
                 itemRepo.listByOrder(order.id),
-                plantRepo::find // Utilise la lambda pour le PlantLookup
+                plantLookup
             );
             payload.add(ApiMapper.toOrder(order, items));
         }
@@ -79,7 +79,7 @@ public class OrderController {
             Order finalOrder = repo.find(orderId);
             List<Map<String, Object>> items = ApiMapper.toOrderItems(
                 itemRepo.listByOrder(orderId),
-                plantRepo::find
+                plantLookup
             );
             return Response.status(Response.Status.CREATED)
                            .entity(ApiMapper.toOrder(finalOrder, items))
@@ -108,7 +108,7 @@ public class OrderController {
         Order updated = repo.find(id);
         List<Map<String, Object>> items = ApiMapper.toOrderItems(
             itemRepo.listByOrder(id),
-            plantRepo::find
+            plantLookup
         );
         return Response.ok(ApiMapper.toOrder(updated, items)).build();
     }
@@ -131,12 +131,7 @@ public class OrderController {
     private BigDecimal createOrderItem(int orderId, Map<String, Integer> itemMap) throws Exception {
         int plantId = itemMap.get("plantId");
         int quantity = itemMap.get("quantity");
-        Plant plant = plantRepo.find(plantId);
-
-        if (plant == null) throw new IllegalArgumentException("Plante " + plantId + " introuvable");
-        if (plant.stock < quantity) throw new IllegalArgumentException("Stock insuffisant pour " + plant.name);
-
-        plantRepo.updateStock(plant.id, plant.stock - quantity);
+        Plant plant = plantLookup.reserveStock(plantId, quantity);
         OrderItem item = new OrderItem(orderId, plantId, quantity, plant.price);
         itemRepo.create(item);
 

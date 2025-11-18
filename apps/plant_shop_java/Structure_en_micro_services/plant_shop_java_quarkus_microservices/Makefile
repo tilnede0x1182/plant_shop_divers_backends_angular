@@ -46,8 +46,9 @@ compile-auth: compile-utils
 		$(wildcard $(AUTH_DIR)/src/*.java) \
 		$(wildcard $(AUTH_DIR)/src/util/*.java) \
 		$(wildcard $(AUTH_DIR)/src/controllers/*.java) \
-		$(wildcard $(AUTH_DIR)/src/model/*.java) \
-		$(wildcard $(AUTH_DIR)/src/repository/*.java) \
+		$(wildcard $(AUTH_DIR)/src/models/*.java) \
+		$(wildcard $(AUTH_DIR)/src/repositories/*.java) \
+		$(wildcard $(AUTH_DIR)/src/services/*.java) \
 		$(wildcard $(AUTH_DIR)/src/security/*.java)
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
@@ -57,8 +58,9 @@ compile-catalog: compile-utils
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/security/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/controllers/*.java) \
-		$(wildcard $(CATALOG_DIR)/src/model/*.java) \
-		$(wildcard $(CATALOG_DIR)/src/repository/*.java)
+		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/repositories/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/services/*.java)
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
@@ -67,8 +69,9 @@ compile-order: compile-utils
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
 		$(wildcard $(ORDER_DIR)/src/security/*.java) \
 		$(wildcard $(ORDER_DIR)/src/controllers/*.java) \
-		$(wildcard $(ORDER_DIR)/src/model/*.java) \
-		$(wildcard $(ORDER_DIR)/src/repository/*.java)
+		$(wildcard $(ORDER_DIR)/src/models/*.java) \
+		$(wildcard $(ORDER_DIR)/src/repositories/*.java) \
+		$(wildcard $(ORDER_DIR)/src/services/*.java)
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
@@ -77,8 +80,9 @@ compile-user: compile-utils
 		$(wildcard $(USER_DIR)/src/util/*.java) \
 		$(wildcard $(USER_DIR)/src/security/*.java) \
 		$(wildcard $(USER_DIR)/src/controllers/*.java) \
-		$(wildcard $(USER_DIR)/src/model/*.java) \
-		$(wildcard $(USER_DIR)/src/repository/*.java)
+		$(wildcard $(USER_DIR)/src/models/*.java) \
+		$(wildcard $(USER_DIR)/src/repositories/*.java) \
+		$(wildcard $(USER_DIR)/src/services/*.java)
 compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin

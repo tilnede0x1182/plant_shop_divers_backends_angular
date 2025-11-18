@@ -98,7 +98,7 @@ pub async fn create_order(
         inserts.push((item.plant_id, item.quantity, price));
     }
 
-    if !inserts.is_empty() {
+    let inserted_items = if !inserts.is_empty() {
         let mut builder = QueryBuilder::<Postgres>::new(
             "INSERT INTO order_items (order_id, plant_id, quantity, price) ",
         );
@@ -108,14 +108,21 @@ pub async fn create_order(
                 .push_bind(*quantity)
                 .push_bind(price.clone());
         });
+        builder.push(" RETURNING id, plant_id, quantity, price");
 
         log_debug_lazy(|| format!("[orders] bulk insert SQL: {}", builder.sql()));
 
-        builder.build().execute(&mut *tx).await.map_err(|e| {
-            log_debug_lazy(|| format!("[orders] bulk insert order_items failed: {e}"));
-            AppError::DatabaseError(e)
-        })?;
-    }
+        builder
+            .build_query_as::<InsertedOrderItemRow>()
+            .fetch_all(&mut *tx)
+            .await
+            .map_err(|e| {
+                log_debug_lazy(|| format!("[orders] bulk insert order_items failed: {e}"));
+                AppError::DatabaseError(e)
+            })?
+    } else {
+        Vec::new()
+    };
 
     sqlx::query!(
         "UPDATE orders SET total = $1 WHERE id = $2",
@@ -131,7 +138,32 @@ pub async fn create_order(
 
     tx.commit().await.map_err(|e| AppError::DatabaseError(e))?;
 
-    let summary = fetch_single_summary(state.read_pool(), order.id).await?;
+    let mut summary_items = Vec::with_capacity(inserted_items.len());
+    for item in inserted_items {
+        if let Some(plant) = plants.get(&item.plant_id) {
+            let plant_view = OrderItemPlant {
+                id: plant.id,
+                name: plant.name.clone(),
+                price: plant.price.as_i32_lossy(),
+            };
+            summary_items.push(OrderItemResponse::new(
+                item.id,
+                item.plant_id,
+                item.quantity,
+                item.price.as_i32_lossy(),
+                plant_view,
+            ));
+        }
+    }
+
+    let summary = OrderSummary::new(
+        order.id,
+        order.status.clone(),
+        total.as_i32_lossy(),
+        order.created_at,
+        summary_items,
+    );
+
     Ok((StatusCode::CREATED, Json(summary)))
 }
 
@@ -140,8 +172,11 @@ pub async fn list_orders(
     Data(state): Data<&AppState>,
     auth: AuthSession,
 ) -> Result<Response, AppError> {
+    log_debug_lazy(|| format!("[orders] list_orders start for user {}", auth.user_id()));
     let rows = fetch_rows_for_user(state.read_pool(), auth.user_id()).await?;
+    log_debug_lazy(|| format!("[orders] list_orders fetched {} db rows", rows.len()));
     let summaries = fold_rows(rows);
+    log_debug_lazy(|| format!("[orders] list_orders returning {} orders", summaries.len()));
     buffered_json(&summaries, StatusCode::OK)
 }
 
@@ -204,6 +239,14 @@ struct DbOrderRow {
     plant_price: Option<BigDecimal>,
 }
 
+#[derive(sqlx::FromRow)]
+struct InsertedOrderItemRow {
+    id: i32,
+    plant_id: i32,
+    quantity: i32,
+    price: BigDecimal,
+}
+
 async fn fetch_rows_for_user(pool: &PgPool, user_id: i32) -> Result<Vec<DbOrderRow>, AppError> {
     sqlx::query_as!(
         DbOrderRow,
@@ -213,12 +256,12 @@ async fn fetch_rows_for_user(pool: &PgPool, user_id: i32) -> Result<Vec<DbOrderR
             o.status           AS order_status,
             o.total            AS order_total,
             o.created_at       AS order_created_at,
-            oi.id              AS order_item_id,
-            oi.quantity        AS order_item_quantity,
-            oi.price           AS order_item_price,
-            p.id               AS plant_id,
-            p.name             AS plant_name,
-            p.price            AS plant_price
+            oi.id              AS "order_item_id?",
+            oi.quantity        AS "order_item_quantity?",
+            oi.price           AS "order_item_price?",
+            p.id               AS "plant_id?",
+            p.name             AS "plant_name?",
+            p.price            AS "plant_price?"
         FROM orders o
         LEFT JOIN order_items oi ON oi.order_id = o.id
         LEFT JOIN plants p ON p.id = oi.plant_id
@@ -229,7 +272,10 @@ async fn fetch_rows_for_user(pool: &PgPool, user_id: i32) -> Result<Vec<DbOrderR
     )
     .fetch_all(pool)
     .await
-    .map_err(AppError::DatabaseError)
+    .map_err(|e| {
+        log_debug_lazy(|| format!("[orders] list_orders query failed for user {user_id}: {e}"));
+        AppError::DatabaseError(e)
+    })
 }
 
 async fn fetch_single_summary(pool: &PgPool, order_id: i32) -> Result<OrderSummary, AppError> {
@@ -241,12 +287,12 @@ async fn fetch_single_summary(pool: &PgPool, order_id: i32) -> Result<OrderSumma
             o.status           AS order_status,
             o.total            AS order_total,
             o.created_at       AS order_created_at,
-            oi.id              AS order_item_id,
-            oi.quantity        AS order_item_quantity,
-            oi.price           AS order_item_price,
-            p.id               AS plant_id,
-            p.name             AS plant_name,
-            p.price            AS plant_price
+            oi.id              AS "order_item_id?",
+            oi.quantity        AS "order_item_quantity?",
+            oi.price           AS "order_item_price?",
+            p.id               AS "plant_id?",
+            p.name             AS "plant_name?",
+            p.price            AS "plant_price?"
         FROM orders o
         LEFT JOIN order_items oi ON oi.order_id = o.id
         LEFT JOIN plants p ON p.id = oi.plant_id
@@ -257,7 +303,10 @@ async fn fetch_single_summary(pool: &PgPool, order_id: i32) -> Result<OrderSumma
     )
     .fetch_all(pool)
     .await
-    .map_err(AppError::DatabaseError)?;
+    .map_err(|e| {
+        log_debug_lazy(|| format!("[orders] summary query failed for order {order_id}: {e}"));
+        AppError::DatabaseError(e)
+    })?;
 
     fold_rows(rows).into_iter().next().ok_or(AppError::NotFound)
 }
@@ -279,27 +328,40 @@ fn fold_rows(rows: Vec<DbOrderRow>) -> Vec<OrderSummary> {
             summaries.len() - 1
         });
 
-        if let Some(item_id) = row.order_item_id {
-            if let (Some(plant_id), Some(item_price), Some(plant_price)) = (
-                row.plant_id,
-                row.order_item_price.clone(),
-                row.plant_price.clone(),
-            ) {
-                let plant_view = OrderItemPlant {
-                    id: plant_id,
-                    name: row.plant_name.clone().unwrap_or_default(),
-                    price: plant_price.as_i32_lossy(),
-                };
-                summaries[*entry].items.push(OrderItemResponse::new(
-                    item_id,
-                    plant_id,
-                    row.order_item_quantity.unwrap_or(0),
-                    item_price.as_i32_lossy(),
-                    plant_view,
-                ));
-            }
+        if let Some(item) = map_row_to_item(&row) {
+            summaries[*entry].items.push(item);
         }
     }
 
     summaries
+}
+
+fn map_row_to_item(row: &DbOrderRow) -> Option<OrderItemResponse> {
+    let item_id = row.order_item_id?;
+    let plant_id = match row.plant_id {
+        Some(id) => id,
+        None => {
+            log_debug_lazy(|| {
+                format!(
+                    "[orders] ignore order_item {:?} (order #{}) car la plante liée a été supprimée",
+                    row.order_item_id, row.order_id
+                )
+            });
+            return None;
+        }
+    };
+    let item_price = row.order_item_price.clone()?;
+    let plant_price = row.plant_price.clone()?;
+
+    Some(OrderItemResponse::new(
+        item_id,
+        plant_id,
+        row.order_item_quantity.unwrap_or(0),
+        item_price.as_i32_lossy(),
+        OrderItemPlant {
+            id: plant_id,
+            name: row.plant_name.clone().unwrap_or_default(),
+            price: plant_price.as_i32_lossy(),
+        },
+    ))
 }

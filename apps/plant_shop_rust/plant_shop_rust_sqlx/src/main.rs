@@ -1,6 +1,7 @@
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
+use std::time::Duration;
 use tokio::runtime::Builder;
 
 use poem::{
@@ -30,7 +31,7 @@ use crate::{
     order_items::handlers::{delete_order_item, get_order_item, update_order_item},
     orders::handlers::{create_order, delete_order, get_order, list_orders, update_order},
     plants::handlers::{create_plant, delete_plant, get_plant, list_plants, update_plant},
-    state::AppState,
+    state::{AppState, CacheTtls},
     users::handlers::{create_user, delete_user, get_user, list_users, update_user},
 };
 
@@ -47,17 +48,30 @@ fn main() -> Result<(), std::io::Error> {
 
 async fn async_main() -> Result<(), std::io::Error> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL manquant");
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
+    let read_pool = PgPoolOptions::new()
+        .max_connections(env_u32("READ_POOL_MAX", 10))
+        .acquire_timeout(duration_from_env_ms("READ_POOL_TIMEOUT_MS", 500))
         .connect(&database_url)
         .await
-        .expect("Connexion base de données impossible");
+        .expect("Connexion base de données impossible (read pool)");
 
-    if let Err(e) = run_migrations(&pool).await {
+    let write_pool = PgPoolOptions::new()
+        .max_connections(env_u32("WRITE_POOL_MAX", 5))
+        .acquire_timeout(duration_from_env_ms("WRITE_POOL_TIMEOUT_MS", 1500))
+        .connect(&database_url)
+        .await
+        .expect("Connexion base de données impossible (write pool)");
+
+    if let Err(e) = run_migrations(&write_pool).await {
         eprintln!("Erreur lors de l'application des migrations: {}", e);
     }
 
-    let state = AppState::new(pool);
+    let cache_ttls = CacheTtls::new(
+        duration_from_env_secs("USER_CACHE_TTL_SECS", 60),
+        duration_from_env_secs("PLANT_CACHE_TTL_SECS", 60),
+    );
+
+    let state = AppState::new(read_pool, write_pool, cache_ttls);
 
     let cors = Cors::new()
         .allow_credentials(true)
@@ -138,4 +152,27 @@ async fn async_main() -> Result<(), std::io::Error> {
     Server::new(TcpListener::bind("0.0.0.0:4100"))
         .run(app)
         .await
+}
+
+fn env_u32(key: &str, default: u32) -> u32 {
+    env::var(key)
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(default)
+}
+
+fn duration_from_env_ms(key: &str, default_ms: u64) -> Duration {
+    let millis = env::var(key)
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(default_ms);
+    Duration::from_millis(millis)
+}
+
+fn duration_from_env_secs(key: &str, default_secs: u64) -> Duration {
+    let secs = env::var(key)
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(default_secs);
+    Duration::from_secs(secs)
 }

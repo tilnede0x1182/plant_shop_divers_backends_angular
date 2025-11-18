@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
 use tokio::sync::RwLock;
@@ -19,53 +20,83 @@ pub trait PlantCache: Send + Sync {
     async fn invalidate(&self);
 }
 
-#[derive(Default)]
-pub struct InMemoryUserCache {
-    inner: RwLock<Option<Vec<UserResponse>>>,
+struct TimedVecCache<T> {
+    ttl: Duration,
+    inner: RwLock<Option<(Instant, Vec<T>)>>,
 }
 
-#[derive(Default)]
-pub struct InMemoryPlantCache {
-    inner: RwLock<Option<Vec<PlantResponse>>>,
+impl<T> TimedVecCache<T> {
+    fn new(ttl: Duration) -> Self {
+        Self {
+            ttl,
+            inner: RwLock::new(None),
+        }
+    }
+}
+
+impl<T: Clone> TimedVecCache<T> {
+    async fn get_fresh(&self) -> Option<Vec<T>> {
+        let mut guard = self.inner.write().await;
+        if let Some((stored_at, data)) = guard.as_ref() {
+            if stored_at.elapsed() <= self.ttl {
+                return Some(data.clone());
+            }
+        }
+        guard.take();
+        None
+    }
+
+    async fn set_snapshot(&self, data: &[T]) {
+        self.inner
+            .write()
+            .await
+            .replace((Instant::now(), data.to_vec()));
+    }
+}
+
+impl<T> TimedVecCache<T> {
+    async fn invalidate_inner(&self) {
+        self.inner.write().await.take();
+    }
 }
 
 #[async_trait]
-impl UserCache for InMemoryUserCache {
+impl UserCache for TimedVecCache<UserResponse> {
     async fn get(&self) -> Option<Vec<UserResponse>> {
-        self.inner.read().await.clone()
+        self.get_fresh().await
     }
 
     async fn set(&self, data: &[UserResponse]) {
-        self.inner.write().await.replace(data.to_vec());
+        self.set_snapshot(data).await;
     }
 
     async fn invalidate(&self) {
-        self.inner.write().await.take();
+        self.invalidate_inner().await;
     }
 }
 
 #[async_trait]
-impl PlantCache for InMemoryPlantCache {
+impl PlantCache for TimedVecCache<PlantResponse> {
     async fn get(&self) -> Option<Vec<PlantResponse>> {
-        self.inner.read().await.clone()
+        self.get_fresh().await
     }
 
     async fn set(&self, data: &[PlantResponse]) {
-        self.inner.write().await.replace(data.to_vec());
+        self.set_snapshot(data).await;
     }
 
     async fn invalidate(&self) {
-        self.inner.write().await.take();
+        self.invalidate_inner().await;
     }
 }
 
 pub type SharedUserCache = Arc<dyn UserCache>;
 pub type SharedPlantCache = Arc<dyn PlantCache>;
 
-pub fn default_user_cache() -> SharedUserCache {
-    Arc::new(InMemoryUserCache::default())
+pub fn default_user_cache(ttl: Duration) -> SharedUserCache {
+    Arc::new(TimedVecCache::new(ttl))
 }
 
-pub fn default_plant_cache() -> SharedPlantCache {
-    Arc::new(InMemoryPlantCache::default())
+pub fn default_plant_cache(ttl: Duration) -> SharedPlantCache {
+    Arc::new(TimedVecCache::new(ttl))
 }

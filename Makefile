@@ -314,6 +314,114 @@ pm2-stop-service-java-distrib:
 	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_distribuée" pm2-stop SERVICE=$(SERVICE)
 
 # ======================================================
+# ☕ Backend Java Architecture distribuée Javalin
+# ======================================================
+
+run-backend-java-javalin-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_javalin_distribuée" run-gateway
+
+compile-backend-java-javalin-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_javalin_distribuée" compile
+
+seed-backend-java-javalin-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_javalin_distribuée" seed
+
+pm2-start-backend-java-javalin-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_javalin_distribuée" pm2-start-all
+
+pm2-stop-backend-java-javalin-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_javalin_distribuée" pm2-stop-all
+
+pm2-start-service-java-javalin-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-javalin-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_javalin_distribuée" pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-javalin-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-javalin-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_javalin_distribuée" pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
+# ☕ Backend Java Architecture distribuée Micronaut
+# ======================================================
+
+run-backend-java-micronaut-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_micronaut_distribuée" run-gateway
+
+compile-backend-java-micronaut-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_micronaut_distribuée" compile
+
+seed-backend-java-micronaut-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_micronaut_distribuée" seed
+
+pm2-start-backend-java-micronaut-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_micronaut_distribuée" pm2-start-all
+
+pm2-stop-backend-java-micronaut-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_micronaut_distribuée" pm2-stop-all
+
+pm2-start-service-java-micronaut-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-micronaut-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_micronaut_distribuée" pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-micronaut-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-micronaut-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_micronaut_distribuée" pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
+# ☕ Backend Java Architecture distribuée Quarkus
+# ======================================================
+
+run-backend-java-quarkus-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée" run-gateway
+
+compile-backend-java-quarkus-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée" compile
+
+seed-backend-java-quarkus-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée" seed
+
+pm2-start-backend-java-quarkus-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée" pm2-start-all
+
+pm2-stop-backend-java-quarkus-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée" pm2-stop-all
+
+pm2-start-service-java-quarkus-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-quarkus-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée" pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-quarkus-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-quarkus-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée" pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
+# ☕ Backend Java Architecture distribuée Spring
+# ======================================================
+
+run-backend-java-spring-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_spring_distribuée" run-gateway
+
+compile-backend-java-spring-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_spring_distribuée" compile
+
+seed-backend-java-spring-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_spring_distribuée" seed
+
+pm2-start-backend-java-spring-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_spring_distribuée" pm2-start-all
+
+pm2-stop-backend-java-spring-distrib:
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_spring_distribuée" pm2-stop-all
+
+pm2-start-service-java-spring-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-spring-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_spring_distribuée" pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-spring-distrib:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-spring-distrib SERVICE=<nom>"; exit 1; fi
+	make -C "apps/plant_shop_java/Structure_en_application_distribuée/plant_shop_java_spring_distribuée" pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
 # ☕ Backend Java Microservices
 # ======================================================
 
@@ -339,6 +447,114 @@ pm2-start-service-java-micro:
 pm2-stop-service-java-micro:
 	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-micro SERVICE=<nom>"; exit 1; fi
 	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_microservices pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
+# ☕ Backend Java Microservices Javalin
+# ======================================================
+
+run-backend-java-javalin-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_javalin_microservices run-gateway
+
+compile-backend-java-javalin-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_javalin_microservices compile
+
+seed-backend-java-javalin-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_javalin_microservices seed
+
+pm2-start-backend-java-javalin-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_javalin_microservices pm2-start-all
+
+pm2-stop-backend-java-javalin-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_javalin_microservices pm2-stop-all
+
+pm2-start-service-java-javalin-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-javalin-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_javalin_microservices pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-javalin-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-javalin-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_javalin_microservices pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
+# ☕ Backend Java Microservices Micronaut
+# ======================================================
+
+run-backend-java-micronaut-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_micronaut_microservices run-gateway
+
+compile-backend-java-micronaut-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_micronaut_microservices compile
+
+seed-backend-java-micronaut-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_micronaut_microservices seed
+
+pm2-start-backend-java-micronaut-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_micronaut_microservices pm2-start-all
+
+pm2-stop-backend-java-micronaut-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_micronaut_microservices pm2-stop-all
+
+pm2-start-service-java-micronaut-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-micronaut-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_micronaut_microservices pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-micronaut-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-micronaut-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_micronaut_microservices pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
+# ☕ Backend Java Microservices Quarkus
+# ======================================================
+
+run-backend-java-quarkus-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_quarkus_microservices run-gateway
+
+compile-backend-java-quarkus-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_quarkus_microservices compile
+
+seed-backend-java-quarkus-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_quarkus_microservices seed
+
+pm2-start-backend-java-quarkus-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_quarkus_microservices pm2-start-all
+
+pm2-stop-backend-java-quarkus-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_quarkus_microservices pm2-stop-all
+
+pm2-start-service-java-quarkus-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-quarkus-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_quarkus_microservices pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-quarkus-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-quarkus-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_quarkus_microservices pm2-stop SERVICE=$(SERVICE)
+
+# ======================================================
+# ☕ Backend Java Microservices Spring
+# ======================================================
+
+run-backend-java-spring-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_spring_microservices run-gateway
+
+compile-backend-java-spring-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_spring_microservices compile
+
+seed-backend-java-spring-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_spring_microservices seed
+
+pm2-start-backend-java-spring-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_spring_microservices pm2-start-all
+
+pm2-stop-backend-java-spring-microservices:
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_spring_microservices pm2-stop-all
+
+pm2-start-service-java-spring-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-start-service-java-spring-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_spring_microservices pm2-start SERVICE=$(SERVICE)
+
+pm2-stop-service-java-spring-micro:
+	@if [ -z "$(SERVICE)" ]; then echo "Usage: make pm2-stop-service-java-spring-micro SERVICE=<nom>"; exit 1; fi
+	make -C apps/plant_shop_java/Structure_en_micro_services/plant_shop_java_spring_microservices pm2-stop SERVICE=$(SERVICE)
 
 # ======================================================
 # 🛠️ Backend C (HTTPServer)

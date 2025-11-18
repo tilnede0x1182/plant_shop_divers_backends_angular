@@ -1,0 +1,33 @@
+1
+- Copier depuis Quarkus monolith : BaseRepository, ApiMapper, DatabaseFactory, AuthController, SessionService, Guards, PlantController, OrderController, OrderService (et ses helpers PlantLookup/
+mapping), UserController (incluant la logique admin/password).
+- Copier depuis Micronaut distribué / Java distribué : helpers Request, JsonMapper, Pm2Manager, SessionAuthFilter, classe d’entrée AuthService (service isolé), guards/bootstrap propres au catalog (si
+nécessaires), l’ensemble du gateway (Gateway, GatewayHandler, SessionContext, RouteTarget) ainsi que les petits POJO locaux additionnels (Plant, User) utilisés par les services distribués.
+# 6
+Révision de la liste des fichiers à réintroduire, chemins relatifs à plant_shop_java_quarkus_distribuée :
+- **Depuis Quarkus monolith**
+  - `utils/BaseRepository.java`
+  - `utils/ApiMapper.java`
+  - `utils/DatabaseFactory.java`
+  - `auth-service/src/controllers/AuthController.java`
+  - `auth-service/src/security/SessionService.java`
+  - `auth-service/src/security/Guards.java`
+  - `catalog-service/src/controllers/PlantController.java`
+  - `order-service/src/controllers/OrderController.java`
+  - `order-service/src/services/OrderService.java`
+  - `order-service/src/services/PlantLookup.java`
+  - `user-service/src/controllers/UserController.java`
+- **Depuis Micronaut / Java distribué**
+  - `utils/Request.java`
+  - `utils/JsonMapper.java`
+  - `utils/Pm2Manager.java`
+  - `auth-service/src/security/SessionAuthFilter.java`
+  - `auth-service/src/AuthService.java`
+  - `catalog-service/src/CatalogService.java`
+  - `order-service/src/OrderService.java`
+  - `order-service/src/models/Plant.java`
+  - `order-service/src/models/User.java`
+  - `gateway/src/Gateway.java`
+  - `gateway/src/core/GatewayHandler.java`
+  - `gateway/src/core/SessionContext.java`
+  - `gateway/src/core/RouteTarget.java`

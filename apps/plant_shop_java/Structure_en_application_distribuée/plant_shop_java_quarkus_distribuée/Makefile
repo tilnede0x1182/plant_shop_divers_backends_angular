@@ -16,6 +16,11 @@ SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 SERVICES := auth-service catalog-service order-service user-service
 DB_NAME=plant_shop_java_quarkus_distribuee
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
+
+define bundle-service
+	@echo "📦 Génération du fast-jar Quarkus ($(1))"
+	@java -Dorg.jboss.logging.provider=jul -cp "$(UTILS_DIR)/bin:$(LIB_CP)" utils.QuarkusBundleBuilder $(1)
+endef
 ## ────────────────
 # Dépendances
 ## ────────────────
@@ -54,28 +59,33 @@ compile-auth: compile-utils
 	@mkdir -p $(AUTH_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
 		$(AUTH_DIR)/src/AuthService.java
+	$(call bundle-service,auth-service)
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
 		$(CATALOG_DIR)/src/CatalogService.java
+	$(call bundle-service,catalog-service)
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
 		$(ORDER_DIR)/src/OrderService.java
+	$(call bundle-service,order-service)
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
 		$(USER_DIR)/src/UserService.java
+	$(call bundle-service,user-service)
 compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
 		$(wildcard $(GATEWAY_DIR)/src/*.java)
+	$(call bundle-service,gateway)
 
-compile: compile-auth compile-catalog compile-order compile-user compile-gateway bundle
+compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 ## ────────────────
 # Run services
 ## ────────────────

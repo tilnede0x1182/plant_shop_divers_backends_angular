@@ -101,4 +101,34 @@ public class AuthController {
         User user = guards.requireUser();
         return Response.ok(ApiMapper.toUser(user)).build();
     }
+
+    @GET
+    @Path("/_session")
+    public Response session(@CookieParam("session_id") String sessionId) throws Exception {
+        if (sessionId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                           .entity(Map.of("error", "Authentification requise"))
+                           .build();
+        }
+
+        Integer userId = sessionService.getSessions().get(sessionId);
+        if (userId == null) {
+            return Response.status(Response.Status.UNAUTHORIZED)
+                           .entity(Map.of("error", "Session invalide"))
+                           .build();
+        }
+
+        User user = userRepo.find(userId);
+        if (user == null) {
+            sessionService.getSessions().remove(sessionId);
+            return Response.status(Response.Status.UNAUTHORIZED)
+                           .entity(Map.of("error", "Session expirée"))
+                           .build();
+        }
+
+        return Response.ok(Map.of(
+            "id", user.id,
+            "admin", user.isAdmin
+        )).build();
+    }
 }

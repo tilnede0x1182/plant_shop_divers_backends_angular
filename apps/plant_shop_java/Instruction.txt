@@ -1,0 +1,245 @@
+Roaddmap Pour le projet distribué et micrservice :
+
+1) Crez tout la logique sous forme de text (pas de codee)
+2) crer unarchitecture (liste des fihcier sous forme de tree)
+3 crer un script de touch mkdir pour crer l'architrue en une seule fois (j'insiste)
+4) remplir les fichiers esantiels : makefile, test et seed (le tes et la seed seront
+copiés collés depuis un autre prrojert puisqu'il sont identuqes aux autres projets java)
+5) Créez les fichier du projer 1 par 1
+6) Compiler le projet (et débuguez la compilation)
+7) Lancer le tests js et débuguer jusqu'à ce qu'il passe
+8) je test avec angular et vous fais un retour
+
+Aides :
+
+- Pour ne pas perdre la vue d'nsemble du priejt, refaites régulièrement un coup
+de "generate_java_jpa_project_summary.sh ." dans le dossier de projet et lisez le projet.txt généré.
+- Inspirez vous du projet quarkus monolith pour la logique
+___
+
+1)
+
+
+• ### Logique fonctionnelle (texte uniquement) – Quarkus distribué
+
+  - Principe général : on décompose le monolithe Quarkus existant en quatre services métiers (auth, catalog, order, user) + une gateway HTTP unique. Chaque service reste dans le même process JVM que les
+    autres (architecture “distribuée” non autonome) : ils partagent config/.env, la même base PostgreSQL et les utilitaires communs (mappers, gestion des identités transférées, accès DB).
+  - Auth-service
+      - Routes POST /api/auth/login, POST /api/auth/register, POST /api/auth/logout, GET /api/auth/me, GET /api/auth/_session.
+      - Stocke les utilisateurs (users), hash BCrypt.
+      - Gère les sessions en mémoire (UUID → userId) + cookie SameSite=Lax.
+      - Expose l’identité courante à la gateway via _session.
+  - Catalog-service
+      - Routes publiques GET /api/plants, GET /api/plants/{id} ; routes admin POST/PATCH/DELETE /api/admin/plants, plus endpoint interne PATCH /api/internal/plants/{id}/stock.
+      - Persiste les plantes (plants), applique validation de stock/prix.
+      - N’autorise les mutations que si le header X-User-Admin=true.
+  - Order-service
+      - Routes GET /api/orders, POST /api/orders, PATCH /api/orders/{id} (admin), DELETE /api/orders/{id} (admin).
+      - Lors de la création d’une commande : vérification du stock via catalog-service (appel HTTP interne via gateway), décrémentation du stock, persistance orders + order_items.
+      - Lors de la sérialisation vers le front, on filtre les items dont la plante a été supprimée (évite les 500 sur l’Order Index).
+  - User-service
+      - Routes admin GET /api/admin/users, POST /api/users, PATCH /api/users/{id}, DELETE /api/users/{id} + routes user GET/PUT /api/users/{id} (propre compte).
+      - Gère les rôles (isAdmin).
+      - Requiert X-User-* pour déterminer les droits.
+  - Gateway
+      - Reverse proxy HTTP sur http://localhost:4100/api/*.
+      - Routes publiques : GET /plants* ; toutes les autres nécessitent une session valable (validation via _session).
+      - Propage l’identité via headers X-User-Id / X-User-Admin.
+      - Garantit que les cookies de session sont relayés.
+
+  ### Logique fonctionnelle – Quarkus microservices
+
+  - Principe général : même découpage fonctionnel que ci-dessus, mais cette fois chaque service est autonome (projet Quarkus Maven indépendant). Chaque microservice possède son application.properties,
+    son mvnw, ses dépendances Quarkus, et s’exécute sur son propre port (auth 6101, catalog 6102, order 6103, user 6104, gateway 4100). Partage de la base PostgreSQL mais configuration injectée
+    par .env.
+  - Auth-service (Quarkus)
+      - RESTEasy ressources AuthResource, SessionResource.
+      - Beans CDI pour SessionStore, PasswordService.
+      - Sécurité gérée avec quarkus-security (form auth custom) + ContainerRequestFilter pour peupler SecurityIdentity.
+      - Tests Quarkus (@QuarkusTest) pour login/register.
+  - Catalog-service
+      - RESTEasy + Panache : PlantEntity, PlantRepository, PlantResource.
+      - Validation via Bean Validation.
+      - CORS activé pour http://localhost:8300.
+      - Endpoints identiques à la version distribuée mais service réellement autonome.
+  - Order-service
+      - RESTEasy OrderResource, AdminOrderResource.
+      - Appels vers catalog via REST Client Quarkus (@RegisterRestClient).
+      - Transaction Panache sur OrderEntity, OrderItemEntity.
+      - Filtre ForwardedIdentityFilter CDI pour récupérer X-User-*.
+  - User-service
+      - REST resources pour CRUD admin + self update.
+      - Vérifications des rôles via @RolesAllowed ou filtre custom.
+      - Réutilisation d’un module commun (DTO + mappers) packagé en jar partagé.
+  - Gateway
+      - Peut rester en Java/PM2 ou devenir un module Quarkus “proxy” (RESTEasy/Vert.x).
+      - Dans la version microservices, il tourne indépendamment, effectue les mêmes vérifications (session → headers) et redirige vers http://localhost:{servicePort}/api/....
+
+  Ces descriptions textuelles couvrent la logique attendue pour les deux variantes Quarkus en suivant vos conventions (distribué = monolithe découpé / microservices = services autonomes).
+
+2)
+
+• Voici une proposition d’architecture (format tree) pour chacun des deux projets Quarkus nouvellement créés.
+
+  ———
+
+  ### 1. Quarkus distribué (monolithe découpé)
+
+  plant_shop_java/Structure_en_application_distribuée/plant_shop_java_quarkus_distribuée
+  ├── auth-service
+  │   ├── src
+  │   │   ├── controllers
+  │   │   │   ├── AuthResource.java
+  │   │   │   └── SessionResource.java
+  │   │   ├── model
+  │   │   │   └── User.java
+  │   │   ├── repository
+  │   │   │   └── UserRepository.java
+  │   │   ├── service
+  │   │   │   ├── SessionStore.java
+  │   │   │   └── AuthService.java
+  │   │   └── security
+  │   │       └── SecurityConfig.java
+  │   ├── beans.xml
+  │   └── AuthApplication.java
+  ├── catalog-service
+  │   ├── src
+  │   │   ├── controllers
+  │   │   │   └── PlantResource.java
+  │   │   ├── model
+  │   │   │   └── Plant.java
+  │   │   ├── repository
+  │   │   │   └── PlantRepository.java
+  │   │   ├── service
+  │   │   │   └── PlantService.java
+  │   │   └── security
+  │   │       └── CatalogGuards.java
+  │   ├── beans.xml
+  │   └── CatalogApplication.java
+  ├── order-service
+  │   ├── src
+  │   │   ├── controllers
+  │   │   │   └── OrderResource.java
+  │   │   ├── model
+  │   │   │   ├── Order.java
+  │   │   │   └── OrderItem.java
+  │   │   ├── repository
+  │   │   │   ├── OrderRepository.java
+  │   │   │   └── OrderItemRepository.java
+  │   │   ├── service
+  │   │   │   └── OrderService.java
+  │   │   └── security
+  │   │       └── OrderGuards.java
+  │   ├── beans.xml
+  │   └── OrderApplication.java
+  ├── user-service
+  │   ├── src
+  │   │   ├── controllers
+  │   │   │   └── UserResource.java
+  │   │   ├── model
+  │   │   │   └── UserProfile.java
+  │   │   ├── repository
+  │   │   │   └── UserProfileRepository.java
+  │   │   ├── service
+  │   │   │   └── UserService.java
+  │   │   └── security
+  │   │       └── UserGuards.java
+  │   ├── beans.xml
+  │   └── UserApplication.java
+  ├── gateway
+  │   ├── src
+  │   │   ├── Gateway.java
+  │   │   └── core
+  │   │       ├── GatewayHandler.java
+  │   │       ├── RouteTarget.java
+  │   │       └── SessionContext.java
+  │   └── beans.xml
+  ├── utils
+  │   ├── src
+  │   │   ├── ForwardedIdentityFilter.java
+  │   │   ├── ForwardedIdentityHolder.java
+  │   │   ├── ForwardedIdentity.java
+  │   │   ├── JsonMapper.java
+  │   │   └── EnvLoader.java
+  │   └── beans.xml
+  ├── config
+  │   └── .env.example
+  ├── db
+  │   ├── schema.sql
+  │   └── seed.sql
+  ├── test
+  │   └── Test.java
+  ├── Makefile
+  ├── mvnw (si besoin)
+  └── README.md
+
+  ———
+
+  ### 2. Quarkus microservices (services autonomes)
+
+  plant_shop_java/Structure_en_micro_services/plant_shop_java_quarkus_microservices
+  ├── common
+  │   ├── pom.xml
+  │   ├── src/main/java/com/plantshop/common
+  │   │   ├── dto
+  │   │   │   ├── PlantDto.java
+  │   │   │   ├── OrderDto.java
+  │   │   │   └── UserDto.java
+  │   │   └── security
+  │   │       └── ForwardedIdentity.java
+  │   └── src/main/resources/META-INF/beans.xml
+  ├── auth-service
+  │   ├── pom.xml
+  │   ├── src/main/java/com/plantshop/auth
+  │   │   ├── AuthApplication.java
+  │   │   ├── resource
+  │   │   │   ├── AuthResource.java
+  │   │   │   └── SessionResource.java
+  │   │   ├── service
+  │   │   │   ├── AuthService.java
+  │   │   │   └── SessionStore.java
+  │   │   ├── model/UserEntity.java
+  │   │   └── repository/UserRepository.java
+  │   └── src/main/resources
+  │       ├── application.properties
+  │       └── import.sql
+  ├── catalog-service
+  │   ├── pom.xml
+  │   ├── src/main/java/com/plantshop/catalog
+  │   │   ├── CatalogApplication.java
+  │   │   ├── resource/PlantResource.java
+  │   │   ├── service/PlantService.java
+  │   │   ├── model/PlantEntity.java
+  │   │   └── repository/PlantRepository.java
+  │   └── src/main/resources/application.properties
+  ├── order-service
+  │   ├── pom.xml
+  │   ├── src/main/java/com/plantshop/order
+  │   │   ├── OrderApplication.java
+  │   │   ├── resource/OrderResource.java
+  │   │   ├── model/{OrderEntity, OrderItemEntity, PlantStock.java}
+  │   │   ├── repository/{OrderRepository, OrderItemRepository}.java
+  │   │   ├── restclient/CatalogClient.java
+  │   │   └── service/OrderService.java
+  │   └── src/main/resources/application.properties
+  ├── user-service
+  │   ├── pom.xml
+  │   ├── src/main/java/com/plantshop/user
+  │   │   ├── UserApplication.java
+  │   │   ├── resource/UserResource.java
+  │   │   ├── model/UserProfileEntity.java
+  │   │   ├── repository/UserProfileRepository.java
+  │   │   └── service/UserService.java
+  │   └── src/main/resources/application.properties
+  ├── gateway
+  │   ├── pom.xml
+  │   ├── src/main/java/com/plantshop/gateway
+  │   │   ├── GatewayApplication.java
+  │   │   ├── resource/ProxyResource.java
+  │   │   └── service/GatewayService.java
+  │   └── src/main/resources/application.properties
+  ├── docker-compose.yml (optionnel pour Postgres)
+  ├── Makefile ou scripts de démarrage (mvnw) pour orchestrer les services
+  └── README.md
+
+  Ces arbres serviront de référence pour la suite (touch/mkdir script, remplissage des fichiers, etc.).

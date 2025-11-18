@@ -4,27 +4,16 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.*;
+import util.EnvLoader;
 import util.PasswordUtil;
-import java.nio.file.*;
 
 /** Seed aligné sur la version C++ : noms réalistes, descriptions, prix cohérents,
     décrémentation du stock, génération users.txt                                     */
 public final class Seed {
-	private static final Path ENV_PATH = Paths.get("config", ".env");
 
 	/* ---------- Lecture .env ---------- */
-	private static Map<String, String> env() throws IOException {
-			Map<String, String> out = new HashMap<>();
-			try (BufferedReader br = Files.newBufferedReader(ENV_PATH)) {
-					String line;
-					while ((line = br.readLine()) != null) {
-							int i = line.indexOf('=');
-							if (i > 0) {
-									out.put(line.substring(0, i).trim(), line.substring(i + 1).trim());
-							}
-					}
-			}
-			return out;
+	private static Map<String,String> env() {
+		return EnvLoader.load();
 	}
 
 	/* ---------- Constantes ---------- */

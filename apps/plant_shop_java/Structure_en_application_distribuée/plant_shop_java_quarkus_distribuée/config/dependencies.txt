@@ -1,37 +1,59 @@
-# Serveur Quarkus
-io.quarkus:quarkus-rest:3.10.0
-io.quarkus:quarkus-jackson:3.10.0
-io.quarkus:quarkus-hibernate-orm:3.10.0
-io.quarkus:quarkus-jdbc-mysql:3.10.0
-io.quarkus:quarkus-hibernate-validator:3.10.0
+# ====== PLANT_SHOP_JAVA_MICRONAUT ======
+# Version stable Micronaut 4.6.3 + PostgreSQL + BCrypt + SLF4J + ASM + YAML
+# Résolution complète automatique par Coursier
 
-# Sécurité
-org.mindrot:jbcrypt:0.4
+# --- Cœur Micronaut ---
+io.micronaut:micronaut-runtime:4.6.3
+io.micronaut:micronaut-http-server-netty:4.6.3
+io.micronaut:micronaut-http-server:4.6.3
+io.micronaut:micronaut-http:4.6.3
+io.micronaut:micronaut-inject:4.6.3
+io.micronaut:micronaut-inject-java:4.6.3
+io.micronaut:micronaut-context:4.6.3
+io.micronaut:micronaut-core:4.6.3
+io.micronaut:micronaut-aop:4.6.3
+io.micronaut:micronaut-router:4.6.3
+io.micronaut:micronaut-buffer-netty:4.6.3
 
-# JSON
-org.json:json:20210307
-
-# Base de données
-org.postgresql:postgresql:42.7.8
-
-# Logs serveur
- org.slf4j:slf4j-simple:2.0.17
-# org.slf4j:slf4j-nop:2.0.17
-
-# Ajout (RESTEasy + Undertow) — à ajouter sans supprimer ce qui précède
-org.jboss.resteasy:resteasy-undertow:6.2.7.Final
-org.jboss.resteasy:resteasy-jackson2-provider:6.2.7.Final
-org.jboss.resteasy:resteasy-cdi:6.2.7.Final
-jakarta.ws.rs:jakarta.ws.rs-api:3.1.0
-io.undertow:undertow-core:2.2.36.Final
-
-# Ajout (Jackson)
-com.fasterxml.jackson.core:jackson-databind:2.14.2
-com.fasterxml.jackson.core:jackson-core:2.14.2
-com.fasterxml.jackson.core:jackson-annotations:2.14.2
-
-# Ajout (CDI Weld SE)
-org.jboss.weld.se:weld-se-core:5.1.0.Final
-jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1
+# --- Validation & Annotations ---
+io.micronaut.validation:micronaut-validation:4.12.0
+jakarta.validation:jakarta.validation-api:3.0.2
 jakarta.annotation:jakarta.annotation-api:2.1.1
 jakarta.inject:jakarta.inject-api:2.0.1
+
+# --- JSON / Jackson / Serde ---
+io.micronaut:micronaut-jackson-databind:4.6.3
+io.micronaut:micronaut-json-core:4.6.3
+io.micronaut.serde:micronaut-serde-jackson:2.11.1
+com.fasterxml.jackson.core:jackson-core:2.17.2
+com.fasterxml.jackson.core:jackson-databind:2.17.2
+com.fasterxml.jackson.core:jackson-annotations:2.17.2
+org.json:json:20210307
+
+# --- Réactivité / Flux ---
+org.reactivestreams:reactive-streams:1.0.3
+io.projectreactor:reactor-core:3.5.0
+
+# --- Réseau / Netty ---
+io.netty:netty-buffer:4.1.99.Final
+io.netty:netty-codec:4.1.99.Final
+io.netty:netty-codec-http:4.1.99.Final
+io.netty:netty-codec-http2:4.1.99.Final
+io.netty:netty-common:4.1.99.Final
+io.netty:netty-handler:4.1.99.Final
+io.netty:netty-transport:4.1.99.Final
+
+# --- Base de données ---
+org.postgresql:postgresql:42.7.4
+
+# --- Sécurité / Hash ---
+org.mindrot:jbcrypt:0.4
+
+# --- Journalisation ---
+org.slf4j:slf4j-api:2.0.12
+org.slf4j:slf4j-simple:2.0.12
+
+# --- Utilitaires ---
+org.yaml:snakeyaml:2.2
+org.ow2.asm:asm:9.5
+org.ow2.asm:asm-commons:9.5

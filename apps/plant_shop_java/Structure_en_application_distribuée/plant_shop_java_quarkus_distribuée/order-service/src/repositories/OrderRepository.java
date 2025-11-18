@@ -1,15 +1,14 @@
-package repository;
+package repositories;
 
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import model.Order;
-import order.repositories.BaseRepository;
+import models.Order;
 
-@RequestScoped
+@Dependent
 public class OrderRepository extends BaseRepository<Order> {
 
     @Inject

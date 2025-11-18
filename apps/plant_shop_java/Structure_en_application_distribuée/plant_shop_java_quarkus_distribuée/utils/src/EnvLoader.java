@@ -6,55 +6,23 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
- * Charge config/.env quelle que soit la position du service (racine ou dossier spécifique)
- * et offre des accesseurs compatibles avec les overrides d'environnement.
+ * Charge config/.env depuis le service courant ou le dossier parent.
  */
 public final class EnvLoader {
-
-    private static final List<Path> CANDIDATES = List.of(
-        Path.of("config", ".env"),
-        Path.of("..", "config", ".env"),
-        Path.of("..", "..", "config", ".env")
-    );
-
-    private static volatile Map<String, String> cached;
 
     private EnvLoader() {}
 
     public static Map<String, String> load() {
-        Map<String, String> snapshot = cached;
-        if (snapshot == null) {
-            synchronized (EnvLoader.class) {
-                snapshot = cached;
-                if (snapshot == null) {
-                    cached = snapshot = readAll();
-                }
-            }
-        }
-        return snapshot;
-    }
-
-    public static String get(String key, String fallback) {
-        String env = System.getenv(key);
-        if (env != null && !env.isBlank()) {
-            return env;
-        }
-        return load().getOrDefault(key, fallback);
-    }
-
-    private static Map<String, String> readAll() {
         Map<String, String> values = new HashMap<>();
-        for (Path candidate : CANDIDATES) {
-            read(candidate, values);
-        }
+        read(Path.of("config", ".env"), values);
+        read(Path.of("..", "config", ".env"), values);
         if (values.isEmpty()) {
-            throw new IllegalStateException("config/.env introuvable (candidats: " + CANDIDATES + ")");
+            throw new IllegalStateException("config/.env introuvable");
         }
-        return Map.copyOf(values);
+        return values;
     }
 
     private static void read(Path path, Map<String, String> values) {
@@ -68,7 +36,7 @@ public final class EnvLoader {
                 if (idx > 0) {
                     String key = line.substring(0, idx).trim();
                     String value = line.substring(idx + 1).trim();
-                    if (!key.isEmpty() && !value.isEmpty()) {
+                    if (!key.isEmpty()) {
                         values.put(key, value);
                     }
                 }

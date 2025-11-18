@@ -1,12 +1,11 @@
-package repository;
+package repositories;
 
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import java.sql.*;
-import model.User;
-import auth.repositories.BaseRepository;
+import models.User;
 
-@RequestScoped
+@Dependent
 public class UserRepository extends BaseRepository<User> {
 
     @Inject
@@ -20,7 +19,7 @@ public class UserRepository extends BaseRepository<User> {
             rs.getInt("id"),
             rs.getString("name"),
             rs.getString("email"),
-            null,
+            null, // passwordHash est volontairement laissé à null
             rs.getBoolean("is_admin"),
             rs.getTimestamp("created_at")
         );
@@ -36,7 +35,7 @@ public class UserRepository extends BaseRepository<User> {
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getString("email"),
-                        rs.getString("password_hash"),
+                        rs.getString("password_hash"), // Le hash est inclus ici
                         rs.getBoolean("is_admin"),
                         rs.getTimestamp("created_at")
                     );

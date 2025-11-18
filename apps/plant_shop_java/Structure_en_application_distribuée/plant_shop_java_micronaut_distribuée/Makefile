@@ -8,6 +8,7 @@ USER_DIR := $(ROOT)/user-service
 GATEWAY_DIR := $(ROOT)/gateway
 DB_DIR := $(ROOT)/db
 TEST_DIR := $(ROOT)/test
+LOG_DIR := $(ROOT)/logs
 LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
 UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)

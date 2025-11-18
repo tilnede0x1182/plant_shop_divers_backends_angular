@@ -95,7 +95,15 @@ const items = [
     left: '  │     ├── plant_shop_java_quarkus',
     right: 'Backend Java Quarkus',
   },
-  { left: '  │     └── plant_shop_java_spring', right: 'Backend Java Spring Boot' },
+  { left: '  │     └── plant_shop_java_spring', right: '' },
+  {
+    left: '  │        ├── plant_shop_java_spring_boot_security',
+    right: 'Backend Spring Boot Security (JDBC)',
+  },
+  {
+    left: '  │        └── plant_shop_java_spring_boot_security_hibernate',
+    right: 'Backend Spring Boot Security + Hibernate',
+  },
 
   { left: '  ├─ plant_shop_python', right: 'Backend en Python (Flask)' },
   { left: '  ├─ plant_shop_haskell', right: 'Backend en Haskell (Stack)' },

@@ -138,7 +138,7 @@ compile-seed:
 	@javac -proc:full -cp $(CLASSPATH) -d bin utils/src/EnvLoader.java utils/src/PasswordUtil.java db/Seed.java
 seed:
 	@if [ ! -f bin/db/Seed.class ]; then make compile-seed; fi
-	@java -cp $(CLASSPATH) db.Seed
+	@java -Djava.util.logging.manager=org.jboss.logmanager.LogManager -cp $(CLASSPATH) db.Seed
 seed-dev: clean compile-seed seed
 ## ────────────────
 # Test

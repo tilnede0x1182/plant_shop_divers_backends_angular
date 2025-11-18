@@ -11,8 +11,13 @@ LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
 UTILS_SRC := $(filter-out $(UTILS_DIR)/src/ApiMapper.java $(UTILS_DIR)/src/Request.java, $(wildcard $(UTILS_DIR)/src/*.java))
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
+SERVICES := auth-service catalog-service order-service user-service gateway
 DB_NAME=plant_shop_java_quarkus_microservices
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
+define bundle-service
+	@echo "📦 Génération du fast-jar Quarkus ($(1))"
+	@java -Dorg.jboss.logging.provider=jul -cp "$(UTILS_DIR)/bin:$(LIB_CP)" utils.QuarkusBundleBuilder $(1)
+endef
 ## ────────────────
 # Dépendances
 ## ────────────────
@@ -39,10 +44,13 @@ compile-utils:
 	@echo "🔧 Compilation utilitaires"
 	@mkdir -p $(UTILS_DIR)/bin
 	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
+bundle: compile-utils
+	@echo "📦 Génération des fast-jars Quarkus"
+	@java -Dorg.jboss.logging.provider=jul -cp "$(UTILS_DIR)/bin:$(LIB_CP)" utils.QuarkusBundleBuilder $(SERVICES)
 compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
-	@javac -proc:full -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
+	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(AUTH_DIR)/bin \
 		$(wildcard $(AUTH_DIR)/src/*.java) \
 		$(wildcard $(AUTH_DIR)/src/util/*.java) \
 		$(wildcard $(AUTH_DIR)/src/controllers/*.java) \
@@ -50,10 +58,11 @@ compile-auth: compile-utils
 		$(wildcard $(AUTH_DIR)/src/repositories/*.java) \
 		$(wildcard $(AUTH_DIR)/src/services/*.java) \
 		$(wildcard $(AUTH_DIR)/src/security/*.java)
+	$(call bundle-service,auth-service)
 compile-catalog: compile-utils
 	@echo "🌱 Compilation CatalogService"
 	@mkdir -p $(CATALOG_DIR)/bin
-	@javac -proc:full -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
+	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(CATALOG_DIR)/bin \
 		$(wildcard $(CATALOG_DIR)/src/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/security/*.java) \
@@ -61,10 +70,11 @@ compile-catalog: compile-utils
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/services/*.java)
+	$(call bundle-service,catalog-service)
 compile-order: compile-utils
 	@echo "🧾 Compilation OrderService"
 	@mkdir -p $(ORDER_DIR)/bin
-	@javac -proc:full -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
+	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(ORDER_DIR)/bin \
 		$(wildcard $(ORDER_DIR)/src/*.java) \
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
 		$(wildcard $(ORDER_DIR)/src/security/*.java) \
@@ -72,10 +82,11 @@ compile-order: compile-utils
 		$(wildcard $(ORDER_DIR)/src/models/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repositories/*.java) \
 		$(wildcard $(ORDER_DIR)/src/services/*.java)
+	$(call bundle-service,order-service)
 compile-user: compile-utils
 	@echo "👥 Compilation UserService"
 	@mkdir -p $(USER_DIR)/bin
-	@javac -proc:full -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
+	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(USER_DIR)/bin \
 		$(wildcard $(USER_DIR)/src/*.java) \
 		$(wildcard $(USER_DIR)/src/util/*.java) \
 		$(wildcard $(USER_DIR)/src/security/*.java) \
@@ -83,11 +94,13 @@ compile-user: compile-utils
 		$(wildcard $(USER_DIR)/src/models/*.java) \
 		$(wildcard $(USER_DIR)/src/repositories/*.java) \
 		$(wildcard $(USER_DIR)/src/services/*.java)
+	$(call bundle-service,user-service)
 compile-gateway: compile-utils
 	@echo "🚪 Compilation Gateway"
 	@mkdir -p $(GATEWAY_DIR)/bin
-	@javac -proc:full -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
+	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(SERVICE_CP)" -d $(GATEWAY_DIR)/bin \
 		$(wildcard $(GATEWAY_DIR)/src/*.java)
+	$(call bundle-service,gateway)
 compile: compile-auth compile-catalog compile-order compile-user compile-gateway
 ## ────────────────
 # Run services

@@ -1,0 +1,27 @@
+# Serveur Quarkus
+io.quarkus:quarkus-rest:3.10.0
+io.quarkus:quarkus-rest-jackson:3.10.0
+io.quarkus:quarkus-jackson:3.10.0
+io.quarkus:quarkus-hibernate-orm:3.10.0
+io.quarkus:quarkus-jdbc-postgresql:3.10.0
+io.quarkus:quarkus-hibernate-validator:3.10.0
+
+# Sécurité
+org.mindrot:jbcrypt:0.4
+
+# JSON
+org.json:json:20210307
+
+# Base de données
+org.postgresql:postgresql:42.7.8
+
+# Logs serveur
+#org.slf4j:slf4j-simple:2.0.17
+#org.slf4j:slf4j-nop:2.0.17
+
+# Ajout (CDI Weld SE)
+org.jboss.weld.se:weld-se-core:5.1.0.Final
+jakarta.enterprise:jakarta.enterprise.cdi-api:4.0.1
+jakarta.annotation:jakarta.annotation-api:2.1.1
+jakarta.inject:jakarta.inject-api:2.0.1
+jakarta.ws.rs:jakarta.ws.rs-api:3.1.0

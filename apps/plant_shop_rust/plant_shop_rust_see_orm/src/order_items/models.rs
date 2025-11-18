@@ -1,14 +1,14 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct OrderItem {
     pub id: i32,
-		#[allow(dead_code)]
+    #[allow(dead_code)]
     #[serde(skip_serializing)]
     pub order_id: Option<i32>,
     pub plant_id: Option<i32>,
     pub quantity: i32,
-		pub price: i32,
+    pub price: i32,
 }
 
 #[allow(dead_code)]

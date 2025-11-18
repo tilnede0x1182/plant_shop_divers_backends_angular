@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 #[allow(dead_code)]
 #[derive(Serialize, Deserialize, Clone)]
@@ -23,17 +23,17 @@ pub struct PlantBasic {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OrderItemWithPlant {
-	pub id: i32,
-	pub quantity: i32,
-	pub price: i32,
-	pub plant_id: i32,
-	pub plant: PlantBasic,
+    pub id: i32,
+    pub quantity: i32,
+    pub price: i32,
+    pub plant_id: i32,
+    pub plant: PlantBasic,
 }
 
 #[derive(Debug, Serialize)]
 pub struct OrderWithItems {
     pub id: i32,
-		#[allow(dead_code)]
+    #[allow(dead_code)]
     #[serde(skip_serializing)]
     pub user_id: Option<i32>,
     pub total: i32,

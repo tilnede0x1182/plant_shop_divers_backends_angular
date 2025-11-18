@@ -1,175 +1,173 @@
+use crate::auth::session::AuthSession;
+use crate::entity::users::{ActiveModel as ActiveUser, Column, Entity as User, Model as UserModel};
+use crate::errors::AppError;
+use crate::users::models::User as UserDto;
+use argon2::password_hash::{rand_core::OsRng, SaltString};
+use argon2::{Argon2, PasswordHasher};
 /// Handlers Poem pour gestion utilisateurs (SeaORM)
 use poem::{
-	handler,
-	web::{Data, Json, Path},
-	Result as PoemResult,
-	http::StatusCode,
-	web::cookie::CookieJar,
+    handler,
+    http::StatusCode,
+    web::{Data, Json, Path},
+    Result as PoemResult,
 };
-use crate::errors::AppError;
-use crate::auth::jwt::verify_jwt;
-use crate::entity::users::{Entity as User, ActiveModel as ActiveUser, Model as UserModel, Column};
-use sea_orm::{DatabaseConnection, Set, ActiveModelTrait, EntityTrait, QueryOrder, IntoActiveModel};
-use argon2::{Argon2, PasswordHasher};
-use argon2::password_hash::{SaltString, rand_core::OsRng};
+use sea_orm::{
+    ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryOrder, Set,
+};
 use serde::Deserialize;
-use crate::users::models::User as UserDto;
 use serde_json::json;
 
 /// DTO pour création d'utilisateur
 #[derive(Deserialize)]
 pub struct CreateUserDto {
-	pub email: String,
-	#[serde(alias = "name")]
-	pub username: String,
-	pub password: String,
+    pub email: String,
+    #[serde(alias = "name")]
+    pub username: String,
+    pub password: String,
 }
 
 /// DTO pour update utilisateur (tous champs optionnels sauf id dans l’URL)
 #[derive(Deserialize)]
 pub struct UpdateUserDto {
-	#[serde(alias = "name")]
-	pub username: Option<String>,
-	pub email: Option<String>,
-	#[serde(alias = "admin")]
-	pub is_admin: Option<bool>,
+    #[serde(alias = "name")]
+    pub username: Option<String>,
+    pub email: Option<String>,
+    #[serde(alias = "admin")]
+    pub is_admin: Option<bool>,
 }
 
 #[handler]
 pub async fn list_users(
     Data(db): Data<&DatabaseConnection>,
-    jar: &CookieJar,
+    auth: AuthSession,
 ) -> Result<Json<Vec<serde_json::Value>>, AppError> {
-	// Authentification JWT
-	let token = jar
-		.get("auth_token")
-		.map(|c| c.value_str().to_string())
-		.ok_or(AppError::Unauthorized)?;
-	let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-	let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
+    // Vérifie que l'utilisateur courant est admin (via DB pour rester source de vérité)
+    let current = User::find_by_id(auth.user_id())
+        .one(db)
+        .await
+        .map_err(|_| AppError::Internal)?
+        .ok_or(AppError::Unauthorized)?;
 
-	// Vérifie que l'utilisateur courant est admin
-	let current = User::find_by_id(claims.sub)
-		.one(db)
-		.await
-		.map_err(|_| AppError::Internal)?
-		.ok_or(AppError::Unauthorized)?;
+    if !current.is_admin {
+        return Err(AppError::Forbidden);
+    }
 
-	if !current.is_admin {
-		return Err(AppError::Forbidden);
-	}
+    // Récupère tous les utilisateurs (tri alphabétique par username)
+    let users = User::find()
+        .order_by_asc(Column::Username)
+        .all(db)
+        .await
+        .map_err(|_| AppError::Internal)?;
 
-	// Récupère tous les utilisateurs (tri alphabétique par username)
-	let users = User::find()
-		.order_by_asc(Column::Username)
-		.all(db)
-		.await
-		.map_err(|_| AppError::Internal)?;
+    let mapped: Vec<_> = users
+        .into_iter()
+        .map(|u| {
+            json!({
+                    "id": u.id,
+                    "email": u.email,
+                    "name": u.username,   // <— renommage attendu par Angular
+                    "admin": u.is_admin,  // <— cohérent avec front
+                    "createdAt": u.created_at
+            })
+        })
+        .collect();
 
-	let mapped: Vec<_> = users.into_iter().map(|u| {
-			json!({
-					"id": u.id,
-					"email": u.email,
-					"name": u.username,   // <— renommage attendu par Angular
-					"admin": u.is_admin,  // <— cohérent avec front
-					"createdAt": u.created_at
-			})
-	}).collect();
-
-	Ok(Json(mapped))
+    Ok(Json(mapped))
 }
 
 #[handler]
-pub async fn create_user(Data(db): Data<&DatabaseConnection>, Json(payload): Json<CreateUserDto>) -> PoemResult<(StatusCode, Json<UserModel>)> {
-	let salt = SaltString::generate(&mut OsRng);
-	let password_hash = Argon2::default()
-		.hash_password(payload.password.as_bytes(), &salt)
-		.map_err(|_| AppError::Internal)?
-		.to_string();
+pub async fn create_user(
+    Data(db): Data<&DatabaseConnection>,
+    Json(payload): Json<CreateUserDto>,
+) -> PoemResult<(StatusCode, Json<UserModel>)> {
+    let salt = SaltString::generate(&mut OsRng);
+    let password_hash = Argon2::default()
+        .hash_password(payload.password.as_bytes(), &salt)
+        .map_err(|_| AppError::Internal)?
+        .to_string();
 
-	let new_user = ActiveUser {
-		username: Set(payload.username.clone()),
-		email: Set(payload.email.clone()),
-		password_hash: Set(password_hash),
-		is_admin: Set(false),
-		..Default::default()
-	};
+    let new_user = ActiveUser {
+        username: Set(payload.username.clone()),
+        email: Set(payload.email.clone()),
+        password_hash: Set(password_hash),
+        is_admin: Set(false),
+        ..Default::default()
+    };
 
-	let inserted = new_user.insert(db).await.map_err(|_| AppError::Internal)?;
-	Ok((StatusCode::CREATED, Json(inserted)))
+    let inserted = new_user.insert(db).await.map_err(|_| AppError::Internal)?;
+    Ok((StatusCode::CREATED, Json(inserted)))
 }
 
 #[handler]
-pub async fn get_user(Data(db): Data<&DatabaseConnection>, Path(user_id): Path<i32>) -> PoemResult<Json<UserDto>> {
-	let user = User::find_by_id(user_id)
-		.one(db)
-		.await
-		.map_err(|_| AppError::Internal)?
-		.ok_or(AppError::NotFound)?;
+pub async fn get_user(
+    Data(db): Data<&DatabaseConnection>,
+    Path(user_id): Path<i32>,
+) -> PoemResult<Json<UserDto>> {
+    let user = User::find_by_id(user_id)
+        .one(db)
+        .await
+        .map_err(|_| AppError::Internal)?
+        .ok_or(AppError::NotFound)?;
 
-	let dto = UserDto {
-		id: user.id,
-		email: user.email,
-		username: user.username,
-		is_admin: user.is_admin,
-		created_at: user.created_at.into(),
-	};
+    let dto = UserDto {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        is_admin: user.is_admin,
+        created_at: user.created_at.into(),
+    };
 
-	Ok(Json(dto))
+    Ok(Json(dto))
 }
 
 #[handler]
 pub async fn update_user(
-	jar: &CookieJar,
-	Data(db): Data<&DatabaseConnection>,
-	Path(user_id): Path<i32>,
-	Json(payload): Json<UpdateUserDto>,
+    auth: AuthSession,
+    Data(db): Data<&DatabaseConnection>,
+    Path(user_id): Path<i32>,
+    Json(payload): Json<UpdateUserDto>,
 ) -> PoemResult<Json<UserModel>> {
-	let token = jar
-		.get("auth_token")
-		.map(|c| c.value_str().to_string())
-		.ok_or(AppError::Unauthorized)?;
-	let secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-	let claims = verify_jwt(&token, &secret).map_err(|_| AppError::Unauthorized)?;
+    let current = User::find_by_id(auth.user_id())
+        .one(db)
+        .await
+        .map_err(|_| AppError::Internal)?
+        .ok_or(AppError::Unauthorized)?;
 
-	let current = User::find_by_id(claims.sub)
-		.one(db)
-		.await
-		.map_err(|_| AppError::Internal)?
-		.ok_or(AppError::Unauthorized)?;
+    if !current.is_admin && current.id != user_id {
+        return Err(AppError::Forbidden.into());
+    }
 
-	if !current.is_admin && current.id != user_id {
-		return Err(AppError::Forbidden.into());
-	}
+    let existing = User::find_by_id(user_id)
+        .one(db)
+        .await
+        .map_err(|_| AppError::Internal)?
+        .ok_or(AppError::NotFound)?;
 
-	let existing = User::find_by_id(user_id)
-		.one(db)
-		.await
-		.map_err(|_| AppError::Internal)?
-		.ok_or(AppError::NotFound)?;
+    let mut active = existing.into_active_model();
+    if let Some(name) = payload.username.clone() {
+        active.username = Set(name);
+    }
+    if let Some(email) = payload.email.clone() {
+        active.email = Set(email);
+    }
+    if let Some(is_admin) = payload.is_admin {
+        if current.is_admin {
+            active.is_admin = Set(is_admin);
+        }
+    }
 
-	let mut active = existing.into_active_model();
-	if let Some(name) = payload.username.clone() {
-		active.username = Set(name);
-	}
-	if let Some(email) = payload.email.clone() {
-		active.email = Set(email);
-	}
-	if let Some(is_admin) = payload.is_admin {
-		if current.is_admin {
-			active.is_admin = Set(is_admin);
-		}
-	}
-
-	let updated = active.update(db).await.map_err(|_| AppError::Internal)?;
-	Ok(Json(updated))
+    let updated = active.update(db).await.map_err(|_| AppError::Internal)?;
+    Ok(Json(updated))
 }
 
 #[handler]
-pub async fn delete_user(Data(db): Data<&DatabaseConnection>, Path(user_id): Path<i32>) -> PoemResult<()> {
-	User::delete_by_id(user_id)
-		.exec(db)
-		.await
-		.map_err(|_| AppError::Internal)?;
-	Ok(())
+pub async fn delete_user(
+    Data(db): Data<&DatabaseConnection>,
+    Path(user_id): Path<i32>,
+) -> PoemResult<()> {
+    User::delete_by_id(user_id)
+        .exec(db)
+        .await
+        .map_err(|_| AppError::Internal)?;
+    Ok(())
 }

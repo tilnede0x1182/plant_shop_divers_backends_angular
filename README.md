@@ -115,10 +115,10 @@ apps/
   │  │  ├── plant_shop_java_javalin_microservices                            → Microservices Java avec Javalin
   │  │  ├── plant_shop_java_micronaut_microservices                          → Microservices Java avec Micronaut
   │  │  ├── plant_shop_java_quarkus_microservices                            → Microservices Java avec Quarkus
-  │  │  └── plant_shop_java_spring_microservices                             →
+  │  │  └── plant_shop_java_spring_microservices
   │  │     ├── plant_shop_java_spring_boot_security_microservices            → Microservices Spring Boot Security (JDBC)
   │  │     └── plant_shop_java_spring_boot_security_hibernate_microservices  → Microservices Spring Boot Security + Hibernate
-  │  ├── Structure_en_application_distribuée
+  │  ├── Structure_en_application_distribuée                                 →
   │  │  ├── plant_shop_java_distribuée                                       → Architecture distribuée (HTTP)
   │  │  ├── plant_shop_java_javalin_distribuée                               → Architecture distribuée avec Javalin
   │  │  ├── plant_shop_java_micronaut_distribuée                             → Architecture distribuée avec Micronaut
@@ -132,7 +132,9 @@ apps/
   │     ├── plant_shop_javalin                                               → Backend Java Javalin
   │     ├── plant_shop_java_micronaut                                        → Backend Java Micronaut
   │     ├── plant_shop_java_quarkus                                          → Backend Java Quarkus
-  │     └── plant_shop_java_spring                                           → Backend Java Spring Boot
+  │     └── plant_shop_java_spring
+  │        ├── plant_shop_java_spring_boot_security                          → Backend Spring Boot Security (JDBC)
+  │        └── plant_shop_java_spring_boot_security_hibernate                → Backend Spring Boot Security + Hibernate
   ├─ plant_shop_python                                                       → Backend en Python (Flask)
   ├─ plant_shop_haskell                                                      → Backend en Haskell (Stack)
   └─ plant_shop_rust

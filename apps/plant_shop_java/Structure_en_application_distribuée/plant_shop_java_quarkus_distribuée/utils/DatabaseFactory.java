@@ -1,4 +1,4 @@
-package utils;
+package util;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.RequestScoped;
@@ -27,23 +27,34 @@ public final class DatabaseFactory {
 
     private synchronized Map<String, String> loadEnv() throws IOException {
         if (envCache == null) {
+            // Tentative de charger depuis la config du service courant (config/.env)
             if (!Files.exists(ENV_FILE)) {
+                // Tentative de charger depuis le répertoire parent (../config/.env)
+                Path parentEnv = Path.of("..", "config", ".env");
+                if (Files.exists(parentEnv)) {
+                    loadEnvFromFile(parentEnv);
+                    return envCache;
+                }
                 envCache = Map.of();
                 return envCache;
             }
-            Map<String, String> values = new HashMap<>();
-            try (BufferedReader reader = new BufferedReader(new FileReader(ENV_FILE.toFile()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    int idx = line.indexOf('=');
-                    if (idx > 0) {
-                        values.put(line.substring(0, idx).trim(), line.substring(idx + 1).trim());
-                    }
-                }
-            }
-            envCache = values;
+            loadEnvFromFile(ENV_FILE);
         }
         return envCache;
+    }
+
+    private void loadEnvFromFile(Path file) throws IOException {
+        Map<String, String> values = new HashMap<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                int idx = line.indexOf('=');
+                if (idx > 0) {
+                    values.put(line.substring(0, idx).trim(), line.substring(idx + 1).trim());
+                }
+            }
+        }
+        envCache = values;
     }
 
     @Produces
@@ -53,7 +64,6 @@ public final class DatabaseFactory {
         String url = env.get("DATABASE_URL");
         String user = env.get("DATABASE_USER");
         String pass = env.get("DATABASE_PASS");
-
         if (url == null || user == null || pass == null) {
             throw new IllegalStateException("DATABASE_URL, DATABASE_USER et DATABASE_PASS doivent être définis dans config/.env");
         }

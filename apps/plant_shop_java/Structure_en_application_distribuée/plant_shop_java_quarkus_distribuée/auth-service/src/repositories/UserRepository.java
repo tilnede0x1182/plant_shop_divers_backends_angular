@@ -4,6 +4,8 @@ import jakarta.enterprise.context.Dependent;
 import jakarta.inject.Inject;
 import java.sql.*;
 import models.User;
+import util.DatabaseFactory; // Import pour la connexion
+import util.ForwardedIdentityHolder; // Ajout si besoin
 
 @Dependent
 public class UserRepository extends BaseRepository<User> {
@@ -63,9 +65,9 @@ public class UserRepository extends BaseRepository<User> {
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword
-            ? "UPDATE users SET name=?, email=?, is_admin=?, password_hash=? WHERE id=?"
+            ?
+            "UPDATE users SET name=?, email=?, is_admin=?, password_hash=? WHERE id=?"
             : "UPDATE users SET name=?, email=?, is_admin=? WHERE id=?";
-
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setString(1, u.name);
             ps.setString(2, u.email);

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import models.Plant;
 import repositories.PlantRepository;
 import security.Guards;
-import utils.ApiMapper;
+import util.ApiMapper;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
@@ -23,7 +23,6 @@ public class PlantController {
 
     @Inject
     PlantRepository repo;
-
     @Inject
     Guards guards;
 
@@ -49,8 +48,10 @@ public class PlantController {
     @GET
     @Path("/admin/plants")
     public Response listAdmin() throws Exception {
-        guards.requireAdmin(); // Sécurise la route
-        return listPublic(); // Réutilise la logique publique
+        guards.requireAdmin();
+        // Sécurise la route
+        return listPublic();
+        // Réutilise la logique publique
     }
 
     @GET
@@ -58,7 +59,8 @@ public class PlantController {
     public Response show(@PathParam("id") int id) throws Exception {
         Plant plant = repo.find(id);
         return plant != null
-            ? Response.ok(ApiMapper.toPlant(plant)).build()
+            ?
+        Response.ok(ApiMapper.toPlant(plant)).build()
             : Response.status(Response.Status.NOT_FOUND).build();
     }
 
@@ -89,7 +91,6 @@ public class PlantController {
         if (updatedData.price != null) existing.price = updatedData.price;
         // Le test vérifie la mise à jour du stock
         if (updatedData.stock != 0) existing.stock = updatedData.stock;
-
         repo.update(existing);
         return Response.ok(ApiMapper.toPlant(repo.find(id))).build();
     }

@@ -1,11 +1,7 @@
-package model;
+package models;
 
-import io.micronaut.core.annotation.Introspected;
-import io.micronaut.serde.annotation.Serdeable;
 import java.sql.Timestamp;
 
-@Introspected
-@Serdeable
 public final class User {
     public int id;
     public String name;

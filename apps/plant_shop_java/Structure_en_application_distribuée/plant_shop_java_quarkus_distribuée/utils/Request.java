@@ -1,7 +1,6 @@
 package util;
 
 import com.sun.net.httpserver.HttpExchange;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**

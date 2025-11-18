@@ -1,4 +1,4 @@
-package utils;
+package util;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -11,7 +11,6 @@ import models.Order;
 import models.OrderItem;
 import models.Plant;
 import models.User;
-
 /**
  * Classe utilitaire pour mapper les objets Modèle en Map<String, Object>
  * prêtes à être sérialisées en JSON par Jackson.
@@ -79,11 +78,13 @@ public final class ApiMapper {
     }
 
     private static Double toDecimal(BigDecimal value) {
-        return value == null ? null : value.doubleValue();
+        return value == null ?
+        null : value.doubleValue();
     }
 
     private static String toIso(Timestamp timestamp) {
-        return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
+        return timestamp == null ?
+        null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 
     /**

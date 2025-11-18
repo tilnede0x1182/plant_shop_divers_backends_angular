@@ -1,12 +1,8 @@
-package model;
+package models;
 
-import io.micronaut.core.annotation.Introspected;
-import io.micronaut.serde.annotation.Serdeable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-@Introspected
-@Serdeable
 public final class Plant {
     public int id;
     public String name;

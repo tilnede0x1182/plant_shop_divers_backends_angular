@@ -13,8 +13,8 @@ import java.util.stream.Collectors;
 import models.User;
 import repositories.UserRepository;
 import security.Guards;
-import utils.ApiMapper;
-import utils.PasswordUtil;
+import util.ApiMapper;
+import util.PasswordUtil;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
@@ -71,7 +71,8 @@ public class UserController {
     // --- IMPLÉMENTATION ---
 
     private Response listImpl() throws Exception {
-        guards.requireAdmin(); // Seul un admin peut lister les utilisateurs
+        guards.requireAdmin();
+        // Seul un admin peut lister les utilisateurs
         List<?> payload = repo.list().stream()
             .sorted(userComparator())
             .map(ApiMapper::toUser)
@@ -83,7 +84,6 @@ public class UserController {
     @Path("/users/{id}")
     public Response show(@PathParam("id") int id) throws Exception {
         User currentUser = guards.requireUser();
-
         // Un utilisateur ne peut voir que son profil, un admin peut voir tout le monde
         if (currentUser.id != id && !currentUser.isAdmin) {
             return Response.status(Response.Status.FORBIDDEN).build();
@@ -91,7 +91,8 @@ public class UserController {
 
         User user = repo.find(id);
         return user != null
-            ? Response.ok(ApiMapper.toUser(user)).build()
+            ?
+        Response.ok(ApiMapper.toUser(user)).build()
             : Response.status(Response.Status.NOT_FOUND).build();
     }
 
@@ -99,14 +100,14 @@ public class UserController {
     @Path("/users")
     @Transactional
     public Response create(Map<String, Object> body) throws Exception {
-        guards.requireAdmin(); // Seul un admin peut créer un utilisateur (selon test)
+        guards.requireAdmin();
+        // Seul un admin peut créer un utilisateur (selon test)
 
         String email = (String) body.get("email");
         String name = (String) body.get("name");
         String password = body.get("password") instanceof String ? (String) body.get("password") : null;
         boolean adminFlag = body.containsKey("admin")
             && Boolean.parseBoolean(String.valueOf(body.get("admin")));
-
         if (email == null || password == null || password.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST)
                            .entity(Map.of("error", "email et password sont requis"))
@@ -119,7 +120,6 @@ public class UserController {
 
         User userData = new User(name, email, PasswordUtil.hashPassword(password), adminFlag);
         int newId = repo.create(userData);
-
         return Response.status(Response.Status.CREATED)
                        .entity(ApiMapper.toUser(repo.find(newId)))
                        .build();
@@ -127,7 +127,6 @@ public class UserController {
 
     private Response updateImpl(int id, Map<String, Object> body) throws Exception {
         User currentUser = guards.requireUser();
-
         // Un utilisateur ne peut modifier que lui-même, un admin peut modifier tout le monde
         if (currentUser.id != id && !currentUser.isAdmin) {
             return Response.status(Response.Status.FORBIDDEN).build();
@@ -166,9 +165,11 @@ public class UserController {
     }
 
     private Response destroyImpl(int id) throws Exception {
-        guards.requireAdmin(); // Seul un admin peut supprimer un utilisateur
+        guards.requireAdmin();
+        // Seul un admin peut supprimer un utilisateur
         repo.delete(id);
-        return Response.ok().build(); // 200 OK attendu par le test
+        return Response.ok().build();
+        // 200 OK attendu par le test
     }
 
     private Comparator<User> userComparator() {

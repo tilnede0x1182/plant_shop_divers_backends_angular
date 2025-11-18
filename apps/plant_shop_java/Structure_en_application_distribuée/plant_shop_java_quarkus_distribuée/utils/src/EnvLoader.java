@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-
 /**
  * Charge config/.env depuis le service courant ou le dossier parent.
  */
@@ -36,7 +35,7 @@ public final class EnvLoader {
                 if (idx > 0) {
                     String key = line.substring(0, idx).trim();
                     String value = line.substring(idx + 1).trim();
-                    if (!key.isEmpty()) {
+                    if (!key.isEmpty() && !values.containsKey(key)) {
                         values.put(key, value);
                     }
                 }

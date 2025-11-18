@@ -18,11 +18,15 @@ public class Guards {
     AuthenticatedUser authenticatedUser;
 
     public User requireUser() {
-        if (authenticatedUser.getUser() == null) {
+        // Dans ce service (auth-service), le ForwardedIdentityHolder est lu par
+        // le filtre du service, mais AuthController utilise sa propre session locale.
+        // Ce Guards doit être utilisé pour /auth/me et les autres services.
+        User user = authenticatedUser.getUser();
+        if (user == null) {
             // Lance une exception JAX-RS qui se traduit par une réponse 401
             throw new WebApplicationException("Authentification requise", Response.Status.UNAUTHORIZED);
         }
-        return authenticatedUser.getUser();
+        return user;
     }
 
     public User requireAdmin() {

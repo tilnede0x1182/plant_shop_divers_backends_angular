@@ -3,7 +3,6 @@ package controllers;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.CookieParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
@@ -13,8 +12,8 @@ import models.User;
 import repositories.UserRepository;
 import security.Guards;
 import security.SessionService;
-import utils.ApiMapper;
-import utils.PasswordUtil;
+import util.ApiMapper;
+import util.PasswordUtil;
 
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)
@@ -24,7 +23,6 @@ public class AuthController {
 
     @Inject
     UserRepository userRepo;
-
     @Inject
     SessionService sessionService;
 
@@ -57,7 +55,6 @@ public class AuthController {
     @Path("/login")
     public Response login(Map<String, String> body) throws Exception {
         User user = userRepo.findByEmailWithPassword(body.get("email"));
-
         if (user == null || !PasswordUtil.checkPassword(body.get("password"), user.passwordHash)) {
             return Response.status(Response.Status.UNAUTHORIZED)
                            .entity(Map.of("error", "Identifiants invalides"))
@@ -66,14 +63,12 @@ public class AuthController {
 
         String sessionId = UUID.randomUUID().toString();
         sessionService.getSessions().put(sessionId, user.id);
-
         NewCookie cookie = new NewCookie.Builder("session_id")
             .value(sessionId)
             .path("/")
             .maxAge(3600) // 1 heure
             .httpOnly(true)
             .build();
-
         return Response.status(Response.Status.CREATED)
                        .cookie(cookie)
                        .entity(ApiMapper.toUser(user))
@@ -94,7 +89,6 @@ public class AuthController {
             .maxAge(0) // Expire immédiatement
             .httpOnly(true)
             .build();
-
         // 204 No Content
         return Response.noContent().cookie(expiredCookie).build();
     }
@@ -103,6 +97,7 @@ public class AuthController {
     @Path("/me")
     public Response me() {
         // Le Guard lève une 401 si l'utilisateur n'est pas trouvé
+        // Le Guards utilise maintenant le ForwardedIdentity pour vérifier l'authentification
         User user = guards.requireUser();
         return Response.ok(ApiMapper.toUser(user)).build();
     }

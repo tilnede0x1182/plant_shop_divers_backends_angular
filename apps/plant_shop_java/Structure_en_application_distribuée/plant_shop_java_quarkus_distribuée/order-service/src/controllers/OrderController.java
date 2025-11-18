@@ -19,7 +19,7 @@ import repositories.OrderItemRepository;
 import repositories.OrderRepository;
 import repositories.PlantRepository;
 import security.Guards;
-import utils.ApiMapper;
+import util.ApiMapper;
 
 @Path("/api/orders")
 @Produces(MediaType.APPLICATION_JSON)
@@ -81,11 +81,9 @@ public class OrderController {
                 itemRepo.listByOrder(orderId),
                 plantRepo::find
             );
-
             return Response.status(Response.Status.CREATED)
                            .entity(ApiMapper.toOrder(finalOrder, items))
                            .build();
-
         } catch (IllegalArgumentException ex) {
             // @Transactional gère le rollback, mais on envoie la 400
             return Response.status(Response.Status.BAD_REQUEST)

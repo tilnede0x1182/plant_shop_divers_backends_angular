@@ -1,6 +1,7 @@
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
+use tokio::runtime::Builder;
 
 use poem::{
     get,
@@ -11,11 +12,16 @@ use poem::{
 };
 
 mod auth;
+mod cache;
 mod db;
+mod dto;
 mod errors;
+mod logging;
 mod order_items;
 mod orders;
 mod plants;
+mod response;
+mod state;
 mod users;
 
 use crate::{
@@ -24,13 +30,22 @@ use crate::{
     order_items::handlers::{delete_order_item, get_order_item, update_order_item},
     orders::handlers::{create_order, delete_order, get_order, list_orders, update_order},
     plants::handlers::{create_plant, delete_plant, get_plant, list_plants, update_plant},
+    state::AppState,
     users::handlers::{create_user, delete_user, get_user, list_users, update_user},
 };
 
-#[tokio::main]
-async fn main() -> Result<(), std::io::Error> {
-    // Charger .env et config
+fn main() -> Result<(), std::io::Error> {
     dotenv().ok();
+    let worker_threads = num_cpus::get().max(2);
+    Builder::new_multi_thread()
+        .worker_threads(worker_threads)
+        .enable_all()
+        .build()
+        .expect("Impossible de créer le runtime tokio")
+        .block_on(async_main())
+}
+
+async fn async_main() -> Result<(), std::io::Error> {
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL manquant");
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -38,10 +53,11 @@ async fn main() -> Result<(), std::io::Error> {
         .await
         .expect("Connexion base de données impossible");
 
-    // Migration (SQLx)
     if let Err(e) = run_migrations(&pool).await {
         eprintln!("Erreur lors de l'application des migrations: {}", e);
     }
+
+    let state = AppState::new(pool);
 
     let cors = Cors::new()
         .allow_credentials(true)
@@ -113,7 +129,7 @@ async fn main() -> Result<(), std::io::Error> {
                     .delete(delete_order_item),
             ),
         )
-        .with(AddData::new(pool))
+        .with(AddData::new(state.clone()))
         .with(poem::middleware::CookieJarManager::new())
         .with(cors);
 

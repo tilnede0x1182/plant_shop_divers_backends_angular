@@ -1,74 +1,84 @@
 use super::models::{NewPlant, Plant, UpdatePlant};
 use crate::auth::session::AdminGuard;
 use crate::db::updates::PartialUpdate;
+use crate::dto::PlantResponse;
 use crate::errors::AppError;
-/// Handlers Poem pour gestion des plantes
+use crate::response::buffered_json;
+use crate::state::AppState;
 use poem::{
     handler,
     http::StatusCode,
     web::{Data, Json, Path},
-    Result as PoemResult,
+    Response, Result as PoemResult,
 };
-use sqlx::PgPool;
 
 /// Création d’une plante (201 Created)
-/// @payload données de la plante
-/// @return plante créée
 #[handler]
 pub async fn create_plant(
-    Data(pool): Data<&PgPool>,
-    _admin: AdminGuard,
+    Data(state): Data<&AppState>,
+    admin: AdminGuard,
     Json(payload): Json<NewPlant>,
-) -> PoemResult<(StatusCode, Json<Plant>), AppError> {
+) -> PoemResult<(StatusCode, Json<PlantResponse>), AppError> {
+    let _ = admin.user_id();
     let plant = sqlx::query_as!(
-		Plant,
-		"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING id, name, description, price, stock, created_at",
-		payload.name,
-		payload.description,
-		payload.price,
-		payload.stock
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|_| AppError::Conflict)?;
-    Ok((StatusCode::CREATED, Json(plant)))
+        Plant,
+        "INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING id, name, description, price, stock, created_at",
+        payload.name,
+        payload.description,
+        payload.price,
+        payload.stock
+    )
+    .fetch_one(state.write_pool())
+    .await
+    .map_err(|_| AppError::Conflict)?;
+
+    state.plant_cache().invalidate().await;
+    Ok((StatusCode::CREATED, Json(PlantResponse::from(plant))))
 }
 
 #[handler]
-pub async fn list_plants(Data(pool): Data<&PgPool>) -> PoemResult<Json<Vec<Plant>>, AppError> {
+pub async fn list_plants(Data(state): Data<&AppState>) -> Result<Response, AppError> {
+    if let Some(cached) = state.plant_cache().get().await {
+        return buffered_json(&cached, StatusCode::OK);
+    }
+
     let plants = sqlx::query_as!(
         Plant,
         "SELECT id, name, description, price, stock, created_at FROM plants ORDER BY name ASC",
     )
-    .fetch_all(pool)
+    .fetch_all(state.read_pool())
     .await
     .map_err(|_| AppError::Internal)?;
-    Ok(Json(plants))
+
+    let response: Vec<PlantResponse> = plants.into_iter().map(PlantResponse::from).collect();
+    state.plant_cache().set(&response).await;
+
+    buffered_json(&response, StatusCode::OK)
 }
 
 #[handler]
 pub async fn get_plant(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(plant_id): Path<i32>,
-) -> PoemResult<Json<Plant>> {
+) -> PoemResult<Json<PlantResponse>> {
     let plant = sqlx::query_as!(
         Plant,
         "SELECT id, name, description, price, stock, created_at
  		FROM plants WHERE id = $1",
         plant_id
     )
-    .fetch_one(pool)
+    .fetch_one(state.read_pool())
     .await
     .map_err(|_| AppError::NotFound)?;
-    Ok(Json(plant))
+    Ok(Json(PlantResponse::from(plant)))
 }
 
 #[handler]
 pub async fn update_plant(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(plant_id): Path<i32>,
     Json(payload): Json<UpdatePlant>,
-) -> PoemResult<Json<Plant>> {
+) -> PoemResult<Json<PlantResponse>> {
     let mut updater = PartialUpdate::new("plants");
     updater.set_with_coalesce("name", payload.name.clone());
     updater.set_with_coalesce("description", payload.description.clone());
@@ -82,17 +92,25 @@ pub async fn update_plant(
 
     let plant = builder
         .build_query_as::<Plant>()
-        .fetch_one(pool)
+        .fetch_one(state.write_pool())
         .await
         .map_err(|_| AppError::NotFound)?;
-    Ok(Json(plant))
+
+    state.plant_cache().invalidate().await;
+
+    Ok(Json(PlantResponse::from(plant)))
 }
 
 #[handler]
-pub async fn delete_plant(Data(pool): Data<&PgPool>, Path(plant_id): Path<i32>) -> PoemResult<()> {
+pub async fn delete_plant(
+    Data(state): Data<&AppState>,
+    Path(plant_id): Path<i32>,
+) -> PoemResult<()> {
     sqlx::query!("DELETE FROM plants WHERE id = $1", plant_id)
-        .execute(pool)
+        .execute(state.write_pool())
         .await
         .map_err(|_| AppError::NotFound)?;
+
+    state.plant_cache().invalidate().await;
     Ok(())
 }

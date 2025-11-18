@@ -11,6 +11,16 @@ where
     serializer.serialize_i32(nombre)
 }
 
+pub trait PriceExt {
+    fn as_i32_lossy(&self) -> i32;
+}
+
+impl PriceExt for BigDecimal {
+    fn as_i32_lossy(&self) -> i32 {
+        self.to_i32().unwrap_or(0)
+    }
+}
+
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
 pub struct Plant {
     pub id: i32,

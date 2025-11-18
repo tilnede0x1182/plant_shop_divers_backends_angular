@@ -2,9 +2,9 @@ use std::future::Future;
 
 use poem::web::{cookie::CookieJar, Data};
 use poem::{FromRequest, Request, RequestBody};
-use sqlx::PgPool;
 
 use crate::errors::AppError;
+use crate::state::AppState;
 
 use super::jwt::{verify_jwt, Claims};
 
@@ -59,7 +59,8 @@ impl<'a> FromRequest<'a> for AdminGuard {
     ) -> impl Future<Output = poem::Result<Self>> + Send {
         async move {
             let auth = AuthSession::from_request(req, body).await?;
-            let Data(pool) = Data::<&PgPool>::from_request(req, body).await?;
+            let Data(state) = Data::<&AppState>::from_request(req, body).await?;
+            let pool = state.read_pool();
 
             let record = sqlx::query!("SELECT is_admin FROM users WHERE id = $1", auth.user_id())
                 .fetch_one(pool)

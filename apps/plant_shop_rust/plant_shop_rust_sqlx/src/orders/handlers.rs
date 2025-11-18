@@ -1,71 +1,120 @@
-// Gestion des commandes (handlers Poem)
+use std::collections::HashMap;
+
 use poem::{
     handler,
     http::StatusCode,
-    web::cookie::CookieJar,
     web::{Data, Json, Path},
-    Result as PoemResult,
+    Response, Result as PoemResult,
 };
 use serde::Deserialize;
-use sqlx::PgPool;
+use sqlx::{types::BigDecimal, PgPool, Postgres, QueryBuilder};
 
-use super::models::{Order, OrderItemPayload, OrderWithItems, PlantBasic, UpdateOrder};
+use crate::auth::session::AuthSession;
+use crate::dto::{OrderItemPlant, OrderItemResponse, OrderSummary};
 use crate::errors::AppError;
-use crate::orders::helpers::{build_order_item_with_plant, resolve_user_id};
+use crate::logging::log_debug_lazy;
+use crate::plants::models::PriceExt;
+use crate::response::buffered_json;
+use crate::state::AppState;
 
-// Structure pour le payload de création de commande
-#[derive(Deserialize)]
-pub struct NewOrderPayload {
-    pub items: Vec<OrderItemPayload>,
+#[derive(Deserialize, Clone)]
+pub struct NewOrderItemDto {
+    #[serde(alias = "plantId")]
+    pub plant_id: i32,
+    pub quantity: i32,
 }
 
-/// Création de commande utilisateur courant (@jar cookie JWT → user_id, 201 en sortie)
+#[derive(Deserialize)]
+pub struct NewOrderPayload {
+    pub items: Vec<NewOrderItemDto>,
+}
+
+#[derive(Deserialize)]
+pub struct UpdateOrderDto {
+    pub status: Option<String>,
+}
+
 #[handler]
 pub async fn create_order(
-    Data(pool): Data<&PgPool>,
-    jar: &CookieJar,
+    Data(state): Data<&AppState>,
+    auth: AuthSession,
     Json(payload): Json<NewOrderPayload>,
-) -> PoemResult<(StatusCode, Json<OrderWithItems>)> {
-    let user_id = resolve_user_id(jar, pool).await?;
-
-    let mut tx = pool.begin().await.map_err(|e| AppError::DatabaseError(e))?;
-    let mut total = sqlx::types::BigDecimal::from(0);
-
-    let order = sqlx::query_as!(
-		Order,
-		"INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id,user_id, total, status, created_at",
-		user_id,
-		total
-	)
-	.fetch_one(&mut *tx)
-	.await.map_err(|e| AppError::DatabaseError(e))?;
-
-    let mut created_items = Vec::new();
-    for item in payload.items {
-        let plant = sqlx::query!(
-            "SELECT price, stock FROM plants WHERE id = $1",
-            item.plant_id
-        )
-        .fetch_optional(&mut *tx)
+) -> PoemResult<(StatusCode, Json<OrderSummary>)> {
+    let mut tx = state
+        .write_pool()
+        .begin()
         .await
-        .map_err(|e| AppError::DatabaseError(e))?
-        .ok_or(AppError::NotFound)?;
-        if plant.stock < item.quantity as i32 {
-            tx.rollback()
-                .await
-                .map_err(|e| AppError::DatabaseError(e))?;
+        .map_err(|e| AppError::DatabaseError(e))?;
+
+    let plant_ids: Vec<i32> = payload.items.iter().map(|item| item.plant_id).collect();
+
+    log_debug_lazy(|| {
+        format!(
+            "[orders] create_order for user {} with {} items",
+            auth.user_id(),
+            payload.items.len()
+        )
+    });
+
+    let plant_rows = sqlx::query!(
+        "SELECT id, name, price, stock FROM plants WHERE id = ANY($1)",
+        &plant_ids
+    )
+    .fetch_all(&mut *tx)
+    .await
+    .map_err(|e| {
+        log_debug_lazy(|| format!("[orders] plant lookup failed: {e}"));
+        AppError::DatabaseError(e)
+    })?;
+
+    let mut plants = HashMap::new();
+    for row in plant_rows {
+        plants.insert(row.id, row);
+    }
+
+    let mut total = BigDecimal::from(0);
+    let mut inserts = Vec::new();
+
+    let order = sqlx::query!(
+        "INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id, user_id, total, status, created_at",
+        auth.user_id(),
+        total
+    )
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(|e| {
+        log_debug_lazy(|| format!("[orders] failed inserting order header: {e}"));
+        AppError::DatabaseError(e)
+    })?;
+
+    for item in &payload.items {
+        let plant = plants.get(&item.plant_id).ok_or(AppError::NotFound)?;
+        if plant.stock < item.quantity {
+            tx.rollback().await.ok();
             return Err(AppError::Conflict.into());
         }
-        let item_price = plant.price.clone();
-        let item_total = item_price.clone() * sqlx::types::BigDecimal::from(item.quantity);
-        total += item_total;
-        let order_item = sqlx::query_as!(
-			crate::order_items::models::OrderItem,
-			"INSERT INTO order_items (order_id, plant_id, quantity, price) VALUES ($1, $2, $3, $4) RETURNING id, order_id, plant_id, quantity, price",
-			order.id, item.plant_id, item.quantity as i32, item_price
-		)
-		.fetch_one(&mut *tx).await.map_err(|e| AppError::DatabaseError(e))?;
-        created_items.push(order_item);
+        let price = plant.price.clone();
+        total += price.clone() * BigDecimal::from(item.quantity);
+        inserts.push((item.plant_id, item.quantity, price));
+    }
+
+    if !inserts.is_empty() {
+        let mut builder = QueryBuilder::<Postgres>::new(
+            "INSERT INTO order_items (order_id, plant_id, quantity, price) ",
+        );
+        builder.push_values(inserts.iter(), |mut b, (plant_id, quantity, price)| {
+            b.push_bind(order.id)
+                .push_bind(*plant_id)
+                .push_bind(*quantity)
+                .push_bind(price.clone());
+        });
+
+        log_debug_lazy(|| format!("[orders] bulk insert SQL: {}", builder.sql()));
+
+        builder.build().execute(&mut *tx).await.map_err(|e| {
+            log_debug_lazy(|| format!("[orders] bulk insert order_items failed: {e}"));
+            AppError::DatabaseError(e)
+        })?;
     }
 
     sqlx::query!(
@@ -75,185 +124,62 @@ pub async fn create_order(
     )
     .execute(&mut *tx)
     .await
-    .map_err(|e| AppError::DatabaseError(e))?;
+    .map_err(|e| {
+        log_debug_lazy(|| format!("[orders] failed updating total for order {}: {e}", order.id));
+        AppError::DatabaseError(e)
+    })?;
+
     tx.commit().await.map_err(|e| AppError::DatabaseError(e))?;
 
-    let response = OrderWithItems {
-        id: order.id,
-        user_id: order.user_id,
-        total,
-        status: order.status,
-        created_at: order.created_at,
-        items: {
-            let mut items_vec = Vec::new();
-            for order_item in &created_items {
-                let plant = sqlx::query_as!(
-                    PlantBasic,
-                    "SELECT id,name, price, stock, description FROM plants WHERE id = $1",
-                    order_item.plant_id
-                )
-                .fetch_one(pool)
-                .await
-                .map_err(|e| AppError::DatabaseError(e))?;
-                items_vec.push(build_order_item_with_plant(
-                    order_item.id,
-                    order_item.quantity,
-                    order_item.price.clone(),
-                    plant,
-                ));
-            }
-            items_vec
-        },
-        number: None,
-    };
-    Ok((StatusCode::CREATED, Json(response)))
+    let summary = fetch_single_summary(state.read_pool(), order.id).await?;
+    Ok((StatusCode::CREATED, Json(summary)))
 }
 
 #[handler]
 pub async fn list_orders(
-    Data(pool): Data<&PgPool>,
-    jar: &CookieJar,
-) -> Result<Json<Vec<OrderWithItems>>, AppError> {
-    let user_id = resolve_user_id(jar, pool).await?;
-
-    // on récupère les commandes pour affichage triées par date décroissante (récentes d'abord)
-    // et on calcule la numérotation chronologique (1 = plus ancienne) via ROW_NUMBER()
-    let orders = sqlx::query!(
-        r#"
-			SELECT
-					id,
-					user_id,
-					total,
-					status,
-					created_at,
-					ROW_NUMBER() OVER (ORDER BY created_at ASC) AS number
-			FROM orders
-			WHERE user_id = $1
-			ORDER BY created_at DESC
-			"#,
-        user_id
-    )
-    .fetch_all(pool)
-    .await
-    .map_err(AppError::DatabaseError)?;
-
-    let mut results = Vec::new();
-
-    for order in &orders {
-        let items_rows = sqlx::query!(
-			"SELECT oi.id, oi.quantity, oi.price, p.id as plant_id, p.name, p.price as plant_price, p.stock, p.description
-			 FROM order_items oi
-			 JOIN plants p ON oi.plant_id = p.id
-			 WHERE oi.order_id = $1",
-			order.id
-		)
-		.fetch_all(pool)
-		.await
-		.map_err(AppError::DatabaseError)?;
-
-        let items: Vec<_> = items_rows
-            .into_iter()
-            .map(|row| {
-                let plant = PlantBasic {
-                    id: row.plant_id,
-                    name: row.name,
-                    price: row.plant_price,
-                    stock: row.stock,
-                    description: row.description,
-                };
-                build_order_item_with_plant(row.id, row.quantity, row.price, plant)
-            })
-            .collect();
-
-        let order_data = OrderWithItems {
-            id: order.id,
-            user_id: order.user_id,
-            total: order.total.clone(),
-            status: order.status.clone(),
-            created_at: order.created_at,
-            items,
-            number: order.number,
-        };
-        results.push(order_data);
-    }
-
-    Ok(Json(results))
+    Data(state): Data<&AppState>,
+    auth: AuthSession,
+) -> Result<Response, AppError> {
+    let rows = fetch_rows_for_user(state.read_pool(), auth.user_id()).await?;
+    let summaries = fold_rows(rows);
+    buffered_json(&summaries, StatusCode::OK)
 }
 
 #[handler]
 pub async fn get_order(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(order_id): Path<i32>,
-) -> PoemResult<Json<OrderWithItems>> {
-    let order = sqlx::query_as!(
-        Order,
-        "SELECT id,user_id, total, status, created_at FROM orders WHERE id = $1",
-        order_id
-    )
-    .fetch_one(pool)
-    .await
-    .map_err(|e| AppError::DatabaseError(e))?;
-
-    let items = sqlx::query!(
-		"SELECT oi.id, oi.quantity, oi.price, p.id as plant_id, p.name, p.price as plant_price, p.stock, p.description
-		 FROM order_items oi
-		 JOIN plants p ON oi.plant_id = p.id
-		 WHERE oi.order_id = $1",
-		order.id
-	)
-	.fetch_all(pool)
-	.await
-	.map_err(AppError::DatabaseError)?
-	.into_iter()
-	.map(|row| {
-		let plant = PlantBasic {
-			id: row.plant_id,
-			name: row.name,
-			price: row.plant_price,
-			stock: row.stock,
-			description: row.description,
-		};
-		build_order_item_with_plant(row.id, row.quantity, row.price, plant)
-	})
-	.collect();
-
-    let order_with_items = OrderWithItems {
-        id: order.id,
-        user_id: order.user_id,
-        total: order.total,
-        status: order.status,
-        created_at: order.created_at,
-        items,
-        number: None,
-    };
-    Ok(Json(order_with_items))
+) -> Result<Response, AppError> {
+    let summary = fetch_single_summary(state.read_pool(), order_id).await?;
+    buffered_json(&summary, StatusCode::OK)
 }
 
 #[handler]
 pub async fn update_order(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(order_id): Path<i32>,
-    Json(payload): Json<UpdateOrder>,
-) -> PoemResult<Json<Order>> {
-    let order = sqlx::query_as!(
-        Order,
-        "UPDATE orders SET
-			status = COALESCE($1, status)
-		 WHERE id = $2
-		 RETURNING id,user_id, total, status, created_at",
+    Json(payload): Json<UpdateOrderDto>,
+) -> PoemResult<Json<OrderSummary>> {
+    sqlx::query!(
+        "UPDATE orders SET status = COALESCE($1, status) WHERE id = $2",
         payload.status,
         order_id
     )
-    .fetch_one(pool)
+    .execute(state.write_pool())
     .await
     .map_err(|e| AppError::DatabaseError(e))?;
-    Ok(Json(order))
+
+    let summary = fetch_single_summary(state.read_pool(), order_id).await?;
+    Ok(Json(summary))
 }
 
 #[handler]
-pub async fn delete_order(Data(pool): Data<&PgPool>, Path(order_id): Path<i32>) -> PoemResult<()> {
+pub async fn delete_order(
+    Data(state): Data<&AppState>,
+    Path(order_id): Path<i32>,
+) -> PoemResult<()> {
     let result = sqlx::query!("DELETE FROM orders WHERE id = $1", order_id)
-        .execute(pool)
+        .execute(state.write_pool())
         .await
         .map_err(|e| AppError::DatabaseError(e))?;
 
@@ -262,4 +188,118 @@ pub async fn delete_order(Data(pool): Data<&PgPool>, Path(order_id): Path<i32>) 
     }
 
     Ok(())
+}
+
+#[derive(sqlx::FromRow)]
+struct DbOrderRow {
+    order_id: i32,
+    order_status: String,
+    order_total: BigDecimal,
+    order_created_at: chrono::DateTime<chrono::Utc>,
+    order_item_id: Option<i32>,
+    order_item_quantity: Option<i32>,
+    order_item_price: Option<BigDecimal>,
+    plant_id: Option<i32>,
+    plant_name: Option<String>,
+    plant_price: Option<BigDecimal>,
+}
+
+async fn fetch_rows_for_user(pool: &PgPool, user_id: i32) -> Result<Vec<DbOrderRow>, AppError> {
+    sqlx::query_as!(
+        DbOrderRow,
+        r#"
+        SELECT
+            o.id               AS order_id,
+            o.status           AS order_status,
+            o.total            AS order_total,
+            o.created_at       AS order_created_at,
+            oi.id              AS order_item_id,
+            oi.quantity        AS order_item_quantity,
+            oi.price           AS order_item_price,
+            p.id               AS plant_id,
+            p.name             AS plant_name,
+            p.price            AS plant_price
+        FROM orders o
+        LEFT JOIN order_items oi ON oi.order_id = o.id
+        LEFT JOIN plants p ON p.id = oi.plant_id
+        WHERE o.user_id = $1
+        ORDER BY o.created_at DESC, oi.id ASC
+        "#,
+        user_id
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(AppError::DatabaseError)
+}
+
+async fn fetch_single_summary(pool: &PgPool, order_id: i32) -> Result<OrderSummary, AppError> {
+    let rows = sqlx::query_as!(
+        DbOrderRow,
+        r#"
+        SELECT
+            o.id               AS order_id,
+            o.status           AS order_status,
+            o.total            AS order_total,
+            o.created_at       AS order_created_at,
+            oi.id              AS order_item_id,
+            oi.quantity        AS order_item_quantity,
+            oi.price           AS order_item_price,
+            p.id               AS plant_id,
+            p.name             AS plant_name,
+            p.price            AS plant_price
+        FROM orders o
+        LEFT JOIN order_items oi ON oi.order_id = o.id
+        LEFT JOIN plants p ON p.id = oi.plant_id
+        WHERE o.id = $1
+        ORDER BY oi.id ASC
+        "#,
+        order_id
+    )
+    .fetch_all(pool)
+    .await
+    .map_err(AppError::DatabaseError)?;
+
+    fold_rows(rows).into_iter().next().ok_or(AppError::NotFound)
+}
+
+fn fold_rows(rows: Vec<DbOrderRow>) -> Vec<OrderSummary> {
+    let mut summaries = Vec::new();
+    let mut index = HashMap::new();
+
+    for row in rows {
+        let entry = index.entry(row.order_id).or_insert_with(|| {
+            let summary = OrderSummary::new(
+                row.order_id,
+                row.order_status.clone(),
+                row.order_total.as_i32_lossy(),
+                row.order_created_at,
+                Vec::new(),
+            );
+            summaries.push(summary);
+            summaries.len() - 1
+        });
+
+        if let Some(item_id) = row.order_item_id {
+            if let (Some(plant_id), Some(item_price), Some(plant_price)) = (
+                row.plant_id,
+                row.order_item_price.clone(),
+                row.plant_price.clone(),
+            ) {
+                let plant_view = OrderItemPlant {
+                    id: plant_id,
+                    name: row.plant_name.clone().unwrap_or_default(),
+                    price: plant_price.as_i32_lossy(),
+                };
+                summaries[*entry].items.push(OrderItemResponse::new(
+                    item_id,
+                    plant_id,
+                    row.order_item_quantity.unwrap_or(0),
+                    item_price.as_i32_lossy(),
+                    plant_view,
+                ));
+            }
+        }
+    }
+
+    summaries
 }

@@ -1,16 +1,16 @@
 use super::models::{NewOrderItem, OrderItem};
 use crate::errors::AppError;
+use crate::state::AppState;
 /// Handlers Poem pour gestion des éléments de commande
 use poem::{
     handler,
     web::{Data, Json, Path},
     Result as PoemResult,
 };
-use sqlx::PgPool;
 
 #[handler]
 pub async fn get_order_item(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(order_item_id): Path<i32>,
 ) -> PoemResult<Json<OrderItem>, AppError> {
     let item = sqlx::query_as!(
@@ -19,7 +19,7 @@ pub async fn get_order_item(
  		FROM order_items WHERE id = $1",
         order_item_id
     )
-    .fetch_one(pool)
+    .fetch_one(state.read_pool())
     .await
     .map_err(|_| AppError::NotFound)?;
     Ok(Json(item))
@@ -27,7 +27,7 @@ pub async fn get_order_item(
 
 #[handler]
 pub async fn update_order_item(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(order_item_id): Path<i32>,
     Json(payload): Json<NewOrderItem>,
 ) -> PoemResult<Json<OrderItem>, AppError> {
@@ -46,7 +46,7 @@ pub async fn update_order_item(
         payload.price,
         order_item_id
     )
-    .fetch_one(pool)
+    .fetch_one(state.write_pool())
     .await
     .map_err(|_| AppError::NotFound)?;
     Ok(Json(item))
@@ -54,11 +54,11 @@ pub async fn update_order_item(
 
 #[handler]
 pub async fn delete_order_item(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(order_item_id): Path<i32>,
 ) -> PoemResult<(), AppError> {
     sqlx::query!("DELETE FROM order_items WHERE id = $1", order_item_id)
-        .execute(pool)
+        .execute(state.write_pool())
         .await
         .map_err(|_| AppError::NotFound)?;
     Ok(())

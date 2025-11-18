@@ -1,7 +1,10 @@
 use super::models::{NewUser, UpdateUser, User};
 use crate::auth::session::{AdminGuard, AuthSession};
 use crate::db::updates::PartialUpdate;
+use crate::dto::UserResponse;
 use crate::errors::AppError;
+use crate::response::buffered_json;
+use crate::state::AppState;
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
 use poem::http::StatusCode;
@@ -9,36 +12,41 @@ use poem::http::StatusCode;
 use poem::{
     handler,
     web::{Data, Json, Path},
-    Result as PoemResult,
+    Response, Result as PoemResult,
 };
-use sqlx::PgPool;
 
 #[handler]
 pub async fn list_users(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     admin: AdminGuard,
-) -> Result<Json<Vec<User>>, AppError> {
-    // Force utilisation du guard (utile si besoin du user_id plus tard)
+) -> Result<Response, AppError> {
     let _ = admin.user_id();
-    // Récupération de tous les utilisateurs
+
+    if let Some(cached) = state.user_cache().get().await {
+        return buffered_json(&cached, StatusCode::OK);
+    }
+
     let users = sqlx::query_as!(
         User,
         r#"SELECT id, email, username, is_admin, created_at
-			FROM users
-			ORDER BY is_admin DESC, username COLLATE "und-x-icu" ASC"#
+            FROM users
+            ORDER BY is_admin DESC, username COLLATE "und-x-icu" ASC"#
     )
-    .fetch_all(pool)
+    .fetch_all(state.read_pool())
     .await
     .map_err(AppError::DatabaseError)?;
 
-    Ok(Json(users))
+    let responses: Vec<UserResponse> = users.into_iter().map(UserResponse::from).collect();
+    state.user_cache().set(&responses).await;
+
+    buffered_json(&responses, StatusCode::OK)
 }
 
 #[handler]
 pub async fn create_user(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Json(payload): Json<NewUser>,
-) -> PoemResult<(StatusCode, Json<User>)> {
+) -> PoemResult<(StatusCode, Json<UserResponse>)> {
     let salt = SaltString::generate(&mut OsRng);
     let password_hash = Argon2::default()
         .hash_password(payload.password.as_bytes(), &salt)
@@ -46,59 +54,58 @@ pub async fn create_user(
         .to_string();
 
     let user = sqlx::query_as!(
-		User,
-		"INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id,email, username, is_admin, created_at",
-		payload.name,
-		payload.email,
-		password_hash
-	)
-	.fetch_one(pool)
-	.await
-	.map_err(|e| AppError::DatabaseError(e))?;
+        User,
+        "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id,email, username, is_admin, created_at",
+        payload.name,
+        payload.email,
+        password_hash
+    )
+    .fetch_one(state.write_pool())
+    .await
+    .map_err(|e| AppError::DatabaseError(e))?;
 
-    Ok((StatusCode::CREATED, Json(user)))
+    state.user_cache().invalidate().await;
+
+    Ok((StatusCode::CREATED, Json(UserResponse::from(user))))
 }
 
 #[handler]
 pub async fn get_user(
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(user_id): Path<i32>,
-) -> PoemResult<Json<User>> {
+) -> PoemResult<Json<UserResponse>> {
     let user = sqlx::query_as!(
         User,
         "SELECT id,email, username, is_admin, created_at FROM users WHERE id = $1",
         user_id
     )
-    .fetch_one(pool)
+    .fetch_one(state.read_pool())
     .await
     .map_err(|_| AppError::NotFound)?;
-    Ok(Json(user))
+    Ok(Json(UserResponse::from(user)))
 }
 
 #[handler]
 pub async fn update_user(
     auth: AuthSession,
-    Data(pool): Data<&PgPool>,
+    Data(state): Data<&AppState>,
     Path(user_id): Path<i32>,
     Json(payload): Json<UpdateUser>,
-) -> PoemResult<Json<User>> {
-    // Charger rôle courant (source de vérité DB)
+) -> PoemResult<Json<UserResponse>> {
     let current = sqlx::query!(
         r#"SELECT id, is_admin FROM users WHERE id = $1"#,
         auth.user_id()
     )
-    .fetch_one(pool)
+    .fetch_one(state.read_pool())
     .await
     .map_err(AppError::DatabaseError)?;
 
-    // Ignorer la tentative d’élévation de privilèges par un non-admin
     let admin_value = if current.is_admin {
         payload.admin
     } else {
         None
     };
 
-    // Interdire édition d'un autre user si non-admin
     if !current.is_admin && current.id != user_id {
         return Err(AppError::Forbidden.into());
     }
@@ -115,22 +122,26 @@ pub async fn update_user(
 
     let user = builder
         .build_query_as::<User>()
-        .fetch_one(pool)
+        .fetch_one(state.write_pool())
         .await
         .map_err(AppError::DatabaseError)?;
 
-    Ok(Json(user))
+    state.user_cache().invalidate().await;
+
+    Ok(Json(UserResponse::from(user)))
 }
 
 #[handler]
-pub async fn delete_user(Data(pool): Data<&PgPool>, Path(user_id): Path<i32>) -> PoemResult<()> {
+pub async fn delete_user(Data(state): Data<&AppState>, Path(user_id): Path<i32>) -> PoemResult<()> {
     let result = sqlx::query!("DELETE FROM users WHERE id = $1", user_id)
-        .execute(pool)
+        .execute(state.write_pool())
         .await
         .map_err(|e| AppError::DatabaseError(e))?;
 
     if result.rows_affected() == 0 {
         return Err(AppError::NotFound.into());
     }
+
+    state.user_cache().invalidate().await;
     Ok(())
 }

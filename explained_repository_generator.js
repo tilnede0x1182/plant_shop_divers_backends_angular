@@ -38,7 +38,15 @@ const items = [
   },
   {
     left: '  │  │  └── plant_shop_java_spring_microservices',
-    right: 'Microservices Java avec Spring Boot',
+    right: '',
+  },
+  {
+    left: '  │  │     ├── plant_shop_java_spring_boot_security_microservices',
+    right: 'Microservices Spring Boot Security (JDBC)',
+  },
+  {
+    left: '  │  │     └── plant_shop_java_spring_boot_security_hibernate_microservices',
+    right: 'Microservices Spring Boot Security + Hibernate',
   },
   { left: '  │  ├── Structure_en_application_distribuée', right: '' },
   {
@@ -59,7 +67,15 @@ const items = [
   },
   {
     left: '  │  │  └── plant_shop_java_spring_distribuée',
-    right: 'Architecture distribuée avec Spring Boot',
+    right: '',
+  },
+  {
+    left: '  │  │     ├── plant_shop_java_spring_boot_security_distribuée',
+    right: 'Distribué Spring Boot Security (JDBC)',
+  },
+  {
+    left: '  │  │     └── plant_shop_java_spring_boot_security_hibernate_distribuée',
+    right: 'Distribué Spring Boot Security + Hibernate',
   },
   { left: '  │  └── Structure_monolithique', right: '' },
   { left: '  │     ├── plant_shop_java', right: 'Backend en Java avec HTTP' },

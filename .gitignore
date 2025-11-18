@@ -106,6 +106,7 @@ bin/maven-workspace/
 sqlx-data.json  # cache d'introspection SQLx
 
 # 🗒️ Logs & fichiers temporaires
+**/logs/
 *.log
 *.swp
 *.swo

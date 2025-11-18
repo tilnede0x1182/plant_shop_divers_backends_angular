@@ -25,6 +25,8 @@ public final class User {
         this(0, name, email, passwordHash, isAdmin, null);
     }
 
+    public User() {}
+
     public boolean isAdmin() {
         return isAdmin;
     }

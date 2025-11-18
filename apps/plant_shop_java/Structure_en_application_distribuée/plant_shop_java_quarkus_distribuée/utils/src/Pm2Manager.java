@@ -144,13 +144,14 @@ public final class Pm2Manager {
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
         }
-        if (!processExists(service.name())) {
+        List<String> command = List.of("pm2", "delete", service.name());
+        try {
+            runCommand(command);
+        } catch (RuntimeException e) {
             if (!quiet) {
                 System.out.printf("ℹ️  pm2 ne gérait pas le service %s%n", name);
             }
-            return;
         }
-        runCommand(List.of("pm2", "delete", service.name()));
     }
 
     private static void deleteIfExists(String name) throws Exception {

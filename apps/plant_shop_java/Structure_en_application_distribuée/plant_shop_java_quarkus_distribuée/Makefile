@@ -10,7 +10,7 @@ DB_DIR := $(ROOT)/db
 TEST_DIR := $(ROOT)/test
 LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
-UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
+UTILS_SRC := $(shell find $(UTILS_DIR)/src -name "*.java")
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
 DB_NAME=plant_shop_java_quarkus_distribuee
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
@@ -40,7 +40,12 @@ clean:
 compile-utils:
 	@echo "🔧 Compilation utilitaires"
 	@mkdir -p $(UTILS_DIR)/bin
-	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin $(UTILS_SRC)
+	@javac -proc:full -J-Dorg.jboss.logging.provider=jul -cp "$(UTILS_CP)" -d $(UTILS_DIR)/bin \
+		$(UTILS_SRC) \
+		$(wildcard $(AUTH_DIR)/src/models/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
+		$(wildcard $(ORDER_DIR)/src/models/*.java) \
+		$(wildcard $(USER_DIR)/src/models/*.java)
 compile-auth: compile-utils
 	@echo "🔐 Compilation AuthService"
 	@mkdir -p $(AUTH_DIR)/bin
@@ -58,6 +63,7 @@ compile-catalog: compile-utils
 		$(wildcard $(CATALOG_DIR)/src/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/models/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/repositories/*.java) \
+		$(wildcard $(CATALOG_DIR)/src/security/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/util/*.java) \
 		$(wildcard $(CATALOG_DIR)/src/controllers/*.java)
 compile-order: compile-utils
@@ -67,6 +73,7 @@ compile-order: compile-utils
 		$(wildcard $(ORDER_DIR)/src/*.java) \
 		$(wildcard $(ORDER_DIR)/src/models/*.java) \
 		$(wildcard $(ORDER_DIR)/src/repositories/*.java) \
+		$(wildcard $(ORDER_DIR)/src/security/*.java) \
 		$(wildcard $(ORDER_DIR)/src/util/*.java) \
 		$(wildcard $(ORDER_DIR)/src/controllers/*.java)
 compile-user: compile-utils
@@ -76,6 +83,7 @@ compile-user: compile-utils
 		$(wildcard $(USER_DIR)/src/*.java) \
 		$(wildcard $(USER_DIR)/src/models/*.java) \
 		$(wildcard $(USER_DIR)/src/repositories/*.java) \
+		$(wildcard $(USER_DIR)/src/security/*.java) \
 		$(wildcard $(USER_DIR)/src/util/*.java) \
 		$(wildcard $(USER_DIR)/src/controllers/*.java)
 compile-gateway: compile-utils

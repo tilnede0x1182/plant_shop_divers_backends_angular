@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 /// Gestion des commandes avec SeaORM
 use poem::{
     handler,
@@ -6,22 +8,20 @@ use poem::{
     Result as PoemResult,
 };
 use sea_orm::{
-    ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryOrder, Set,
-    TransactionTrait,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter,
+    Set, TransactionTrait,
 };
 use serde::Deserialize;
 
 use crate::auth::session::AuthSession;
 use crate::entity::{
-    order_items::ActiveModel as ActiveOrderItem,
-    orders::{
-        ActiveModel as ActiveOrder, Column as OrderColumn, Entity as Order, Model as OrderModel,
-    },
-    plants::Entity as Plant,
+    order_items::{ActiveModel as ActiveOrderItem, Entity as OrderItemEntity},
+    orders::{ActiveModel as ActiveOrder, Entity as Order},
+    plants::{Column as PlantColumn, Entity as Plant, Model as PlantModel},
 };
 use crate::errors::AppError;
-use crate::orders::helpers::{build_order_item_response, build_order_summary};
 use crate::orders::models::OrderSummary;
+use crate::orders::query::{summaries_for_user, summary_by_id};
 
 /// DTO pour création de commande (contient id plante + quantité)
 #[derive(Deserialize, Clone)]
@@ -49,11 +49,24 @@ pub async fn create_order(
     Data(db): Data<&DatabaseConnection>,
     auth: AuthSession,
     Json(payload): Json<NewOrderPayload>,
-) -> PoemResult<(StatusCode, Json<OrderModel>)> {
+) -> PoemResult<(StatusCode, Json<OrderSummary>)> {
     let user_id = auth.user_id();
-
+    if payload.items.is_empty() {
+        return Err(AppError::Conflict.into());
+    }
     let txn = db.begin().await.map_err(|_| AppError::Internal)?;
+
     let mut total: i32 = 0;
+    let plant_ids: Vec<i32> = payload.items.iter().map(|i| i.plant_id).collect();
+    let plants = Plant::find()
+        .filter(PlantColumn::Id.is_in(plant_ids.clone()))
+        .all(&txn)
+        .await
+        .map_err(|_| AppError::Internal)?;
+    let mut plant_map: HashMap<i32, PlantModel> = HashMap::new();
+    for plant in plants {
+        plant_map.insert(plant.id, plant);
+    }
 
     let new_order = ActiveOrder {
         user_id: Set(Some(user_id)),
@@ -64,36 +77,34 @@ pub async fn create_order(
         .insert(&txn)
         .await
         .map_err(|_| AppError::Internal)?;
+    let order_id = inserted_order.id;
 
+    let mut order_items = Vec::with_capacity(payload.items.len());
     for item in &payload.items {
-        let plant = Plant::find_by_id(item.plant_id)
-            .one(&txn)
-            .await
-            .map_err(|_| AppError::Internal)?
-            .ok_or(AppError::NotFound)?;
-
+        let plant = plant_map.get(&item.plant_id).ok_or(AppError::NotFound)?;
         if plant.stock < item.quantity {
             txn.rollback().await.map_err(|_| AppError::Internal)?;
             return Err(AppError::Conflict.into());
         }
-
-        let item_price = plant.price;
-        total += item_price * item.quantity;
-
-        let new_item = ActiveOrderItem {
+        let price = plant.price;
+        total += price * item.quantity;
+        order_items.push(ActiveOrderItem {
             order_id: Set(Some(inserted_order.id)),
             plant_id: Set(Some(plant.id)),
             quantity: Set(item.quantity),
-            price: Set(item_price),
+            price: Set(price),
             ..Default::default()
-        };
-        new_item
-            .insert(&txn)
+        });
+    }
+
+    if !order_items.is_empty() {
+        OrderItemEntity::insert_many(order_items)
+            .exec(&txn)
             .await
             .map_err(|_| AppError::Internal)?;
     }
 
-    let mut updated_order = inserted_order.clone().into_active_model();
+    let mut updated_order = inserted_order.into_active_model();
     updated_order.total = Set(total);
     updated_order
         .update(&txn)
@@ -101,7 +112,8 @@ pub async fn create_order(
         .map_err(|_| AppError::Internal)?;
     txn.commit().await.map_err(|_| AppError::Internal)?;
 
-    Ok((StatusCode::CREATED, Json(inserted_order)))
+    let summary = summary_by_id(db, order_id).await?;
+    Ok((StatusCode::CREATED, Json(summary)))
 }
 
 /// Liste des commandes de l’utilisateur courant
@@ -110,46 +122,9 @@ pub async fn list_orders(
     Data(db): Data<&DatabaseConnection>,
     auth: AuthSession,
 ) -> Result<Json<Vec<OrderSummary>>, AppError> {
-    // Auth
     let user_id = auth.user_id();
-
-    use crate::entity::order_items;
-    use sea_orm::prelude::*;
-
-    // Récupération commandes + items
-    let orders_with_items: Vec<(OrderModel, Vec<order_items::Model>)> = Order::find()
-        .filter(OrderColumn::UserId.eq(Some(user_id)))
-        .order_by_desc(OrderColumn::CreatedAt)
-        .find_with_related(order_items::Entity)
-        .all(db)
-        .await
-        .map_err(|_| AppError::Internal)?;
-
-    // Mapping JSON attendu par les tests
-    let mut response = Vec::new();
-
-    for (order, items) in orders_with_items {
-        let mut item_details = Vec::new();
-
-        for item in items {
-            let pid = match item.plant_id {
-                Some(pid) => pid,
-                None => continue,
-            };
-
-            // Ignore l'item si la plante n'existe plus
-            let plant = match Plant::find_by_id(pid).one(db).await {
-                Ok(Some(plant)) => plant,
-                _ => continue,
-            };
-
-            item_details.push(build_order_item_response(item, plant));
-        }
-
-        response.push(build_order_summary(order, item_details));
-    }
-
-    Ok(Json(response))
+    let summaries = summaries_for_user(db, user_id).await?;
+    Ok(Json(summaries))
 }
 
 /// Lecture d’une commande complète (avec items)
@@ -157,14 +132,9 @@ pub async fn list_orders(
 pub async fn get_order(
     Data(db): Data<&DatabaseConnection>,
     Path(order_id): Path<i32>,
-) -> PoemResult<Json<OrderModel>> {
-    let order = Order::find_by_id(order_id)
-        .one(db)
-        .await
-        .map_err(|_| AppError::Internal)?
-        .ok_or(AppError::NotFound)?;
-
-    Ok(Json(order))
+) -> PoemResult<Json<OrderSummary>> {
+    let summary = summary_by_id(db, order_id).await?;
+    Ok(Json(summary))
 }
 
 /// Mise à jour du statut de commande
@@ -173,7 +143,7 @@ pub async fn update_order(
     Data(db): Data<&DatabaseConnection>,
     Path(order_id): Path<i32>,
     Json(payload): Json<UpdateOrderDto>,
-) -> PoemResult<Json<OrderModel>> {
+) -> PoemResult<Json<OrderSummary>> {
     let existing = Order::find_by_id(order_id)
         .one(db)
         .await
@@ -185,8 +155,9 @@ pub async fn update_order(
         active.status = Set(status);
     }
 
-    let updated = active.update(db).await.map_err(|_| AppError::Internal)?;
-    Ok(Json(updated))
+    active.update(db).await.map_err(|_| AppError::Internal)?;
+    let summary = summary_by_id(db, order_id).await?;
+    Ok(Json(summary))
 }
 
 /// Suppression d’une commande

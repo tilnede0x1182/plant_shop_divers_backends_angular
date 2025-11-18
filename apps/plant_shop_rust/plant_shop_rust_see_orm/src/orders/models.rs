@@ -40,6 +40,8 @@ pub struct OrderSummary {
     pub created_at: DateTime<Utc>,
     #[serde(rename = "orderItems")]
     pub items: Vec<OrderItemResponse>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub number: Option<i64>,
 }
 
 impl OrderSummary {
@@ -48,6 +50,7 @@ impl OrderSummary {
         status: String,
         total: i32,
         created_at: DateTime<Utc>,
+        number: Option<i64>,
         items: Vec<OrderItemResponse>,
     ) -> Self {
         Self {
@@ -55,6 +58,7 @@ impl OrderSummary {
             status,
             total,
             created_at,
+            number,
             items,
         }
     }

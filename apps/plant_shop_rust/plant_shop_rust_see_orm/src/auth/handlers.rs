@@ -5,6 +5,7 @@ use crate::errors::AppError;
 use crate::users::models::User as UserDto;
 use argon2::password_hash::{rand_core::OsRng, PasswordHash, SaltString};
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
+use once_cell::sync::Lazy;
 /// Handlers Poem pour auth (login, register, me, logout) — version SeaORM
 use poem::{
     handler,
@@ -14,6 +15,8 @@ use poem::{
     Result as PoemResult,
 };
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
+
+static ARGON2: Lazy<Argon2> = Lazy::new(Argon2::default);
 
 /// Payload de login
 #[derive(serde::Deserialize)]
@@ -45,7 +48,7 @@ pub async fn login(
         .ok_or(AppError::Unauthorized)?;
 
     let parsed = PasswordHash::new(&user.password_hash).map_err(|_| AppError::Internal)?;
-    let ok = Argon2::default()
+    let ok = ARGON2
         .verify_password(payload.password.as_bytes(), &parsed)
         .is_ok();
     if !ok {
@@ -71,7 +74,7 @@ pub async fn register(
     jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserDto>)> {
     let salt = SaltString::generate(&mut OsRng);
-    let hash_str = Argon2::default()
+    let hash_str = ARGON2
         .hash_password(payload.password.as_bytes(), &salt)
         .map_err(|_| AppError::Internal)?
         .to_string();

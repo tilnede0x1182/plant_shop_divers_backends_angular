@@ -37,6 +37,17 @@ CREATE TABLE IF NOT EXISTS order_items (
 );
 
 -- Index et contraintes utiles
-CREATE INDEX idx_orders_user_id ON orders(user_id);
-CREATE INDEX idx_order_items_order_id ON order_items(order_id);
-CREATE INDEX idx_order_items_plant_id ON order_items(plant_id);
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_plant_id ON order_items(plant_id);
+
+DROP VIEW IF EXISTS orders_with_rank;
+CREATE VIEW orders_with_rank AS
+SELECT
+    o.id               AS order_id,
+    o.user_id          AS user_id,
+    o.total            AS total,
+    o.status           AS status,
+    o.created_at       AS created_at,
+    ROW_NUMBER() OVER (PARTITION BY o.user_id ORDER BY o.created_at ASC) AS order_number
+FROM orders o;

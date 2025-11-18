@@ -4,6 +4,7 @@ use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
 use dotenvy::dotenv;
 use lipsum;
+use once_cell::sync::Lazy;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use sea_orm::{ConnectionTrait, Database, DatabaseConnection, DbBackend, Statement};
@@ -219,7 +220,7 @@ async fn create_users(
         let email = format!("admin{}@planteshop.com", index);
         let password = "password".to_string();
         let salt = SaltString::generate(&mut OsRng);
-        let password_hash = Argon2::default()
+        let password_hash = ARGON2
             .hash_password(password.as_bytes(), &salt)
             .map_err(|_| AppError::Internal)?
             .to_string();
@@ -248,7 +249,7 @@ async fn create_users(
         let email = generate_realistic_email(index);
         let password = generate_random_password();
         let salt = SaltString::generate(&mut OsRng);
-        let password_hash = Argon2::default()
+        let password_hash = ARGON2
             .hash_password(password.as_bytes(), &salt)
             .map_err(|_| AppError::Internal)?
             .to_string();
@@ -442,3 +443,4 @@ pub async fn run_seed() -> Result<(), AppError> {
     println!("\n🎉 Seed terminée avec succès !");
     Ok(())
 }
+static ARGON2: Lazy<Argon2> = Lazy::new(Argon2::default);

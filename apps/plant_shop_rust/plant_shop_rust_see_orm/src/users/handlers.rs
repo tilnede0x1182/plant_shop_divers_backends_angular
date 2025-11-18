@@ -1,10 +1,12 @@
 use crate::auth::session::{AdminGuard, AuthSession};
+use crate::config::env_u64;
 use crate::entity::users::{ActiveModel as ActiveUser, Column, Entity as User};
 use crate::errors::AppError;
 use crate::users::helpers::apply_user_updates;
 use crate::users::models::{NewUser, UpdateUser, User as UserDto};
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
+use once_cell::sync::Lazy;
 /// Handlers Poem pour gestion utilisateurs (SeaORM)
 use poem::{
     handler,
@@ -13,8 +15,11 @@ use poem::{
     Result as PoemResult,
 };
 use sea_orm::{
-    ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryOrder, Set,
+    ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, PaginatorTrait, QueryOrder,
+    Set,
 };
+
+static ARGON2: Lazy<Argon2> = Lazy::new(Argon2::default);
 
 #[handler]
 pub async fn list_users(
@@ -23,13 +28,23 @@ pub async fn list_users(
 ) -> Result<Json<Vec<UserDto>>, AppError> {
     let _ = admin.user_id();
     // Récupère tous les utilisateurs (tri alphabétique par username)
-    let users = User::find()
+    let page_size = env_u64("USERS_PAGE_SIZE", 128).max(1);
+    let paginator = User::find()
         .order_by_asc(Column::Username)
-        .all(db)
+        .paginate(db, page_size);
+    let total_pages = paginator
+        .num_pages()
         .await
         .map_err(|_| AppError::Internal)?;
 
-    let mapped: Vec<_> = users.into_iter().map(UserDto::from).collect();
+    let mut mapped = Vec::new();
+    for page in 0..total_pages {
+        let chunk = paginator
+            .fetch_page(page)
+            .await
+            .map_err(|_| AppError::Internal)?;
+        mapped.extend(chunk.into_iter().map(UserDto::from));
+    }
 
     Ok(Json(mapped))
 }
@@ -40,7 +55,7 @@ pub async fn create_user(
     Json(payload): Json<NewUser>,
 ) -> PoemResult<(StatusCode, Json<UserDto>)> {
     let salt = SaltString::generate(&mut OsRng);
-    let password_hash = Argon2::default()
+    let password_hash = ARGON2
         .hash_password(payload.password.as_bytes(), &salt)
         .map_err(|_| AppError::Internal)?
         .to_string();

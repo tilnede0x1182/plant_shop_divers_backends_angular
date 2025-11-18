@@ -9,6 +9,7 @@ use poem::{
 use sea_orm::DatabaseConnection;
 
 mod auth;
+mod config;
 mod db;
 mod entity;
 mod errors;

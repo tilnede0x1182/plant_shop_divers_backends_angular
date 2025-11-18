@@ -51,14 +51,15 @@ public final class GatewayHandler implements HttpHandler {
             return;
         }
 
-        SessionContext session = SessionContext.anonymous();
+        boolean sessionIntrospection = "auth".equals(target.service()) && target.path().startsWith("/api/auth/_session");
+        SessionContext session = sessionIntrospection
+            ? SessionContext.anonymous()
+            : resolveSession(ex);
+
         boolean needAuth = config.requiresAuth(target.service(), ex.getRequestMethod(), target.path());
-        if (!"auth".equals(target.service())) {
-            session = resolveSession(ex);
-            if (needAuth && !session.authenticated()) {
-                sendJson(ex, 401, "{\"error\":\"Authentification requise\"}");
-                return;
-            }
+        if (needAuth && !session.authenticated()) {
+            sendJson(ex, 401, "{\"error\":\"Authentification requise\"}");
+            return;
         }
 
         byte[] body = ex.getRequestBody().readAllBytes();

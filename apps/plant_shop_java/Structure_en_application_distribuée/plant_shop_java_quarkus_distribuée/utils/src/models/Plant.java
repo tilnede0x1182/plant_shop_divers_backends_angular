@@ -11,6 +11,10 @@ public final class Plant {
     public int stock;
     public Timestamp createdAt; // null lors de l’insertion
 
+    public Plant() {
+        // Constructeur par défaut requis pour la désérialisation JSON (JAX-RS / Jackson)
+    }
+
     public Plant(int id, String name, String description, BigDecimal price, int stock, Timestamp createdAt) {
         this.id = id;
         this.name = name;

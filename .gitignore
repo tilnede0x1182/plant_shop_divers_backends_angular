@@ -95,6 +95,10 @@ Cargo.lock
 # ─────────────────────────────────────────────────────────────────────────────
 # Ignorer tous les fichiers JAR dans le projet
 *.jar
+.quarkus/
+*/.quarkus/
+bin/maven-workspace/
+*/bin/maven-workspace/
 
 # 🗄️ SQLx / migrations
 sqlx-data.json  # cache d'introspection SQLx

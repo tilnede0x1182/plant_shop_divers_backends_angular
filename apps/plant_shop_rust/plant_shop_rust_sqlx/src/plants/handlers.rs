@@ -1,5 +1,6 @@
 use super::models::{NewPlant, Plant, UpdatePlant};
-use crate::auth::session::AuthSession;
+use crate::auth::session::AdminGuard;
+use crate::db::updates::PartialUpdate;
 use crate::errors::AppError;
 /// Handlers Poem pour gestion des plantes
 use poem::{
@@ -16,12 +17,9 @@ use sqlx::PgPool;
 #[handler]
 pub async fn create_plant(
     Data(pool): Data<&PgPool>,
-    auth: AuthSession,
+    _admin: AdminGuard,
     Json(payload): Json<NewPlant>,
 ) -> PoemResult<(StatusCode, Json<Plant>), AppError> {
-    if !auth.is_admin() {
-        return Err(AppError::Forbidden.into()); // 403
-    }
     let plant = sqlx::query_as!(
 		Plant,
 		"INSERT INTO plants (name, description, price, stock) VALUES ($1, $2, $3, $4) RETURNING id, name, description, price, stock, created_at",
@@ -71,24 +69,22 @@ pub async fn update_plant(
     Path(plant_id): Path<i32>,
     Json(payload): Json<UpdatePlant>,
 ) -> PoemResult<Json<Plant>> {
-    let plant = sqlx::query_as!(
-        Plant,
-        "UPDATE plants SET
-			name = COALESCE($1, name),
-			description = COALESCE($2, description),
-			price = COALESCE($3, price),
-			stock = COALESCE($4, stock)
-		 WHERE id = $5
-		 RETURNING id, name, description, price, stock, created_at",
-        payload.name,
-        payload.description,
-        payload.price,
-        payload.stock,
-        plant_id
-    )
-    .fetch_one(pool)
-    .await
-    .map_err(|_| AppError::NotFound)?;
+    let mut updater = PartialUpdate::new("plants");
+    updater.set_with_coalesce("name", payload.name.clone());
+    updater.set_with_coalesce("description", payload.description.clone());
+    updater.set_with_coalesce("price", payload.price.clone());
+    updater.set_with_coalesce("stock", payload.stock);
+
+    let mut builder = updater.finish();
+    builder.push(" WHERE id = ");
+    builder.push_bind(plant_id);
+    builder.push(" RETURNING id, name, description, price, stock, created_at");
+
+    let plant = builder
+        .build_query_as::<Plant>()
+        .fetch_one(pool)
+        .await
+        .map_err(|_| AppError::NotFound)?;
     Ok(Json(plant))
 }
 

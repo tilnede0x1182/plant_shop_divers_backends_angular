@@ -1,5 +1,6 @@
 use super::models::{NewUser, UpdateUser, User};
-use crate::auth::session::AuthSession;
+use crate::auth::session::{AdminGuard, AuthSession};
+use crate::db::updates::PartialUpdate;
 use crate::errors::AppError;
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
@@ -15,18 +16,10 @@ use sqlx::PgPool;
 #[handler]
 pub async fn list_users(
     Data(pool): Data<&PgPool>,
-    auth: AuthSession,
+    admin: AdminGuard,
 ) -> Result<Json<Vec<User>>, AppError> {
-    // Vérification du rôle admin
-    let user = sqlx::query!("SELECT id, is_admin FROM users WHERE id = $1", auth.user_id())
-        .fetch_one(pool)
-        .await
-        .map_err(AppError::DatabaseError)?;
-
-    if !user.is_admin {
-        return Err(AppError::Forbidden);
-    }
-
+    // Force utilisation du guard (utile si besoin du user_id plus tard)
+    let _ = admin.user_id();
     // Récupération de tous les utilisateurs
     let users = sqlx::query_as!(
         User,
@@ -110,22 +103,21 @@ pub async fn update_user(
         return Err(AppError::Forbidden.into());
     }
 
-    let user = sqlx::query_as!(
-        User,
-        r#"UPDATE users SET
-			username = COALESCE($1, username),
-			email    = COALESCE($2, email),
-			is_admin = COALESCE($3, is_admin)
-		WHERE id = $4
-		RETURNING id, email, username, is_admin, created_at"#,
-        payload.name,
-        payload.email,
-        admin_value,
-        user_id
-    )
-    .fetch_one(pool)
-    .await
-    .map_err(AppError::DatabaseError)?;
+    let mut updater = PartialUpdate::new("users");
+    updater.set_with_coalesce("username", payload.name.clone());
+    updater.set_with_coalesce("email", payload.email.clone());
+    updater.set_with_coalesce("is_admin", admin_value);
+
+    let mut builder = updater.finish();
+    builder.push(" WHERE id = ");
+    builder.push_bind(user_id);
+    builder.push(" RETURNING id, email, username, is_admin, created_at");
+
+    let user = builder
+        .build_query_as::<User>()
+        .fetch_one(pool)
+        .await
+        .map_err(AppError::DatabaseError)?;
 
     Ok(Json(user))
 }

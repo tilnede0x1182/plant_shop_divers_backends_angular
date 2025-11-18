@@ -2,6 +2,7 @@ use super::jwt::generate_jwt;
 use super::models::{LoginPayload, RegisterPayload, UserAuth};
 use super::session::AuthSession;
 use crate::errors::AppError;
+use crate::users::models::User;
 use poem::web::cookie::{Cookie, CookieJar};
 /// Handlers Poem pour auth (login, register, me, logout)
 use poem::{
@@ -21,11 +22,12 @@ pub async fn login(
     Json(payload): Json<LoginPayload>,
     jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserAuth>)> {
-    let user: UserAuth = sqlx::query_as!(
-		UserAuth,
-		"SELECT id,email, username, password_hash, is_admin, created_at FROM users WHERE email = $1",
-		payload.email
-	)
+    let LoginPayload { email, password } = payload;
+
+    let user: UserAuth = sqlx::query_as::<_, UserAuth>(
+        "SELECT id,email, username, password_hash, is_admin, created_at FROM users WHERE email = $1",
+    )
+    .bind(&email)
     .fetch_optional(pool)
     .await
     .map_err(|e| AppError::DatabaseError(e))?
@@ -33,7 +35,7 @@ pub async fn login(
 
     let parsed_hash = PasswordHash::new(&user.password_hash).map_err(|_| AppError::Internal)?;
     let valide = Argon2::default()
-        .verify_password(payload.password.as_bytes(), &parsed_hash)
+        .verify_password(password.as_bytes(), &parsed_hash)
         .is_ok();
 
     if !valide {
@@ -41,7 +43,8 @@ pub async fn login(
     }
 
     let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-    let jwt = generate_jwt(user.id, user.is_admin, &jwt_secret).map_err(|_| AppError::Internal)?;
+    let jwt = generate_jwt(user.user.id, user.user.is_admin, &jwt_secret)
+        .map_err(|_| AppError::Internal)?;
 
     let mut cookie = Cookie::new("auth_token", jwt.clone());
     cookie.set_path("/api");
@@ -58,19 +61,23 @@ pub async fn register(
     Json(payload): Json<RegisterPayload>,
     jar: &CookieJar,
 ) -> PoemResult<(StatusCode, Json<UserAuth>)> {
+    let RegisterPayload {
+        name,
+        email,
+        password,
+    } = payload;
     let salt = SaltString::generate(&mut OsRng);
     let hash_str = Argon2::default()
-        .hash_password(payload.password.as_bytes(), &salt)
+        .hash_password(password.as_bytes(), &salt)
         .map_err(|_| AppError::Internal)?
         .to_string();
 
     // ✅ Vérifie si l'utilisateur existe déjà
-    if let Some(existing) = sqlx::query_as!(
-        UserAuth,
+    if let Some(existing) = sqlx::query_as::<_, UserAuth>(
         "SELECT id, email, username, password_hash, is_admin, created_at
 		FROM users WHERE email = $1",
-        payload.email
     )
+    .bind(&email)
     .fetch_optional(pool)
     .await
     .map_err(AppError::DatabaseError)?
@@ -79,15 +86,14 @@ pub async fn register(
     }
 
     // 🧩 Création d’un nouvel utilisateur
-    let user: UserAuth = sqlx::query_as!(
-        UserAuth,
+    let user: UserAuth = sqlx::query_as::<_, UserAuth>(
         "INSERT INTO users (email, username, password_hash)
 		 VALUES ($1, $2, $3)
 		 RETURNING id, email, username, password_hash, is_admin, created_at",
-        payload.email,
-        payload.name,
-        hash_str
     )
+    .bind(&email)
+    .bind(&name)
+    .bind(&hash_str)
     .fetch_one(pool)
     .await
     .map_err(|e| {
@@ -102,8 +108,8 @@ pub async fn register(
 
     // 🔐 Génère le cookie JWT
     let jwt_secret = std::env::var("JWT_SECRET").map_err(|_| AppError::Internal)?;
-    let token =
-        generate_jwt(user.id, user.is_admin, &jwt_secret).map_err(|_| AppError::Internal)?;
+    let token = generate_jwt(user.user.id, user.user.is_admin, &jwt_secret)
+        .map_err(|_| AppError::Internal)?;
 
     let mut cookie = Cookie::new("auth_token", token.clone());
     cookie.set_path("/api");
@@ -116,33 +122,19 @@ pub async fn register(
 
 #[handler]
 pub async fn me(
-	Data(pool): Data<&PgPool>,
-	auth: AuthSession,
-) -> PoemResult<(StatusCode, Json<AuthMeResponse>)> {
-	let user = sqlx::query!(
-		"SELECT id, email, username, is_admin FROM users WHERE id = $1",
-		auth.user_id()
-	)
+    Data(pool): Data<&PgPool>,
+    auth: AuthSession,
+) -> PoemResult<(StatusCode, Json<User>)> {
+    let user = sqlx::query_as!(
+        User,
+        "SELECT id, email, username, is_admin, created_at FROM users WHERE id = $1",
+        auth.user_id()
+    )
     .fetch_one(pool)
     .await
     .map_err(AppError::DatabaseError)?;
 
-    let response = AuthMeResponse {
-        id: user.id,
-        email: user.email,
-        name: user.username,
-        admin: user.is_admin,
-    };
-
-    Ok((StatusCode::OK, Json(response)))
-}
-
-#[derive(serde::Serialize)]
-struct AuthMeResponse {
-    id: i32,
-    email: String,
-    name: String,
-    admin: bool,
+    Ok((StatusCode::OK, Json(user)))
 }
 
 #[handler]

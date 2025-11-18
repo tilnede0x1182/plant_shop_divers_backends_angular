@@ -67,8 +67,10 @@ final class GatewayConfig {
         if ("auth".equals(service)) {
             return false;
         }
-        if ("catalog".equals(service) && "GET".equals(method) && path.startsWith("/plants")
-            && !path.startsWith("/admin")) {
+        if ("catalog".equals(service)
+            && "GET".equals(method)
+            && path.startsWith("/api/plants")
+            && !path.startsWith("/api/admin")) {
             return false;
         }
         return true;

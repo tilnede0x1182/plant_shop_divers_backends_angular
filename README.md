@@ -89,30 +89,39 @@ Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends
 ## 📦 Structure du repo
 
 apps/
-  ├─ plant-shop-angular-universal                              → Frontend Angular
-  ├─ plant_shop_nest                                           → Backend NestJS
-  ├─ plant_shop_manifest_ABANDON                               → Backend Manifest (abandonné)
-  ├─ plant_shop_go                                             → Backend Golang avec GORM
-  ├─ plant_shop_cpp                                            → Backend en C++
-  ├─ plant_shop_c                                              → Backend en C
+  ├─ plant-shop-angular-universal                    → Frontend Angular + SSR
+  ├─ plant_shop_nest                                 → Backend NestJS
+  ├─ plant_shop_manifest                             → Backend Manifest
+  ├─ plant_shop_go                                   → Backend Golang avec GORM
+  ├─ plant_shop_cpp                                  → Backend en C++ (Drogon)
+  ├─ plant_shop_c                                    → Backend en C (HTTPServer)
+  ├─ plant_shop_c-sharp                              → Backends .NET (Dapper, EF Core, MVC C#)
+  ├─ plant_shop_node_js                              → Backends Node.js/TypeScript MVC
   ├─ plant_shop_java
-  │  ├── Structure_en_micro_services                           →
-  │  │  └── plant_shop_java_microservices                      → Microservices Java
-  │  └── Structure_monolithique                                →
-  │     ├── plant_shop_java                                    → Backend en Java avec HTTP
-  │     ├── plant_shop_java_active_web                         → Backend en Java avec Java Lite (Active Web)
-  │     ├── plant_shop_javalin                                 → Backend en Java avec Javalin
-  │     ├── plant_shop_java_micronaut                          → Backend en Java avec Micronaut
-  │     ├── plant_shop_java_quarkus                            → Backend en Java avec Quarkus
-  │     ├── plant_shop_java_spring                             →
-  │     │  ├── plant_shop_java_spring_boot_security            → Backend Spring Boot + Security
-  │     │  └── plant_shop_java_spring_boot_security_hibernate  → Backend Spring Boot + Security + Hibernate
-  │     └── plant_shop_play_framework                          → Backend avec Play Framework
-  ├─ plant_shop_python                                         → Backend en Python
-  ├─ plant_shop_haskell                                        → Backend en Haskell
+  │  ├── Structure_en_micro_services                 →
+  │  │  ├── plant_shop_java_microservices            → Microservices Java (HTTP)
+  │  │  ├── plant_shop_java_javalin_microservices    → Microservices Java avec Javalin
+  │  │  ├── plant_shop_java_micronaut_microservices  → Microservices Java avec Micronaut
+  │  │  ├── plant_shop_java_quarkus_microservices    → Microservices Java avec Quarkus
+  │  │  └── plant_shop_java_spring_microservices     → Microservices Java avec Spring Boot
+  │  ├── Structure_en_application_distribuée         →
+  │  │  ├── plant_shop_java_distribuée               → Architecture distribuée (HTTP)
+  │  │  ├── plant_shop_java_javalin_distribuée       → Architecture distribuée avec Javalin
+  │  │  ├── plant_shop_java_micronaut_distribuée     → Architecture distribuée avec Micronaut
+  │  │  ├── plant_shop_java_quarkus_distribuée       → Architecture distribuée avec Quarkus
+  │  │  └── plant_shop_java_spring_distribuée        → Architecture distribuée avec Spring Boot
+  │  └── Structure_monolithique                      →
+  │     ├── plant_shop_java                          → Backend en Java avec HTTP
+  │     ├── plant_shop_java_active_web               → Backend Java ActiveWeb
+  │     ├── plant_shop_javalin                       → Backend Java Javalin
+  │     ├── plant_shop_java_micronaut                → Backend Java Micronaut
+  │     ├── plant_shop_java_quarkus                  → Backend Java Quarkus
+  │     └── plant_shop_java_spring                   → Backend Java Spring Boot
+  ├─ plant_shop_python                               → Backend en Python (Flask)
+  ├─ plant_shop_haskell                              → Backend en Haskell (Stack)
   └─ plant_shop_rust
-     ├─ plant_shop_rust_sqlx                                   → Backend Rust avec SQLx
-     └─ plant_shop_rust_see_orm                                → Backend Rust avec SeaORM
+     ├─ plant_shop_rust_sqlx                         → Backend Rust avec SQLx
+     └─ plant_shop_rust_see_orm                      → Backend Rust avec SeaORM
 
 prisma/                                                        → Modèles + seed
 tests/                                                         → Scripts de test des routes backend

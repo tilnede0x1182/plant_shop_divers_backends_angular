@@ -12,7 +12,7 @@ LIB_CP := $(LIB_DIR)/*
 UTILS_CP := $(LIB_DIR)/*
 UTILS_SRC := $(wildcard $(UTILS_DIR)/src/*.java)
 SERVICE_CP := $(LIB_CP):$(UTILS_DIR)/bin
-DB_NAME=plant_shop_java_micronaut_distribuee
+DB_NAME=plant_shop_java_quarkus_distribuee
 CLASSPATH := bin:$(shell find lib -name "*.jar" 2>/dev/null | tr '\n' ':')
 ## ────────────────
 # Dépendances

@@ -3,7 +3,9 @@ package util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +30,11 @@ public final class Pm2Manager {
         switch (args[0]) {
             case "start-all" -> startAll();
             case "stop-all" -> stopAll();
-            case "stop-all-safe" -> stopAllSafe();
+            case "stop-all-silent" -> stopAllSilent();
+            case "start-all-with-logs" -> {
+                requireArgs(args, 2);
+                startAllWithLogs(Path.of(args[1]));
+            }
             case "start" -> {
                 requireArgs(args, 2);
                 startOne(args[1]);
@@ -49,7 +55,8 @@ public final class Pm2Manager {
             Usage: java util.Pm2Manager <commande>
               start-all       Démarre tous les services (via pm2)
               stop-all        Arrête tous les services gérés par pm2
-              stop-all-safe   Idem mais ignore les erreurs si un service est absent
+              stop-all-silent Idem mais ignore les erreurs si un service est absent
+              start-all-with-logs <dir>  Démarre tous les services avec sortie vers un dossier
               start <nom>     Démarre un service
               stop <nom>      Arrête un service
 
@@ -75,10 +82,19 @@ public final class Pm2Manager {
         }
     }
 
-    private static void stopAllSafe() {
+    private static void startAllWithLogs(Path dir) throws Exception {
+        Path logDir = dir.toAbsolutePath();
+        Files.createDirectories(logDir);
+        System.out.printf("🗂️  Logs dans %s%n", logDir);
+        for (String name : SERVICES.keySet()) {
+            startOne(name, logDir);
+        }
+    }
+
+    private static void stopAllSilent() {
         for (String name : SERVICES.keySet()) {
             try {
-                stopOne(name);
+                stopOne(name, true);
             } catch (Exception e) {
                 System.out.printf("⚠️  Impossible d'arrêter %s proprement (%s)%n", name, e.getMessage());
             }
@@ -86,28 +102,52 @@ public final class Pm2Manager {
     }
 
     private static void startOne(String name) throws Exception {
+        startOne(name, null);
+    }
+
+    private static void startOne(String name, Path logDir) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
         }
         deleteIfExists(service.name());
-        runCommand(List.of(
+        List<String> command = new ArrayList<>(List.of(
             "pm2", "start", "java",
             "--name", service.name(),
-            "--cwd", service.directory().toString(),
-            "--",
-            "-cp", service.classpath(),
-            service.mainClass()
+            "--cwd", service.directory().toString()
         ));
+        Path outLog = null;
+        if (logDir != null) {
+            outLog = logDir.resolve(service.name() + ".log");
+            Path errLog = logDir.resolve(service.name() + ".err.log");
+            command.add("--output");
+            command.add(outLog.toString());
+            command.add("--error");
+            command.add(errLog.toString());
+        }
+        command.add("--");
+        command.add("-cp");
+        command.add(service.classpath());
+        command.add(service.mainClass());
+        runCommand(command);
+        if (outLog != null) {
+            System.out.printf("   ↳ %s → %s%n", service.name(), outLog);
+        }
     }
 
     private static void stopOne(String name) throws Exception {
+        stopOne(name, false);
+    }
+
+    private static void stopOne(String name, boolean quiet) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
         }
         if (!processExists(service.name())) {
-            System.out.printf("ℹ️  pm2 ne gérait pas le service %s%n", name);
+            if (!quiet) {
+                System.out.printf("ℹ️  pm2 ne gérait pas le service %s%n", name);
+            }
             return;
         }
         runCommand(List.of("pm2", "delete", service.name()));

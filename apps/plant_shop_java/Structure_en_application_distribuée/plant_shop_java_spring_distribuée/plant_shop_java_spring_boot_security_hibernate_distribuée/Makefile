@@ -104,26 +104,11 @@ run-user: compile-user
 run-gateway: compile-gateway
 	@java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway
 
-stop-java-services:
-	@for proc in AuthApplication CatalogApplication OrderApplication UserApplication Gateway; do \
-		pkill -f "java .*$$proc" 2>/dev/null || true; \
-	done
-
-run-with-logs: pm2-stop-all-safe stop-java-services
+run-with-logs: pm2-stop-all-silent
 	@TS=$$(date +"%Y%m%d_%H%M%S"); \
 	DIR="$(LOG_DIR)/$$TS"; \
 	mkdir -p "$$DIR"; \
-	echo "🗂️  Logs dans $$DIR"; \
-	nohup java -cp "$(AUTH_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.AuthApplication > "$$DIR/auth-service.log" 2>&1 & \
-	echo "   ↳ AuthService → $$DIR/auth-service.log"; \
-	nohup java -cp "$(CATALOG_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.CatalogApplication > "$$DIR/catalog-service.log" 2>&1 & \
-	echo "   ↳ CatalogService → $$DIR/catalog-service.log"; \
-	nohup java -cp "$(ORDER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.OrderApplication > "$$DIR/order-service.log" 2>&1 & \
-	echo "   ↳ OrderService → $$DIR/order-service.log"; \
-	nohup java -cp "$(USER_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" app.UserApplication > "$$DIR/user-service.log" 2>&1 & \
-	echo "   ↳ UserService → $$DIR/user-service.log"; \
-	nohup java -cp "$(GATEWAY_DIR)/bin:$(UTILS_DIR)/bin:$(LIB_CP)" Gateway > "$$DIR/gateway.log" 2>&1 & \
-	echo "   ↳ Gateway → $$DIR/gateway.log"; \
+	java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all-with-logs "$$DIR"; \
 	echo "🚀 Services démarrés (dossier $$DIR)"
 
 compile-run-with-logs: compile run-with-logs
@@ -131,10 +116,10 @@ compile-run-with-logs: compile run-with-logs
 ## ────────────────
 # PM2 Management
 ## ────────────────
-pm2-start-all: pm2-stop-all-safe
+pm2-start-all:
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager start-all
-pm2-stop-all-safe:
-	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all-safe
+pm2-stop-all-silent:
+	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all-silent
 pm2-stop-all:
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop-all
 pm2-start:
@@ -147,9 +132,7 @@ ifndef SERVICE
 	@$(error Usage: make pm2-stop SERVICE=<nom>)
 endif
 	@java -cp "$(UTILS_DIR)/bin:$(LIB_CP)" util.Pm2Manager stop $(SERVICE)
-run: pm2-start-all
-clean-pm2:
-	@pm2 delete all
+run: pm2-stop-all-silent pm2-start-all
 compile_run: compile run
 build-dev: clean compile
 ## ────────────────

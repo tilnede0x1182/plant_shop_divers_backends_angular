@@ -632,7 +632,8 @@ compile-test-backend-python: compile-backend-python test-backend-python
 
 # Run Angular SPA seul (avec proxy backend actif)
 run-dev-front:
-	npm run dev-front
+# 	npm run dev-front
+	bun run dev-front
 
 # Build Frontend Angular
 build-front:

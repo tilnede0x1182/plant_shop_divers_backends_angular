@@ -19,6 +19,8 @@ data Plant = Plant
   , plantCreatedAt   :: UTCTime
   } deriving (Show, Generic)
 
+-- | Options Aeson pour le parsing JSON des plantes.
+-- Supprime le préfixe \"plant\" et convertit en camelCase.
 plantOptions :: Options
 plantOptions = aesonDrop 5 camelCase
 

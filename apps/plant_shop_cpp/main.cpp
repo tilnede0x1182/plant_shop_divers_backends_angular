@@ -11,6 +11,12 @@
 using namespace drogon;
 
 /** """ Vérifie si le port d’écoute HTTP est disponible avant le lancement du serveur """ */
+/**
+ * Vérifie si le port d écoute HTTP est disponible.
+ *
+ * @param port Numéro du port à tester
+ * @return true si disponible, false sinon
+ */
 bool isPortAvailable(unsigned short port) {
 	// Problème de déctection de faux positif de port occupés.
 	// -> mise en commentaire temporaire
@@ -28,6 +34,11 @@ bool isPortAvailable(unsigned short port) {
 	return true;
 }
 /** """ Vérifie la présence du fichier config.json """ */
+/**
+ * Vérifie la présence du fichier config.json.
+ *
+ * @param path Chemin du fichier de configuration
+ */
 void checkConfigFile(const std::string& path = "config.json") {
 	if (std::filesystem::exists(path)) {
 		std::cout << "✅ Fichier de configuration détecté : "
@@ -132,6 +143,11 @@ void enableCors() {
 }
 
 /** """ Crée le client PostgreSQL """ */
+/**
+ * Crée le client PostgreSQL global.
+ *
+ * @param dbUrl URL de connexion à la base de données
+ */
 void createDbClient(const std::string& dbUrl) {
 	using namespace drogon;
 	app().createDbClient(

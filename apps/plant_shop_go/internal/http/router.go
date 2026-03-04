@@ -13,6 +13,7 @@ import (
 )
 
 // NewRouter construit et retourne le routeur principal.
+// @param db Client GORM de base de données
 func NewRouter(db *gorm.DB) *mux.Router {
 	r := mux.NewRouter()
 	ensureAdminSeed(db) // S'assure que l'admin du test existe

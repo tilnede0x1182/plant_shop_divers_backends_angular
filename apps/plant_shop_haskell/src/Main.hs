@@ -16,6 +16,8 @@ import qualified Controllers.PlantController as Plant
 import qualified Controllers.UserController as User
 import qualified Controllers.OrderController as Order
 
+-- | Point d'entrée principal du serveur.
+-- Charge la configuration, connecte à la base de données et démarre le serveur Scotty.
 main :: IO ()
 main = do
   -- Charger .env local d'abord, puis fallback monorepo
@@ -41,7 +43,9 @@ main = do
     Left _  -> putStrLn $ "❌ Erreur : le port " ++ show port ++ " est déjà utilisé."
     Right _ -> return ()
 
--- Application Scotty
+-- | Application Scotty principale.
+-- Configure les middlewares et monte les routes des contrôleurs.
+-- @param conn Connexion à la base de données PostgreSQL
 app :: Connection -> ScottyM ()
 app conn = do
   middleware logStdoutDev

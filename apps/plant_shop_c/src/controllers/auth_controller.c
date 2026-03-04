@@ -10,6 +10,13 @@
 
 extern PGconn* DB;
 
+/**
+ * Envoie une réponse JSON au client.
+ *
+ * @param c Connexion Mongoose
+ * @param j Objet JSON à envoyer
+ * @param code Code HTTP de réponse
+ */
 static void send_json(struct mg_connection* c, cJSON* j, int code) {
     char* txt = cJSON_PrintUnformatted(j);
     mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", txt);
@@ -17,12 +24,24 @@ static void send_json(struct mg_connection* c, cJSON* j, int code) {
     if (j) cJSON_Delete(j);
 }
 
+/**
+ * Génère un sel aléatoire pour le hachage.
+ *
+ * @param salt Buffer pour stocker le sel
+ * @param len Longueur du sel en octets
+ */
 static void generate_salt(uint8_t *salt, size_t len) {
     for (size_t i = 0; i < len; i++) {
         salt[i] = (uint8_t)rand();
     }
 }
 
+/**
+ * Gère l inscription d un nouvel utilisateur.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void auth_register(struct mg_connection* c, struct mg_http_message *hm) {
     cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
     if (!j) {
@@ -68,6 +87,12 @@ void auth_register(struct mg_connection* c, struct mg_http_message *hm) {
     send_json(c, out, 201);
 }
 
+/**
+ * Gère la connexion d un utilisateur.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
     struct mg_str *cookie_hdr = mg_http_get_header(hm, "Cookie");
     if (cookie_hdr) {
@@ -155,6 +180,12 @@ void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
     cJSON_Delete(o);
 }
 
+/**
+ * Retourne les informations de l utilisateur connecté.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
     char jwt_val_str[32] = {0};
     if (!get_cookie_manual(hm, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str))) {
@@ -186,6 +217,12 @@ void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
     send_json(c, o, 200);
 }
 
+/**
+ * Déconnecte l utilisateur en supprimant le cookie.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void auth_logout(struct mg_connection* c, struct mg_http_message *hm) {
     mg_http_reply(c, 200, "Set-Cookie: plant_shop_c_backend=; Path=/; HttpOnly; Max-Age=0\r\n", "");
 }

@@ -10,7 +10,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// GET /api/plants
+// PublicListPlants retourne la liste de toutes les plantes.
+// @param db Client GORM de base de données
 func PublicListPlants(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var plants []models.Plant
@@ -23,7 +24,8 @@ func PublicListPlants(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// GET /api/plants/{id}
+// PublicGetPlant retourne une plante par son ID.
+// @param db Client GORM de base de données
 func PublicGetPlant(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")

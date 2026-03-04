@@ -9,6 +9,13 @@
 
 extern PGconn* DB;
 
+/**
+ * Envoie une réponse JSON formatée.
+ *
+ * @param c Connexion Mongoose
+ * @param j Objet JSON à envoyer
+ * @param code Code HTTP de réponse
+ */
 static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
     char *text = cJSON_PrintUnformatted(j);
     mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
@@ -16,18 +23,36 @@ static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
     if (j) cJSON_Delete(j);
 }
 
+/**
+ * Vérifie si l utilisateur courant est administrateur.
+ *
+ * @param hm Message HTTP contenant le cookie
+ * @return 1 si admin, 0 sinon
+ */
 static int is_admin(struct mg_http_message* hm) {
     int uid = get_current_user_id(hm);
     if (uid == 0) return 0;
     return user_repo_is_admin(DB, uid);
 }
 
+/**
+ * Génère un sel aléatoire pour le hachage.
+ *
+ * @param salt Buffer pour stocker le sel
+ * @param len Longueur du sel en octets
+ */
 static void generate_salt(uint8_t *salt, size_t len) {
     for (size_t i = 0; i < len; i++) {
         salt[i] = (uint8_t)rand();
     }
 }
 
+/**
+ * Crée un nouvel utilisateur (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP contenant les données
+ */
 void user_create(struct mg_connection* c, struct mg_http_message *hm) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");
@@ -73,6 +98,13 @@ void user_create(struct mg_connection* c, struct mg_http_message *hm) {
     send_json_reply(c, o, 201);
 }
 
+/**
+ * Récupère un utilisateur par son ID.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ * @param id ID de l utilisateur
+ */
 void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
 
     User u;
@@ -91,6 +123,13 @@ void user_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
     (void)hm;
 }
 
+/**
+ * Modifie un utilisateur existant (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP contenant les données
+ * @param id ID de l utilisateur
+ */
 void user_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
     // printf("[USER CONTROLLER] Réception de la requête PATCH /api/users/%d\n", id);
     // printf("[USER CONTROLLER] Corps reçu : \"%.*s\"\n", (int)hm->body.len, hm->body.buf);
@@ -126,6 +165,13 @@ void user_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
     mg_http_reply(c, 200, "", "");
 }
 
+/**
+ * Supprime un utilisateur (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ * @param id ID de l utilisateur
+ */
 void user_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");
@@ -135,6 +181,12 @@ void user_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
     mg_http_reply(c, 200, "", "");
 }
 
+/**
+ * Callback pour ajouter un utilisateur à un tableau JSON.
+ *
+ * @param u Pointeur vers l utilisateur
+ * @param arg Tableau JSON cible
+ */
 static void admin_users_list_cb(User* u, void* arg) {
 	cJSON* arr = (cJSON*)arg;
 	cJSON* j = cJSON_CreateObject();
@@ -145,6 +197,12 @@ static void admin_users_list_cb(User* u, void* arg) {
 	cJSON_AddItemToArray(arr, j);
 }
 
+/**
+ * Liste tous les utilisateurs (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void admin_users_list(struct mg_connection* c, struct mg_http_message *hm) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");

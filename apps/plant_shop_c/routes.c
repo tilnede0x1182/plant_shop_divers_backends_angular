@@ -9,7 +9,12 @@
 #include "src/controllers/order_item_controller.h"
 #include "src/utils/cors.h"
 
-/* -------- trace utilitaire -------- */
+/**
+ * Trace une route pour le debug (désactivé).
+ *
+ * @param hm Message HTTP reçu
+ * @param h Nom du handler
+ */
 static void log_route(struct mg_http_message *hm, const char *h) {
 	// fprintf(stderr, "[ROUTE] %.*s %.*s → %s\n",
 	//         (int) hm->method.len, hm->method.buf,
@@ -17,13 +22,24 @@ static void log_route(struct mg_http_message *hm, const char *h) {
 	//         h);
 }
 
-/* -------- /api/ping -------- */
+/**
+ * Handler pour le endpoint de santé /api/ping.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 static void api_ping(struct mg_connection *c, struct mg_http_message *hm) {
 	log_route(hm, "api_ping");
 	cors_reply(c, 200, "", "");
 }
 
-/* -------- routeur principal -------- */
+/**
+ * Routeur principal de l application.
+ * Dispatch les requêtes vers les controllers appropriés.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void route_request(struct mg_connection *c, struct mg_http_message *hm) {
   if (cors_handle_preflight(c, hm)) return;
 	int id = 0;                               /* buffer id */

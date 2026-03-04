@@ -14,6 +14,8 @@ import (
 	"plant_shop_go/internal/models"
 )
 
+// main est le point d entrée du serveur.
+// Initialise la base de données et démarre le serveur HTTP.
 func main() {
 	_ = godotenv.Load(".env")
 
@@ -51,6 +53,9 @@ func main() {
 	log.Fatal(srv.ListenAndServe())
 }
 
+// getEnv récupère une variable d environnement ou retourne une valeur par défaut.
+// @param key Nom de la variable d environnement
+// @param def Valeur par défaut
 func getEnv(key, def string) string {
 	if v := os.Getenv(key); v != "" {
 		return v

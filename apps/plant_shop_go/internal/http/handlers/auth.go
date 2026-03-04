@@ -17,6 +17,7 @@ import (
 POST /api/auth/register
 Crée un user, renvoie 201 + cookie JWT.
 */
+// Register crée un nouvel utilisateur et retourne un cookie JWT.
 func Register(w http.ResponseWriter, r *http.Request) {
 	type inp struct {
 		Email    string `json:"email"`
@@ -49,6 +50,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 POST /api/auth/login
 Valide credentials, renvoie 201 + cookie JWT.
 */
+// Login vérifie les credentials et retourne un cookie JWT.
 func Login(w http.ResponseWriter, r *http.Request) {
 	type inp struct{ Email, Password string }
 	var in inp
@@ -76,6 +78,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 GET /api/auth/me
 Retourne {id,email,name,admin} du token.
 */
+// Me retourne les informations de l utilisateur connecté.
 func Me(w http.ResponseWriter, r *http.Request) {
 	claims, ok := r.Context().Value("claims").(*security.Claims)
 	if !ok {
@@ -98,6 +101,7 @@ func Me(w http.ResponseWriter, r *http.Request) {
 POST /api/auth/logout
 Efface cookie.
 */
+// Logout supprime le cookie d authentification.
 func Logout(w http.ResponseWriter, r *http.Request) {
 	security.ClearCookie(w)
 	w.WriteHeader(http.StatusNoContent)

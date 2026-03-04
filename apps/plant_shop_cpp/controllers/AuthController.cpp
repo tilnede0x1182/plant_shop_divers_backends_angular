@@ -50,12 +50,25 @@ static std::string hashPassword(const std::string& pwd) {
 }
 
 /** """ Vérifie un mot de passe contre un hash Argon2id """ */
+/**
+ * Vérifie un mot de passe contre un hash Argon2id.
+ *
+ * @param pwd Mot de passe en clair
+ * @param encodedHash Hash encodé Argon2id
+ * @return true si le mot de passe correspond
+ */
 static bool verifyPassword(const std::string& pwd, const std::string& encodedHash) {
 	int result = argon2id_verify(encodedHash.c_str(), pwd.data(), pwd.size());
 	return result == ARGON2_OK;
 }
 
-/** Parsing JSON sûr */
+/**
+ * Parse le corps JSON d une requête HTTP.
+ *
+ * @param req Requête HTTP
+ * @param data Objet JSON de sortie
+ * @return true si parsing réussi
+ */
 static bool parseJson(const HttpRequestPtr& req, Json::Value& data) {
 	try {
 		std::string body(req->body());

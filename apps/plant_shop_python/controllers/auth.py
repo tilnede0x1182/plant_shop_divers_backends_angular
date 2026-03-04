@@ -22,6 +22,11 @@ def _attach_session_cookie(response, token):
     response.set_cookie('backend_python', token, **options)
 
 def init_auth_controller(db_connection):
+    """
+    Initialise le contrôleur d'authentification avec la connexion DB.
+    
+    @param db_connection Connexion à la base de données
+    """
     user_repo = UserRepository(db_connection)
 
     @auth_bp.route('/register', methods=['POST'])

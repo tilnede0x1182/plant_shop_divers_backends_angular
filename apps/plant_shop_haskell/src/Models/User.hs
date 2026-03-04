@@ -39,6 +39,8 @@ data PublicUser = PublicUser
   , publicUserIsAdmin :: Bool
   } deriving (Show, Generic)
 
+-- | Convertit un User en PublicUser (sans le hash du mot de passe).
+-- @param user L'utilisateur à convertir
 toPublicUser :: User -> PublicUser
 toPublicUser user = PublicUser
   { publicUserId      = userId user

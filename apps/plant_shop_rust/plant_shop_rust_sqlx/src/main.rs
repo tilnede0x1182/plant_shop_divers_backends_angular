@@ -35,6 +35,8 @@ use crate::{
     users::handlers::{create_user, delete_user, get_user, list_users, update_user},
 };
 
+/// Point d'entrée principal du serveur.
+/// Configure le runtime Tokio et démarre le serveur async.
 fn main() -> Result<(), std::io::Error> {
     dotenv().ok();
     let worker_threads = num_cpus::get().max(2);
@@ -154,6 +156,9 @@ async fn async_main() -> Result<(), std::io::Error> {
         .await
 }
 
+/// Lit une variable d'environnement u32 avec valeur par défaut.
+/// @param key Nom de la variable
+/// @param default Valeur par défaut
 fn env_u32(key: &str, default: u32) -> u32 {
     env::var(key)
         .ok()
@@ -161,6 +166,9 @@ fn env_u32(key: &str, default: u32) -> u32 {
         .unwrap_or(default)
 }
 
+/// Lit une durée en millisecondes depuis l'environnement.
+/// @param key Nom de la variable
+/// @param default_ms Durée par défaut en ms
 fn duration_from_env_ms(key: &str, default_ms: u64) -> Duration {
     let millis = env::var(key)
         .ok()
@@ -169,6 +177,9 @@ fn duration_from_env_ms(key: &str, default_ms: u64) -> Duration {
     Duration::from_millis(millis)
 }
 
+/// Lit une durée en secondes depuis l'environnement.
+/// @param key Nom de la variable
+/// @param default_secs Durée par défaut en secondes
 fn duration_from_env_secs(key: &str, default_secs: u64) -> Duration {
     let secs = env::var(key)
         .ok()

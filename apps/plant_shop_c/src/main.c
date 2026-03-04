@@ -7,7 +7,14 @@
 PGconn *DB = NULL;
 char JWT_SECRET[128] = {0};
 
-// Mongoose event handler function
+/**
+ * Gestionnaire d événements Mongoose.
+ * Traite les messages HTTP entrants.
+ *
+ * @param c Connexion Mongoose
+ * @param ev Type d événement
+ * @param ev_data Données de l événement
+ */
 static void fn(struct mg_connection *c, int ev, void *ev_data) {
 	if (ev == MG_EV_HTTP_MSG) {
 		struct mg_http_message *hm = (struct mg_http_message *) ev_data;
@@ -15,7 +22,10 @@ static void fn(struct mg_connection *c, int ev, void *ev_data) {
 	}
 }
 
-// Database connection
+/**
+ * Établit la connexion à la base de données PostgreSQL.
+ * Lit les paramètres depuis les variables d environnement.
+ */
 static void db_connect(void) {
     char db_url[128], db_user[64], db_pass[64];
     read_db_env(db_url, db_user, db_pass);
@@ -32,6 +42,12 @@ static void db_connect(void) {
     printf("✅ Connexion à la base de données '%s' réussie\n", db_url);
 }
 
+/**
+ * Point d entrée principal du serveur.
+ * Initialise la connexion DB et démarre le serveur HTTP Mongoose.
+ *
+ * @return Code de sortie (0 = succès)
+ */
 int main(void) {
     struct mg_mgr mgr;
     char port[16];

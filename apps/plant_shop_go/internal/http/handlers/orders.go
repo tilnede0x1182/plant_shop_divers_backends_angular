@@ -13,7 +13,9 @@ import (
 	"plant_shop_go/internal/security"
 )
 
-// firstNonNil est un utilitaire pour gérer les deux formats de plantId.
+/// firstNonNil retourne la première valeur non nil.
+// @param a Première valeur à tester
+// @param b Valeur de secours
 func firstNonNil(a, b any) any {
 	if a != nil {
 		return a
@@ -21,7 +23,8 @@ func firstNonNil(a, b any) any {
 	return b
 }
 
-// parseUintOrZero tente de convertir une string en uint; retourne 0 si échec.
+/// parseUintOrZero convertit une string en uint.
+// @param s Chaîne à convertir
 func parseUintOrZero(s string) uint {
 	if s == "" {
 		return 0
@@ -33,7 +36,8 @@ func parseUintOrZero(s string) uint {
 	return uint(v)
 }
 
-// ListUserOrders liste les commandes de l'utilisateur authentifié.
+// ListUserOrders liste les commandes de l utilisateur authentifié.
+// @param db Client GORM de base de données
 func ListUserOrders(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		raw := r.Context().Value("claims")
@@ -75,7 +79,8 @@ func ListUserOrders(db *gorm.DB) http.HandlerFunc {
 	}
 }
 
-// CreateOrder crée une commande pour l'utilisateur authentifié.
+// CreateOrder crée une commande pour l utilisateur authentifié.
+// @param db Client GORM de base de données
 func CreateOrder(db *gorm.DB) http.HandlerFunc {
 	type itemReq struct {
 		PlantIDAny any `json:"plantId"`

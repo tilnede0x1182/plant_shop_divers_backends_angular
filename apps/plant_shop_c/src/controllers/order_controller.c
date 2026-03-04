@@ -13,6 +13,13 @@ extern PGconn* DB;
 
 static int is_admin(struct mg_http_message* hm);
 
+/**
+ * Modifie le statut d une commande (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP contenant le nouveau statut
+ * @param order_id ID de la commande
+ */
 void patch_order_status(struct mg_connection* c, struct mg_http_message* hm, int order_id) {
 	if (!is_admin(hm)) {
 			mg_http_reply(c, 403, "Content-Type: application/json\r\n", "{\"error\":\"Accès interdit\"}\n");
@@ -38,6 +45,13 @@ void patch_order_status(struct mg_connection* c, struct mg_http_message* hm, int
 	mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{\"status\":\"%s\"}\n", new_status);
 }
 
+/**
+ * Envoie une réponse JSON formatée.
+ *
+ * @param c Connexion Mongoose
+ * @param j Objet JSON à envoyer
+ * @param code Code HTTP de réponse
+ */
 static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
     char *text = cJSON_PrintUnformatted(j);
     mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
@@ -45,11 +59,23 @@ static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
     if (j) cJSON_Delete(j);
 }
 
+/**
+ * Vérifie si l utilisateur courant est administrateur.
+ *
+ * @param hm Message HTTP contenant le cookie
+ * @return 1 si admin, 0 sinon
+ */
 static int is_admin(struct mg_http_message* hm) {
     int uid = get_current_user_id(hm);
     return user_repo_is_admin(DB, uid);
 }
 
+/**
+ * Crée une nouvelle commande.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP contenant les articles
+ */
 void orders_create(struct mg_connection* c, struct mg_http_message *hm) {
     int uid = get_current_user_id(hm);
     if (!uid) {
@@ -77,6 +103,12 @@ void orders_create(struct mg_connection* c, struct mg_http_message *hm) {
     send_json_reply(c, o, 201);
 }
 
+/**
+ * Liste les commandes de l utilisateur.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void orders_list(struct mg_connection* c, struct mg_http_message *hm) {
     int uid = get_current_user_id(hm);
     if (!uid) {
@@ -87,6 +119,13 @@ void orders_list(struct mg_connection* c, struct mg_http_message *hm) {
     send_json_reply(c, arr, 200);
 }
 
+/**
+ * Modifie une commande existante (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP contenant les données
+ * @param id ID de la commande
+ */
 void orders_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
 	// fprintf(stderr, "[DEBUG][PATCH] appel /api/orders/%d\n", id);
 
@@ -112,6 +151,13 @@ void orders_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
 	mg_http_reply(c, 200, "", "");
 }
 
+/**
+ * Supprime une commande (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ * @param id ID de la commande
+ */
 void orders_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");

@@ -55,6 +55,10 @@ export function app(): express.Express {
   return server;
 }
 
+/**
+ * Démarre le serveur Express.
+ * Récupère le port depuis la variable d'environnement PORT ou utilise 4000 par défaut.
+ */
 function run(): void {
   const port = process.env['PORT'] || 4000;
 

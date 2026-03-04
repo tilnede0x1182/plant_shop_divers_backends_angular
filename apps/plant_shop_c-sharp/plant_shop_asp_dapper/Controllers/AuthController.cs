@@ -14,6 +14,9 @@ namespace plant_shop_asp_dapper.Controllers
         private readonly UserRepository _userRepo;
         private readonly JwtUtil _jwtUtil;
 
+        /// <summary>
+        /// Constructeur du contrôleur d'authentification.
+        /// </summary>
         public AuthController(UserRepository userRepo, JwtUtil jwtUtil)
         {
             _userRepo = userRepo;

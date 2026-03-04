@@ -1,6 +1,6 @@
 # 🔬 Multi-Backends Playground – Exploration backend avec Angular
 
-Ce repo Nx est un **laboratoire d’exploration backend** : un frontend Angular SSR unique sert d’interface, et plusieurs backends interchangeables exposent la même API REST et partagent la même base PostgreSQL.
+Ce repo Nx est un **laboratoire d’exploration backend** : un frontend Angular unique sert d’interface, et plusieurs backends interchangeables exposent la même API REST et partagent la même base PostgreSQL.
 Le cas d’usage est simple (PlantShop), mais il permet de comparer des backends sur un terrain concret : modèles, authentification, commandes.
 
 ---
@@ -141,7 +141,6 @@ apps/
      ├─ plant_shop_rust_sqlx                                                 → Backend Rust avec SQLx
      └─ plant_shop_rust_see_orm                                              → Backend Rust avec SeaORM
 
-prisma/                                                                      → Modèles Prisma + seed
+prisma/                                                                      → Modèles Prisma + seed (pour le backend NestJS uniquement)
 tests/                                                                       → Scripts de tests E2E/Routes
-diagnose-ora.js                                                              → Script diagnostic Oracle
 ```

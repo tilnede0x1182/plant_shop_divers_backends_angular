@@ -194,6 +194,9 @@ Dictionary<string, string> LoadEnv(string rootPath)
     return map;
 }
 
+/// <summary>
+/// Résout la chaîne de connexion depuis les variables d'environnement ou la configuration.
+/// </summary>
 string ResolveConnectionString(IConfiguration config, IDictionary<string, string> env)
 {
     if (env.TryGetValue("DATABASE_URL", out var rawUrl) && !string.IsNullOrWhiteSpace(rawUrl))
@@ -204,6 +207,9 @@ string ResolveConnectionString(IConfiguration config, IDictionary<string, string
     return config.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=plant_shop_c-sharp";
 }
 
+// <summary>
+/// Normalise une URL de connexion PostgreSQL en chaîne de connexion standard.
+/// </summary>
 string NormalizeConnectionString(string rawUrl, IDictionary<string, string> env)
 {
     string normalized = rawUrl.Trim();

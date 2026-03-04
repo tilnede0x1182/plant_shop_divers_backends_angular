@@ -18,13 +18,17 @@ import           Middleware.Auth        (requireAdmin)
 import           Models.Plant           (CreatePlantPayload (..), Plant (..))
 import qualified Utils.Response         as R
 
+-- | Requête SQL de base pour sélectionner les plantes.
 plantSelectBase :: Query
 plantSelectBase =
   "SELECT id, name, description, price::int AS price, stock, created_at FROM plants"
 
+-- | Requête SQL pour sélectionner toutes les plantes triées par nom.
 selectPlantRows :: Query
 selectPlantRows = plantSelectBase <> " ORDER BY name ASC"
 
+-- | Routes REST pour la gestion des plantes.
+-- @param conn Connexion à la base de données PostgreSQL
 routes :: Connection -> ScottyM ()
 routes conn = do
   -- GET /api/plants (Public)

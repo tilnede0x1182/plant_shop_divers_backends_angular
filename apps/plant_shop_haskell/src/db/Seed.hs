@@ -72,12 +72,15 @@ updatePlantStock pId quantity = map update
 -- CONSTANTES (identiques à la version Java)
 --------------------------------------------------------------------------------
 
+-- | Nombre d'administrateurs à créer.
 nbAdmins :: Int
 nbAdmins = 3
 
+-- | Nombre d'utilisateurs standard à créer.
 nbUsers :: Int
 nbUsers = 20
 
+-- | Nombre de plantes à créer.
 nbPlants :: Int
 nbPlants = 50
 
@@ -210,7 +213,9 @@ main = do
 
         putStrLn "🎉 Seed terminée !"
 
--- | Crée les administrateurs
+-- | Crée les administrateurs.
+-- @param conn Connexion à la base de données PostgreSQL
+-- @return Tuple ([Int], [T.Text]) contenant les IDs créés et les credentials
 createAdmins :: Connection -> IO ([Int], [T.Text])
 createAdmins conn = do
     results <- forM [1..nbAdmins] $ \i -> do
@@ -227,7 +232,9 @@ createAdmins conn = do
     -- Sépare les IDs des credentials
     return (map fst results, map snd results)
 
--- | Crée les utilisateurs normaux
+-- | Crée les utilisateurs normaux.
+-- @param conn Connexion à la base de données PostgreSQL
+-- @return Tuple ([Int], [T.Text]) contenant les IDs créés et les credentials
 createUsers :: Connection -> IO ([Int], [T.Text])
 createUsers conn = do
     results <- forM [1..nbUsers] $ \_ -> do

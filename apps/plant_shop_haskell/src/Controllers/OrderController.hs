@@ -19,13 +19,16 @@ import           Models.OrderItem
 import           Models.Plant
 import           Middleware.Auth                  (requireAdmin, requireUser)
 
+-- | Requête SQL de base pour sélectionner les commandes.
 orderSelectBase :: Query
 orderSelectBase =
   "SELECT id, user_id, total::int AS total, status, created_at FROM orders"
 
+-- | Requête SQL admin pour lister toutes les commandes.
 orderSelectAdmin :: Query
 orderSelectAdmin = orderSelectBase <> " ORDER BY created_at DESC"
 
+-- | Requête SQL pour sélectionner les commandes d'un utilisateur.
 orderSelectByUser :: Query
 orderSelectByUser = orderSelectBase <> " WHERE user_id = ? ORDER BY created_at DESC"
 
@@ -39,6 +42,8 @@ orderItemsSelectByOrder =
   \JOIN plants p ON p.id = oi.plant_id \
   \WHERE oi.order_id = ?"
 
+-- | Routes REST pour la gestion des commandes.
+-- @param conn Connexion à la base de données PostgreSQL
 routes :: Connection -> ScottyM ()
 routes conn = do
   -- GET /api/orders

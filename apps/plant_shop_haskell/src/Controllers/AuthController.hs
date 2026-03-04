@@ -29,6 +29,8 @@ import           Utils.JWT              (createToken)
 import           Utils.Password         (hashPassword, validatePassword)
 import qualified Utils.Response         as R
 
+-- | Routes REST pour l'authentification.
+-- @param conn Connexion à la base de données PostgreSQL
 routes :: Connection -> ScottyM ()
 routes conn = do
   -- POST /api/auth/register

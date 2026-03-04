@@ -10,6 +10,13 @@
 
 extern PGconn* DB;
 
+/**
+ * Envoie une réponse JSON formatée.
+ *
+ * @param c Connexion Mongoose
+ * @param j Objet JSON à envoyer
+ * @param code Code HTTP de réponse
+ */
 static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
     char *text = cJSON_PrintUnformatted(j);
     mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
@@ -17,11 +24,24 @@ static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
     if (j) cJSON_Delete(j);
 }
 
+/**
+ * Vérifie si l utilisateur courant est administrateur.
+ *
+ * @param hm Message HTTP contenant le cookie
+ * @return 1 si admin, 0 sinon
+ */
 static int is_admin(struct mg_http_message* hm) {
     int uid = get_current_user_id(hm);
     return user_repo_is_admin(DB, uid);
 }
 
+/**
+ * Récupère une plante par son ID.
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ * @param id ID de la plante
+ */
 void plant_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
     Plant p;
     if (!plant_repo_find(DB, id, &p)) {
@@ -38,6 +58,12 @@ void plant_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
     (void)hm;
 }
 
+/**
+ * Callback pour ajouter une plante à un tableau JSON.
+ *
+ * @param p Pointeur vers la plante
+ * @param a Tableau JSON cible
+ */
 static void admin_plants_list_cb(Plant* p, void* a) {
     cJSON *j = cJSON_CreateObject();
     cJSON_AddNumberToObject(j, "id", p->id);
@@ -47,12 +73,24 @@ static void admin_plants_list_cb(Plant* p, void* a) {
     cJSON_AddItemToArray((cJSON*)a, j);
 }
 
+/**
+ * Liste toutes les plantes (accès public).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void plants_list_public(struct mg_connection* c, struct mg_http_message *hm) {
     cJSON *arr = cJSON_CreateArray();
     plant_repo_each(DB, admin_plants_list_cb, arr);
     send_json_reply(c, arr, 200);
 }
 
+/**
+ * Liste toutes les plantes (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ */
 void admin_plants_list(struct mg_connection* c, struct mg_http_message *hm) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");
@@ -63,6 +101,12 @@ void admin_plants_list(struct mg_connection* c, struct mg_http_message *hm) {
     send_json_reply(c, arr, 200);
 }
 
+/**
+ * Ajoute une nouvelle plante (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP contenant les données JSON
+ */
 void admin_plants_add(struct mg_connection* c, struct mg_http_message *hm) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");
@@ -90,6 +134,13 @@ void admin_plants_add(struct mg_connection* c, struct mg_http_message *hm) {
     send_json_reply(c, o, 201);
 }
 
+/**
+ * Modifie une plante existante (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP contenant les données JSON
+ * @param id ID de la plante à modifier
+ */
 void admin_plants_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");
@@ -107,6 +158,13 @@ void admin_plants_patch(struct mg_connection* c, struct mg_http_message *hm, int
     mg_http_reply(c, 200, "", "");
 }
 
+/**
+ * Supprime une plante (accès admin).
+ *
+ * @param c Connexion Mongoose
+ * @param hm Message HTTP reçu
+ * @param id ID de la plante à supprimer
+ */
 void admin_plants_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
     if (!is_admin(hm)) {
         mg_http_reply(c, 403, "", "");

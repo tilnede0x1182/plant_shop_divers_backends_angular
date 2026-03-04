@@ -92,6 +92,12 @@ static string loremSentence() {
 
 /** """ Hash mot de passe sécurisé avec Argon2id
     @plain mot de passe clair """ */
+/**
+ * Hash un mot de passe avec Argon2id.
+ *
+ * @param plain Mot de passe en clair
+ * @return Hash encodé Argon2id
+ */
 static std::string hashPassword(const std::string& plain) {
     const uint32_t t_cost = 2;
     const uint32_t m_cost = 1 << 16;

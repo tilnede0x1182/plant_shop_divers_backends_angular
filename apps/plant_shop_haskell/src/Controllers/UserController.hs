@@ -16,6 +16,8 @@ import qualified Utils.Response         as R
 import           Utils.Password         (hashPassword)
 import           Network.HTTP.Types.Status (status200)
 
+-- | Routes REST pour la gestion des utilisateurs.
+-- @param conn Connexion à la base de données PostgreSQL
 routes :: Connection -> ScottyM ()
 routes conn = do
   -- GET /api/users et /api/admin/users (Admin)

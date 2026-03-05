@@ -77,7 +77,7 @@ void read_server_env(char* port, char* jwt_secret) {
 /**
  * Copie le header Cookie dans un buffer.
  *
- * @param hm Message HTTP
+ * @param http_message Message HTTP
  * @param buf Buffer de destination
  * @param max_len Taille max du buffer
  * @return Longueur copiée, 0 si pas de header
@@ -118,7 +118,7 @@ static int find_cookie_token(char* buf, const char* name, char* out, size_t sz) 
 /**
  * Extrait un cookie par son nom depuis l en-tête Cookie.
  *
- * @param hm Message HTTP contenant les en-têtes
+ * @param http_message Message HTTP contenant les en-têtes
  * @param name Nom du cookie recherché
  * @param out Buffer de sortie pour la valeur
  * @param sz Taille du buffer
@@ -133,7 +133,7 @@ int get_cookie_manual(struct mg_http_message* hm, const char* name, char* out, s
 /**
  * Récupère l ID utilisateur depuis le cookie de session.
  *
- * @param hm Message HTTP contenant les cookies
+ * @param http_message Message HTTP contenant les cookies
  * @return ID utilisateur si connecté, 0 sinon
  */
 int get_current_user_id(struct mg_http_message *hm) {

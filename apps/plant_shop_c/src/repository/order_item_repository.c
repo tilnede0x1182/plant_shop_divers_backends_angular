@@ -30,7 +30,7 @@ static void prepare_add_params(const OrderItem *it, const char **params, char bu
 /**
  * Ajoute un article de commande en base de données.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param it Pointeur vers l OrderItem à insérer
  */
 void order_item_repo_add(PGconn *db, const OrderItem *it) {
@@ -61,8 +61,8 @@ static void fill_order_item(PGresult *res, int row, OrderItem *it) {
  *
  * @param db Connexion PostgreSQL
  * @param order_id ID de la commande
- * @param cb Fonction callback appelée pour chaque article
- * @param ud Données utilisateur passées au callback
+ * @param callback_function Fonction callback appelée pour chaque article
+ * @param callback_data Données utilisateur passées au callback
  */
 void order_item_repo_by_order(PGconn *db, int order_id, void(*cb)(OrderItem*, void*), void *ud) {
 	char buf[12];

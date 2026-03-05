@@ -26,7 +26,7 @@ static void fill_plant(Plant *pl, PGresult *res, int row) {
 /**
  * Ajoute une plante en base de données.
  *
- * @param conn Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param pl Pointeur vers la Plant à insérer
  * @return ID de la plante créée, 0 si erreur
  */
@@ -155,8 +155,8 @@ void plant_repo_del(PGconn *conn, int id) {
  * Parcourt toutes les plantes via callback.
  *
  * @param conn Connexion PostgreSQL
- * @param cb Fonction callback appelée pour chaque plante
- * @param ctx Données utilisateur passées au callback
+ * @param callback_function Fonction callback appelée pour chaque plante
+ * @param callback_context Données utilisateur passées au callback
  */
 void plant_repo_each(PGconn *conn, void (*cb)(Plant*, void*), void *ctx) {
 	PGresult *res = PQexec(conn, "SELECT id,name,description,price,stock FROM plants ORDER BY name ASC");

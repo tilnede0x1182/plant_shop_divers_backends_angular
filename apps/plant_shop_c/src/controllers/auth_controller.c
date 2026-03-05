@@ -40,7 +40,7 @@ static void send_json(struct mg_connection* connection, cJSON* json_obj, int cod
  * Genere un sel aleatoire pour le hachage.
  *
  * @param salt Buffer pour stocker le sel
- * @param len Longueur du sel en octets
+ * @param salt_length Longueur du sel en octets
  */
 static void generate_salt(uint8_t *salt, size_t len) {
 	for (size_t idx = 0; idx < len; idx++) {
@@ -51,15 +51,15 @@ static void generate_salt(uint8_t *salt, size_t len) {
 /**
  * Parse le JSON et extrait les champs requis.
  *
- * @param hm Message HTTP recu
+ * @param http_message Message HTTP recu
  * @param name Pointeur pour le champ name
  * @param email Pointeur pour le champ email
  * @param password Pointeur pour le champ password
  * @return Objet cJSON parse ou NULL si erreur
  */
-static cJSON* parse_register_json(struct mg_http_message *hm, const char **name,
+static cJSON* parse_register_json(struct mg_http_message *http_message, const char **name,
 								   const char **email, const char **password) {
-	cJSON* json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+	cJSON* json = cJSON_ParseWithLength(http_message->body.buf, http_message->body.len);
 	if (!json) return NULL;
 	*name = cJSON_GetStringValue(cJSON_GetObjectItem(json, "name"));
 	*email = cJSON_GetStringValue(cJSON_GetObjectItem(json, "email"));
@@ -106,41 +106,41 @@ static int create_user_from_data(const char* name, const char* email, const char
 /**
  * Gere l inscription d un nouvel utilisateur.
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP recu
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP recu
  */
-void auth_register(struct mg_connection* c, struct mg_http_message *hm) {
+void auth_register(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
 	const char *name, *email, *password;
-	cJSON* json = parse_register_json(hm, &name, &email, &password);
-	if (!json) { mg_http_reply(c, 400, "", "{\"error\":\"Invalid JSON\"}\n"); return; }
-	if (!name || !email || !password) { cJSON_Delete(json); mg_http_reply(c, 400, "", "{\"error\":\"Missing fields\"}\n"); return; }
+	cJSON* json = parse_register_json(http_message, &name, &email, &password);
+	if (!json) { mg_http_reply(mongoose_connection, 400, "", "{\"error\":\"Invalid JSON\"}\n"); return; }
+	if (!name || !email || !password) { cJSON_Delete(json); mg_http_reply(mongoose_connection, 400, "", "{\"error\":\"Missing fields\"}\n"); return; }
 	char encoded_hash[128];
-	if (!hash_password(password, encoded_hash, sizeof(encoded_hash))) { cJSON_Delete(json); mg_http_reply(c, 500, "", "{\"error\":\"Hashing failed\"}\n"); return; }
+	if (!hash_password(password, encoded_hash, sizeof(encoded_hash))) { cJSON_Delete(json); mg_http_reply(mongoose_connection, 500, "", "{\"error\":\"Hashing failed\"}\n"); return; }
 	int user_id = create_user_from_data(name, email, encoded_hash);
 	cJSON_Delete(json);
-	if (user_id == 0) { mg_http_reply(c, 409, "Content-Type: application/json\r\n", "{\"error\":\"Email already exists\"}\n"); return; }
-	cJSON *out = cJSON_CreateObject();
-	cJSON_AddNumberToObject(out, "id", user_id);
-	send_json(c, out, 201);
+	if (user_id == 0) { mg_http_reply(mongoose_connection, 409, "Content-Type: application/json\r\n", "{\"error\":\"Email already exists\"}\n"); return; }
+	cJSON *response_json = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response_json, "id", user_id);
+	send_json(mongoose_connection, response_json, 201);
 }
 
 /**
  * Parse le JSON de login et extrait email/password.
  *
- * @param hm Message HTTP recu
- * @param email_buf Buffer pour l email
- * @param password_buf Buffer pour le password
- * @param buf_size Taille des buffers
+ * @param http_message Message HTTP recu
+ * @param email_buffer Buffer pour l email
+ * @param password_buffer Buffer pour le password
+ * @param buffer_size Taille des buffers
  * @return 1 si succes, 0 si erreur
  */
-static int parse_login_json(struct mg_http_message *hm, char* email_buf,
-							 char* password_buf, size_t buf_size) {
-	cJSON* json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+static int parse_login_json(struct mg_http_message *http_message, char* email_buffer,
+							 char* password_buffer, size_t buffer_size) {
+	cJSON* json = cJSON_ParseWithLength(http_message->body.buf, http_message->body.len);
 	if (!json) return 0;
 	const char* email = cJSON_GetStringValue(cJSON_GetObjectItem(json, "email"));
 	const char* password = cJSON_GetStringValue(cJSON_GetObjectItem(json, "password"));
-	if (email) snprintf(email_buf, buf_size, "%s", email);
-	if (password) snprintf(password_buf, buf_size, "%s", password);
+	if (email) snprintf(email_buffer, buffer_size, "%s", email);
+	if (password) snprintf(password_buffer, buffer_size, "%s", password);
 	cJSON_Delete(json);
 	return (email && password);
 }
@@ -148,105 +148,100 @@ static int parse_login_json(struct mg_http_message *hm, char* email_buf,
 /**
  * Verifie les credentials et retourne l utilisateur.
  *
- * @param email_buf Email de l utilisateur
- * @param password_buf Mot de passe en clair
+ * @param email_buffer Email de l utilisateur
+ * @param password_buffer Mot de passe en clair
  * @param user Pointeur vers la structure User a remplir
  * @return 1 si credentials valides, 0 sinon
  */
-static int verify_credentials(const char* email_buf, const char* password_buf, User* user) {
-	if (!user_repo_find_by_mail(DB, email_buf, user)) return 0;
-	return argon2id_verify(user->password_hash, password_buf, strlen(password_buf)) == ARGON2_OK;
+static int verify_credentials(const char* email_buffer, const char* password_buffer, User* user) {
+	if (!user_repo_find_by_mail(DB, email_buffer, user)) return 0;
+	return argon2id_verify(user->password_hash, password_buffer, strlen(password_buffer)) == ARGON2_OK;
 }
 
 /**
  * Envoie la reponse de login avec le cookie de session.
  *
- * @param c Connexion Mongoose
+ * @param mongoose_connection Connexion Mongoose
  * @param user Pointeur vers l utilisateur connecte
  */
-static void send_login_response(struct mg_connection* c, User* user) {
+static void send_login_response(struct mg_connection* mongoose_connection, User* user) {
 	char cookie[256];
 	snprintf(cookie, sizeof(cookie),
 			 "Set-Cookie: plant_shop_c_backend=%d; Path=/; HttpOnly; Max-Age=86400", user->id);
 	char headers[512];
 	snprintf(headers, sizeof(headers),
 			 "%s\r\nContent-Type: application/json\r\n", cookie);
-	cJSON *out = cJSON_CreateObject();
-	cJSON_AddStringToObject(out, "email", user->email);
-	char* json_str = cJSON_PrintUnformatted(out);
-	mg_http_reply(c, 201, headers, "%s", json_str);
+	cJSON *response_json = cJSON_CreateObject();
+	cJSON_AddStringToObject(response_json, "email", user->email);
+	char* json_str = cJSON_PrintUnformatted(response_json);
+	mg_http_reply(mongoose_connection, 201, headers, "%s", json_str);
 	free(json_str);
-	cJSON_Delete(out);
+	cJSON_Delete(response_json);
 }
 
 /**
  * Gere la connexion d un utilisateur.
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP recu
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP recu
  */
-void auth_login(struct mg_connection* c, struct mg_http_message *hm) {
-	char email_buf[128] = {0}, password_buf[128] = {0};
-	if (!parse_login_json(hm, email_buf, password_buf, sizeof(email_buf))) {
-		mg_http_reply(c, 400, "Content-Type: application/json\r\n",
+void auth_login(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
+	char email_buffer[128] = {0}, password_buffer[128] = {0};
+	if (!parse_login_json(http_message, email_buffer, password_buffer, sizeof(email_buffer))) {
+		mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n",
 					  "{\"error\":\"Invalid JSON or missing fields\"}\n");
 		return;
 	}
 	User user;
-	if (!verify_credentials(email_buf, password_buf, &user)) {
-		mg_http_reply(c, 401, "Content-Type: application/json\r\n",
+	if (!verify_credentials(email_buffer, password_buffer, &user)) {
+		mg_http_reply(mongoose_connection, 401, "Content-Type: application/json\r\n",
 					  "{\"error\":\"Invalid credentials\"}\n");
 		return;
 	}
-	send_login_response(c, &user);
+	send_login_response(mongoose_connection, &user);
 }
 
-/**
- * Retourne les informations de l utilisateur connecte.
- *
- * @param c Connexion Mongoose
- * @param hm Message HTTP recu
- */
 /**
  * Construit la reponse JSON pour auth_me.
  *
- * @param c Connexion Mongoose
+ * @param mongoose_connection Connexion Mongoose
  * @param user Pointeur vers l utilisateur
  */
-static void send_me_response(struct mg_connection* c, User* user) {
-	cJSON* out = cJSON_CreateObject();
-	cJSON_AddStringToObject(out, "email", user->email);
-	cJSON_AddStringToObject(out, "name", user->name);
-	cJSON_AddNumberToObject(out, "id", user->id);
-	cJSON_AddBoolToObject(out, "admin", user->is_admin);
-	send_json(c, out, 200);
+static void send_me_response(struct mg_connection* mongoose_connection, User* user) {
+	cJSON* response_json = cJSON_CreateObject();
+	cJSON_AddStringToObject(response_json, "email", user->email);
+	cJSON_AddStringToObject(response_json, "name", user->name);
+	cJSON_AddNumberToObject(response_json, "id", user->id);
+	cJSON_AddBoolToObject(response_json, "admin", user->is_admin);
+	send_json(mongoose_connection, response_json, 200);
 }
 
 /**
  * Retourne les informations de l utilisateur connecte.
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP recu
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP recu
  */
-void auth_me(struct mg_connection* c, struct mg_http_message *hm) {
-	char jwt_val_str[32] = {0};
-	if (!get_cookie_manual(hm, "plant_shop_c_backend", jwt_val_str, sizeof(jwt_val_str))) {
-		mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"Unauthorized\"}\n");
+void auth_me(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
+	char cookie_value_string[32] = {0};
+	if (!get_cookie_manual(http_message, "plant_shop_c_backend", cookie_value_string, sizeof(cookie_value_string))) {
+		mg_http_reply(mongoose_connection, 401, "Content-Type: application/json\r\n", "{\"error\":\"Unauthorized\"}\n");
 		return;
 	}
-	int user_id = atoi(jwt_val_str);
-	if (user_id == 0) { mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid token\"}\n"); return; }
+	int user_identifier = atoi(cookie_value_string);
+	if (user_identifier == 0) { mg_http_reply(mongoose_connection, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid token\"}\n"); return; }
 	User user;
-	if (!user_repo_find(DB, user_id, &user)) { mg_http_reply(c, 401, "Content-Type: application/json\r\n", "{\"error\":\"User not found\"}\n"); return; }
-	send_me_response(c, &user);
+	if (!user_repo_find(DB, user_identifier, &user)) { mg_http_reply(mongoose_connection, 401, "Content-Type: application/json\r\n", "{\"error\":\"User not found\"}\n"); return; }
+	send_me_response(mongoose_connection, &user);
 }
 
 /**
  * Deconnecte l utilisateur en supprimant le cookie.
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP recu
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP recu
  */
-void auth_logout(struct mg_connection* c, struct mg_http_message *hm) {
-	mg_http_reply(c, 200, "Set-Cookie: plant_shop_c_backend=; Path=/; HttpOnly; Max-Age=0\r\n", "");
+void auth_logout(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
+	(void)http_message;
+	mg_http_reply(mongoose_connection, 200, "Set-Cookie: plant_shop_c_backend=; Path=/; HttpOnly; Max-Age=0\r\n", "");
 }

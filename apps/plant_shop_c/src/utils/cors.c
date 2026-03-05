@@ -45,7 +45,7 @@ static char* format_body(const char *fmt, va_list ap) {
 /**
  * Envoie une réponse HTTP avec les en-têtes CORS.
  *
- * @param conn Connexion mongoose
+ * @param mongoose_connection Connexion mongoose
  * @param status Code HTTP de réponse
  * @param extra_headers En-têtes supplémentaires (peut être NULL)
  * @param fmt Format printf pour le corps de réponse
@@ -78,7 +78,7 @@ void cors_reply_json(struct mg_connection *conn, int status, const char *json) {
  * Gère les requêtes CORS preflight (OPTIONS).
  *
  * @param conn Connexion mongoose
- * @param hm Message HTTP de la requête
+ * @param http_message Message HTTP de la requête
  * @return 1 si requête OPTIONS traitée, 0 sinon
  */
 int cors_handle_preflight(struct mg_connection *conn, struct mg_http_message *hm) {

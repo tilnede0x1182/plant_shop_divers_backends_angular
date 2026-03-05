@@ -17,7 +17,7 @@
    ============================================================================== */
 extern PGconn* DB;
 
-static int is_admin(struct mg_http_message* hm);
+static int is_admin(struct mg_http_message* http_message);
 
 /* ==============================================================================
    Fonctions utilitaires
@@ -25,26 +25,26 @@ static int is_admin(struct mg_http_message* hm);
 /**
  * Envoie une reponse JSON formatee.
  *
- * @param c Connexion Mongoose
+ * @param mongoose_connection Connexion Mongoose
  * @param json_obj Objet JSON a envoyer
  * @param code Code HTTP de reponse
  */
-static void send_json_reply(struct mg_connection* c, cJSON* json_obj, int code) {
-	char *text = cJSON_PrintUnformatted(json_obj);
-	mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
-	free(text);
+static void send_json_reply(struct mg_connection* mongoose_connection, cJSON* json_obj, int http_code) {
+	char *json_text = cJSON_PrintUnformatted(json_obj);
+	mg_http_reply(mongoose_connection, http_code, "Content-Type: application/json\r\n", "%s", json_text);
+	free(json_text);
 	if (json_obj) cJSON_Delete(json_obj);
 }
 
 /**
  * Verifie si l utilisateur courant est administrateur.
  *
- * @param hm Message HTTP contenant le cookie
+ * @param http_message Message HTTP contenant le cookie
  * @return 1 si admin, 0 sinon
  */
-static int is_admin(struct mg_http_message* hm) {
-	int user_id = get_current_user_id(hm);
-	return user_repo_is_admin(DB, user_id);
+static int is_admin(struct mg_http_message* http_message) {
+	int user_identifier = get_current_user_id(http_message);
+	return user_repo_is_admin(DB, user_identifier);
 }
 
 /* ==============================================================================
@@ -53,80 +53,80 @@ static int is_admin(struct mg_http_message* hm) {
 /**
  * Modifie le statut d une commande (acces admin).
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP contenant le nouveau statut
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP contenant le nouveau statut
  * @param order_id ID de la commande
  */
-void patch_order_status(struct mg_connection* c, struct mg_http_message* hm, int order_id) {
-	if (!is_admin(hm)) { mg_http_reply(c, 403, "Content-Type: application/json\r\n", "{\"error\":\"Forbidden\"}\n"); return; }
-	cJSON* json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
-	if (!json) { mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}\n"); return; }
-	const char* new_status = cJSON_GetStringValue(cJSON_GetObjectItem(json, "status"));
-	if (!new_status) { cJSON_Delete(json); mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing status\"}\n"); return; }
-	int ok = order_repo_update_status(DB, order_id, new_status);
-	cJSON_Delete(json);
-	if (!ok) { mg_http_reply(c, 500, "Content-Type: application/json\r\n", "{\"error\":\"Update failed\"}\n"); return; }
-	mg_http_reply(c, 200, "Content-Type: application/json\r\n", "{\"status\":\"%s\"}\n", new_status);
+void patch_order_status(struct mg_connection* mongoose_connection, struct mg_http_message* http_message, int order_identifier) {
+	if (!is_admin(http_message)) { mg_http_reply(mongoose_connection, 403, "Content-Type: application/json\r\n", "{\"error\":\"Forbidden\"}\n"); return; }
+	cJSON* json_data = cJSON_ParseWithLength(http_message->body.buf, http_message->body.len);
+	if (!json_data) { mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}\n"); return; }
+	const char* new_status = cJSON_GetStringValue(cJSON_GetObjectItem(json_data, "status"));
+	if (!new_status) { cJSON_Delete(json_data); mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing status\"}\n"); return; }
+	int update_success = order_repo_update_status(DB, order_identifier, new_status);
+	cJSON_Delete(json_data);
+	if (!update_success) { mg_http_reply(mongoose_connection, 500, "Content-Type: application/json\r\n", "{\"error\":\"Update failed\"}\n"); return; }
+	mg_http_reply(mongoose_connection, 200, "Content-Type: application/json\r\n", "{\"status\":\"%s\"}\n", new_status);
 }
 
 /**
  * Cree une nouvelle commande.
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP contenant les articles
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP contenant les articles
  */
-void orders_create(struct mg_connection* c, struct mg_http_message *hm) {
-	int user_id = get_current_user_id(hm);
-	if (!user_id) { mg_http_reply(c, 401, "", ""); return; }
-	cJSON* json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
-	if (!json) { mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
-	cJSON *items = cJSON_GetObjectItem(json, "items");
-	if (!items || !cJSON_IsArray(items)) { cJSON_Delete(json); mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing items\"}"); return; }
-	int new_order_id = order_repo_add(DB, user_id, items);
-	cJSON_Delete(json);
-	cJSON* response = cJSON_CreateObject();
-	cJSON_AddNumberToObject(response, "id", new_order_id);
-	send_json_reply(c, response, 201);
+void orders_create(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
+	int user_identifier = get_current_user_id(http_message);
+	if (!user_identifier) { mg_http_reply(mongoose_connection, 401, "", ""); return; }
+	cJSON* json_data = cJSON_ParseWithLength(http_message->body.buf, http_message->body.len);
+	if (!json_data) { mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
+	cJSON *items_array = cJSON_GetObjectItem(json_data, "items");
+	if (!items_array || !cJSON_IsArray(items_array)) { cJSON_Delete(json_data); mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n", "{\"error\":\"Missing items\"}"); return; }
+	int new_order_identifier = order_repo_add(DB, user_identifier, items_array);
+	cJSON_Delete(json_data);
+	cJSON* response_json = cJSON_CreateObject();
+	cJSON_AddNumberToObject(response_json, "id", new_order_identifier);
+	send_json_reply(mongoose_connection, response_json, 201);
 }
 
 /**
  * Liste les commandes de l utilisateur.
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP recu
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP recu
  */
-void orders_list(struct mg_connection* c, struct mg_http_message *hm) {
-	int user_id = get_current_user_id(hm);
-	if (!user_id) { mg_http_reply(c, 401, "", ""); return; }
-	cJSON* arr = order_repo_list(DB, user_id);
-	send_json_reply(c, arr, 200);
+void orders_list(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
+	int user_identifier = get_current_user_id(http_message);
+	if (!user_identifier) { mg_http_reply(mongoose_connection, 401, "", ""); return; }
+	cJSON* orders_array = order_repo_list(DB, user_identifier);
+	send_json_reply(mongoose_connection, orders_array, 200);
 }
 
 /**
  * Modifie une commande existante (acces admin).
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP contenant les donnees
- * @param id ID de la commande
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP contenant les donnees
+ * @param order_identifier ID de la commande
  */
-void orders_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
-	if (!is_admin(hm)) { mg_http_reply(c, 403, "", ""); return; }
-	cJSON *json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
-	if (!json) { mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
-	order_repo_patch(DB, id, json);
-	cJSON_Delete(json);
-	mg_http_reply(c, 200, "", "");
+void orders_patch(struct mg_connection* mongoose_connection, struct mg_http_message *http_message, int order_identifier) {
+	if (!is_admin(http_message)) { mg_http_reply(mongoose_connection, 403, "", ""); return; }
+	cJSON *json_data = cJSON_ParseWithLength(http_message->body.buf, http_message->body.len);
+	if (!json_data) { mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
+	order_repo_patch(DB, order_identifier, json_data);
+	cJSON_Delete(json_data);
+	mg_http_reply(mongoose_connection, 200, "", "");
 }
 
 /**
  * Supprime une commande (acces admin).
  *
- * @param c Connexion Mongoose
- * @param hm Message HTTP recu
- * @param id ID de la commande
+ * @param mongoose_connection Connexion Mongoose
+ * @param http_message Message HTTP recu
+ * @param order_identifier Identifiant de la commande
  */
-void orders_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
-	if (!is_admin(hm)) { mg_http_reply(c, 403, "", ""); return; }
-	order_repo_del(DB, id);
-	mg_http_reply(c, 200, "", "");
+void orders_del(struct mg_connection* mongoose_connection, struct mg_http_message *http_message, int order_identifier) {
+	if (!is_admin(http_message)) { mg_http_reply(mongoose_connection, 403, "", ""); return; }
+	order_repo_del(DB, order_identifier);
+	mg_http_reply(mongoose_connection, 200, "", "");
 }

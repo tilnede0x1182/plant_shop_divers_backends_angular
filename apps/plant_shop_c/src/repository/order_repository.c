@@ -15,7 +15,7 @@
 /**
  * Met à jour le statut d une commande.
  *
- * @param conn Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param order_id ID de la commande
  * @param status Nouveau statut (pending, shipped, etc.)
  * @return 1 si succès, 0 sinon
@@ -139,7 +139,7 @@ static cJSON* plant_to_json(Plant *pl) {
  * Callback pour convertir un OrderItem en JSON.
  *
  * @param it Pointeur vers l OrderItem
- * @param ud Contexte
+ * @param callback_data Contexte
  */
 static void _item_to_json(OrderItem *it, void *ud) {
 	struct _item_ctx *ctx = ud;

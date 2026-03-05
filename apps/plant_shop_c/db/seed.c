@@ -107,14 +107,14 @@ static void read_env(char* url, char* user, char* pass) {
 	if (!file) { perror(".env"); exit(1); }
 	char line[256];
 	while (fgets(line, sizeof line, file)) {
-		char* eq = strchr(line, '=');
-		if (!eq) continue;
-		*eq = '\0';
-		char* val = eq + 1;
-		val[strcspn(val, "\r\n")] = '\0';
-		if (!strcmp(line, "DATABASE_URL")) strcpy(url, val);
-		else if (!strcmp(line, "DATABASE_USER")) strcpy(user, val);
-		else if (!strcmp(line, "DATABASE_PASS")) strcpy(pass, val);
+		char* equals_sign = strchr(line, '=');
+		if (!equals_sign) continue;
+		*equals_sign = '\0';
+		char* value_string = equals_sign + 1;
+		value_string[strcspn(value_string, "\r\n")] = '\0';
+		if (!strcmp(line, "DATABASE_URL")) strcpy(url, value_string);
+		else if (!strcmp(line, "DATABASE_USER")) strcpy(user, value_string);
+		else if (!strcmp(line, "DATABASE_PASS")) strcpy(pass, value_string);
 	}
 	fclose(file);
 }
@@ -125,7 +125,7 @@ static void read_env(char* url, char* user, char* pass) {
 /**
  * Exécute une requête SQL sans retour de données.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param query Requête SQL à exécuter
  */
 static void exec(PGconn* db, const char* query) {
@@ -372,10 +372,10 @@ static int add_order_item_if_stock(PGconn* db, int order_id, int* plant_ids,
 	int plant_index = rnd(0, NB_PLANTS - 1);
 	if (plant_stocks[plant_index] <= 0) return 0;
 	int qty = rnd(1, 3);
-	if (qty > plant_stocks[plant_idx]) qty = plant_stocks[plant_idx];
+	if (qty > plant_stocks[plant_index]) qty = plant_stocks[plant_index];
 	insert_order_item(db, order_id, plant_ids[plant_index], qty, plant_prices[plant_index]);
-	plant_stocks[plant_idx] -= qty;
-	return plant_prices[plant_idx] * qty;
+	plant_stocks[plant_index] -= qty;
+	return plant_prices[plant_index] * qty;
 }
 
 /**
@@ -451,7 +451,7 @@ static void run_seed(PGconn* db) {
 
 	FILE* output_file = fopen("users.txt", "w");
 	int user_ids[NB_USERS];
-	seed_all_users(db, txt, user_ids);
+	seed_all_users(db, output_file, user_ids);
 	fclose(output_file);
 
 	int plant_ids[NB_PLANTS], plant_prices[NB_PLANTS], plant_stocks[NB_PLANTS];

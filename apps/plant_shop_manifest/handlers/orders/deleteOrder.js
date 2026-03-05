@@ -1,5 +1,11 @@
 const { findOrderUuidByTrueId, deleteOrderItemsByOrder } = require('../auth/db');
 
+/**
+ * Handler suppression commande
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;

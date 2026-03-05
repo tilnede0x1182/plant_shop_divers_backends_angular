@@ -27,6 +27,20 @@ const NB_ADMINS: u32 = 3;
 const NB_USERS: u32 = 20;
 const NB_PLANTS: u32 = 50;
 const MAX_ORDERS_PER_USER: u32 = 7;
+
+const EMAIL_PRENOMS: &[&str] = &[
+    "charles", "brain", "roy", "zackary", "vincenza", "kyle", "christelle",
+    "berenice", "greg", "bart", "maybelle", "amanda", "gabe", "brooklyn",
+    "tanner", "malachi", "dana", "kaelyn", "nickolas", "kathryne",
+];
+
+const EMAIL_NOMS: &[&str] = &[
+    "lubowitz", "bernier", "tremblay", "gusikowski", "mohr",
+    "cormier", "wolf", "mraz", "blick", "wisoky", "prohaska",
+];
+
+const EMAIL_DOMAINES: &[&str] = &["gmail.com", "yahoo.com", "hotmail.com"];
+
 const PLANT_NAMES: &[&str] = &[
     "Rose",
     "Tulipe",
@@ -148,46 +162,10 @@ async fn reset_db(db: &DatabaseConnection) -> Result<(), AppError> {
 /// @param index Index pour varier les donnees
 /// @return Email genere
 fn generate_realistic_email(index: u32) -> String {
-    let prenoms = [
-        "charles",
-        "brain",
-        "roy",
-        "zackary",
-        "vincenza",
-        "kyle",
-        "christelle",
-        "berenice",
-        "greg",
-        "bart",
-        "maybelle",
-        "amanda",
-        "gabe",
-        "brooklyn",
-        "tanner",
-        "malachi",
-        "dana",
-        "kaelyn",
-        "nickolas",
-        "kathryne",
-    ];
-    let noms = [
-        "lubowitz",
-        "bernier",
-        "tremblay",
-        "gusikowski",
-        "mohr",
-        "cormier",
-        "wolf",
-        "mraz",
-        "blick",
-        "wisoky",
-        "prohaska",
-    ];
-    let domaines = ["gmail.com", "yahoo.com", "hotmail.com"];
-    let prenom = prenoms[(index as usize) % prenoms.len()];
-    let nom = noms[(index as usize) % noms.len()];
+    let prenom = EMAIL_PRENOMS[(index as usize) % EMAIL_PRENOMS.len()];
+    let nom = EMAIL_NOMS[(index as usize) % EMAIL_NOMS.len()];
     let numero = 20 + index;
-    let domaine = domaines[(index as usize) % domaines.len()];
+    let domaine = EMAIL_DOMAINES[(index as usize) % EMAIL_DOMAINES.len()];
     format!("{}_{}{}@{}", prenom, nom, numero, domaine)
 }
 
@@ -436,8 +414,43 @@ async fn create_orders(
     Ok(())
 }
 
+/// Formate une liste de credentials en texte.
+///
+/// @param creds Liste de (email, password)
+/// @return Texte formate
+fn format_credentials(creds: Vec<(String, String)>) -> String {
+    creds.iter()
+        .map(|(email, password)| format!("{} {}
+", email, password))
+        .collect()
+}
+
+/// Ecrit le contenu dans un fichier avec gestion d'erreur.
+///
+/// @param file Fichier ouvert en ecriture
+/// @param content Contenu a ecrire
+fn write_file_content(file: &mut File, content: &str) {
+    if let Err(e) = file.write_all(content.as_bytes()) {
+        println!("[ERREUR][write users.txt] {e}");
+    }
+}
+
 /// Ecrit un fichier users.txt avec les identifiants.
 ///
+/// Cree un fichier et retourne le handle ou None en cas d'erreur.
+///
+/// @param path Chemin du fichier
+/// @return Option<File> ou None
+fn create_file_safe(path: &str) -> Option<File> {
+    match File::create(path) {
+        Ok(f) => Some(f),
+        Err(e) => {
+            println!("[ERREUR][create {path}] {e}");
+            None
+        }
+    }
+}
+
 /// @param admins Credentials des admins (email, password)
 /// @param users Credentials des users (email, password)
 /// @return Ok(()) si reussi, Err(AppError) sinon
@@ -446,24 +459,10 @@ fn write_users_file(
     users: Vec<(String, String)>,
 ) -> Result<(), AppError> {
     println!("✍️  Génération du fichier users.txt...");
-    let mut file = match File::create("users.txt") {
-        Ok(f) => f,
-        Err(e) => {
-            println!("[ERREUR][create users.txt] {e}");
-            return Ok(());
-        }
-    };
-    let mut content = String::from("Administrateurs :\n\n");
-    for (email, password) in admins {
-        content.push_str(&format!("{} {}\n", email, password));
-    }
-    content.push_str("\nUtilisateurs :\n\n");
-    for (email, password) in users {
-        content.push_str(&format!("{} {}\n", email, password));
-    }
-    if let Err(e) = file.write_all(content.as_bytes()) {
-        println!("[ERREUR][write users.txt] {e}");
-    }
+    let Some(mut file) = create_file_safe("users.txt") else { return Ok(()); };
+    let content = format!("Administrateurs :\n\n{}\nUtilisateurs :\n\n{}",
+        format_credentials(admins), format_credentials(users));
+    write_file_content(&mut file, &content);
     println!("✅ Fichier users.txt généré.");
     Ok(())
 }

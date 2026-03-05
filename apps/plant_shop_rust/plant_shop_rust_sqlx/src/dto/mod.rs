@@ -4,7 +4,7 @@
 // Importations
 // ==============================================================================
 
-use crate::plants::models::Plant;
+use crate::plants::models::{Plant, PriceExt};
 use crate::users::models::User;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
@@ -13,6 +13,7 @@ use serde::Serialize;
 // Structures
 // ==============================================================================
 
+#[derive(Serialize, Clone)]
 /// DTO de reponse pour un utilisateur (sans mot de passe).
 pub struct UserResponse {
     pub id: i32,
@@ -44,6 +45,7 @@ impl From<User> for UserResponse {
     }
 }
 
+#[derive(Serialize, Clone)]
 /// DTO de reponse pour une plante.
 pub struct PlantResponse {
     pub id: i32,
@@ -71,6 +73,7 @@ impl From<Plant> for PlantResponse {
     }
 }
 
+#[derive(Serialize, Clone)]
 /// Plante associee a un item de commande (vue simplifiee).
 pub struct OrderItemPlant {
     pub id: i32,
@@ -78,6 +81,7 @@ pub struct OrderItemPlant {
     pub price: i32,
 }
 
+#[derive(Serialize, Clone)]
 /// DTO de reponse pour un item de commande.
 pub struct OrderItemResponse {
     pub id: i32,
@@ -102,6 +106,7 @@ impl OrderItemResponse {
     }
 }
 
+#[derive(Serialize, Clone)]
 /// Resume d'une commande avec ses items.
 pub struct OrderSummary {
     pub id: i32,

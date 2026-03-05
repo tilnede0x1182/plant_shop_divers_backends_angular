@@ -1,6 +1,12 @@
 const bcrypt = require('bcrypt');
 const { pool, findUserByUuid, serializeUser } = require('../auth/db');
 
+/**
+ * Handler création utilisateur
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   try {
     const { email, password, name, admin } = req.body;

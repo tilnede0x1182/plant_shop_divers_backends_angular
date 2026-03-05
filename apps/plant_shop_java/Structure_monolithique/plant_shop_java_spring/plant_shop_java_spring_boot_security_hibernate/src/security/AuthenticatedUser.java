@@ -21,7 +21,10 @@ public class AuthenticatedUser {
         return user;
     }
 
-    /** Définit l'utilisateur authentifié. */
+    /**
+	 * Définit l'utilisateur authentifié.
+	 * @param user User Utilisateur authentifié
+	 */
     public void setUser(User user) {
         this.user = user;
     }

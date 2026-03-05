@@ -23,7 +23,7 @@ export class OrderItemsService {
 
   /**
     Récupère un orderItem par id
-    @id identifiant numérique orderItem
+    @param id Identifiant numérique orderItem
   */
   async one(id: number) {
     const orderItem = await this.prisma.orderItem.findUnique({
@@ -42,10 +42,10 @@ export class OrderItemsService {
   }
 
   /**
-    recherche un item spécifique appartenant à un utilisateur
-    @id identifiant de l’item
-    @user utilisateur connecté
-  */
+    Recherche un item spécifique appartenant à un utilisateur
+    @param id Identifiant de l’item
+    @param user Utilisateur connecté
+   */
   async findOneForUser(id: number, user: User) {
     const orderItem = await this.prisma.orderItem.findFirst({
       where: { id, order: { userId: user.id } },
@@ -58,9 +58,9 @@ export class OrderItemsService {
 
   /**
     Création orderItem (corrigé pour prendre user et dto)
-    @dto données orderItem
-    @user utilisateur connecté
-  */
+    @param dto Données orderItem
+    @param user Utilisateur connecté
+   */
   async create(dto: CreateOrderItemDto, user: User) {
     // Approche 2 : Utiliser uniquement l'approche relationnelle
     return this.prisma.orderItem.create({
@@ -78,8 +78,8 @@ export class OrderItemsService {
 
   /**
     Mise à jour orderItem (quantité)
-    @id identifiant orderItem
-    @dto données mises à jour
+    @param id Identifiant orderItem
+   * @param dto Données mises à jour
   */
   async update(id: number, dto: UpdateOrderItemDto) {
     return this.prisma.orderItem.update({ where: { id }, data: dto });
@@ -87,7 +87,7 @@ export class OrderItemsService {
 
   /**
     Suppression orderItem
-    @id identifiant orderItem
+   * @param id Identifiant orderItem
   */
   async remove(id: number) {
     return this.prisma.orderItem.delete({ where: { id } });

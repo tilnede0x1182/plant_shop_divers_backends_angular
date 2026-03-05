@@ -7,6 +7,7 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
+use async_trait::async_trait;
 
 use crate::dto::{PlantResponse, UserResponse};
 
@@ -14,18 +15,20 @@ use crate::dto::{PlantResponse, UserResponse};
 // Traits
 // ==============================================================================
 
+#[async_trait]
 /// Trait pour le cache utilisateurs.
 pub trait UserCache: Send + Sync {
-    fn get(&self) -> impl std::future::Future<Output = Option<Vec<UserResponse>>> + Send;
-    fn set(&self, data: &[UserResponse]) -> impl std::future::Future<Output = ()> + Send;
-    fn invalidate(&self) -> impl std::future::Future<Output = ()> + Send;
+    async fn get(&self) -> Option<Vec<UserResponse>>;
+    async fn set(&self, data: &[UserResponse]);
+    async fn invalidate(&self);
 }
 
+#[async_trait]
 /// Trait pour le cache plantes.
 pub trait PlantCache: Send + Sync {
-    fn get(&self) -> impl std::future::Future<Output = Option<Vec<PlantResponse>>> + Send;
-    fn set(&self, data: &[PlantResponse]) -> impl std::future::Future<Output = ()> + Send;
-    fn invalidate(&self) -> impl std::future::Future<Output = ()> + Send;
+    async fn get(&self) -> Option<Vec<PlantResponse>>;
+    async fn set(&self, data: &[PlantResponse]);
+    async fn invalidate(&self);
 }
 
 /// Cache partage pour les utilisateurs.
@@ -76,6 +79,7 @@ impl<T: Clone + Send + Sync> TimedVecCache<T> {
 // Implementations
 // ==============================================================================
 
+#[async_trait]
 impl UserCache for TimedVecCache<UserResponse> {
     /// Implementation du cache utilisateurs.
     async fn get(&self) -> Option<Vec<UserResponse>> { self.get_data().await }
@@ -83,6 +87,7 @@ impl UserCache for TimedVecCache<UserResponse> {
     async fn invalidate(&self) { self.clear().await }
 }
 
+#[async_trait]
 impl PlantCache for TimedVecCache<PlantResponse> {
     /// Implementation du cache plantes.
     async fn get(&self) -> Option<Vec<PlantResponse>> { self.get_data().await }

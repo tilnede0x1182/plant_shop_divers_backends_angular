@@ -4,6 +4,12 @@ const {
   serializePlant
 } = require('../auth/db');
 
+/**
+ * Handler mise à jour plante (admin)
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;

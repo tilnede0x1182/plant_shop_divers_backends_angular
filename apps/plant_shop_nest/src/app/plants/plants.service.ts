@@ -29,9 +29,9 @@ export class PlantsService {
   }
 
   /**
-    Retourne une plante par id
-    @id identifiant numérique plante
-  */
+   * Retourne une plante par id
+   * @param id Identifiant numérique plante
+   */
   async one(id: number) {
     const plant = await this.prisma.plant.findUnique({ where: { id } });
     if (!plant) throw new NotFoundException('Plante non trouvée');
@@ -39,33 +39,34 @@ export class PlantsService {
   }
 
   /**
-    findOne (alias de one)
-  */
+   * findOne (alias de one)
+   * @param id Identifiant numérique plante
+   */
   async findOne(id: number) {
     return this.one(id);
   }
 
   /**
-    Création plante
-    @dto données plante
-  */
+   * Création plante
+   * @param dto Données plante
+   */
   async create(dto: CreatePlantDto) {
     return this.prisma.plant.create({ data: dto });
   }
 
   /**
-    Mise à jour plante
-    @id identifiant plante
-    @dto données mises à jour
-  */
+   * Mise à jour plante
+   * @param id Identifiant plante
+   * @param dto Données mises à jour
+   */
   async update(id: number, dto: UpdatePlantDto) {
     return this.prisma.plant.update({ where: { id }, data: dto });
   }
 
   /**
-    Suppression plante
-    @id identifiant plante
-  */
+   * Suppression plante
+   * @param id Identifiant plante
+   */
   async remove(id: number) {
     return this.prisma.plant.delete({ where: { id } });
   }

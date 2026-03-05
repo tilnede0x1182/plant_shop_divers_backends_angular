@@ -1,6 +1,12 @@
 const { generateUserToken } = require('./tokenUtils');
 const { findUserByEmail } = require('./db');
 
+/**
+ * Handler inscription utilisateur
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   try {
     const { email, password, name } = req.body;

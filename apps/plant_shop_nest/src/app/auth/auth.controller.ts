@@ -18,6 +18,10 @@ export class AuthController {
 
   /**
    * Inscription : crée un compte
+   * @param email Email de l'utilisateur
+   * @param password Mot de passe
+   * @param name Nom de l'utilisateur
+   * @return Utilisateur créé
    */
   @Post('register')
   async register(
@@ -29,7 +33,13 @@ export class AuthController {
     return { user };
   }
 
-  /** Connexion */
+  /**
+   * Connexion d'un utilisateur
+   * @param email Email de l'utilisateur
+   * @param password Mot de passe
+   * @param res Réponse Express pour le cookie
+   * @return Utilisateur connecté
+   */
   @Post('login')
   async login(
     @Body('email') email: string,
@@ -49,14 +59,21 @@ export class AuthController {
     return { user };
   }
 
-  /** Déconnexion */
+  /**
+   * Déconnexion de l'utilisateur
+   * @param res Réponse Express pour supprimer le cookie
+   * @return Message de confirmation
+   */
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('jwt');
     return { message: 'Déconnecté' };
   }
 
-  /** Récupérer l’utilisateur courant */
+  /** Récupérer l’utilisateur courant
+   * @param req Requête contenant le token JWT
+   * @return Données de l'utilisateur connecté
+   */
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async me(@Req() req: Request) {

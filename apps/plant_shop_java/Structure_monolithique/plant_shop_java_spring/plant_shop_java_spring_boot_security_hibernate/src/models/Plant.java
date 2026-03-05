@@ -35,7 +35,15 @@ public class Plant {
     @Column(name = "created_at", updatable = false)
     public Timestamp createdAt;
 
-    /** Constructeur complet. */
+    /**
+	 * Constructeur complet.
+	 * @param id int Identifiant de la plante
+	 * @param name String Nom de la plante
+	 * @param description String Description
+	 * @param price BigDecimal Prix
+	 * @param stock int Stock disponible
+	 * @param createdAt Timestamp Date de création
+	 */
     public Plant(int id, String name, String description, BigDecimal price, int stock, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -44,7 +52,13 @@ public class Plant {
         this.stock = stock;
         this.createdAt = createdAt;
     }
-    /** Constructeur pour création. */
+    /**
+	 * Constructeur pour création.
+	 * @param name String Nom de la plante
+	 * @param description String Description
+	 * @param price BigDecimal Prix
+	 * @param stock int Stock disponible
+	 */
     public Plant(String name, String description, BigDecimal price, int stock) {
         this(0, name, description, price, stock, null);
     }

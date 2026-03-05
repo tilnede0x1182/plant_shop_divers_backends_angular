@@ -1,6 +1,12 @@
 const { pool, findUserIdByTrueId, findUserByTrueId, findAdminById, serializeUser } = require('../auth/db');
 const { getUserFromToken, generateUserToken } = require('../auth/tokenUtils');
 
+/**
+ * Handler mise à jour utilisateur
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   try {
     const { id } = req.params;

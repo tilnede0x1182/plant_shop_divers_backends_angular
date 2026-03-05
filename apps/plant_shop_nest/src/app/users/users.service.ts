@@ -29,9 +29,9 @@ export class UsersService {
   }
 
   /**
-    Récupère un utilisateur par id
-    @id identifiant numérique utilisateur
-  */
+   * Récupère un utilisateur par id
+   * @param id Identifiant numérique utilisateur
+   */
   async one(id: number) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('Utilisateur non trouvé');
@@ -39,17 +39,18 @@ export class UsersService {
   }
 
   /**
-    findOne (alias de one)
-  */
+   * findOne (alias de one)
+   * @param id Identifiant numérique utilisateur
+   */
   async findOne(id: number) {
     return this.one(id);
   }
 
   /**
-    Création utilisateur
-    @dto données utilisateur (CreateUserDto)
-    @return utilisateur créé
-  */
+   * Création utilisateur
+   * @param dto Données utilisateur (CreateUserDto)
+   * @return Utilisateur créé
+   */
   async create(dto: CreateUserDto) {
     const user = await this.prisma.user.create({ data: dto });
     return user;
@@ -66,20 +67,20 @@ export class UsersService {
   }
 
   /**
-    Suppression utilisateur
-    @id identifiant utilisateur
-    @return utilisateur supprimé
-  */
+   * Suppression utilisateur
+   * @param id Identifiant utilisateur
+   * @return Utilisateur supprimé
+   */
   async remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
   }
 
   /**
-    Mise à jour utilisateur
-    @id identifiant utilisateur
-    @dto données à mettre à jour (UpdateUserDto)
-    @return utilisateur mis à jour
-  */
+   * Mise à jour utilisateur
+   * @param id Identifiant utilisateur
+   * @param dto Données à mettre à jour (UpdateUserDto)
+   * @return Utilisateur mis à jour
+   */
   async update(id: number, dto: UpdateUserDto) {
     const user = await this.prisma.user.update({ where: { id }, data: dto });
     return user;

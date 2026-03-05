@@ -1,6 +1,11 @@
 const { listOrdersForUser, listOrderItemsWithPlants, serializeOrder, findUserIdByTrueId } = require('../auth/db');
 const { getUserFromToken } = require('../auth/tokenUtils');
 
+/**
+ * Handler liste commandes utilisateur
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ */
 module.exports = async (req, res) => {
   try {
     const currentUser = getUserFromToken(req);

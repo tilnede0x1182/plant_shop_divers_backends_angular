@@ -3,6 +3,11 @@ const {
   serializePlant
 } = require('../auth/db');
 
+/**
+ * Handler récupération plante par id (public)
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ */
 module.exports = async (req, res) => {
   try {
     const { id } = req.params;

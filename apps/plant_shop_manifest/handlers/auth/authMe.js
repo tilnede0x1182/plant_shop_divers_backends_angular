@@ -1,6 +1,12 @@
 const { findUserByTrueId, serializeUser } = require('./db');
 const { getUserFromToken } = require('./tokenUtils');
 
+/**
+ * Handler récupération utilisateur courant
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   try {
     console.log('👤 /auth/me called');

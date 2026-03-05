@@ -101,7 +101,10 @@ public class AuthController {
         return ResponseEntity.ok(ApiMapper.toUser(user));
     }
 
-    /** Authentifie un utilisateur dans le contexte Spring Security. */
+    /**
+	 * Authentifie un utilisateur dans le contexte Spring Security.
+	 * @param user User Utilisateur à authentifier
+	 */
     private void authenticateUser(User user) {
         List<SimpleGrantedAuthority> authorities = user.isAdmin
             ? List.of(

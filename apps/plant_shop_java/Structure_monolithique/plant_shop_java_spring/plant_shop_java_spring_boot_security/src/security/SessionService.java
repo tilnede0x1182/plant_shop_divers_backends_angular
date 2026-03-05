@@ -19,7 +19,10 @@ public class SessionService {
         return sessions;
     }
 
-    /** Supprime une session. */
+    /**
+	 * Supprime une session.
+	 * @param sessionId String Identifiant de session à supprimer
+	 */
     public void removeSession(String sessionId) {
         if (sessionId != null) {
             sessions.remove(sessionId);

@@ -7,6 +7,11 @@ const {
 } = require('../auth/db');
 const { getUserFromToken } = require('../auth/tokenUtils');
 
+/**
+ * Handler récupération commande par id
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ */
 module.exports = async (req, res) => {
   try {
     const { id } = req.params;

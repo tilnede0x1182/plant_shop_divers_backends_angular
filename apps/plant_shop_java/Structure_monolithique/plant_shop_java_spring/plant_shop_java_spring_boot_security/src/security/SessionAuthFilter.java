@@ -56,7 +56,11 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /** Extrait le cookie de session de la requête. */
+    /**
+	 * Extrait le cookie de session de la requête.
+	 * @param request HttpServletRequest Requête HTTP
+	 * @return Cookie de session ou null
+	 */
     private Cookie extractSessionCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
@@ -70,7 +74,10 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
-    /** Traite la session et authentifie l'utilisateur si valide. */
+    /**
+	 * Traite la session et authentifie l'utilisateur si valide.
+	 * @param sessionId String Identifiant de session
+	 */
     private void handleSession(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             return;

@@ -34,7 +34,14 @@ public class Order {
     @Column(name = "created_at", updatable = false)
     public Timestamp createdAt;
 
-    /** Constructeur complet. */
+    /**
+	 * Constructeur complet.
+	 * @param id int Identifiant de la commande
+	 * @param userId int Identifiant de l'utilisateur
+	 * @param total BigDecimal Total de la commande
+	 * @param status String Statut de la commande
+	 * @param createdAt Timestamp Date de création
+	 */
     public Order(int id, int userId, BigDecimal total, String status, Timestamp createdAt) {
         this.id = id;
         this.userId = userId;
@@ -42,7 +49,12 @@ public class Order {
         this.status = status;
         this.createdAt = createdAt;
     }
-    /** Constructeur pour création. */
+    /**
+	 * Constructeur pour création.
+	 * @param userId int Identifiant utilisateur
+	 * @param total BigDecimal Total
+	 * @param status String Statut
+	 */
     public Order(int userId, BigDecimal total, String status) {
         this(0, userId, total, status, null);
     }

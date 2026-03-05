@@ -31,7 +31,14 @@ public class OrderItem {
     @Column(nullable = false)
     public BigDecimal price;
 
-    /** Constructeur complet. */
+    /**
+	 * Constructeur complet.
+	 * @param id int Identifiant de l'article
+	 * @param orderId int Identifiant de la commande
+	 * @param plantId int Identifiant de la plante
+	 * @param quantity int Quantité
+	 * @param price BigDecimal Prix unitaire
+	 */
     public OrderItem(int id, int orderId, int plantId, int quantity, BigDecimal price) {
         this.id = id;
         this.orderId = orderId;
@@ -39,7 +46,13 @@ public class OrderItem {
         this.quantity = quantity;
         this.price = price;
     }
-    /** Constructeur pour création. */
+    /**
+	 * Constructeur pour création.
+	 * @param orderId int Identifiant de la commande
+	 * @param plantId int Identifiant de la plante
+	 * @param quantity int Quantité
+	 * @param price BigDecimal Prix unitaire
+	 */
     public OrderItem(int orderId, int plantId, int quantity, BigDecimal price) {
         this(0, orderId, plantId, quantity, price);
     }

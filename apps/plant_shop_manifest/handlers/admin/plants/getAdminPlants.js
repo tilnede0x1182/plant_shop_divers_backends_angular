@@ -3,6 +3,11 @@ const {
   serializePlant
 } = require('../../auth/db');
 
+/**
+ * Handler liste plantes (admin)
+ * @param {Object} _req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ */
 module.exports = async (_req, res) => {
   try {
     const plants = await listPlantsWithTrueId();

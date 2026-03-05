@@ -13,6 +13,9 @@ import java.util.List;
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     /** Trouve les articles d'une commande. */
     List<OrderItem> findByOrderId(int orderId);
-    /** Supprime les articles d'une commande. */
+    /**
+	 * Supprime les articles d'une commande.
+	 * @param orderId int Identifiant de la commande
+	 */
     void deleteByOrderId(int orderId);
 }

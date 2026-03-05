@@ -9,6 +9,12 @@ const {
 } = require('../auth/db');
 const { getUserFromToken } = require('../auth/tokenUtils');
 
+/**
+ * Handler création de commande
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   try {
     const currentUser = getUserFromToken(req);

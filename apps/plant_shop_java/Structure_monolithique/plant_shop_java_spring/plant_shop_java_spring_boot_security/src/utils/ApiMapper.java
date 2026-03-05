@@ -84,12 +84,20 @@ public final class ApiMapper {
         return mapped;
     }
 
-    /** Convertit un BigDecimal en Double. */
+    /**
+	 * Convertit un BigDecimal en Double.
+	 * @param value BigDecimal Valeur à convertir
+	 * @return Double ou null
+	 */
     private static Double toDecimal(BigDecimal value) {
         return value == null ? null : value.doubleValue();
     }
 
-    /** Convertit un Timestamp en chaîne ISO 8601. */
+    /**
+	 * Convertit un Timestamp en chaîne ISO 8601.
+	 * @param timestamp Timestamp Valeur à convertir
+	 * @return Chaîne ISO 8601 ou null
+	 */
     private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }

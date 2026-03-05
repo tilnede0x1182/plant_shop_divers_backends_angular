@@ -1,5 +1,10 @@
 const { listUsersWithTrueId, serializeUser } = require('../auth/db');
 
+/**
+ * Handler liste tous les utilisateurs
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ */
 module.exports = async (req, res) => {
   try {
     const users = await listUsersWithTrueId();

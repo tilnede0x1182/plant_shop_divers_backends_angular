@@ -2,6 +2,11 @@ const bcrypt = require('bcrypt');
 const { generateUserToken, ADMIN_ENTITY_SLUG, USER_ENTITY_SLUG } = require('./tokenUtils');
 const { findUserByEmail, findAdminByEmail } = require('./db');
 
+/**
+ * Recherche un compte (user ou admin) par email
+ * @param {string} email Email du compte
+ * @return {Object|null} Compte trouvé ou null
+ */
 async function findAccountByEmail(email) {
   const admin = await findAdminByEmail(email);
   if (admin) {
@@ -24,6 +29,12 @@ async function findAccountByEmail(email) {
   return null;
 }
 
+/**
+ * Handler de connexion
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   console.log('🔥 authLogin handler called!', req.body);
   try {

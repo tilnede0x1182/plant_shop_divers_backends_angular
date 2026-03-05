@@ -14,7 +14,7 @@ use crate::state::AppState;
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
 use poem::http::StatusCode;
-use poem:{
+use poem::{
     handler,
     web::{Data, Json, Path},
     Response, Result as PoemResult,

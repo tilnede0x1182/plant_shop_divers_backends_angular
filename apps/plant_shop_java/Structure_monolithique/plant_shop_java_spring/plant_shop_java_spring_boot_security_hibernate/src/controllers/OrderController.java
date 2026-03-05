@@ -114,8 +114,11 @@ public class OrderController {
     }
 
     /**
-     * Logique privée pour créer un item et mettre à jour le stock.
-     */
+	 * Logique privée pour créer un item et mettre à jour le stock.
+	 * @param order Order Commande parente
+	 * @param itemMap Map<String,Integer> Données de l'item (plantId, quantity)
+	 * @return BigDecimal Sous-total de l'item
+	 */
     private BigDecimal createOrderItem(Order order, Map<String, Integer> itemMap) throws Exception {
         int plantId = itemMap.get("plantId");
         int quantity = itemMap.get("quantity");

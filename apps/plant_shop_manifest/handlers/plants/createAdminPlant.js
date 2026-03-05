@@ -3,6 +3,12 @@ const {
   serializePlant
 } = require('../auth/db');
 
+/**
+ * Handler création plante (admin)
+ * @param {Object} req Requête HTTP
+ * @param {Object} res Réponse HTTP
+ * @param {Object} manifest Instance Manifest
+ */
 module.exports = async (req, res, manifest) => {
   try {
     const { name, price, stock, description } = req.body;

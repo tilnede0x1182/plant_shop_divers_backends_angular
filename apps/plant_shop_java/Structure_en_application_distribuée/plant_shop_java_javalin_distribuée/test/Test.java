@@ -421,7 +421,10 @@ private static String rand(int n) {
 		System.out.printf("   ↳ Utilisateur connecté: %s (%s)%n", mail, nom);
 	}
 
-	/* -------- Main -------- */
+	/**
+	 * Point d'entrée des tests.
+	 * @param args String[] Arguments CLI
+	 */
 	public static void main(String[] args) {
 		try {
 			if (!waitForServer("127.0.0.1", Integer.parseInt(PORT), 5000)) {

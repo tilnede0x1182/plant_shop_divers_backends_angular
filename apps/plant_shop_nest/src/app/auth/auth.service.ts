@@ -12,6 +12,13 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
+  /**
+   * Inscription d'un nouvel utilisateur
+   * @param email Email de l'utilisateur
+   * @param password Mot de passe en clair
+   * @param name Nom de l'utilisateur (optionnel)
+   * @return Utilisateur créé (sans mot de passe)
+   */
   async register(email: string, password: string, name?: string) {
     const hashed = await bcrypt.hash(password, 10);
     const utilisateur = await this.usersService.create({
@@ -28,6 +35,12 @@ export class AuthService {
     };
   }
 
+  /**
+   * Valide les credentials d'un utilisateur
+   * @param email Email de l'utilisateur
+   * @param password Mot de passe en clair
+   * @return Utilisateur validé
+   */
   async validateUser(email: string, password: string) {
     const utilisateur = await this.usersService.findByEmail(email);
     if (!utilisateur) throw new UnauthorizedException('Utilisateur inexistant');
@@ -39,6 +52,8 @@ export class AuthService {
 
   /**
    * Générer un JWT pour un utilisateur
+   * @param utilisateur Utilisateur à authentifier
+   * @return Token JWT et données utilisateur
    */
   async login(utilisateur: any) {
     const payload = {

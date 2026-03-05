@@ -86,9 +86,10 @@ public class InstallCoursier {
 		}
 
     /**
-     * Copie immédiatement le jar depuis le cache vers ./lib si absent.
-     * Affiche une ligne une fois la copie réalisée ou si le fichier est ignoré.
-     */
+	 * Copie immédiatement le jar depuis le cache vers ./lib si absent.
+	 * Affiche une ligne une fois la copie réalisée ou si le fichier est ignoré.
+	 * @param jarPath String Chemin vers le fichier JAR
+	 */
     private static void copyJarImmediate(String jarPath) {
         try {
             Path src = Paths.get(jarPath);
@@ -128,9 +129,10 @@ public class InstallCoursier {
     }
 
 		/**
-		 * Supprime les .jar obsolètes dans ./lib qui ne sont plus référencés
-		 * par les dépendances actives ni leurs dépendances transitives.
-		 */
+	 * Supprime les .jar obsolètes dans ./lib qui ne sont plus référencés
+	 * par les dépendances actives ni leurs dépendances transitives.
+	 * @param deps List<String> Liste des dépendances actives
+	 */
 		private static void cleanObsoleteJars(List<String> deps) throws IOException, InterruptedException {
 				boolean didDelete = false;
 

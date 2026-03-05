@@ -17,6 +17,12 @@ const ADMIN_ENTITY_SLUG =
   process.env.MANIFEST_ADMIN_SLUG ||
   'admins';
 
+/**
+ * Génère un token JWT pour un utilisateur
+ * @param {Object} user Utilisateur à authentifier
+ * @param {Object} options Options de génération (entitySlug)
+ * @return {string} Token JWT signé
+ */
 function generateUserToken(user, options = {}) {
   if (!user?.email) {
     throw new Error('Cannot generate token without user email');
@@ -41,6 +47,11 @@ function generateUserToken(user, options = {}) {
   );
 }
 
+/**
+ * Extrait l'utilisateur depuis le token JWT de la requête
+ * @param {Object} req Requête HTTP
+ * @return {Object|null} Utilisateur décodé ou null
+ */
 function getUserFromToken(req) {
   try {
     let token = null;

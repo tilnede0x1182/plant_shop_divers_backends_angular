@@ -27,7 +27,7 @@ export class OrdersService {
 
   /**
    * Liste les commandes de l’utilisateur courant uniquement
-   * @userId identifiant de l’utilisateur connecté
+   * @param userId Identifiant de l’utilisateur connecté
    */
   async findAll(userId: number) {
     return this.prisma.order.findMany({
@@ -39,7 +39,7 @@ export class OrdersService {
 
   /**
     Détail commande par id (inclut items/plantes)
-    @id identifiant numérique commande
+    @param id Identifiant numérique commande
   */
   async one(id: number) {
     const order = await this.prisma.order.findUnique({
@@ -52,9 +52,9 @@ export class OrdersService {
 
   /**
     retourne une commande pour un utilisateur donné
-    @id identifiant de la commande
-    @user utilisateur connecté
-  */
+    @param id Identifiant de la commande
+    @param user Utilisateur connecté
+   */
   async findOneForUser(id: number, user: User) {
     if (user.admin) {
       return this.one(id); // admin → accès global
@@ -70,8 +70,8 @@ export class OrdersService {
 
   /**
     Création commande (corrigé pour attendre aussi l’utilisateur)
-    @dto données commande
-    @user utilisateur connecté
+    @param dto Données commande
+    @param user Utilisateur connecté
   */
   async create(dto: CreateOrderDto, user: User) {
     let total = 0;
@@ -108,8 +108,8 @@ export class OrdersService {
 
   /**
     Mise à jour commande (statut, items)
-    @id identifiant commande
-    @dto données mises à jour
+    @param id Identifiant commande
+   * @param dto Données mises à jour
   */
   async update(id: number, dto: UpdateOrderDto) {
     return this.prisma.order.update({ where: { id }, data: dto });
@@ -117,7 +117,7 @@ export class OrdersService {
 
   /**
     Suppression commande (+ suppression items liés)
-    @id identifiant commande
+   * @param id Identifiant commande
   */
   async remove(id: number) {
     await this.prisma.orderItem.deleteMany({ where: { orderId: id } });

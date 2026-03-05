@@ -23,14 +23,14 @@ public final class User {
     public String password;
 
     /**
-     * Constructeur complet (lecture DB).
-     * @param id ID de l'utilisateur
-     * @param name Nom
-     * @param email Email
-     * @param passwordHash Hash du mot de passe
-     * @param isAdmin Statut admin
-     * @param createdAt Date de création
-     */
+	 * Constructeur complet (lecture DB).
+	 * @param id int Identifiant utilisateur
+	 * @param name String Nom
+	 * @param email String Email
+	 * @param passwordHash String Hash du mot de passe
+	 * @param isAdmin boolean Statut admin
+	 * @param createdAt Timestamp Date de création
+	 */
     public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -40,12 +40,12 @@ public final class User {
         this.createdAt = createdAt;
     }
     /**
-     * Constructeur pour insertion.
-     * @param name Nom
-     * @param email Email
-     * @param passwordHash Hash du mot de passe
-     * @param isAdmin Statut admin
-     */
+	 * Constructeur pour insertion.
+	 * @param name String Nom
+	 * @param email String Email
+	 * @param passwordHash String Hash du mot de passe
+	 * @param isAdmin boolean Statut admin
+	 */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }

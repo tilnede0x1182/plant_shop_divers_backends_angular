@@ -26,8 +26,8 @@ char JWT_SECRET[128] = {0};
  */
 static void http_event_handler(struct mg_connection *connection, int event, void *event_data) {
 	if (event == MG_EV_HTTP_MSG) {
-		struct mg_http_message *http_msg = (struct mg_http_message *) event_data;
-		route_request(connection, http_msg);
+		struct mg_http_message *http_message = (struct mg_http_message *) event_data;
+		route_request(connection, http_message);
 	}
 }
 
@@ -39,10 +39,10 @@ static void database_connect(void) {
     char database_url[128], database_user[64], database_password[64];
     read_db_env(database_url, database_user, database_password);
 
-    char conn_str[512];
-    snprintf(conn_str, sizeof(conn_str), "dbname=%s user=%s password=%s", database_url, database_user, database_password);
+    char connection_string[512];
+    snprintf(connection_string, sizeof(connection_string), "dbname=%s user=%s password=%s", database_url, database_user, database_password);
 
-    DATABASE_CONNECTION = PQconnectdb(conn_str);
+    DATABASE_CONNECTION = PQconnectdb(connection_string);
     if (PQstatus(DATABASE_CONNECTION) != CONNECTION_OK) {
         printf("❌ Connexion à la base de données échouée : %s\n", PQerrorMessage(DATABASE_CONNECTION));
         PQfinish(DATABASE_CONNECTION);
@@ -58,11 +58,11 @@ static void database_connect(void) {
  * @param url URL d écoute
  * @return 1 si succès, 0 si erreur
  */
-static int start_server(struct mg_mgr* mgr, const char* url) {
-	mg_mgr_init(mgr);
-	printf("🚀 Démarrage de Mongoose v%s sur %s\n", MG_VERSION, url);
-	struct mg_connection *listen_conn = mg_http_listen(mgr, url, http_event_handler, NULL);
-	if (listen_conn == NULL) { printf("❌ Port occupé ou droits insuffisants : %s\n", url); return 0; }
+static int start_server(struct mg_mgr* mongoose_manager, const char* listen_url) {
+	mg_mgr_init(mongoose_manager);
+	printf("🚀 Démarrage de Mongoose v%s sur %s\n", MG_VERSION, listen_url);
+	struct mg_connection *listen_connection = mg_http_listen(mongoose_manager, listen_url, http_event_handler, NULL);
+	if (listen_connection == NULL) { printf("❌ Port occupé ou droits insuffisants : %s\n", listen_url); return 0; }
 	return 1;
 }
 

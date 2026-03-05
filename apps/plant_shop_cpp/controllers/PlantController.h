@@ -4,15 +4,8 @@
 
 
 /**
- * """ Contrôleur des plantes
- *  Routes gérées :
- *   - GET  /api/plants
- *   - GET  /api/plants/{id}
- *   - GET  /api/admin/plants
- *   - POST /api/admin/plants
- *   - PATCH /api/admin/plants/{id}
- *   - DELETE /api/admin/plants/{id}
- * """
+ * Controleur des plantes.
+ * Routes gerees : GET/POST/PATCH/DELETE /api/plants et /api/admin/plants.
  */
 class PlantController : public drogon::HttpController<PlantController> {
 public:
@@ -25,29 +18,62 @@ public:
 		ADD_METHOD_TO(PlantController::deletePlant, "/api/admin/plants/{1}", drogon::Delete);
 	METHOD_LIST_END
 
-	/** """ Liste publique des plantes """ */
+	/**
+ * Liste publique des plantes.
+ *
+ * @param req Requete HTTP
+ * @param callback Callback de reponse
+ */
 	void listPlants(const drogon::HttpRequestPtr& req,
 	                std::function<void(const drogon::HttpResponsePtr&)>&& callback);
 
-	/** """ Détails d'une plante """ */
+	/**
+ * Details d une plante.
+ *
+ * @param req Requete HTTP
+ * @param callback Callback de reponse
+ * @param plantId Identifiant de la plante
+ */
 	void getPlant(const drogon::HttpRequestPtr& req,
 	              std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	              int plantId);
 
-	/** """ Liste complète (admin) """ */
+	/**
+ * Liste complete (admin).
+ *
+ * @param req Requete HTTP
+ * @param callback Callback de reponse
+ */
 	void listAdminPlants(const drogon::HttpRequestPtr& req,
 	                     std::function<void(const drogon::HttpResponsePtr&)>&& callback);
 
-	/** """ Création d'une plante (admin) """ */
+	/**
+ * Creation d une plante (admin).
+ *
+ * @param req Requete HTTP avec JSON
+ * @param callback Callback de reponse
+ */
 	void createPlant(const drogon::HttpRequestPtr& req,
 	                 std::function<void(const drogon::HttpResponsePtr&)>&& callback);
 
-	/** """ Mise à jour d'une plante (admin) """ */
+	/**
+ * Mise a jour d une plante (admin).
+ *
+ * @param req Requete HTTP avec JSON
+ * @param callback Callback de reponse
+ * @param plantId Identifiant de la plante
+ */
 	void updatePlant(const drogon::HttpRequestPtr& req,
 	                 std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	                 int plantId);
 
-	/** """ Suppression d'une plante (admin) """ */
+	/**
+ * Suppression d une plante (admin).
+ *
+ * @param req Requete HTTP
+ * @param callback Callback de reponse
+ * @param plantId Identifiant de la plante
+ */
 	void deletePlant(const drogon::HttpRequestPtr& req,
 	                 std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	                 int plantId);

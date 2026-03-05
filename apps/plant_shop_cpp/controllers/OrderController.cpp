@@ -22,8 +22,13 @@ using drogon_model::plant_shop_cpp::OrderItems;
 using drogon_model::plant_shop_cpp::Users;
 using drogon_model::plant_shop_cpp::Plants;
 
-/* ---- Utilitaires internes ---- */
-
+/**
+ * Cree une reponse HTTP d erreur JSON.
+ *
+ * @param code Code HTTP
+ * @param msg Message d erreur
+ * @return Reponse HTTP formatee
+ */
 static HttpResponsePtr err(int code, const std::string& msg) {
 	Json::Value j;
 	j["error"] = msg;
@@ -32,7 +37,12 @@ static HttpResponsePtr err(int code, const std::string& msg) {
 	return r;
 }
 
-/* ---- Créer une commande ---- */
+/**
+ * Cree une nouvelle commande.
+ *
+ * @param req Requete HTTP avec JSON (items)
+ * @param cb Callback de reponse
+ */
 void OrderController::createOrder(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb) {
 	try {
@@ -108,7 +118,12 @@ void OrderController::createOrder(const HttpRequestPtr& req,
 	} catch (...) { cb(err(500,"Erreur serveur")); }
 }
 
-/* ---- Liste commandes utilisateur ---- */
+/**
+ * Liste les commandes de l utilisateur connecte.
+ *
+ * @param req Requete HTTP avec cookie auth
+ * @param cb Callback de reponse
+ */
 void OrderController::listOrders(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb) {
 	try {
@@ -189,7 +204,13 @@ void OrderController::listOrders(const HttpRequestPtr& req,
 	}
 }
 
-/* ---- Lecture commande ---- */
+/**
+ * Recupere une commande par ID.
+ *
+ * @param req Requete HTTP (non utilise)
+ * @param cb Callback de reponse
+ * @param id Identifiant de la commande
+ */
 void OrderController::getOrder(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	try {
 		Mapper<Orders> mo(app().getDbClient());
@@ -200,7 +221,13 @@ void OrderController::getOrder(const HttpRequestPtr&, std::function<void(const H
 	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
-/* ---- MAJ commande ---- */
+/**
+ * Met a jour le statut d une commande.
+ *
+ * @param req Requete HTTP avec JSON (status)
+ * @param cb Callback de reponse
+ * @param id Identifiant de la commande
+ */
 void OrderController::updateOrder(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	auto j = req->getJsonObject();
@@ -216,7 +243,13 @@ void OrderController::updateOrder(const HttpRequestPtr& req,
 	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
-/* ---- Suppression commande ---- */
+/**
+ * Supprime une commande.
+ *
+ * @param req Requete HTTP (non utilise)
+ * @param cb Callback de reponse
+ * @param id Identifiant de la commande
+ */
 void OrderController::deleteOrder(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	try {
 		Mapper<Orders> mo(app().getDbClient());
@@ -227,7 +260,13 @@ void OrderController::deleteOrder(const HttpRequestPtr&, std::function<void(cons
 	} catch (...) { cb(err(404,"Commande introuvable")); }
 }
 
-/* ---- CRUD items ---- */
+/**
+ * Recupere un article de commande par ID.
+ *
+ * @param req Requete HTTP (non utilise)
+ * @param cb Callback de reponse
+ * @param id Identifiant de l article
+ */
 void OrderController::getOrderItem(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	try {
 		Mapper<OrderItems> mi(app().getDbClient());
@@ -236,6 +275,13 @@ void OrderController::getOrderItem(const HttpRequestPtr&, std::function<void(con
 	} catch (...) { cb(err(404,"Item introuvable")); }
 }
 
+/**
+ * Met a jour la quantite d un article.
+ *
+ * @param req Requete HTTP avec JSON (quantity)
+ * @param cb Callback de reponse
+ * @param id Identifiant de l article
+ */
 void OrderController::updateOrderItem(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	auto j = req->getJsonObject();
@@ -251,6 +297,13 @@ void OrderController::updateOrderItem(const HttpRequestPtr& req,
 	} catch (...) { cb(err(404,"Item introuvable")); }
 }
 
+/**
+ * Supprime un article de commande.
+ *
+ * @param req Requete HTTP (non utilise)
+ * @param cb Callback de reponse
+ * @param id Identifiant de l article
+ */
 void OrderController::deleteOrderItem(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	try {
 		Mapper<OrderItems> mi(app().getDbClient());

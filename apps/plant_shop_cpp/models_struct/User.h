@@ -22,7 +22,9 @@ struct User {
 	bool is_admin{};
 	std::string created_at;
 
-	/** """ Sérialisation JSON conforme au test JS (sans mot de passe) """ */
+	/**
+ * Sérialisation JSON conforme au test JS (sans mot de passe).
+ */
 	Json::Value toJson() const {
 		Json::Value j;
 		j["id"] = id;
@@ -33,7 +35,9 @@ struct User {
 		return j;
 	}
 
-	/** """ Conversion depuis JSON pour création / mise à jour """ */
+	/**
+ * Conversion depuis JSON pour création / mise à jour.
+ */
 	static User fromJson(const Json::Value& data) {
 		User u;
 		if (data.isMember("id")) u.id = data["id"].asInt();

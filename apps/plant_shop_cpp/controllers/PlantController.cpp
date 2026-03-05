@@ -14,7 +14,13 @@ using namespace drogon::orm;
 using drogon_model::plant_shop_cpp::Plants;
 using drogon_model::plant_shop_cpp::Users;
 
-/* ---- Helpers ---- */
+/**
+ * Cree une reponse HTTP d erreur JSON.
+ *
+ * @param code Code HTTP
+ * @param msg Message d erreur
+ * @return Reponse HTTP formatee
+ */
 static HttpResponsePtr err(int code, const std::string &msg) {
 	Json::Value j;
 	j["error"] = msg;
@@ -23,7 +29,12 @@ static HttpResponsePtr err(int code, const std::string &msg) {
 	return r;
 }
 
-/* ---- Liste publique ---- */
+/**
+ * Liste toutes les plantes (route publique).
+ *
+ * @param req Requete HTTP (non utilise)
+ * @param cb Callback de reponse
+ */
 void PlantController::listPlants(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb) {
 	try {
 		Mapper<Plants> mp(app().getDbClient());
@@ -36,7 +47,13 @@ void PlantController::listPlants(const HttpRequestPtr&, std::function<void(const
 	} catch (...) { cb(err(500, "Erreur serveur")); }
 }
 
-/* ---- Détails ---- */
+/**
+ * Recupere les details d une plante par ID.
+ *
+ * @param req Requete HTTP (non utilise)
+ * @param cb Callback de reponse
+ * @param id Identifiant de la plante
+ */
 void PlantController::getPlant(const HttpRequestPtr&, std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	try {
 		Mapper<Plants> mp(app().getDbClient());
@@ -50,7 +67,12 @@ void PlantController::getPlant(const HttpRequestPtr&, std::function<void(const H
 	} catch (...) { cb(err(404, "Plante introuvable")); }
 }
 
-/* ---- Liste admin ---- */
+/**
+ * Liste toutes les plantes (route admin).
+ *
+ * @param req Requete HTTP avec cookie admin
+ * @param cb Callback de reponse
+ */
 void PlantController::listAdminPlants(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb) {
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Accès refusé"));
@@ -63,7 +85,12 @@ void PlantController::listAdminPlants(const HttpRequestPtr& req,
 	} catch (...) { cb(err(500, "Erreur serveur")); }
 }
 
-/* ---- Création ---- */
+/**
+ * Cree une nouvelle plante (admin uniquement).
+ *
+ * @param req Requete HTTP avec JSON (name, price, stock)
+ * @param cb Callback de reponse
+ */
 void PlantController::createPlant(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb) {
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Non autorisé"));
@@ -86,7 +113,13 @@ void PlantController::createPlant(const HttpRequestPtr& req,
 	} catch (...) { cb(err(500, "Erreur création plante")); }
 }
 
-/* ---- Mise à jour ---- */
+/**
+ * Met a jour une plante existante (admin uniquement).
+ *
+ * @param req Requete HTTP avec JSON partiel
+ * @param cb Callback de reponse
+ * @param id Identifiant de la plante
+ */
 void PlantController::updatePlant(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 
@@ -161,7 +194,13 @@ void PlantController::updatePlant(const HttpRequestPtr& req,
 	}
 }
 
-/* ---- Suppression ---- */
+/**
+ * Supprime une plante (admin uniquement).
+ *
+ * @param req Requete HTTP avec cookie admin
+ * @param cb Callback de reponse
+ * @param id Identifiant de la plante
+ */
 void PlantController::deletePlant(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	// --- Vérification des droits administrateur (avec logs complets) ---

@@ -11,14 +11,26 @@ using namespace drogon;
 using namespace drogon::orm;
 using drogon_model::plant_shop_cpp::OrderItems;
 
-/* ---- Réponse d’erreur simplifiée ---- */
+/**
+ * Cree une reponse HTTP d erreur JSON.
+ *
+ * @param code Code HTTP
+ * @param msg Message d erreur
+ * @return Reponse HTTP formatee
+ */
 static HttpResponsePtr err(int code, const std::string& msg) {
 	auto r = HttpResponse::newHttpJsonResponse({{"error", msg}});
 	r->setStatusCode((HttpStatusCode)code);
 	return r;
 }
 
-/* ---- Lecture ---- */
+/**
+ * Recupere un article de commande par ID.
+ *
+ * @param req Requete HTTP (non utilise)
+ * @param cb Callback de reponse
+ * @param id Identifiant de l article
+ */
 void OrderItemController::getOrderItem(const HttpRequestPtr&,
 	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	try {
@@ -30,7 +42,13 @@ void OrderItemController::getOrderItem(const HttpRequestPtr&,
 	} catch (...) { cb(err(404, "Item introuvable")); }
 }
 
-/* ---- Mise à jour ---- */
+/**
+ * Met a jour la quantite d un article.
+ *
+ * @param req Requete HTTP avec JSON (quantity)
+ * @param cb Callback de reponse
+ * @param id Identifiant de l article
+ */
 void OrderItemController::updateOrderItem(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	auto j = req->getJsonObject();
@@ -45,7 +63,13 @@ void OrderItemController::updateOrderItem(const HttpRequestPtr& req,
 	} catch (...) { cb(err(404, "Item introuvable")); }
 }
 
-/* ---- Suppression ---- */
+/**
+ * Supprime un article de commande.
+ *
+ * @param req Requete HTTP (non utilise)
+ * @param cb Callback de reponse
+ * @param id Identifiant de l article
+ */
 void OrderItemController::deleteOrderItem(const HttpRequestPtr&,
 	std::function<void(const HttpResponsePtr&)>&& cb, int id) {
 	try {

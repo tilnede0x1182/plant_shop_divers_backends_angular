@@ -5,14 +5,8 @@
 #include "OrderItem.h"
 
 /**
- * """ Modèle de commande (Order)
- *   Correspond à la table SQL 'orders'
- *   - id SERIAL PRIMARY KEY
- *   - user_id INTEGER (nullable)
- *   - total NUMERIC(10,2)
- *   - status VARCHAR(50)
- *   - created_at TIMESTAMPTZ
- * """
+ * Modele de commande (Order).
+ * Correspond a la table SQL orders.
  */
 struct Order {
 	int id;

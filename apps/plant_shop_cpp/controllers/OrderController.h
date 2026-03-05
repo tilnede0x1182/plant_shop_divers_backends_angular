@@ -3,17 +3,8 @@
 #include <json/json.h>
 
 /**
- * """ Contrôleur des commandes et items
- *  Routes gérées :
- *   - POST /api/orders
- *   - GET  /api/orders
- *   - GET  /api/orders/{id}
- *   - PATCH /api/orders/{id}
- *   - DELETE /api/orders/{id}
- *   - GET /api/order_items/{id}
- *   - PATCH /api/order_items/{id}
- *   - DELETE /api/order_items/{id}
- * """
+ * Controleur des commandes et items.
+ * Routes gerees : CRUD /api/orders et /api/order_items.
  */
 class OrderController : public drogon::HttpController<OrderController> {
 public:
@@ -29,40 +20,86 @@ public:
 		ADD_METHOD_TO(OrderController::deleteOrderItem, "/api/order_items/{1}", drogon::Delete);
 	METHOD_LIST_END
 
-	/** """ Crée une nouvelle commande pour l'utilisateur courant """ */
+	/**
+	 * Cree une nouvelle commande pour l utilisateur courant.
+	 *
+	 * @param req Requete HTTP
+	 * @param callback Callback de reponse
+	 */
 	void createOrder(const drogon::HttpRequestPtr& req,
 	                 std::function<void(const drogon::HttpResponsePtr&)>&& callback);
 
-	/** """ Liste les commandes de l'utilisateur courant """ */
+	/**
+	 * Liste les commandes de l utilisateur courant.
+	 *
+	 * @param req Requete HTTP
+	 * @param callback Callback de reponse
+	 */
 	void listOrders(const drogon::HttpRequestPtr& req,
 	                std::function<void(const drogon::HttpResponsePtr&)>&& callback);
 
-	/** """ Récupère une commande par ID """ */
+	/**
+	 * Recupere une commande par ID.
+	 *
+	 * @param req Requete HTTP
+	 * @param callback Callback de reponse
+	 * @param orderId ID de la commande
+	 */
 	void getOrder(const drogon::HttpRequestPtr& req,
 	              std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	              int orderId);
 
-	/** """ Met à jour une commande (admin) """ */
+	/**
+	 * Met a jour une commande (admin).
+	 *
+	 * @param req Requete HTTP
+	 * @param callback Callback de reponse
+	 * @param orderId ID de la commande
+	 */
 	void updateOrder(const drogon::HttpRequestPtr& req,
 	                 std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	                 int orderId);
 
-	/** """ Supprime une commande (admin) """ */
+	/**
+	 * Supprime une commande (admin).
+	 *
+	 * @param req Requete HTTP
+	 * @param callback Callback de reponse
+	 * @param orderId ID de la commande
+	 */
 	void deleteOrder(const drogon::HttpRequestPtr& req,
 	                 std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	                 int orderId);
 
-	/** """ Récupère un item de commande par ID """ */
+	/**
+	 * Recupere un item de commande par ID.
+	 *
+	 * @param req Requete HTTP
+	 * @param callback Callback de reponse
+	 * @param itemId ID de l item
+	 */
 	void getOrderItem(const drogon::HttpRequestPtr& req,
 	                  std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	                  int itemId);
 
-	/** """ Met à jour un item de commande (admin) """ */
+	/**
+	 * Met a jour un item de commande (admin).
+	 *
+	 * @param req Requete HTTP
+	 * @param callback Callback de reponse
+	 * @param itemId ID de l item
+	 */
 	void updateOrderItem(const drogon::HttpRequestPtr& req,
 	                     std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	                     int itemId);
 
-	/** """ Supprime un item de commande """ */
+	/**
+	 * Supprime un item de commande.
+	 *
+	 * @param req Requete HTTP
+	 * @param callback Callback de reponse
+	 * @param itemId ID de l item
+	 */
 	void deleteOrderItem(const drogon::HttpRequestPtr& req,
 	                     std::function<void(const drogon::HttpResponsePtr&)>&& callback,
 	                     int itemId);

@@ -28,7 +28,12 @@ using namespace drogon;
 using namespace drogon::orm;
 using drogon_model::plant_shop_cpp::Users;
 
-/** """ Hachage Argon2id """ */
+/**
+ * Hachage Argon2id d un mot de passe.
+ *
+ * @param pwd Mot de passe en clair
+ * @return Hash Argon2id encode
+ */
 static std::string hashPassword(const std::string& pwd) {
 	const uint32_t t_cost = 2, m_cost = 1 << 16, parallel = 1;
 	std::vector<uint8_t> salt(16);
@@ -49,12 +54,11 @@ static std::string hashPassword(const std::string& pwd) {
 	return std::string(encoded);
 }
 
-/** """ Vérifie un mot de passe contre un hash Argon2id """ */
 /**
- * Vérifie un mot de passe contre un hash Argon2id.
+ * Verifie un mot de passe contre un hash Argon2id.
  *
  * @param pwd Mot de passe en clair
- * @param encodedHash Hash encodé Argon2id
+ * @param encodedHash Hash encode Argon2id
  * @return true si le mot de passe correspond
  */
 static bool verifyPassword(const std::string& pwd, const std::string& encodedHash) {
@@ -63,11 +67,11 @@ static bool verifyPassword(const std::string& pwd, const std::string& encodedHas
 }
 
 /**
- * Parse le corps JSON d une requête HTTP.
+ * Parse le corps JSON d une requete HTTP.
  *
- * @param req Requête HTTP
+ * @param req Requete HTTP
  * @param data Objet JSON de sortie
- * @return true si parsing réussi
+ * @return true si parsing reussi
  */
 static bool parseJson(const HttpRequestPtr& req, Json::Value& data) {
 	try {
@@ -79,7 +83,12 @@ static bool parseJson(const HttpRequestPtr& req, Json::Value& data) {
 	} catch (...) { return false; }
 }
 
-/** Inscription */
+/**
+ * Inscription d un nouvel utilisateur.
+ *
+ * @param req Requete HTTP contenant email, password, name
+ * @param cb Callback de reponse
+ */
 void AuthController::registerUser(const HttpRequestPtr& req,
 	std::function<void(const HttpResponsePtr&)>&& cb) {
 	Json::Value d;
@@ -109,6 +118,13 @@ void AuthController::registerUser(const HttpRequestPtr& req,
 }
 
 /* ---- Helpers génériques ---- */
+/**
+ * Cree une reponse HTTP d erreur.
+ *
+ * @param code Code HTTP
+ * @param msg Message d erreur
+ * @return Reponse HTTP JSON
+ */
 static HttpResponsePtr err(int code, const std::string &msg) {
 	Json::Value j;
 	j["error"] = msg;
@@ -117,7 +133,12 @@ static HttpResponsePtr err(int code, const std::string &msg) {
 	return r;
 }
 
-/** """ Vérifie si le cookie jwt indique un admin @req requête HTTP """ */
+/**
+ * Verifie si le cookie jwt indique un admin.
+ *
+ * @param req Requete HTTP
+ * @return true si admin
+ */
 bool AuthController::isAdmin(const drogon::HttpRequestPtr& req) {
     const auto& cookies = req->cookies();
     LOG_DEBUG << "[isAdmin] cookies count: " << cookies.size();
@@ -145,7 +166,13 @@ bool AuthController::isAdmin(const drogon::HttpRequestPtr& req) {
     return false;
 }
 
-/** """ Vérifie si la requête peut agir : admin OU propriétaire """ */
+/**
+ * Verifie si la requete peut agir : admin OU proprietaire.
+ *
+ * @param req Requete HTTP
+ * @param uid ID utilisateur cible
+ * @return true si autorise
+ */
 bool AuthController::canAct(const HttpRequestPtr& req, int uid) {
 	auto userOpt = AuthController::canActDecodeJWT(req);	// JWT ou JSESSIONID
 	if (!userOpt.has_value()) return false;
@@ -153,7 +180,12 @@ bool AuthController::canAct(const HttpRequestPtr& req, int uid) {
 	return user.getValueOfIsAdmin() || user.getValueOfId() == uid;
 }
 
-/** """ Décode le JWT ou résout via JSESSIONID pour récupérer l'utilisateur correspondant """ */
+/**
+ * Decode le JWT ou resout via JSESSIONID pour recuperer l utilisateur.
+ *
+ * @param req Requete HTTP
+ * @return Utilisateur ou nullopt
+ */
 std::optional<drogon_model::plant_shop_cpp::Users> AuthController::canActDecodeJWT(const HttpRequestPtr &req) {
 	std::string email; std::string name; int64_t userId = 0; bool admin = false;
 
@@ -188,7 +220,13 @@ std::optional<drogon_model::plant_shop_cpp::Users> AuthController::canActDecodeJ
 	return std::nullopt;
 }
 
-/** """ Version booléenne de canActDecodeJWT : admin ou propriétaire """ */
+/**
+ * Version booleenne de canActDecodeJWT : admin ou proprietaire.
+ *
+ * @param req Requete HTTP
+ * @param uid ID utilisateur cible
+ * @return true si autorise
+ */
 bool AuthController::canActDecodeJWTBool(const HttpRequestPtr &req, int uid) {
 	auto userOpt = AuthController::canActDecodeJWT(req);
 	if (!userOpt.has_value()) return false;
@@ -196,7 +234,12 @@ bool AuthController::canActDecodeJWTBool(const HttpRequestPtr &req, int uid) {
 	return user.getValueOfIsAdmin() || user.getValueOfId() == uid;
 }
 
-/** Connexion utilisateur */
+/**
+ * Connexion utilisateur.
+ *
+ * @param req Requete HTTP contenant email et password
+ * @param cb Callback de reponse
+ */
 void AuthController::login(const drogon::HttpRequestPtr& req,
 	std::function<void (const drogon::HttpResponsePtr&)>&& cb) {
 	try {
@@ -262,7 +305,12 @@ void AuthController::login(const drogon::HttpRequestPtr& req,
 	}
 }
 
-/** Profil /auth/me */
+/**
+ * Profil utilisateur /auth/me.
+ *
+ * @param req Requete HTTP
+ * @param cb Callback de reponse
+ */
 void AuthController::me(const drogon::HttpRequestPtr& req,
 	std::function<void (const drogon::HttpResponsePtr&)>&& cb) {
 	std::string email; std::string name; int64_t userId = 0; bool admin = false;
@@ -300,7 +348,12 @@ void AuthController::me(const drogon::HttpRequestPtr& req,
 	cb(drogon::HttpResponse::newHttpJsonResponse(j));
 }
 
-/** Déconnexion */
+/**
+ * Deconnexion utilisateur.
+ *
+ * @param req Requete HTTP
+ * @param cb Callback de reponse
+ */
 void AuthController::logout(const drogon::HttpRequestPtr& req,
 	std::function<void (const drogon::HttpResponsePtr&)>&& cb) {
 	auto resp = drogon::HttpResponse::newHttpJsonResponse(Json::Value(Json::objectValue));

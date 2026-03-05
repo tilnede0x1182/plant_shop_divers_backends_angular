@@ -6,9 +6,12 @@
 #include "controllers/OrderController.h"
 
 /**
- * """ Configuration complète des routes HTTP du backend Plant Shop
+ * Configuration complete des routes HTTP du backend Plant Shop.
  */
 
+/**
+ * Enregistre toutes les routes HTTP dans Drogon.
+ */
 inline void registerRoutes() {
 	using namespace drogon;
 

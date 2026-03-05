@@ -13,7 +13,13 @@ using namespace drogon;
 using namespace drogon::orm;
 using drogon_model::plant_shop_cpp::Users;
 
-/* ---- Helpers génériques ---- */
+/**
+ * Cree une reponse HTTP d erreur JSON.
+ *
+ * @param code Code HTTP
+ * @param msg Message d erreur
+ * @return Reponse HTTP formatee
+ */
 static HttpResponsePtr err(int code, const std::string &msg) {
 	Json::Value j;
 	j["error"] = msg;
@@ -22,6 +28,12 @@ static HttpResponsePtr err(int code, const std::string &msg) {
 	return r;
 }
 
+/**
+ * Recupere l utilisateur courant depuis le cookie.
+ *
+ * @param req Requete HTTP avec cookie auth_user
+ * @return Utilisateur ou nullopt si non connecte
+ */
 static std::optional<Users> currentUser(const HttpRequestPtr &req) {
 	try {
 		if (!req->cookies().count("auth_user")) return std::nullopt;
@@ -31,7 +43,12 @@ static std::optional<Users> currentUser(const HttpRequestPtr &req) {
 	} catch (...) { return std::nullopt; }
 }
 
-/* ---- Création (admin) ---- */
+/**
+ * Cree un nouvel utilisateur (admin uniquement).
+ *
+ * @param req Requete HTTP avec JSON (email, password, name)
+ * @param cb Callback de reponse
+ */
 void UserController::createUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb) {
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	auto j = req->getJsonObject();
@@ -53,7 +70,12 @@ void UserController::createUser(const HttpRequestPtr &req, std::function<void(co
 	} catch (...) { cb(err(409, "Email déjà utilisé")); }
 }
 
-/* ---- Liste utilisateurs (admin) ---- */
+/**
+ * Liste tous les utilisateurs (admin uniquement).
+ *
+ * @param req Requete HTTP avec cookie admin
+ * @param cb Callback de reponse
+ */
 void UserController::listUsers(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb) {
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
@@ -74,7 +96,13 @@ void UserController::listUsers(const HttpRequestPtr &req, std::function<void(con
 	} catch (...) { cb(err(500, "Erreur serveur")); }
 }
 
-/* ---- Lecture ---- */
+/**
+ * Recupere un utilisateur par ID.
+ *
+ * @param req Requete HTTP
+ * @param cb Callback de reponse
+ * @param id Identifiant de l utilisateur
+ */
 void UserController::getUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
 	if (!AuthController::canAct(req, id)) return cb(err(403, "Forbidden"));
 	try {
@@ -89,7 +117,13 @@ void UserController::getUser(const HttpRequestPtr &req, std::function<void(const
 	} catch (...) { cb(err(404, "Not found")); }
 }
 
-/* ---- Mise à jour ---- */
+/**
+ * Met a jour un utilisateur.
+ *
+ * @param req Requete HTTP avec JSON partiel
+ * @param cb Callback de reponse
+ * @param id Identifiant de l utilisateur
+ */
 void UserController::updateUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
 	if (!AuthController::canAct(req, id)) return cb(err(403, "Forbidden"));
 	auto j = req->getJsonObject();
@@ -113,7 +147,13 @@ void UserController::updateUser(const HttpRequestPtr &req, std::function<void(co
 	} catch (...) { cb(err(404, "User introuvable")); }
 }
 
-/* ---- Suppression ---- */
+/**
+ * Supprime un utilisateur (admin uniquement).
+ *
+ * @param req Requete HTTP avec cookie admin
+ * @param cb Callback de reponse
+ * @param id Identifiant de l utilisateur
+ */
 void UserController::deleteUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
@@ -125,7 +165,12 @@ void UserController::deleteUser(const HttpRequestPtr &req, std::function<void(co
 	} catch (...) { cb(err(404, "User introuvable")); }
 }
 
-/* ---- Liste admins ---- */
+/**
+ * Liste tous les utilisateurs (route admin).
+ *
+ * @param req Requete HTTP avec cookie admin
+ * @param cb Callback de reponse
+ */
 void UserController::listAdminUsers(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb) {
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {
@@ -146,7 +191,13 @@ void UserController::listAdminUsers(const HttpRequestPtr &req, std::function<voi
 	} catch (...) { cb(err(500, "Erreur serveur")); }
 }
 
-/* ---- Mise à jour admin ---- */
+/**
+ * Met a jour un utilisateur (route admin).
+ *
+ * @param req Requete HTTP avec JSON partiel
+ * @param cb Callback de reponse
+ * @param id Identifiant de l utilisateur
+ */
 void UserController::updateAdminUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	auto j = req->getJsonObject();
@@ -164,7 +215,13 @@ void UserController::updateAdminUser(const HttpRequestPtr &req, std::function<vo
 	} catch (...) { cb(err(404, "User introuvable")); }
 }
 
-/* ---- Suppression admin ---- */
+/**
+ * Supprime un utilisateur (route admin).
+ *
+ * @param req Requete HTTP avec cookie admin
+ * @param cb Callback de reponse
+ * @param id Identifiant de l utilisateur
+ */
 void UserController::deleteAdminUser(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&cb, int id) {
 	if (!AuthController::isAdmin(req)) return cb(err(403, "Forbidden"));
 	try {

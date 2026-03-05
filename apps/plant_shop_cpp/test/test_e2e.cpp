@@ -22,7 +22,14 @@
 using namespace drogon;
 using namespace std;
 
-// Vérifie si le port 4100 est ouvert en TCP
+/**
+ * Attend que le serveur soit disponible sur le port specifie.
+ *
+ * @param host Adresse IP du serveur
+ * @param port Numero du port
+ * @param timeout_ms Timeout en millisecondes
+ * @return true si le serveur repond avant timeout
+ */
 bool waitForServer(const char* host, unsigned short port, int timeout_ms = 5000) {
 	auto start = std::chrono::steady_clock::now();
 	while (std::chrono::steady_clock::now() - start < std::chrono::milliseconds(timeout_ms)) {
@@ -200,6 +207,11 @@ public:
 // 🧪 Modules de test
 // ------------------------------------------------------
 
+/**
+ * Tests du module plantes (CRUD admin).
+ *
+ * @param ctx Contexte de test
+ */
 void test_plants(TestContext& ctx) {
     cout << "\n📌 TEST MODULE: PLANTS (admin)" << endl;
     Json::Value plant_data;
@@ -219,6 +231,11 @@ void test_plants(TestContext& ctx) {
     ctx.request("DELETE", "/admin/plants/" + to_string(id), 200, nullptr, "admin");
 }
 
+/**
+ * Tests du module utilisateurs (CRUD admin).
+ *
+ * @param ctx Contexte de test
+ */
 void test_users(TestContext& ctx) {
     cout << "\n📌 TEST MODULE: USERS (admin)" << endl;
     string email = "utilisateur_test_" + ctx.timestamp() + "@example.com";
@@ -236,6 +253,11 @@ void test_users(TestContext& ctx) {
     ctx.request("DELETE", "/users/" + to_string(id), 200, nullptr, "admin");
 }
 
+/**
+ * Tests du module commandes et articles.
+ *
+ * @param ctx Contexte de test
+ */
 void test_orders(TestContext& ctx) {
     cout << "\n📌 TEST MODULE: ORDERS & ORDER ITEMS" << endl;
     Json::Value plant_data;
@@ -279,6 +301,12 @@ void test_orders(TestContext& ctx) {
     ctx.request("DELETE", "/admin/plants/" + to_string(pid), 200, nullptr, "admin");
 }
 
+/**
+ * Tests du profil utilisateur.
+ *
+ * @param ctx Contexte de test
+ * @param email Email de l utilisateur
+ */
 void test_user_profile(TestContext& ctx, const string& email) {
     cout << "\n📌 TEST MODULE: USER PROFILE (user)" << endl;
     auto users = ctx.request("GET", "/users", 200, nullptr, "admin");
@@ -309,6 +337,11 @@ void test_user_profile(TestContext& ctx, const string& email) {
     TestContext::assert_eq(check, "admin", false);
 }
 
+/**
+ * Tests des roles et permissions.
+ *
+ * @param ctx Contexte de test
+ */
 void test_auth_roles(TestContext& ctx) {
     cout << "\n📌 TEST MODULE: ROLES" << endl;
     Json::Value bad_plant;
@@ -324,6 +357,11 @@ void test_auth_roles(TestContext& ctx) {
     ctx.request("GET", "/users", 403, nullptr, "user");
 }
 
+/**
+ * Tests CRUD plantes pour admin.
+ *
+ * @param ctx Contexte de test
+ */
 void test_admin_plants(TestContext& ctx) {
     cout << "\n📌 TEST MODULE: ADMIN PLANTS" << endl;
     auto plantes = ctx.request("GET", "/admin/plants", 200, nullptr, "admin");
@@ -342,6 +380,11 @@ void test_admin_plants(TestContext& ctx) {
     ctx.request("DELETE", "/admin/plants/" + to_string(id), 200, nullptr, "admin");
 }
 
+/**
+ * Tests CRUD utilisateurs pour admin.
+ *
+ * @param ctx Contexte de test
+ */
 void test_admin_users(TestContext& ctx) {
     cout << "\n📌 TEST MODULE: ADMIN USERS" << endl;
     string email = "admin_temp_" + ctx.timestamp() + "@example.com";
@@ -377,6 +420,11 @@ void test_admin_users(TestContext& ctx) {
     ctx.request("DELETE", "/users/" + to_string(id), 200, nullptr, "admin");
 }
 
+/**
+ * Tests de l endpoint /auth/me.
+ *
+ * @param ctx Contexte de test
+ */
 void test_auth_me(TestContext& ctx) {
     cout << "\n📌 TEST MODULE: AUTH /me" << endl;
     auto me = ctx.request("GET", "/auth/me", 200, nullptr, "user");
@@ -391,6 +439,11 @@ void test_auth_me(TestContext& ctx) {
 // ------------------------------------------------------
 // 🚀 Exécution principale
 // ------------------------------------------------------
+/**
+ * Point d entree des tests E2E.
+ *
+ * @return Code de sortie (0=OK, 1=tests echoues, 2=serveur absent)
+ */
 int main() {
     try {
 				// Attendre que le serveur soit prêt avant les requêtes

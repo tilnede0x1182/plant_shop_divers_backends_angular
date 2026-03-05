@@ -10,7 +10,6 @@
 
 using namespace drogon;
 
-/** """ Vérifie si le port d’écoute HTTP est disponible avant le lancement du serveur """ */
 /**
  * Vérifie si le port d écoute HTTP est disponible.
  *
@@ -33,9 +32,8 @@ bool isPortAvailable(unsigned short port) {
 	// return ok;
 	return true;
 }
-/** """ Vérifie la présence du fichier config.json """ */
 /**
- * Vérifie la présence du fichier config.json.
+ * Verifie la presence du fichier config.json.
  *
  * @param path Chemin du fichier de configuration
  */
@@ -49,7 +47,11 @@ void checkConfigFile(const std::string& path = "config.json") {
 	}
 }
 
-/** """ Lit .env et retourne la valeur de DATABASE_URL """ */
+/**
+ * Lit .env et retourne la valeur de DATABASE_URL.
+ *
+ * @return URL de connexion ou chaine vide
+ */
 std::string db_stringenv_read() {
 	std::ifstream envFile(".env");
 	if (!envFile.is_open()) return "";
@@ -61,7 +63,11 @@ std::string db_stringenv_read() {
 	return "";
 }
 
-/** """ Lecture sécurisée du .env """ */
+/**
+ * Lecture securisee du .env avec gestion des erreurs.
+ *
+ * @return URL de connexion ou chaine vide si erreur
+ */
 std::string db_stringenv_read_secured() {
 	try {
 		std::string dbUrl = db_stringenv_read();
@@ -77,7 +83,16 @@ std::string db_stringenv_read_secured() {
 	}
 }
 
-/** """ Extrait les paramètres du DATABASE_URL """ */
+/**
+ * Extrait les parametres du DATABASE_URL.
+ *
+ * @param url URL complete de connexion
+ * @param host Hote (sortie)
+ * @param port Port (sortie)
+ * @param dbname Nom de la base (sortie)
+ * @param user Utilisateur (sortie)
+ * @param pass Mot de passe (sortie)
+ */
 void parseDatabaseUrl(const std::string& url, std::string& host, unsigned short& port,
                       std::string& dbname, std::string& user, std::string& pass) {
 	if (url.rfind("postgresql://", 0) != 0)
@@ -105,7 +120,9 @@ void parseDatabaseUrl(const std::string& url, std::string& host, unsigned short&
 	port = static_cast<unsigned short>(std::stoi(hostPort.substr(colonHost + 1)));
 }
 
-/** """ Crée la connexion PostgreSQL à partir du .env """ */
+/**
+ * Cree la connexion PostgreSQL a partir du .env.
+ */
 void connectToDatabaseFromEnv() {
 	std::string url = db_stringenv_read_secured();
 	if (url.empty()) throw std::runtime_error("DATABASE_URL manquant dans .env");
@@ -131,7 +148,9 @@ void connectToDatabaseFromEnv() {
 	);
 }
 
-/** """ Active CORS pour Angular """ */
+/**
+ * Active CORS pour Angular.
+ */
 void enableCors() {
 	using namespace drogon;
 	app().enableSession();
@@ -142,11 +161,10 @@ void enableCors() {
 	});
 }
 
-/** """ Crée le client PostgreSQL """ */
 /**
- * Crée le client PostgreSQL global.
+ * Cree le client PostgreSQL global.
  *
- * @param dbUrl URL de connexion à la base de données
+ * @param dbUrl URL de connexion a la base de donnees
  */
 void createDbClient(const std::string& dbUrl) {
 	using namespace drogon;
@@ -162,7 +180,9 @@ void createDbClient(const std::string& dbUrl) {
 	LOG_INFO << "✅ Client PostgreSQL (global) initialisé : " << dbUrl;
 }
 
-/** """ Teste la connexion PostgreSQL """ */
+/**
+ * Teste la connexion PostgreSQL.
+ */
 void testDbConnection() {
 	using namespace std::chrono_literals;
 	try {
@@ -192,7 +212,11 @@ void testDbConnection() {
 	}
 }
 
-/** """ Point d’entrée principal du backend Plant Shop (C++) """ */
+/**
+ * Point d entree principal du backend Plant Shop.
+ *
+ * @return Code de sortie (0=OK, 1=erreur)
+ */
 int main() {
 	bool en_test = false;
 	try {

@@ -20,17 +20,21 @@ using drogon::orm::DbClientPtr;
 using std::string;
 using std::vector;
 
-/** """ Constantes de seed (alignées sur seed.ts)
+/**
+ * Constantes de seed (alignées sur seed.ts)
 	@NB_ADMINS nombre d’admins
 	@NB_USERS nombre d’utilisateurs
 	@NB_PLANTS nombre de plantes
-	@MAX_ORDERS_PER_USER max de commandes / user """ */
+	@MAX_ORDERS_PER_USER max de commandes / user.
+ */
 static const int NB_ADMINS = 3;
 static const int NB_USERS = 20;
 static const int NB_PLANTS = 50;
 static const int MAX_ORDERS_PER_USER = 7;
 
-/** """ Noms de plantes (identiques au seed.ts) @PLANT_NAMES liste """ */
+/**
+ * Noms de plantes (identiques au seed.ts) @PLANT_NAMES liste.
+ */
 static const char* PLANT_NAMES[] = {
 	"Rose","Tulipe","Lavande","Orchidée","Basilic","Menthe","Pivoine","Tournesol",
 	"Cactus (Echinopsis)","Bambou","Camomille (Matricaria recutita)","Sauge (Salvia officinalis)",
@@ -63,19 +67,29 @@ static const char* LAST_NAMES[] = {
 
 static const char* EMAIL_DOMAINS[] = {"gmail.com","yahoo.com","hotmail.com"};
 
-/** """ Générateur global @rng moteur aléatoire """ */
+/**
+ * Générateur global @rng moteur aléatoire.
+ */
 static std::mt19937& rng() {
 	static std::mt19937 eng{static_cast<unsigned long>(std::chrono::high_resolution_clock::now().time_since_epoch().count())};
 	return eng;
 }
 
-/** """ Entier aléatoire inclusif @min borne min @max borne max """ */
+/**
+ * Entier aleatoire inclusif.
+ *
+ * @param minValue Borne minimale
+ * @param maxValue Borne maximale
+ * @return Entier aleatoire entre min et max
+ */
 static int rndInt(int minValue, int maxValue) {
 	std::uniform_int_distribution<int> dist(minValue, maxValue);
 	return dist(rng());
 }
 
-/** """ Phrase pseudo-lorem courte (remplace faker.lorem.sentence) """ */
+/**
+ * Phrase pseudo-lorem courte (remplace faker.lorem.sentence).
+ */
 static string loremSentence() {
 	static const char* words[] = {
 		"plante","feuille","racine","terre","lumiere","eau","soin","croissance","arome","vert","tige","jardin","nature"
@@ -90,13 +104,11 @@ static string loremSentence() {
 	return oss.str();
 }
 
-/** """ Hash mot de passe sécurisé avec Argon2id
-    @plain mot de passe clair """ */
 /**
  * Hash un mot de passe avec Argon2id.
  *
  * @param plain Mot de passe en clair
- * @return Hash encodé Argon2id
+ * @return Hash encode Argon2id
  */
 static std::string hashPassword(const std::string& plain) {
     const uint32_t t_cost = 2;
@@ -122,8 +134,11 @@ static std::string hashPassword(const std::string& plain) {
     return std::string(encoded);
 }
 
-/** """ Reset DB: supprime order_items → orders → plants → users
-	@db client SQL """ */
+/**
+ * Reset DB: supprime order_items, orders, plants, users.
+ *
+ * @param db Client SQL
+ */
 static void reset(DbClientPtr db) {
 	db->execSqlSync("DELETE FROM order_items");
 	db->execSqlSync("DELETE FROM orders");
@@ -131,11 +146,14 @@ static void reset(DbClientPtr db) {
 	db->execSqlSync("DELETE FROM users");
 }
 
-/** """ Ajoute un admin indexé (email admin{index+1}@planteshop.com)
-	@db client
-	@index base 0
-	@outEmail email renvoyé
-	@outPwd mot de passe clair """ */
+/**
+ * Ajoute un admin indexe.
+ *
+ * @param db Client SQL
+ * @param index Index base 0
+ * @param outEmail Email renvoye (sortie)
+ * @param outPwd Mot de passe clair (sortie)
+ */
 static void addAdmin(DbClientPtr db, int index, string& outEmail, string& outPwd) {
 	outEmail = "admin" + std::to_string(index + 1) + "@planteshop.com";
 	outPwd = "password";
@@ -152,6 +170,12 @@ static void addAdmin(DbClientPtr db, int index, string& outEmail, string& outPwd
 	);
 }
 
+/**
+ * Cree tous les administrateurs.
+ *
+ * @param db Client SQL
+ * @return Liste des credentials (email, pwd)
+ */
 static vector<std::pair<string,string>> createAdmins(DbClientPtr db) {
 	vector<std::pair<string,string>> creds;
 	for (int i=0;i<NB_ADMINS;i++) {
@@ -162,6 +186,12 @@ static vector<std::pair<string,string>> createAdmins(DbClientPtr db) {
 	return creds;
 }
 
+/**
+ * Ajoute un utilisateur aleatoire.
+ *
+ * @param db Client SQL
+ * @return Credentials (email, pwd)
+ */
 static std::pair<string,string> addUser(DbClientPtr db) {
 	string first = FIRST_NAMES[rndInt(0, (int)(sizeof(FIRST_NAMES)/sizeof(FIRST_NAMES[0]))-1)];
 	string last  = LAST_NAMES [rndInt(0, (int)(sizeof(LAST_NAMES )/sizeof(LAST_NAMES [0]))-1)];
@@ -181,6 +211,12 @@ static std::pair<string,string> addUser(DbClientPtr db) {
 	return {email, pwd};
 }
 
+/**
+ * Cree tous les utilisateurs.
+ *
+ * @param db Client SQL
+ * @return Liste des credentials (email, pwd)
+ */
 static vector<std::pair<string,string>> createUsers(DbClientPtr db) {
 	vector<std::pair<string,string>> creds;
 	for (int i=0;i<NB_USERS;i++) {
@@ -189,6 +225,13 @@ static vector<std::pair<string,string>> createUsers(DbClientPtr db) {
 	return creds;
 }
 
+/**
+ * Ajoute une plante en base.
+ *
+ * @param db Client SQL
+ * @param name Nom de la plante
+ * @return ID de la plante creee
+ */
 static int addPlant(DbClientPtr db, const string& name) {
 	int price = rndInt(5,50);
 	int stock = rndInt(5,30);
@@ -200,6 +243,12 @@ static int addPlant(DbClientPtr db, const string& name) {
 }
 
 struct PlantRow { int id; string name; int price; int stock; };
+/**
+ * Cree toutes les plantes.
+ *
+ * @param db Client SQL
+ * @return Liste des plantes creees
+ */
 static vector<PlantRow> createPlants(DbClientPtr db) {
 	const int max = (int)(sizeof(PLANT_NAMES)/sizeof(PLANT_NAMES[0]));
 	vector<PlantRow> out;
@@ -214,6 +263,14 @@ static vector<PlantRow> createPlants(DbClientPtr db) {
 	return out;
 }
 
+/**
+ * Ajoute un article a une commande.
+ *
+ * @param db Client SQL
+ * @param orderId ID de la commande
+ * @param plants Liste des plantes disponibles
+ * @return Prix total de l article ajoute
+ */
 static int addItem(DbClientPtr db, int orderId, vector<PlantRow>& plants) {
 	if (plants.empty()) return 0;
 	const int idx = rndInt(0, (int)plants.size()-1);
@@ -231,6 +288,13 @@ static int addItem(DbClientPtr db, int orderId, vector<PlantRow>& plants) {
 	return p.price * qty;
 }
 
+/**
+ * Cree une commande pour un utilisateur.
+ *
+ * @param db Client SQL
+ * @param userId ID de l utilisateur
+ * @param plants Liste des plantes disponibles
+ */
 static void createOrderForUser(DbClientPtr db, int userId, vector<PlantRow>& plants) {
 	static const char* statuses[] = {"confirmed","pending","shipped","delivered"};
 	const string st = statuses[rndInt(0,3)];
@@ -245,6 +309,12 @@ static void createOrderForUser(DbClientPtr db, int userId, vector<PlantRow>& pla
 	db->execSqlSync("UPDATE orders SET total=$1 WHERE id=$2", static_cast<double>(total), orderId);
 }
 
+/**
+ * Cree les commandes pour tous les utilisateurs.
+ *
+ * @param db Client SQL
+ * @param plants Liste des plantes disponibles
+ */
 static void createOrders(DbClientPtr db, vector<PlantRow> plants) {
 	auto users = db->execSqlSync("SELECT id FROM users");
 	int totalOrders = 0;
@@ -260,6 +330,12 @@ static void createOrders(DbClientPtr db, vector<PlantRow> plants) {
 }
 
 
+/**
+ * Ecrit le fichier users.txt avec les credentials.
+ *
+ * @param admins Liste des admins (email, pwd)
+ * @param users Liste des users (email, pwd)
+ */
 static void writeUsersFile(const vector<std::pair<string,string>>& admins,
                            const vector<std::pair<string,string>>& users) {
 	std::ofstream f("users.txt", std::ios::out | std::ios::trunc);
@@ -270,6 +346,11 @@ static void writeUsersFile(const vector<std::pair<string,string>>& admins,
 	for (auto& u : users) f << u.first << ' ' << u.second << "\n";
 }
 
+/**
+ * Execute le processus complet de seed.
+ *
+ * @param db Client SQL
+ */
 static void run(DbClientPtr db) {
 	std::cout << "🧱 Création du schéma des tables…\n";
 	std::cout << "✅ Schéma créé avec succès.\n";
@@ -294,6 +375,11 @@ static void run(DbClientPtr db) {
 	std::cout << "🎉 Seed terminée avec succès !\n";
 }
 
+/**
+ * Lit DATABASE_URL depuis le fichier .env.
+ *
+ * @return URL de connexion PostgreSQL
+ */
 std::string readDatabaseUrl() {
 	// Point de départ = emplacement réel de Seed.cpp
 	std::filesystem::path base = std::filesystem::path(__FILE__).parent_path();
@@ -315,12 +401,21 @@ std::string readDatabaseUrl() {
 	throw std::runtime_error("DATABASE_URL non trouvé dans " + envPath.string());
 }
 
-// Fin propre
+/**
+ * Termine proprement le programme.
+ *
+ * @param client Client SQL a liberer
+ */
 static void end_programm(drogon::orm::DbClientPtr& client) {
 	client.reset();
 	std::cout.flush();
 }
 
+/**
+ * Point d entree du programme de seed.
+ *
+ * @return Code de sortie (0=OK, 1=erreur)
+ */
 int main() {
 	try {
 		// Ne jamais toucher à app() ici. La seed ne lance pas le framework HTTP.

@@ -3,17 +3,8 @@
 #include <json/json.h>
 
 /**
- * """ Contrôleur utilisateurs
- *  Routes:
- *   - POST   /api/users
- *   - GET    /api/users
- *   - GET    /api/users/{id}
- *   - PATCH  /api/users/{id}
- *   - DELETE /api/users/{id}
- *   - GET    /api/admin/users
- *   - PATCH  /api/admin/users/{id}
- *   - DELETE /api/admin/users/{id}
- * """
+ * Controleur des utilisateurs.
+ * Routes gerees : CRUD /api/users et /api/admin/users.
  */
 class UserController : public drogon::HttpController<UserController> {
 public:
@@ -29,35 +20,80 @@ public:
 		ADD_METHOD_TO(UserController::deleteAdminUser, "/api/admin/users/{1}", drogon::Delete);
 	METHOD_LIST_END
 
-	/** """ Création d'un utilisateur (admin) """ */
+	/**
+ * Creation d un utilisateur (admin).
+ *
+ * @param req Requete HTTP avec JSON
+ * @param cb Callback de reponse
+ */
 	void createUser(const drogon::HttpRequestPtr& req,
 		std::function<void(const drogon::HttpResponsePtr&)>&& cb);
 
-	/** """ Liste tous les utilisateurs (admin) """ */
+	/**
+ * Liste tous les utilisateurs (admin).
+ *
+ * @param req Requete HTTP
+ * @param cb Callback de reponse
+ */
 	void listUsers(const drogon::HttpRequestPtr& req,
 		std::function<void(const drogon::HttpResponsePtr&)>&& cb);
 
-	/** """ Récupère un utilisateur (owner ou admin) """ */
+	/**
+ * Recupere un utilisateur (owner ou admin).
+ *
+ * @param req Requete HTTP
+ * @param cb Callback de reponse
+ * @param userId Identifiant utilisateur
+ */
 	void getUser(const drogon::HttpRequestPtr& req,
 		std::function<void(const drogon::HttpResponsePtr&)>&& cb, int userId);
 
-	/** """ Met à jour un utilisateur (owner ou admin) """ */
+	/**
+ * Met a jour un utilisateur (owner ou admin).
+ *
+ * @param req Requete HTTP avec JSON
+ * @param cb Callback de reponse
+ * @param userId Identifiant utilisateur
+ */
 	void updateUser(const drogon::HttpRequestPtr& req,
 		std::function<void(const drogon::HttpResponsePtr&)>&& cb, int userId);
 
-	/** """ Supprime un utilisateur (owner ou admin) """ */
+	/**
+ * Supprime un utilisateur (owner ou admin).
+ *
+ * @param req Requete HTTP
+ * @param cb Callback de reponse
+ * @param userId Identifiant utilisateur
+ */
 	void deleteUser(const drogon::HttpRequestPtr& req,
 		std::function<void(const drogon::HttpResponsePtr&)>&& cb, int userId);
 
-	/** """ Liste admin: tri admin d'abord puis name/email """ */
+	/**
+ * Liste admin: tri admin d abord puis name/email.
+ *
+ * @param req Requete HTTP
+ * @param cb Callback de reponse
+ */
 	void listAdminUsers(const drogon::HttpRequestPtr& req,
 		std::function<void(const drogon::HttpResponsePtr&)>&& cb);
 
-	/** """ Mise à jour admin (peut modifier is_admin) """ */
+	/**
+ * Mise a jour admin (peut modifier is_admin).
+ *
+ * @param req Requete HTTP avec JSON
+ * @param cb Callback de reponse
+ * @param userId Identifiant utilisateur
+ */
 	void updateAdminUser(const drogon::HttpRequestPtr& req,
 		std::function<void(const drogon::HttpResponsePtr&)>&& cb, int userId);
 
-	/** """ Suppression admin """ */
+	/**
+ * Suppression admin.
+ *
+ * @param req Requete HTTP
+ * @param cb Callback de reponse
+ * @param userId Identifiant utilisateur
+ */
 	void deleteAdminUser(const drogon::HttpRequestPtr& req,
 		std::function<void(const drogon::HttpResponsePtr&)>&& cb, int userId);
 };

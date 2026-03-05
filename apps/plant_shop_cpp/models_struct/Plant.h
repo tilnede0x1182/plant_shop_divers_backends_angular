@@ -22,7 +22,9 @@ struct Plant {
 	int stock{};
 	std::string created_at;
 
-	/** """ Sérialisation JSON conforme au test JS """ */
+	/**
+ * Sérialisation JSON conforme au test JS.
+ */
 	Json::Value toJson() const {
 		Json::Value j;
 		j["id"] = id;
@@ -34,7 +36,9 @@ struct Plant {
 		return j;
 	}
 
-	/** """ Construction depuis JSON pour POST / PATCH """ */
+	/**
+ * Construction depuis JSON pour POST / PATCH.
+ */
 	static Plant fromJson(const Json::Value& data) {
 		Plant p;
 		if (data.isMember("id")) p.id = data["id"].asInt();

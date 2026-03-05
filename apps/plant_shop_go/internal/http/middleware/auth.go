@@ -7,10 +7,11 @@ import (
 	"plant_shop_go/internal/security"
 )
 
-/*
-Middleware d’authentification par cookie httpOnly "ps_token"
-Injecte les claims dans le contexte de la requête sous la clé "claims".
-*/
+// AuthGuard protege une route en verifiant le cookie JWT.
+// Injecte les claims dans le contexte de la requete.
+//
+// @param next http.Handler Handler suivant dans la chaine
+// @return http.Handler Handler avec verification JWT
 func AuthGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		cookie, err := request.Cookie("ps_token")

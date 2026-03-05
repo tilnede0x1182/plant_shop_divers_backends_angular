@@ -19,6 +19,9 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// secret retourne la cle secrete JWT depuis l environnement.
+//
+// @return []byte Cle secrete pour signer les tokens
 func secret() []byte {
 	key := os.Getenv("JWT_SECRET")
 	if key == "" {
@@ -28,7 +31,13 @@ func secret() []byte {
 	return []byte(key)
 }
 
-// GenerateToken génère un JWT signé contenant uid, le rôle admin et la durée d'expiration.
+// GenerateToken genere un JWT signe contenant uid, le role admin et la duree.
+//
+// @param userID string ID de l utilisateur
+// @param admin bool Role administrateur
+// @param duration time.Duration Duree de validite du token
+// @return string Token JWT signe
+// @return error Erreur eventuelle
 func GenerateToken(userID string, admin bool, duration time.Duration) (string, error) {
 	claims := &Claims{
 		UserID: userID,
@@ -42,7 +51,11 @@ func GenerateToken(userID string, admin bool, duration time.Duration) (string, e
 	return token.SignedString(secret())
 }
 
-// ParseToken vérifie le JWT et retourne les claims.
+// ParseToken verifie le JWT et retourne les claims.
+//
+// @param tokenString string Token JWT a verifier
+// @return *Claims Claims extraits du token
+// @return error Erreur eventuelle
 func ParseToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return secret(), nil
@@ -56,7 +69,10 @@ func ParseToken(tokenString string) (*Claims, error) {
 	return nil, jwt.ErrTokenInvalidClaims
 }
 
-// SetCookie écrit le cookie httpOnly "ps_token" sur la réponse.
+// SetCookie ecrit le cookie httpOnly ps_token sur la reponse.
+//
+// @param w http.ResponseWriter Writer de reponse HTTP
+// @param token string Token JWT a stocker
 func SetCookie(w http.ResponseWriter, token string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "ps_token",
@@ -68,7 +84,9 @@ func SetCookie(w http.ResponseWriter, token string) {
 	})
 }
 
-// ClearCookie supprime le cookie "ps_token".
+// ClearCookie supprime le cookie ps_token.
+//
+// @param w http.ResponseWriter Writer de reponse HTTP
 func ClearCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "ps_token",

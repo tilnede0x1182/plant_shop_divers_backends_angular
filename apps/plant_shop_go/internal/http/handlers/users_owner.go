@@ -11,65 +11,66 @@ import (
 	"plant_shop_go/internal/security"
 )
 
-/*
-GET /api/users/{id}
-*/
-func GetUser(w http.ResponseWriter, r *http.Request) {
-	// Cette fonction est déjà protégée par OwnerGuard, donc l'accès est sécurisé.
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
+// parseUserID extrait l ID utilisateur depuis le chemin.
+func parseUserID(r *http.Request) int {
 	vars := mux.Vars(r)
 	id, _ := strconv.Atoi(vars["id"])
+	return id
+}
 
-	var u models.User
-	if err := db.Connect().First(&u, id).Error; err != nil {
+// sanitizeUserInput retire le champ admin si non autorise.
+func sanitizeUserInput(in map[string]any, isAdmin bool) {
+	if !isAdmin {
+		delete(in, "admin")
+	}
+}
+
+// fetchAndClearPassword charge un user et masque le mot de passe.
+func fetchAndClearPassword(id int) (models.User, error) {
+	var user models.User
+	err := db.Connect().First(&user, id).Error
+	user.Password = ""
+	return user, err
+}
+
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+// GetUser retourne un utilisateur par son ID.
+func GetUser(w http.ResponseWriter, r *http.Request) {
+	id := parseUserID(r)
+	user, err := fetchAndClearPassword(id)
+	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
 	}
-
-	// On ne renvoie jamais le mot de passe
-	u.Password = ""
-	json.NewEncoder(w).Encode(u)
+	json.NewEncoder(w).Encode(user)
 }
 
-/*
-PATCH /api/users/{id}
-*/
+// UpdateUser met a jour un utilisateur (proprietaire ou admin).
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	// OwnerGuard a déjà vérifié que l'utilisateur est soit le propriétaire, soit un admin.
-	// Maintenant, nous devons vérifier si l'utilisateur qui fait la requête est un admin
-	// pour l'autoriser à modifier le champ "admin".
-
 	claims, ok := r.Context().Value("claims").(*security.Claims)
 	if !ok {
-		http.Error(w, "claims not found in context", http.StatusInternalServerError)
+		http.Error(w, "claims not found", http.StatusInternalServerError)
 		return
 	}
-
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-
+	id := parseUserID(r)
 	var in map[string]any
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
-
-	// *** LA CORRECTION EST ICI ***
-	// Si l'utilisateur n'est PAS un admin, on supprime le champ "admin" du payload
-	// pour l'empêcher de se promouvoir lui-même.
-	if !claims.Admin {
-		delete(in, "admin")
-	}
-
-	// Appliquer les modifications
-	d := db.Connect()
-	if err := d.Model(&models.User{}).Where("id = ?", id).Updates(in).Error; err != nil {
+	sanitizeUserInput(in, claims.Admin)
+	conn := db.Connect()
+	if err := conn.Model(&models.User{}).Where("id = ?", id).Updates(in).Error; err != nil {
 		http.Error(w, "update failed", http.StatusInternalServerError)
 		return
 	}
-
-	// Renvoyer l'utilisateur mis à jour
-	var u models.User
-	d.First(&u, id)
-	u.Password = "" // Ne jamais renvoyer le hash
-	json.NewEncoder(w).Encode(u)
+	user, _ := fetchAndClearPassword(id)
+	json.NewEncoder(w).Encode(user)
 }

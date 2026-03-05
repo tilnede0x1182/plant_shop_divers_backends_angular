@@ -11,7 +11,9 @@ import (
 )
 
 // PublicListPlants retourne la liste de toutes les plantes.
-// @param db Client GORM de base de données
+//
+// @param db *gorm.DB Client GORM de base de donnees
+// @return http.HandlerFunc Handler HTTP
 func PublicListPlants(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var plants []models.Plant
@@ -25,7 +27,9 @@ func PublicListPlants(db *gorm.DB) http.HandlerFunc {
 }
 
 // PublicGetPlant retourne une plante par son ID.
-// @param db Client GORM de base de données
+//
+// @param db *gorm.DB Client GORM de base de donnees
+// @return http.HandlerFunc Handler HTTP
 func PublicGetPlant(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		parts := strings.Split(r.URL.Path, "/")

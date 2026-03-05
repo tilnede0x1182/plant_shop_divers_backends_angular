@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"net/http"
 	"strconv"
@@ -13,9 +14,27 @@ import (
 	"plant_shop_go/internal/security"
 )
 
-/// firstNonNil retourne la première valeur non nil.
-// @param a Première valeur à tester
-// @param b Valeur de secours
+// ==============================================================================
+// Types
+// ==============================================================================
+
+// itemReq represente un item de commande en entree.
+type itemReq struct {
+	PlantIDAny any `json:"plantId"`
+	PlantIDAlt any `json:"plant_id"`
+	Quantity   int `json:"quantity"`
+}
+
+// reqBody represente le corps de requete de creation de commande.
+type reqBody struct {
+	Items []itemReq `json:"items"`
+}
+
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
+// firstNonNil retourne la premiere valeur non nil.
 func firstNonNil(a, b any) any {
 	if a != nil {
 		return a
@@ -23,187 +42,240 @@ func firstNonNil(a, b any) any {
 	return b
 }
 
-/// parseUintOrZero convertit une string en uint.
-// @param s Chaîne à convertir
+// parseUintOrZero convertit une string en uint.
 func parseUintOrZero(s string) uint {
 	if s == "" {
 		return 0
 	}
-	v, err := strconv.ParseUint(s, 10, 64)
+	val, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
 		return 0
 	}
-	return uint(v)
+	return uint(val)
 }
 
-// ListUserOrders liste les commandes de l utilisateur authentifié.
-// @param db Client GORM de base de données
+// roundPrice arrondit un prix a 2 decimales.
+func roundPrice(price float64) float64 {
+	return math.Round(price*100) / 100.0
+}
+
+// extractClaims extrait les claims du contexte.
+func extractClaims(r *http.Request) (*security.Claims, bool) {
+	raw := r.Context().Value("claims")
+	if raw == nil {
+		return nil, false
+	}
+	claims, ok := raw.(*security.Claims)
+	return claims, ok
+}
+
+// parsePathID extrait l ID depuis le chemin URL.
+func parsePathID(r *http.Request) (uint64, error) {
+	vars := mux.Vars(r)
+	idStr, ok := vars["id"]
+	if !ok {
+		return 0, errors.New("missing id")
+	}
+	return strconv.ParseUint(idStr, 10, 64)
+}
+
+// extractPlantID extrait l ID de plante depuis un itemReq.
+func extractPlantID(it itemReq) uint {
+	switch val := firstNonNil(it.PlantIDAny, it.PlantIDAlt).(type) {
+	case string:
+		if num, err := strconv.ParseFloat(val, 64); err == nil {
+			return uint(num)
+		}
+	case float64:
+		return uint(val)
+	case int:
+		return uint(val)
+	}
+	return 0
+}
+
+// validateOrderInput valide le body de creation de commande.
+//
+// @param r *http.Request Requete HTTP
+// @return *reqBody Body decode ou nil
+// @return error Erreur de validation
+func validateOrderInput(r *http.Request) (*reqBody, error) {
+	var in reqBody
+	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+		return nil, errors.New("invalid json")
+	}
+	if len(in.Items) == 0 {
+		return nil, errors.New("no items")
+	}
+	return &in, nil
+}
+
+// createEmptyOrder cree une commande vide pour un utilisateur.
+//
+// @param db *gorm.DB Client GORM
+// @param userID string ID utilisateur
+// @return *models.Order Commande creee ou nil
+// @return error Erreur de creation
+func createEmptyOrder(db *gorm.DB, userID string) (*models.Order, error) {
+	order := models.Order{UserID: parseUintOrZero(userID), TotalPrice: 0.0, Status: "pending"}
+	if err := db.Create(&order).Error; err != nil {
+		return nil, err
+	}
+	return &order, nil
+}
+
+// ==============================================================================
+// Fonctions utilitaires principales
+// ==============================================================================
+
+// filterOrderItems filtre les items sans plante valide.
+func filterOrderItems(orders []models.Order) {
+	for idx := range orders {
+		filtered := orders[idx].Items[:0]
+		for _, item := range orders[idx].Items {
+			if item.Plant.ID == 0 {
+				continue
+			}
+			item.Plant.Price = roundPrice(item.Plant.Price)
+			filtered = append(filtered, item)
+		}
+		orders[idx].Items = filtered
+	}
+}
+
+// fetchUserOrders recupere les commandes d un utilisateur.
+func fetchUserOrders(db *gorm.DB, userID string) ([]models.Order, error) {
+	var orders []models.Order
+	err := db.Preload("Items.Plant").
+		Where("user_id = ?", parseUintOrZero(userID)).
+		Order("created_at DESC").
+		Find(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+	if orders == nil {
+		orders = make([]models.Order, 0)
+	}
+	return orders, nil
+}
+
+// createOrderItem cree un item et met a jour le stock.
+func createOrderItem(db *gorm.DB, orderID uint, it itemReq) (float64, error) {
+	plantID := extractPlantID(it)
+	var plant models.Plant
+	if err := db.First(&plant, plantID).Error; err != nil {
+		return 0, errors.New("plant not found")
+	}
+	if plant.Stock < it.Quantity {
+		return 0, errors.New("out of stock")
+	}
+	orderItem := models.OrderItem{OrderID: orderID, PlantID: plant.ID, Quantity: it.Quantity}
+	if err := db.Create(&orderItem).Error; err != nil {
+		return 0, err
+	}
+	db.Model(&plant).Update("stock", plant.Stock-it.Quantity)
+	return float64(it.Quantity) * plant.Price, nil
+}
+
+// processOrderItems traite tous les items d une commande.
+func processOrderItems(db *gorm.DB, orderID uint, items []itemReq) (float64, error) {
+	var total float64
+	for _, it := range items {
+		itemTotal, err := createOrderItem(db, orderID, it)
+		if err != nil {
+			return 0, err
+		}
+		total += itemTotal
+	}
+	return total, nil
+}
+
+// finalizeOrder met a jour le total et charge les items.
+func finalizeOrder(db *gorm.DB, order *models.Order, total float64) error {
+	total = roundPrice(total)
+	db.Model(order).Update("total_price", total)
+	db.Preload("Items").First(order, order.ID)
+	order.TotalPrice = roundPrice(order.TotalPrice)
+	return nil
+}
+
+// ==============================================================================
+// Handlers principaux
+// ==============================================================================
+
+// ListUserOrders liste les commandes de l utilisateur authentifie.
 func ListUserOrders(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		raw := r.Context().Value("claims")
-		if raw == nil {
+		claims, ok := extractClaims(r)
+		if !ok {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		claims := raw.(*security.Claims)
-		var orders []models.Order
-
-		err := db.Preload("Items.Plant").
-			Where("user_id = ?", parseUintOrZero(claims.UserID)).
-			Order("created_at DESC"). // Ajout du tri pour correspondre à NestJS
-			Find(&orders).Error
-
+		orders, err := fetchUserOrders(db, claims.UserID)
 		if err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-
-		if orders == nil {
-			orders = make([]models.Order, 0)
-		}
-
-	for i := range orders {
-		filtered := orders[i].Items[:0]
-		for _, item := range orders[i].Items {
-			if item.Plant.ID == 0 {
-				continue
-			}
-			item.Plant.Price = math.Round(item.Plant.Price*100) / 100.0
-			filtered = append(filtered, item)
-		}
-		orders[i].Items = filtered
-	}
-
+		filterOrderItems(orders)
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(orders)
 	}
 }
 
-// CreateOrder crée une commande pour l utilisateur authentifié.
-// @param db Client GORM de base de données
+// CreateOrder cree une commande pour l utilisateur authentifie.
 func CreateOrder(db *gorm.DB) http.HandlerFunc {
-	type itemReq struct {
-		PlantIDAny any `json:"plantId"`
-		PlantIDAlt any `json:"plant_id"`
-		Quantity   int `json:"quantity"`
-	}
-	type reqBody struct {
-		Items []itemReq `json:"items"`
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		raw := r.Context().Value("claims")
-		if raw == nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-		claims, ok := raw.(*security.Claims)
+		claims, ok := extractClaims(r)
 		if !ok {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-
-		var in reqBody
-		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-			http.Error(w, "invalid json", http.StatusBadRequest)
+		in, err := validateOrderInput(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		if len(in.Items) == 0 {
-			http.Error(w, "no items", http.StatusBadRequest)
-			return
-		}
-
-		order := models.Order{
-			UserID:     parseUintOrZero(claims.UserID),
-			TotalPrice: 0.0,
-			Status:     "pending",
-		}
-		if err := db.Create(&order).Error; err != nil {
+		order, err := createEmptyOrder(db, claims.UserID)
+		if err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-
-		var total float64 = 0.0
-		for _, it := range in.Items {
-			var plantID uint
-			switch v := firstNonNil(it.PlantIDAny, it.PlantIDAlt).(type) {
-				case string:
-					if n, err := strconv.ParseFloat(v, 64); err == nil {
-						plantID = uint(n)
-					}
-				case float64:
-					plantID = uint(v)
-				case int:
-					plantID = uint(v)
-				default:
-					plantID = 0 // défaut si rien
-			}
-
-			var p models.Plant
-			if err := db.First(&p, plantID).Error; err != nil {
-				db.Delete(&order)
-				http.Error(w, "plant not found", http.StatusBadRequest)
-				return
-			}
-			if p.Stock < it.Quantity {
-				db.Delete(&order)
-				http.Error(w, "out of stock", http.StatusBadRequest)
-				return
-			}
-			oi := models.OrderItem{
-				OrderID:  order.ID,
-				PlantID:  p.ID,
-				Quantity: it.Quantity,
-			}
-			if err := db.Create(&oi).Error; err != nil {
-				db.Delete(&order)
-				http.Error(w, "db error", http.StatusInternalServerError)
-				return
-			}
-			if err := db.Model(&p).Update("stock", p.Stock-it.Quantity).Error; err != nil {
-				db.Delete(&order)
-				http.Error(w, "db error", http.StatusInternalServerError)
-				return
-			}
-			total += float64(it.Quantity) * p.Price
-		}
-
-		total = float64(int(total*100)) / 100.0
-		if err := db.Model(&order).Update("total_price", total).Error; err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
+		total, err := processOrderItems(db, order.ID, in.Items)
+		if err != nil {
+			db.Delete(order)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-
-		if err := db.Preload("Items").First(&order, order.ID).Error; err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
-			return
-		}
+		finalizeOrder(db, order, total)
 		w.WriteHeader(http.StatusCreated)
-		for j := range order.Items {
-			order.Items[j].Plant.Price = float64(int(order.Items[j].Plant.Price*100)) / 100.0
-		}
-		order.TotalPrice = float64(int(order.TotalPrice*100)) / 100.0
-		_ = json.NewEncoder(w).Encode(order)
+		json.NewEncoder(w).Encode(order)
 	}
 }
 
-// UpdateOrder met à jour une commande (status).
+// orderStatusInput structure pour mise a jour status.
+type orderStatusInput struct {
+	Status *string `json:"status,omitempty"`
+}
+
+// updateOrderStatus applique le nouveau status si present.
+//
+// @param order *models.Order Commande a mettre a jour
+// @param in *orderStatusInput Input de mise a jour
+func updateOrderStatus(order *models.Order, in *orderStatusInput) {
+	if in.Status != nil {
+		order.Status = *in.Status
+	}
+}
+
+// UpdateOrder met a jour une commande (status).
 func UpdateOrder(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		idStr, ok := vars["id"]
-		if !ok {
-			http.Error(w, "missing id", http.StatusBadRequest)
-			return
-		}
-		id, err := strconv.ParseUint(idStr, 10, 64)
+		id, err := parsePathID(r)
 		if err != nil {
 			http.Error(w, "invalid id", http.StatusBadRequest)
 			return
 		}
-		var in struct {
-			Status *string `json:"status,omitempty"`
-		}
+		var in orderStatusInput
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 			http.Error(w, "invalid json", http.StatusBadRequest)
 			return
@@ -213,35 +285,21 @@ func UpdateOrder(db *gorm.DB) http.HandlerFunc {
 			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
-		if in.Status != nil {
-			order.Status = *in.Status
-		}
-		if err := db.Save(&order).Error; err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
-			return
-		}
-		_ = json.NewEncoder(w).Encode(order)
+		updateOrderStatus(&order, &in)
+		db.Save(&order)
+		json.NewEncoder(w).Encode(order)
 	}
 }
 
 // DeleteOrder supprime une commande par ID depuis le chemin.
 func DeleteOrder(db *gorm.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		idStr, ok := vars["id"]
-		if !ok {
-			http.Error(w, "missing id", http.StatusBadRequest)
-			return
-		}
-		id, err := strconv.ParseUint(idStr, 10, 64)
+		id, err := parsePathID(r)
 		if err != nil {
 			http.Error(w, "invalid id", http.StatusBadRequest)
 			return
 		}
-		if err := db.Delete(&models.Order{}, id).Error; err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
-			return
-		}
+		db.Delete(&models.Order{}, id)
 		w.WriteHeader(http.StatusOK)
 	}
 }

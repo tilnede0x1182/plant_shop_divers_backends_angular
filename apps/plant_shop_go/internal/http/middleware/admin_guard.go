@@ -5,8 +5,10 @@ import (
 	"plant_shop_go/internal/security"
 )
 
-// AdminGuard protège une route en ne laissant passer que les admins.
-// next sert les requêtes validées.
+// AdminGuard protege une route en ne laissant passer que les admins.
+//
+// @param next http.Handler Handler suivant dans la chaine
+// @return http.Handler Handler avec verification admin
 func AdminGuard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// claims injectés par AuthGuard dans le context

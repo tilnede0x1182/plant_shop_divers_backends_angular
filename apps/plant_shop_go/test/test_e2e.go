@@ -354,14 +354,12 @@ func testAdminPlants(who string) {
 	hit("DELETE", `/admin/plants/`+fmt.Sprintf("%d", id), 200, nil, who)
 }
 
-/**
- * Teste la gestion CRUD des administrateurs et la conformité de l’ordre dans /admin/users
- * - Crée un admin temporaire
- * - Vérifie la présence et l’ordre dans la liste
- * - Teste mise à jour nom et bascule du rôle admin
- * - Supprime l’admin temporaire
- * @who jeton d’admin utilisé pour les requêtes
- */
+// Teste la gestion CRUD des administrateurs et la conformité de l’ordre dans /admin/users
+// - Crée un admin temporaire
+// - Vérifie la présence et l’ordre dans la liste
+// - Teste mise à jour nom et bascule du rôle admin
+// - Supprime l’admin temporaire
+// @who jeton d’admin utilisé pour les requêtes
 func testAdminUsers(who string) {
 	log.Println("\n📌 TEST MODULE: ADMIN USERS")
 

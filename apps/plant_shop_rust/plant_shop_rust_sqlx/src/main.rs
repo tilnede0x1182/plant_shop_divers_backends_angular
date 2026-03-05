@@ -7,8 +7,15 @@
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
+use std::net::TcpListener as StdTcpListener;
 use std::time::Duration;
 use tokio::runtime::Builder;
+
+// ==============================================================================
+// Constantes
+// ==============================================================================
+
+const PORT: u16 = 4100;
 
 use poem::{
     get,
@@ -49,9 +56,22 @@ use crate::{
 // Main
 // ==============================================================================
 
+/// Verifie si un port est disponible.
+///
+/// @param port Numero de port a verifier
+/// @return true si disponible, false sinon
+fn is_port_available(port: u16) -> bool {
+    StdTcpListener::bind(("0.0.0.0", port)).is_ok()
+}
+
 /// Point d'entrée principal du serveur.
 /// Configure le runtime Tokio et démarre le serveur async.
 fn main() -> Result<(), std::io::Error> {
+    if !is_port_available(PORT) {
+        eprintln!("❌ Le port {} est déjà utilisé.", PORT);
+        std::process::exit(1);
+    }
+
     dotenv().ok();
     let worker_threads = num_cpus::get().max(2);
     Builder::new_multi_thread()
@@ -163,9 +183,9 @@ async fn async_main() -> Result<(), std::io::Error> {
         .with(poem::middleware::CookieJarManager::new())
         .with(cors);
 
-    // Lancer serveur HTTP sur le port 4100
-    println!("🚀 Serveur démarré sur http://0.0.0.0:4100");
-    Server::new(TcpListener::bind("0.0.0.0:4100"))
+    // Lancer serveur HTTP
+    println!("🚀 Serveur démarré sur http://0.0.0.0:{}", PORT);
+    Server::new(TcpListener::bind(format!("0.0.0.0:{}", PORT)))
         .run(app)
         .await
 }

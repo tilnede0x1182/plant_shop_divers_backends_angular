@@ -13,6 +13,13 @@ use poem::{
     patch, post, EndpointExt, Route, Server,
 };
 use sea_orm::DatabaseConnection;
+use std::net::TcpListener as StdTcpListener;
+
+// ==============================================================================
+// Constantes
+// ==============================================================================
+
+const PORT: u16 = 4100;
 
 // ==============================================================================
 // Modules
@@ -47,8 +54,21 @@ use crate::{
 /// Configure la base de donnees, les migrations, CORS et les routes REST.
 ///
 /// @return Ok(()) si le serveur s'arrete proprement, Err sinon
+/// Verifie si un port est disponible.
+///
+/// @param port Numero de port a verifier
+/// @return true si disponible, false sinon
+fn is_port_available(port: u16) -> bool {
+    StdTcpListener::bind(("0.0.0.0", port)).is_ok()
+}
+
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
+    if !is_port_available(PORT) {
+        eprintln!("❌ Le port {} est déjà utilisé.", PORT);
+        std::process::exit(1);
+    }
+
     // Charger .env et config
     dotenv().ok();
 
@@ -134,9 +154,9 @@ async fn main() -> Result<(), std::io::Error> {
         .with(poem::middleware::CookieJarManager::new())
         .with(cors);
 
-    // Lancer serveur HTTP sur le port 4100
-    println!("🚀 Serveur démarré sur http://0.0.0.0:4100");
-    Server::new(TcpListener::bind("0.0.0.0:4100"))
+    // Lancer serveur HTTP
+    println!("🚀 Serveur démarré sur http://0.0.0.0:{}", PORT);
+    Server::new(TcpListener::bind(format!("0.0.0.0:{}", PORT)))
         .run(app)
         .await
 }

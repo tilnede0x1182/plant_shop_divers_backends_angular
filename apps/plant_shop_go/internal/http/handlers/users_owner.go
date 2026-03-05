@@ -1,5 +1,9 @@
 package handlers
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"encoding/json"
 	"net/http"
@@ -16,25 +20,35 @@ import (
 // ==============================================================================
 
 // parseUserID extrait l ID utilisateur depuis le chemin.
-func parseUserID(r *http.Request) int {
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-	return id
+//
+// @param httpRequest *http.Request Requete HTTP
+// @return int ID utilisateur extrait
+func parseUserID(httpRequest *http.Request) int {
+	pathVars := mux.Vars(httpRequest)
+	userID, _ := strconv.Atoi(pathVars["id"])
+	return userID
 }
 
 // sanitizeUserInput retire le champ admin si non autorise.
-func sanitizeUserInput(in map[string]any, isAdmin bool) {
-	if !isAdmin {
-		delete(in, "admin")
+//
+// @param updateData map[string]any Donnees de mise a jour
+// @param isAdminUser bool True si utilisateur admin
+func sanitizeUserInput(updateData map[string]any, isAdminUser bool) {
+	if !isAdminUser {
+		delete(updateData, "admin")
 	}
 }
 
 // fetchAndClearPassword charge un user et masque le mot de passe.
-func fetchAndClearPassword(id int) (models.User, error) {
-	var user models.User
-	err := db.Connect().First(&user, id).Error
-	user.Password = ""
-	return user, err
+//
+// @param targetUserID int ID de l utilisateur
+// @return models.User Utilisateur trouve
+// @return error Erreur si non trouve
+func fetchAndClearPassword(targetUserID int) (models.User, error) {
+	var foundUser models.User
+	queryError := db.Connect().First(&foundUser, targetUserID).Error
+	foundUser.Password = ""
+	return foundUser, queryError
 }
 
 // ==============================================================================
@@ -42,35 +56,41 @@ func fetchAndClearPassword(id int) (models.User, error) {
 // ==============================================================================
 
 // GetUser retourne un utilisateur par son ID.
-func GetUser(w http.ResponseWriter, r *http.Request) {
-	id := parseUserID(r)
-	user, err := fetchAndClearPassword(id)
-	if err != nil {
-		http.Error(w, "user not found", http.StatusNotFound)
+//
+// @param responseWriter http.ResponseWriter Writer HTTP
+// @param httpRequest *http.Request Requete HTTP
+func GetUser(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	targetUserID := parseUserID(httpRequest)
+	foundUser, queryError := fetchAndClearPassword(targetUserID)
+	if queryError != nil {
+		http.Error(responseWriter, "user not found", http.StatusNotFound)
 		return
 	}
-	json.NewEncoder(w).Encode(user)
+	json.NewEncoder(responseWriter).Encode(foundUser)
 }
 
 // UpdateUser met a jour un utilisateur (proprietaire ou admin).
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value("claims").(*security.Claims)
-	if !ok {
-		http.Error(w, "claims not found", http.StatusInternalServerError)
+//
+// @param responseWriter http.ResponseWriter Writer HTTP
+// @param httpRequest *http.Request Requete HTTP
+func UpdateUser(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	userClaims, claimsFound := httpRequest.Context().Value("claims").(*security.Claims)
+	if !claimsFound {
+		http.Error(responseWriter, "claims not found", http.StatusInternalServerError)
 		return
 	}
-	id := parseUserID(r)
-	var in map[string]any
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+	targetUserID := parseUserID(httpRequest)
+	var updateData map[string]any
+	if decodeError := json.NewDecoder(httpRequest.Body).Decode(&updateData); decodeError != nil {
+		http.Error(responseWriter, "bad request", http.StatusBadRequest)
 		return
 	}
-	sanitizeUserInput(in, claims.Admin)
-	conn := db.Connect()
-	if err := conn.Model(&models.User{}).Where("id = ?", id).Updates(in).Error; err != nil {
-		http.Error(w, "update failed", http.StatusInternalServerError)
+	sanitizeUserInput(updateData, userClaims.Admin)
+	gormDB := db.Connect()
+	if updateError := gormDB.Model(&models.User{}).Where("id = ?", targetUserID).Updates(updateData).Error; updateError != nil {
+		http.Error(responseWriter, "update failed", http.StatusInternalServerError)
 		return
 	}
-	user, _ := fetchAndClearPassword(id)
-	json.NewEncoder(w).Encode(user)
+	updatedUser, _ := fetchAndClearPassword(targetUserID)
+	json.NewEncoder(responseWriter).Encode(updatedUser)
 }

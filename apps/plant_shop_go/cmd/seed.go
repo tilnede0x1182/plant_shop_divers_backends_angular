@@ -1,5 +1,9 @@
 package main
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"log"
 
@@ -10,19 +14,27 @@ import (
 	"plant_shop_go/internal/models"
 )
 
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
 // migrateSchema cree le schema des tables.
 //
-// @param conn *gorm.DB Connexion DB
-func migrateSchema(conn *gorm.DB) {
+// @param dbConnection *gorm.DB Connexion a la base de donnees
+func migrateSchema(dbConnection *gorm.DB) {
 	log.Println("Creation du schema des tables...")
-	conn.AutoMigrate(&models.User{}, &models.Plant{}, &models.Order{}, &models.OrderItem{})
+	dbConnection.AutoMigrate(&models.User{}, &models.Plant{}, &models.Order{}, &models.OrderItem{})
 	log.Println("Schema cree avec succes.")
 }
+
+// ==============================================================================
+// Main
+// ==============================================================================
 
 // main est le point d entree du seed.
 func main() {
 	_ = godotenv.Load(".env")
-	conn := db.Connect()
-	migrateSchema(conn)
-	db.Seed(conn)
+	dbConnection := db.Connect()
+	migrateSchema(dbConnection)
+	db.Seed(dbConnection)
 }

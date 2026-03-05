@@ -1,5 +1,9 @@
 package handlers
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"encoding/json"
 	"net/http"
@@ -34,25 +38,30 @@ type plantUpdateInput struct {
 // ==============================================================================
 
 // applyPlantUpdates applique les mises a jour sur une plante.
-func applyPlantUpdates(plant *models.Plant, in plantUpdateInput) {
-	if in.Name != nil {
-		plant.Name = *in.Name
+//
+// @param targetPlant *models.Plant Plante a mettre a jour
+// @param updateInput plantUpdateInput Donnees de mise a jour
+func applyPlantUpdates(targetPlant *models.Plant, updateInput plantUpdateInput) {
+	if updateInput.Name != nil {
+		targetPlant.Name = *updateInput.Name
 	}
-	if in.Price != nil {
-		plant.Price = roundPrice(*in.Price)
+	if updateInput.Price != nil {
+		targetPlant.Price = roundPrice(*updateInput.Price)
 	}
-	if in.Stock != nil {
-		plant.Stock = *in.Stock
+	if updateInput.Stock != nil {
+		targetPlant.Stock = *updateInput.Stock
 	}
-	if in.Description != nil {
-		plant.Description = *in.Description
+	if updateInput.Description != nil {
+		targetPlant.Description = *updateInput.Description
 	}
 }
 
 // normalizePlantPrices arrondit les prix des plantes.
-func normalizePlantPrices(plants []models.Plant) {
-	for idx := range plants {
-		plants[idx].Price = roundPrice(plants[idx].Price)
+//
+// @param plantList []models.Plant Liste des plantes a normaliser
+func normalizePlantPrices(plantList []models.Plant) {
+	for plantIndex := range plantList {
+		plantList[plantIndex].Price = roundPrice(plantList[plantIndex].Price)
 	}
 }
 
@@ -61,74 +70,86 @@ func normalizePlantPrices(plants []models.Plant) {
 // ==============================================================================
 
 // AdminListPlants liste toutes les plantes (route admin).
-func AdminListPlants(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var plants []models.Plant
-		if err := db.Order("name ASC").Find(&plants).Error; err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
+//
+// @param gormDB *gorm.DB Client GORM
+// @return http.HandlerFunc Handler HTTP
+func AdminListPlants(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		var allPlants []models.Plant
+		if queryError := gormDB.Order("name ASC").Find(&allPlants).Error; queryError != nil {
+			http.Error(responseWriter, "db error", http.StatusInternalServerError)
 			return
 		}
-		normalizePlantPrices(plants)
-		json.NewEncoder(w).Encode(plants)
+		normalizePlantPrices(allPlants)
+		json.NewEncoder(responseWriter).Encode(allPlants)
 	}
 }
 
 // AdminCreatePlant cree une plante (route admin).
-func AdminCreatePlant(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var in plantInput
-		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-			http.Error(w, "invalid json", http.StatusBadRequest)
+//
+// @param gormDB *gorm.DB Client GORM
+// @return http.HandlerFunc Handler HTTP
+func AdminCreatePlant(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		var plantData plantInput
+		if decodeError := json.NewDecoder(httpRequest.Body).Decode(&plantData); decodeError != nil {
+			http.Error(responseWriter, "invalid json", http.StatusBadRequest)
 			return
 		}
-		plant := models.Plant{
-			Name:        in.Name,
-			Price:       roundPrice(in.Price),
-			Stock:       in.Stock,
-			Description: in.Description,
+		newPlant := models.Plant{
+			Name:        plantData.Name,
+			Price:       roundPrice(plantData.Price),
+			Stock:       plantData.Stock,
+			Description: plantData.Description,
 		}
-		if err := db.Create(&plant).Error; err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
+		if createError := gormDB.Create(&newPlant).Error; createError != nil {
+			http.Error(responseWriter, "db error", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(plant)
+		responseWriter.WriteHeader(http.StatusCreated)
+		json.NewEncoder(responseWriter).Encode(newPlant)
 	}
 }
 
 // AdminUpdatePlant met a jour une plante par ID depuis le chemin.
-func AdminUpdatePlant(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := parsePathID(r)
-		if err != nil {
-			http.Error(w, "invalid id", http.StatusBadRequest)
+//
+// @param gormDB *gorm.DB Client GORM
+// @return http.HandlerFunc Handler HTTP
+func AdminUpdatePlant(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		plantID, parseError := parsePathID(httpRequest)
+		if parseError != nil {
+			http.Error(responseWriter, "invalid id", http.StatusBadRequest)
 			return
 		}
-		var in plantUpdateInput
-		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-			http.Error(w, "invalid json", http.StatusBadRequest)
+		var updateInput plantUpdateInput
+		if decodeError := json.NewDecoder(httpRequest.Body).Decode(&updateInput); decodeError != nil {
+			http.Error(responseWriter, "invalid json", http.StatusBadRequest)
 			return
 		}
-		var plant models.Plant
-		if err := db.First(&plant, id).Error; err != nil {
-			http.Error(w, "not found", http.StatusNotFound)
+		var targetPlant models.Plant
+		if findError := gormDB.First(&targetPlant, plantID).Error; findError != nil {
+			http.Error(responseWriter, "not found", http.StatusNotFound)
 			return
 		}
-		applyPlantUpdates(&plant, in)
-		db.Save(&plant)
-		json.NewEncoder(w).Encode(plant)
+		applyPlantUpdates(&targetPlant, updateInput)
+		gormDB.Save(&targetPlant)
+		json.NewEncoder(responseWriter).Encode(targetPlant)
 	}
 }
 
 // AdminDeletePlant supprime une plante par ID depuis le chemin.
-func AdminDeletePlant(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := parsePathID(r)
-		if err != nil {
-			http.Error(w, "invalid id", http.StatusBadRequest)
+//
+// @param gormDB *gorm.DB Client GORM
+// @return http.HandlerFunc Handler HTTP
+func AdminDeletePlant(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		plantID, parseError := parsePathID(httpRequest)
+		if parseError != nil {
+			http.Error(responseWriter, "invalid id", http.StatusBadRequest)
 			return
 		}
-		db.Delete(&models.Plant{}, id)
-		w.WriteHeader(http.StatusOK)
+		gormDB.Delete(&models.Plant{}, plantID)
+		responseWriter.WriteHeader(http.StatusOK)
 	}
 }

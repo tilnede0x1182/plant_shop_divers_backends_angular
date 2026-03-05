@@ -1,5 +1,9 @@
 package handlers
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"encoding/json"
 	"errors"
@@ -34,24 +38,31 @@ type reqBody struct {
 // Fonctions utilitaires
 // ==============================================================================
 
-// firstNonNil retourne la premiere valeur non nil.
-func firstNonNil(a, b any) any {
-	if a != nil {
-		return a
+/// firstNonNil retourne la premiere valeur non nil.
+//
+// @param firstValue any Premiere valeur a tester
+// @param secondValue any Seconde valeur fallback
+// @return any Premiere non nil
+func firstNonNil(firstValue, secondValue any) any {
+	if firstValue != nil {
+		return firstValue
 	}
-	return b
+	return secondValue
 }
 
 // parseUintOrZero convertit une string en uint.
-func parseUintOrZero(s string) uint {
-	if s == "" {
+//
+// @param stringValue string Chaine a convertir
+// @return uint Valeur ou 0
+func parseUintOrZero(stringValue string) uint {
+	if stringValue == "" {
 		return 0
 	}
-	val, err := strconv.ParseUint(s, 10, 64)
-	if err != nil {
+	parsedValue, parseError := strconv.ParseUint(stringValue, 10, 64)
+	if parseError != nil {
 		return 0
 	}
-	return uint(val)
+	return uint(parsedValue)
 }
 
 // roundPrice arrondit un prix a 2 decimales.
@@ -60,68 +71,79 @@ func roundPrice(price float64) float64 {
 }
 
 // extractClaims extrait les claims du contexte.
-func extractClaims(r *http.Request) (*security.Claims, bool) {
-	raw := r.Context().Value("claims")
-	if raw == nil {
+//
+// @param httpRequest *http.Request Requete HTTP
+// @return *security.Claims Claims extraits ou nil
+// @return bool True si claims trouves
+func extractClaims(httpRequest *http.Request) (*security.Claims, bool) {
+	rawClaims := httpRequest.Context().Value("claims")
+	if rawClaims == nil {
 		return nil, false
 	}
-	claims, ok := raw.(*security.Claims)
-	return claims, ok
+	userClaims, claimsFound := rawClaims.(*security.Claims)
+	return userClaims, claimsFound
 }
 
 // parsePathID extrait l ID depuis le chemin URL.
-func parsePathID(r *http.Request) (uint64, error) {
-	vars := mux.Vars(r)
-	idStr, ok := vars["id"]
-	if !ok {
+//
+// @param httpRequest *http.Request Requete HTTP
+// @return uint64 ID extrait
+// @return error Erreur si ID manquant
+func parsePathID(httpRequest *http.Request) (uint64, error) {
+	pathVars := mux.Vars(httpRequest)
+	idString, idFound := pathVars["id"]
+	if !idFound {
 		return 0, errors.New("missing id")
 	}
-	return strconv.ParseUint(idStr, 10, 64)
+	return strconv.ParseUint(idString, 10, 64)
 }
 
-// extractPlantID extrait l ID de plante depuis un itemReq.
-func extractPlantID(it itemReq) uint {
-	switch val := firstNonNil(it.PlantIDAny, it.PlantIDAlt).(type) {
+/// extractPlantID extrait l ID de plante depuis un itemReq.
+//
+// @param orderItemInput itemReq Item de commande
+// @return uint ID de la plante
+func extractPlantID(orderItemInput itemReq) uint {
+	switch rawValue := firstNonNil(orderItemInput.PlantIDAny, orderItemInput.PlantIDAlt).(type) {
 	case string:
-		if num, err := strconv.ParseFloat(val, 64); err == nil {
-			return uint(num)
+		if parsedNum, parseError := strconv.ParseFloat(rawValue, 64); parseError == nil {
+			return uint(parsedNum)
 		}
 	case float64:
-		return uint(val)
+		return uint(rawValue)
 	case int:
-		return uint(val)
+		return uint(rawValue)
 	}
 	return 0
 }
 
 // validateOrderInput valide le body de creation de commande.
 //
-// @param r *http.Request Requete HTTP
+// @param httpRequest *http.Request Requete HTTP
 // @return *reqBody Body decode ou nil
 // @return error Erreur de validation
-func validateOrderInput(r *http.Request) (*reqBody, error) {
-	var in reqBody
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
+func validateOrderInput(httpRequest *http.Request) (*reqBody, error) {
+	var orderBody reqBody
+	if decodeError := json.NewDecoder(httpRequest.Body).Decode(&orderBody); decodeError != nil {
 		return nil, errors.New("invalid json")
 	}
-	if len(in.Items) == 0 {
+	if len(orderBody.Items) == 0 {
 		return nil, errors.New("no items")
 	}
-	return &in, nil
+	return &orderBody, nil
 }
 
 // createEmptyOrder cree une commande vide pour un utilisateur.
 //
-// @param db *gorm.DB Client GORM
+// @param gormDB *gorm.DB Client GORM
 // @param userID string ID utilisateur
 // @return *models.Order Commande creee ou nil
 // @return error Erreur de creation
-func createEmptyOrder(db *gorm.DB, userID string) (*models.Order, error) {
-	order := models.Order{UserID: parseUintOrZero(userID), TotalPrice: 0.0, Status: "pending"}
-	if err := db.Create(&order).Error; err != nil {
-		return nil, err
+func createEmptyOrder(gormDB *gorm.DB, userID string) (*models.Order, error) {
+	newOrder := models.Order{UserID: parseUintOrZero(userID), TotalPrice: 0.0, Status: "pending"}
+	if createError := gormDB.Create(&newOrder).Error; createError != nil {
+		return nil, createError
 	}
-	return &order, nil
+	return &newOrder, nil
 }
 
 // ==============================================================================
@@ -129,73 +151,97 @@ func createEmptyOrder(db *gorm.DB, userID string) (*models.Order, error) {
 // ==============================================================================
 
 // filterOrderItems filtre les items sans plante valide.
-func filterOrderItems(orders []models.Order) {
-	for idx := range orders {
-		filtered := orders[idx].Items[:0]
-		for _, item := range orders[idx].Items {
-			if item.Plant.ID == 0 {
+//
+// @param orderList []models.Order Liste des commandes a filtrer
+func filterOrderItems(orderList []models.Order) {
+	for orderIndex := range orderList {
+		filteredItems := orderList[orderIndex].Items[:0]
+		for _, orderItem := range orderList[orderIndex].Items {
+			if orderItem.Plant.ID == 0 {
 				continue
 			}
-			item.Plant.Price = roundPrice(item.Plant.Price)
-			filtered = append(filtered, item)
+			orderItem.Plant.Price = roundPrice(orderItem.Plant.Price)
+			filteredItems = append(filteredItems, orderItem)
 		}
-		orders[idx].Items = filtered
+		orderList[orderIndex].Items = filteredItems
 	}
 }
 
 // fetchUserOrders recupere les commandes d un utilisateur.
-func fetchUserOrders(db *gorm.DB, userID string) ([]models.Order, error) {
-	var orders []models.Order
-	err := db.Preload("Items.Plant").
+//
+// @param gormDB *gorm.DB Client GORM
+// @param userID string ID utilisateur
+// @return []models.Order Liste des commandes
+// @return error Erreur de requete
+func fetchUserOrders(gormDB *gorm.DB, userID string) ([]models.Order, error) {
+	var userOrders []models.Order
+	queryError := gormDB.Preload("Items.Plant").
 		Where("user_id = ?", parseUintOrZero(userID)).
 		Order("created_at DESC").
-		Find(&orders).Error
-	if err != nil {
-		return nil, err
+		Find(&userOrders).Error
+	if queryError != nil {
+		return nil, queryError
 	}
-	if orders == nil {
-		orders = make([]models.Order, 0)
+	if userOrders == nil {
+		userOrders = make([]models.Order, 0)
 	}
-	return orders, nil
+	return userOrders, nil
 }
 
 // createOrderItem cree un item et met a jour le stock.
-func createOrderItem(db *gorm.DB, orderID uint, it itemReq) (float64, error) {
-	plantID := extractPlantID(it)
-	var plant models.Plant
-	if err := db.First(&plant, plantID).Error; err != nil {
+//
+// @param gormDB *gorm.DB Client GORM
+// @param targetOrderID uint ID de la commande
+// @param itemInput itemReq Item a creer
+// @return float64 Prix total de l item
+// @return error Erreur de creation
+func createOrderItem(gormDB *gorm.DB, targetOrderID uint, itemInput itemReq) (float64, error) {
+	targetPlantID := extractPlantID(itemInput)
+	var targetPlant models.Plant
+	if findError := gormDB.First(&targetPlant, targetPlantID).Error; findError != nil {
 		return 0, errors.New("plant not found")
 	}
-	if plant.Stock < it.Quantity {
+	if targetPlant.Stock < itemInput.Quantity {
 		return 0, errors.New("out of stock")
 	}
-	orderItem := models.OrderItem{OrderID: orderID, PlantID: plant.ID, Quantity: it.Quantity}
-	if err := db.Create(&orderItem).Error; err != nil {
-		return 0, err
+	newOrderItem := models.OrderItem{OrderID: targetOrderID, PlantID: targetPlant.ID, Quantity: itemInput.Quantity}
+	if createError := gormDB.Create(&newOrderItem).Error; createError != nil {
+		return 0, createError
 	}
-	db.Model(&plant).Update("stock", plant.Stock-it.Quantity)
-	return float64(it.Quantity) * plant.Price, nil
+	gormDB.Model(&targetPlant).Update("stock", targetPlant.Stock-itemInput.Quantity)
+	return float64(itemInput.Quantity) * targetPlant.Price, nil
 }
 
 // processOrderItems traite tous les items d une commande.
-func processOrderItems(db *gorm.DB, orderID uint, items []itemReq) (float64, error) {
-	var total float64
-	for _, it := range items {
-		itemTotal, err := createOrderItem(db, orderID, it)
-		if err != nil {
-			return 0, err
+//
+// @param gormDB *gorm.DB Client GORM
+// @param targetOrderID uint ID de la commande
+// @param itemsList []itemReq Liste des items
+// @return float64 Total de la commande
+// @return error Erreur de traitement
+func processOrderItems(gormDB *gorm.DB, targetOrderID uint, itemsList []itemReq) (float64, error) {
+	var orderTotal float64
+	for _, itemInput := range itemsList {
+		itemPrice, itemError := createOrderItem(gormDB, targetOrderID, itemInput)
+		if itemError != nil {
+			return 0, itemError
 		}
-		total += itemTotal
+		orderTotal += itemPrice
 	}
-	return total, nil
+	return orderTotal, nil
 }
 
 // finalizeOrder met a jour le total et charge les items.
-func finalizeOrder(db *gorm.DB, order *models.Order, total float64) error {
-	total = roundPrice(total)
-	db.Model(order).Update("total_price", total)
-	db.Preload("Items").First(order, order.ID)
-	order.TotalPrice = roundPrice(order.TotalPrice)
+//
+// @param gormDB *gorm.DB Client GORM
+// @param targetOrder *models.Order Commande a finaliser
+// @param orderTotal float64 Total calcule
+// @return error Toujours nil
+func finalizeOrder(gormDB *gorm.DB, targetOrder *models.Order, orderTotal float64) error {
+	roundedTotal := roundPrice(orderTotal)
+	gormDB.Model(targetOrder).Update("total_price", roundedTotal)
+	gormDB.Preload("Items").First(targetOrder, targetOrder.ID)
+	targetOrder.TotalPrice = roundPrice(targetOrder.TotalPrice)
 	return nil
 }
 
@@ -204,51 +250,57 @@ func finalizeOrder(db *gorm.DB, order *models.Order, total float64) error {
 // ==============================================================================
 
 // ListUserOrders liste les commandes de l utilisateur authentifie.
-func ListUserOrders(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		claims, ok := extractClaims(r)
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+//
+// @param gormDB *gorm.DB Client GORM
+// @return http.HandlerFunc Handler HTTP
+func ListUserOrders(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		userClaims, claimsFound := extractClaims(httpRequest)
+		if !claimsFound {
+			http.Error(responseWriter, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		orders, err := fetchUserOrders(db, claims.UserID)
-		if err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
+		userOrders, queryError := fetchUserOrders(gormDB, userClaims.UserID)
+		if queryError != nil {
+			http.Error(responseWriter, "db error", http.StatusInternalServerError)
 			return
 		}
-		filterOrderItems(orders)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(orders)
+		filterOrderItems(userOrders)
+		responseWriter.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(responseWriter).Encode(userOrders)
 	}
 }
 
 // CreateOrder cree une commande pour l utilisateur authentifie.
-func CreateOrder(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		claims, ok := extractClaims(r)
-		if !ok {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+//
+// @param gormDB *gorm.DB Client GORM
+// @return http.HandlerFunc Handler HTTP
+func CreateOrder(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		userClaims, claimsFound := extractClaims(httpRequest)
+		if !claimsFound {
+			http.Error(responseWriter, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		in, err := validateOrderInput(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		orderInput, validationError := validateOrderInput(httpRequest)
+		if validationError != nil {
+			http.Error(responseWriter, validationError.Error(), http.StatusBadRequest)
 			return
 		}
-		order, err := createEmptyOrder(db, claims.UserID)
-		if err != nil {
-			http.Error(w, "db error", http.StatusInternalServerError)
+		newOrder, createError := createEmptyOrder(gormDB, userClaims.UserID)
+		if createError != nil {
+			http.Error(responseWriter, "db error", http.StatusInternalServerError)
 			return
 		}
-		total, err := processOrderItems(db, order.ID, in.Items)
-		if err != nil {
-			db.Delete(order)
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		orderTotal, processError := processOrderItems(gormDB, newOrder.ID, orderInput.Items)
+		if processError != nil {
+			gormDB.Delete(newOrder)
+			http.Error(responseWriter, processError.Error(), http.StatusBadRequest)
 			return
 		}
-		finalizeOrder(db, order, total)
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(order)
+		finalizeOrder(gormDB, newOrder, orderTotal)
+		responseWriter.WriteHeader(http.StatusCreated)
+		json.NewEncoder(responseWriter).Encode(newOrder)
 	}
 }
 
@@ -259,47 +311,53 @@ type orderStatusInput struct {
 
 // updateOrderStatus applique le nouveau status si present.
 //
-// @param order *models.Order Commande a mettre a jour
-// @param in *orderStatusInput Input de mise a jour
-func updateOrderStatus(order *models.Order, in *orderStatusInput) {
-	if in.Status != nil {
-		order.Status = *in.Status
+// @param targetOrder *models.Order Commande a mettre a jour
+// @param statusInput *orderStatusInput Input de mise a jour
+func updateOrderStatus(targetOrder *models.Order, statusInput *orderStatusInput) {
+	if statusInput.Status != nil {
+		targetOrder.Status = *statusInput.Status
 	}
 }
 
 // UpdateOrder met a jour une commande (status).
-func UpdateOrder(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := parsePathID(r)
-		if err != nil {
-			http.Error(w, "invalid id", http.StatusBadRequest)
+//
+// @param gormDB *gorm.DB Client GORM
+// @return http.HandlerFunc Handler HTTP
+func UpdateOrder(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		orderID, parseError := parsePathID(httpRequest)
+		if parseError != nil {
+			http.Error(responseWriter, "invalid id", http.StatusBadRequest)
 			return
 		}
-		var in orderStatusInput
-		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-			http.Error(w, "invalid json", http.StatusBadRequest)
+		var statusInput orderStatusInput
+		if decodeError := json.NewDecoder(httpRequest.Body).Decode(&statusInput); decodeError != nil {
+			http.Error(responseWriter, "invalid json", http.StatusBadRequest)
 			return
 		}
-		var order models.Order
-		if err := db.First(&order, id).Error; err != nil {
-			http.Error(w, "not found", http.StatusNotFound)
+		var targetOrder models.Order
+		if findError := gormDB.First(&targetOrder, orderID).Error; findError != nil {
+			http.Error(responseWriter, "not found", http.StatusNotFound)
 			return
 		}
-		updateOrderStatus(&order, &in)
-		db.Save(&order)
-		json.NewEncoder(w).Encode(order)
+		updateOrderStatus(&targetOrder, &statusInput)
+		gormDB.Save(&targetOrder)
+		json.NewEncoder(responseWriter).Encode(targetOrder)
 	}
 }
 
 // DeleteOrder supprime une commande par ID depuis le chemin.
-func DeleteOrder(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		id, err := parsePathID(r)
-		if err != nil {
-			http.Error(w, "invalid id", http.StatusBadRequest)
+//
+// @param gormDB *gorm.DB Client GORM
+// @return http.HandlerFunc Handler HTTP
+func DeleteOrder(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		orderID, parseError := parsePathID(httpRequest)
+		if parseError != nil {
+			http.Error(responseWriter, "invalid id", http.StatusBadRequest)
 			return
 		}
-		db.Delete(&models.Order{}, id)
-		w.WriteHeader(http.StatusOK)
+		gormDB.Delete(&models.Order{}, orderID)
+		responseWriter.WriteHeader(http.StatusOK)
 	}
 }

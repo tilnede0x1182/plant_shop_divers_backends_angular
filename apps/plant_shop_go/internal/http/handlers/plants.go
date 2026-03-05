@@ -1,5 +1,9 @@
 package handlers
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"encoding/json"
 	"net/http"
@@ -10,34 +14,47 @@ import (
 	"gorm.io/gorm"
 )
 
+// ==============================================================================
+// Handlers publics
+// ==============================================================================
+
 // PublicListPlants retourne la liste de toutes les plantes.
 //
-// @param db *gorm.DB Client GORM de base de donnees
+// @param gormDB *gorm.DB Client GORM de base de donnees
 // @return http.HandlerFunc Handler HTTP
-func PublicListPlants(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var plants []models.Plant
-		// Tri par nom, par ordre alphabétique.
-		if err := db.Order("name ASC").Find(&plants).Error; err != nil { http.Error(w,"db error",500); return }
-		for i := range plants {
-			plants[i].Price = float64(int(plants[i].Price*100)) / 100.0
+func PublicListPlants(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		var allPlants []models.Plant
+		if queryError := gormDB.Order("name ASC").Find(&allPlants).Error; queryError != nil {
+			http.Error(responseWriter, "db error", 500)
+			return
 		}
-		_ = json.NewEncoder(w).Encode(plants)
+		for plantIndex := range allPlants {
+			allPlants[plantIndex].Price = float64(int(allPlants[plantIndex].Price*100)) / 100.0
+		}
+		_ = json.NewEncoder(responseWriter).Encode(allPlants)
 	}
 }
 
 // PublicGetPlant retourne une plante par son ID.
 //
-// @param db *gorm.DB Client GORM de base de donnees
+// @param gormDB *gorm.DB Client GORM de base de donnees
 // @return http.HandlerFunc Handler HTTP
-func PublicGetPlant(db *gorm.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		parts := strings.Split(r.URL.Path, "/")
-		idStr := parts[len(parts)-1]
-		id, err := strconv.Atoi(idStr); if err != nil { http.Error(w,"invalid id",400); return }
-		var p models.Plant
-		if err := db.First(&p, id).Error; err != nil { http.Error(w,"not found",404); return }
-		p.Price = float64(int(p.Price*100)) / 100.0
-		_ = json.NewEncoder(w).Encode(p)
+func PublicGetPlant(gormDB *gorm.DB) http.HandlerFunc {
+	return func(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+		pathParts := strings.Split(httpRequest.URL.Path, "/")
+		plantIDString := pathParts[len(pathParts)-1]
+		plantID, parseError := strconv.Atoi(plantIDString)
+		if parseError != nil {
+			http.Error(responseWriter, "invalid id", 400)
+			return
+		}
+		var foundPlant models.Plant
+		if findError := gormDB.First(&foundPlant, plantID).Error; findError != nil {
+			http.Error(responseWriter, "not found", 404)
+			return
+		}
+		foundPlant.Price = float64(int(foundPlant.Price*100)) / 100.0
+		_ = json.NewEncoder(responseWriter).Encode(foundPlant)
 	}
 }

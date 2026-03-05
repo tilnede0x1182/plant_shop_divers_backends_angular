@@ -1,5 +1,9 @@
 package handlers
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"encoding/json"
 	"fmt"
@@ -13,6 +17,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// ==============================================================================
+// Types
+// ==============================================================================
+
 // authInput structure pour login/register.
 type authInput struct {
 	Email    string `json:"email"`
@@ -20,130 +28,138 @@ type authInput struct {
 	Name     string `json:"name"`
 }
 
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
 // decodeAuthInput decode le JSON d'entree auth.
 //
-// @param r *http.Request Requete HTTP
+// @param httpRequest *http.Request Requete HTTP
 // @return *authInput Input decode ou nil
 // @return error Erreur de decodage
-func decodeAuthInput(r *http.Request) (*authInput, error) {
-	var in authInput
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-		return nil, err
+func decodeAuthInput(httpRequest *http.Request) (*authInput, error) {
+	var authData authInput
+	if decodeError := json.NewDecoder(httpRequest.Body).Decode(&authData); decodeError != nil {
+		return nil, decodeError
 	}
-	return &in, nil
+	return &authData, nil
 }
 
 // emailExists verifie si un email existe deja.
 //
-// @param email string Email a verifier
+// @param emailToCheck string Email a verifier
 // @return bool True si existe
-func emailExists(email string) bool {
-	var exists models.User
-	return db.Connect().Where("email = ?", email).First(&exists).Error == nil
+func emailExists(emailToCheck string) bool {
+	var existingUser models.User
+	return db.Connect().Where("email = ?", emailToCheck).First(&existingUser).Error == nil
 }
 
 // createUserFromInput cree un user a partir de l'input.
 //
-// @param in *authInput Input decode
+// @param authData *authInput Input decode
 // @return *models.User User cree
-func createUserFromInput(in *authInput) *models.User {
-	hash, _ := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
-	user := models.User{Email: in.Email, Password: string(hash), Name: in.Name, Admin: false}
-	db.Connect().Create(&user)
-	return &user
+func createUserFromInput(authData *authInput) *models.User {
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(authData.Password), bcrypt.DefaultCost)
+	newUser := models.User{Email: authData.Email, Password: string(passwordHash), Name: authData.Name, Admin: false}
+	db.Connect().Create(&newUser)
+	return &newUser
 }
 
 // setAuthCookie genere et pose le cookie JWT.
 //
-// @param w http.ResponseWriter Writer HTTP
-// @param userID uint ID utilisateur
-// @param admin bool Est admin
-func setAuthCookie(w http.ResponseWriter, userID uint, admin bool) {
-	token, _ := security.GenerateToken(fmt.Sprint(userID), admin, 24*time.Hour)
-	security.SetCookie(w, token)
+// @param responseWriter http.ResponseWriter Writer HTTP
+// @param targetUserID uint ID utilisateur
+// @param isAdmin bool Est admin
+func setAuthCookie(responseWriter http.ResponseWriter, targetUserID uint, isAdmin bool) {
+	jwtToken, _ := security.GenerateToken(fmt.Sprint(targetUserID), isAdmin, 24*time.Hour)
+	security.SetCookie(responseWriter, jwtToken)
 }
+
+// ==============================================================================
+// Handlers
+// ==============================================================================
 
 // Register cree un nouvel utilisateur et retourne un cookie JWT.
 //
-// @param w http.ResponseWriter Writer de reponse HTTP
-// @param r *http.Request Requete HTTP entrante
-func Register(w http.ResponseWriter, r *http.Request) {
-	in, err := decodeAuthInput(r)
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+// @param responseWriter http.ResponseWriter Writer de reponse HTTP
+// @param httpRequest *http.Request Requete HTTP entrante
+func Register(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	authData, decodeError := decodeAuthInput(httpRequest)
+	if decodeError != nil {
+		http.Error(responseWriter, "bad request", http.StatusBadRequest)
 		return
 	}
-	if emailExists(in.Email) {
-		http.Error(w, "email exists", http.StatusConflict)
+	if emailExists(authData.Email) {
+		http.Error(responseWriter, "email exists", http.StatusConflict)
 		return
 	}
-	user := createUserFromInput(in)
-	setAuthCookie(w, user.ID, user.Admin)
-	w.WriteHeader(http.StatusCreated)
+	createdUser := createUserFromInput(authData)
+	setAuthCookie(responseWriter, createdUser.ID, createdUser.Admin)
+	responseWriter.WriteHeader(http.StatusCreated)
 }
 
 // findUserByEmail cherche un user par email.
 //
-// @param email string Email a chercher
+// @param emailToFind string Email a chercher
 // @return *models.User User trouve ou nil
-func findUserByEmail(email string) *models.User {
-	var user models.User
-	if err := db.Connect().Where("email = ?", email).First(&user).Error; err != nil {
+func findUserByEmail(emailToFind string) *models.User {
+	var foundUser models.User
+	if queryError := db.Connect().Where("email = ?", emailToFind).First(&foundUser).Error; queryError != nil {
 		return nil
 	}
-	return &user
+	return &foundUser
 }
 
 // checkPassword verifie le mot de passe.
 //
-// @param hash string Hash bcrypt
-// @param password string Mot de passe en clair
+// @param passwordHash string Hash bcrypt
+// @param clearPassword string Mot de passe en clair
 // @return bool True si valide
-func checkPassword(hash string, password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+func checkPassword(passwordHash string, clearPassword string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(clearPassword)) == nil
 }
 
 // Login verifie les credentials et retourne un cookie JWT.
 //
-// @param w http.ResponseWriter Writer de reponse HTTP
-// @param r *http.Request Requete HTTP entrante
-func Login(w http.ResponseWriter, r *http.Request) {
-	in, err := decodeAuthInput(r)
-	if err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+// @param responseWriter http.ResponseWriter Writer de reponse HTTP
+// @param httpRequest *http.Request Requete HTTP entrante
+func Login(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	authData, decodeError := decodeAuthInput(httpRequest)
+	if decodeError != nil {
+		http.Error(responseWriter, "bad request", http.StatusBadRequest)
 		return
 	}
-	user := findUserByEmail(in.Email)
-	if user == nil || !checkPassword(user.Password, in.Password) {
-		http.Error(w, "invalid creds", http.StatusUnauthorized)
+	foundUser := findUserByEmail(authData.Email)
+	if foundUser == nil || !checkPassword(foundUser.Password, authData.Password) {
+		http.Error(responseWriter, "invalid creds", http.StatusUnauthorized)
 		return
 	}
-	setAuthCookie(w, user.ID, user.Admin)
-	w.WriteHeader(http.StatusCreated)
+	setAuthCookie(responseWriter, foundUser.ID, foundUser.Admin)
+	responseWriter.WriteHeader(http.StatusCreated)
 }
 
 // Me retourne les informations de l utilisateur connecte.
 //
-// @param w http.ResponseWriter Writer de reponse HTTP
-// @param r *http.Request Requete HTTP entrante
-func Me(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value("claims").(*security.Claims)
-	if !ok {
-		http.Error(w, "claims not found in context", http.StatusInternalServerError)
+// @param responseWriter http.ResponseWriter Writer de reponse HTTP
+// @param httpRequest *http.Request Requete HTTP entrante
+func Me(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	userClaims, claimsFound := httpRequest.Context().Value("claims").(*security.Claims)
+	if !claimsFound {
+		http.Error(responseWriter, "claims not found in context", http.StatusInternalServerError)
 		return
 	}
-	var user models.User
-	db.Connect().First(&user, claims.UserID)
-	json.NewEncoder(w).Encode(map[string]any{
-		"id": user.ID, "email": user.Email, "name": user.Name, "admin": user.Admin,
+	var currentUser models.User
+	db.Connect().First(&currentUser, userClaims.UserID)
+	json.NewEncoder(responseWriter).Encode(map[string]any{
+		"id": currentUser.ID, "email": currentUser.Email, "name": currentUser.Name, "admin": currentUser.Admin,
 	})
 }
 
 // Logout supprime le cookie d authentification.
 //
-// @param w http.ResponseWriter Writer de reponse HTTP
-// @param r *http.Request Requete HTTP entrante
-func Logout(w http.ResponseWriter, r *http.Request) {
-	security.ClearCookie(w)
-	w.WriteHeader(http.StatusNoContent)
+// @param responseWriter http.ResponseWriter Writer de reponse HTTP
+// @param httpRequest *http.Request Requete HTTP entrante
+func Logout(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	security.ClearCookie(responseWriter)
+	responseWriter.WriteHeader(http.StatusNoContent)
 }

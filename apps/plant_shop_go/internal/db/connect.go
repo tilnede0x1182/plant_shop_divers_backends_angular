@@ -1,5 +1,9 @@
 package db
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"log"
 	"os"
@@ -10,24 +14,34 @@ import (
 	"gorm.io/gorm"
 )
 
+// ==============================================================================
+// Donnees
+// ==============================================================================
+
 var (
-	conn     *gorm.DB
-	connOnce sync.Once
+	dbConnection     *gorm.DB
+	connectionOnce   sync.Once
 )
 
-// Connect renvoie toujours le même pool GORM et limite les connexions.
+// ==============================================================================
+// Fonctions
+// ==============================================================================
+
+// Connect renvoie toujours le meme pool GORM et limite les connexions.
+//
+// @return *gorm.DB Instance de connexion GORM
 func Connect() *gorm.DB {
-	connOnce.Do(func() {
-		dsn := os.Getenv("DATABASE_URL")
-		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-		if err != nil {
-			log.Fatalf("DB connection failed: %v", err)
+	connectionOnce.Do(func() {
+		databaseURL := os.Getenv("DATABASE_URL")
+		gormInstance, connectionError := gorm.Open(postgres.Open(databaseURL), &gorm.Config{})
+		if connectionError != nil {
+			log.Fatalf("DB connection failed: %v", connectionError)
 		}
-		sqlDB, _ := db.DB()
-		sqlDB.SetMaxOpenConns(10)
-		sqlDB.SetMaxIdleConns(5)
-		sqlDB.SetConnMaxLifetime(time.Hour)
-		conn = db
+		sqlDatabase, _ := gormInstance.DB()
+		sqlDatabase.SetMaxOpenConns(10)
+		sqlDatabase.SetMaxIdleConns(5)
+		sqlDatabase.SetConnMaxLifetime(time.Hour)
+		dbConnection = gormInstance
 	})
-	return conn
+	return dbConnection
 }

@@ -1,5 +1,9 @@
 package main
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"log"
 	"net/http"
@@ -15,39 +19,47 @@ import (
 	"plant_shop_go/internal/models"
 )
 
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
 // getEnv recupere une variable d environnement ou retourne une valeur par defaut.
 //
-// @param key string Nom de la variable d environnement
-// @param def string Valeur par defaut
+// @param envKey string Nom de la variable d environnement
+// @param defaultValue string Valeur par defaut
 // @return string Valeur trouvee ou defaut
-func getEnv(key, def string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
+func getEnv(envKey, defaultValue string) string {
+	if envValue := os.Getenv(envKey); envValue != "" {
+		return envValue
 	}
-	return def
+	return defaultValue
 }
 
 // initDatabase initialise la connexion et les migrations.
 //
 // @return *gorm.DB Connexion DB
 func initDatabase() *gorm.DB {
-	conn := db.Connect()
-	if conn == nil {
+	gormDB := db.Connect()
+	if gormDB == nil {
 		log.Fatal("db connection failed")
 	}
-	migrateModels(conn)
-	return conn
+	migrateModels(gormDB)
+	return gormDB
 }
 
 // migrateModels execute les migrations automatiques.
 //
-// @param conn *gorm.DB Connexion DB
-func migrateModels(conn *gorm.DB) {
-	err := conn.AutoMigrate(&models.User{}, &models.Plant{}, &models.Order{}, &models.OrderItem{})
-	if err != nil {
-		log.Fatalf("migration failed: %v", err)
+// @param gormDB *gorm.DB Connexion DB
+func migrateModels(gormDB *gorm.DB) {
+	migrationError := gormDB.AutoMigrate(&models.User{}, &models.Plant{}, &models.Order{}, &models.OrderItem{})
+	if migrationError != nil {
+		log.Fatalf("migration failed: %v", migrationError)
 	}
 }
+
+// ------------------------------------------------------------------------------
+// Configuration serveur
+// ------------------------------------------------------------------------------
 
 // createCorsHandler configure le middleware CORS.
 //
@@ -74,13 +86,17 @@ func createServer(handler http.Handler) *http.Server {
 	}
 }
 
+// ==============================================================================
+// Main
+// ==============================================================================
+
 // main est le point d entree du serveur.
 func main() {
 	_ = godotenv.Load(".env")
-	conn := initDatabase()
-	router := httpserver.NewRouter(conn)
-	corsHandler := createCorsHandler()
-	srv := createServer(corsHandler.Handler(router))
-	log.Printf("listening on %s", srv.Addr)
-	log.Fatal(srv.ListenAndServe())
+	gormDB := initDatabase()
+	mainRouter := httpserver.NewRouter(gormDB)
+	corsMiddleware := createCorsHandler()
+	httpServer := createServer(corsMiddleware.Handler(mainRouter))
+	log.Printf("listening on %s", httpServer.Addr)
+	log.Fatal(httpServer.ListenAndServe())
 }

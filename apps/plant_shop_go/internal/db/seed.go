@@ -1,5 +1,9 @@
 package db
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"fmt"
 	"log"
@@ -28,13 +32,17 @@ const (
 	MAX_ORDERS_PER_USER = 7
 )
 
-// hashPass genere un hash bcrypt.
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
+// hashPassword genere un hash bcrypt.
 //
-// @param password string Mot de passe en clair
+// @param clearPassword string Mot de passe en clair
 // @return string Hash bcrypt
-func hashPass(password string) string {
-	hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-	return string(hash)
+func hashPassword(clearPassword string) string {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(clearPassword), 10)
+	return string(hashedPassword)
 }
 
 // randomPrice genere un prix aleatoire entre 5 et 50.
@@ -77,189 +85,209 @@ var PLANT_NAMES = []string{
 	"Mimosa (Acacia dealbata)",
 }
 
-// reset reinitialise la base de donnees en supprimant toutes les donnees.
+// ------------------------------------------------------------------------------
+// Fonctions de nettoyage
+// ------------------------------------------------------------------------------
+
+// resetDatabase reinitialise la base de donnees en supprimant toutes les donnees.
 //
-// @param db *gorm.DB Client GORM de base de donnees
-func reset(db *gorm.DB) {
-	log.Println("🧹 Nettoyage de la base de données…")
-	db.Exec("DELETE FROM order_items")
-	db.Exec("DELETE FROM orders")
-	db.Exec("DELETE FROM plants")
-	db.Exec("DELETE FROM users")
-	log.Println("✅ Base de données nettoyée.")
+// @param dbConnection *gorm.DB Client GORM de base de donnees
+func resetDatabase(dbConnection *gorm.DB) {
+	log.Println("Nettoyage de la base de donnees...")
+	dbConnection.Exec("DELETE FROM order_items")
+	dbConnection.Exec("DELETE FROM orders")
+	dbConnection.Exec("DELETE FROM plants")
+	dbConnection.Exec("DELETE FROM users")
+	log.Println("Base de donnees nettoyee.")
 }
 
 // createOneAdmin cree un admin et retourne ses credentials.
 //
-// @param db *gorm.DB Client GORM
-// @param index int Index de l admin
+// @param dbConnection *gorm.DB Client GORM
+// @param adminIndex int Index de l admin
 // @return map[string]string Credentials
-func createOneAdmin(db *gorm.DB, index int) map[string]string {
-	email := fmt.Sprintf("admin%d@planteshop.com", index+1)
-	password := "password"
-	db.Create(&models.User{Email: email, Password: hashPass(password), Admin: true, Name: faker.Name()})
-	return map[string]string{"email": email, "password": password}
+func createOneAdmin(dbConnection *gorm.DB, adminIndex int) map[string]string {
+	adminEmail := fmt.Sprintf("admin%d@planteshop.com", adminIndex+1)
+	adminPassword := "password"
+	dbConnection.Create(&models.User{Email: adminEmail, Password: hashPassword(adminPassword), Admin: true, Name: faker.Name()})
+	return map[string]string{"email": adminEmail, "password": adminPassword}
 }
 
 // createAdmins cree les administrateurs de test.
 //
-// @param db *gorm.DB Client GORM
+// @param dbConnection *gorm.DB Client GORM
 // @return []map[string]string Liste des credentials
-func createAdmins(db *gorm.DB) []map[string]string {
+func createAdmins(dbConnection *gorm.DB) []map[string]string {
 	log.Println("Creation des administrateurs...")
-	var admins []map[string]string
-	for idx := 0; idx < NB_ADMINS; idx++ {
-		admins = append(admins, createOneAdmin(db, idx))
+	var adminCredentials []map[string]string
+	for adminIndex := 0; adminIndex < NB_ADMINS; adminIndex++ {
+		adminCredentials = append(adminCredentials, createOneAdmin(dbConnection, adminIndex))
 	}
 	log.Printf("%d administrateurs crees.\n", NB_ADMINS)
-	return admins
+	return adminCredentials
 }
 
 // createOneUser cree un user et retourne ses credentials.
 //
 // @param db *gorm.DB Client GORM
 // @return map[string]string Credentials
-func createOneUser(db *gorm.DB) map[string]string {
-	password := faker.Password()
-	email := faker.Email()
-	db.Create(&models.User{Email: email, Password: hashPass(password), Admin: false, Name: faker.Name()})
-	return map[string]string{"email": email, "password": password}
+func createOneUser(dbConnection *gorm.DB) map[string]string {
+	userPassword := faker.Password()
+	userEmail := faker.Email()
+	dbConnection.Create(&models.User{Email: userEmail, Password: hashPassword(userPassword), Admin: false, Name: faker.Name()})
+	return map[string]string{"email": userEmail, "password": userPassword}
 }
 
 // createUsers cree les utilisateurs de test.
 //
-// @param db *gorm.DB Client GORM
+// @param dbConnection *gorm.DB Client GORM
 // @return []map[string]string Liste des credentials
-func createUsers(db *gorm.DB) []map[string]string {
+func createUsers(dbConnection *gorm.DB) []map[string]string {
 	log.Println("Creation des utilisateurs...")
-	var users []map[string]string
-	for idx := 0; idx < NB_USERS; idx++ {
-		users = append(users, createOneUser(db))
+	var userCredentials []map[string]string
+	for userIndex := 0; userIndex < NB_USERS; userIndex++ {
+		userCredentials = append(userCredentials, createOneUser(dbConnection))
 	}
 	log.Printf("%d utilisateurs crees.\n", NB_USERS)
-	return users
+	return userCredentials
 }
 
 // createOnePlant cree une plante.
 //
-// @param db *gorm.DB Client GORM
-// @param index int Index de la plante
+// ------------------------------------------------------------------------------
+// Fonctions de creation plantes
+// ------------------------------------------------------------------------------
+
+// @param dbConnection *gorm.DB Client GORM
+// @param plantIndex int Index de la plante
 // @return models.Plant Plante creee
-func createOnePlant(db *gorm.DB, index int) models.Plant {
-	name := PLANT_NAMES[index%len(PLANT_NAMES)]
-	plant := models.Plant{Name: name, Price: randomPrice(), Description: faker.Sentence(), Stock: randomStock()}
-	db.Create(&plant)
-	return plant
+func createOnePlant(dbConnection *gorm.DB, plantIndex int) models.Plant {
+	plantName := PLANT_NAMES[plantIndex%len(PLANT_NAMES)]
+	newPlant := models.Plant{Name: plantName, Price: randomPrice(), Description: faker.Sentence(), Stock: randomStock()}
+	dbConnection.Create(&newPlant)
+	return newPlant
 }
 
 // createPlants cree les plantes de test.
 //
-// @param db *gorm.DB Client GORM
+// @param dbConnection *gorm.DB Client GORM
 // @return []models.Plant Liste des plantes
-func createPlants(db *gorm.DB) []models.Plant {
+func createPlants(dbConnection *gorm.DB) []models.Plant {
 	log.Println("Creation des plantes...")
-	var plants []models.Plant
-	for idx := 0; idx < NB_PLANTS; idx++ {
-		plants = append(plants, createOnePlant(db, idx))
+	var plantList []models.Plant
+	for plantIndex := 0; plantIndex < NB_PLANTS; plantIndex++ {
+		plantList = append(plantList, createOnePlant(dbConnection, plantIndex))
 	}
 	log.Printf("%d plantes creees.\n", NB_PLANTS)
-	return plants
+	return plantList
 }
+
+// ------------------------------------------------------------------------------
+// Fonctions de creation commandes
+// ------------------------------------------------------------------------------
 
 // createOrderForUser cree une commande pour un utilisateur.
 //
-// @param db *gorm.DB Client GORM
-// @param userID uint ID utilisateur
-// @param plants []models.Plant Liste des plantes
-func createOrderForUser(db *gorm.DB, userID uint, plants []models.Plant) {
-	statuses := []string{"confirmed", "pending", "shipped", "delivered"}
-	order := models.Order{UserID: userID, TotalPrice: 0.0, Status: statuses[rand.Intn(len(statuses))]}
-	db.Create(&order)
-	total := addItem(db, order.ID, plants) + addItem(db, order.ID, plants)
-	db.Model(&order).Update("total_price", math.Trunc(total*100)/100)
+// @param dbConnection *gorm.DB Client GORM
+// @param targetUserID uint ID utilisateur
+// @param availablePlants []models.Plant Liste des plantes
+func createOrderForUser(dbConnection *gorm.DB, targetUserID uint, availablePlants []models.Plant) {
+	orderStatuses := []string{"confirmed", "pending", "shipped", "delivered"}
+	newOrder := models.Order{UserID: targetUserID, TotalPrice: 0.0, Status: orderStatuses[rand.Intn(len(orderStatuses))]}
+	dbConnection.Create(&newOrder)
+	orderTotal := addOrderItem(dbConnection, newOrder.ID, availablePlants) + addOrderItem(dbConnection, newOrder.ID, availablePlants)
+	dbConnection.Model(&newOrder).Update("total_price", math.Trunc(orderTotal*100)/100)
 }
 
 // createOrders cree les commandes de test.
 //
-// @param db *gorm.DB Client GORM
-// @param plants []models.Plant Liste des plantes
-func createOrders(db *gorm.DB, plants []models.Plant) {
+// @param dbConnection *gorm.DB Client GORM
+// @param availablePlants []models.Plant Liste des plantes
+func createOrders(dbConnection *gorm.DB, availablePlants []models.Plant) {
 	log.Println("Creation des commandes...")
-	var users []models.User
-	db.Find(&users)
-	totalOrders := 0
-	for _, user := range users {
-		nbOrders := rand.Intn(MAX_ORDERS_PER_USER + 1)
-		for idx := 0; idx < nbOrders; idx++ {
-			createOrderForUser(db, user.ID, plants)
-			totalOrders++
+	var allUsers []models.User
+	dbConnection.Find(&allUsers)
+	orderCount := 0
+	for _, currentUser := range allUsers {
+		ordersForUser := rand.Intn(MAX_ORDERS_PER_USER + 1)
+		for orderIndex := 0; orderIndex < ordersForUser; orderIndex++ {
+			createOrderForUser(dbConnection, currentUser.ID, availablePlants)
+			orderCount++
 		}
 	}
-	log.Printf("%d commandes creees.\n", totalOrders)
+	log.Printf("%d commandes creees.\n", orderCount)
 }
 
-// addItem ajoute un item a une commande et retourne le prix.
+// addOrderItem ajoute un item a une commande et retourne le prix.
 //
-// @param db *gorm.DB Client GORM de base de donnees
-// @param orderID uint ID de la commande
-// @param plants []models.Plant Liste des plantes disponibles
+// @param dbConnection *gorm.DB Client GORM de base de donnees
+// @param targetOrderID uint ID de la commande
+// @param availablePlants []models.Plant Liste des plantes disponibles
 // @return float64 Prix de l item ajoute
-func addItem(db *gorm.DB, orderID uint, plants []models.Plant) float64 {
-	p := plants[rand.Intn(len(plants))]
-	if p.Stock <= 0 {
+func addOrderItem(dbConnection *gorm.DB, targetOrderID uint, availablePlants []models.Plant) float64 {
+	selectedPlant := availablePlants[rand.Intn(len(availablePlants))]
+	if selectedPlant.Stock <= 0 {
 		return 0
 	}
-	qty := rand.Intn(5) + 1
-	if qty > p.Stock {
-		qty = p.Stock
+	itemQuantity := rand.Intn(5) + 1
+	if itemQuantity > selectedPlant.Stock {
+		itemQuantity = selectedPlant.Stock
 	}
-	db.Create(&models.OrderItem{OrderID: orderID, PlantID: p.ID, Quantity: qty})
-	db.Model(&p).Update("stock", p.Stock-qty)
-	return float64(qty) * p.Price
+	dbConnection.Create(&models.OrderItem{OrderID: targetOrderID, PlantID: selectedPlant.ID, Quantity: itemQuantity})
+	dbConnection.Model(&selectedPlant).Update("stock", selectedPlant.Stock-itemQuantity)
+	return float64(itemQuantity) * selectedPlant.Price
 }
+
+// ------------------------------------------------------------------------------
+// Fonctions de generation fichier
+// ------------------------------------------------------------------------------
 
 // buildUsersFileContent construit le contenu du fichier users.txt.
 //
-// @param admins []map[string]string Credentials admin
-// @param users []map[string]string Credentials utilisateur
+// @param adminCredentials []map[string]string Credentials admin
+// @param userCredentials []map[string]string Credentials utilisateur
 // @return string Contenu du fichier
-func buildUsersFileContent(admins, users []map[string]string) string {
-	txt := "Administrateurs :\n\n"
-	for _, admin := range admins {
-		txt += fmt.Sprintf("%s %s\n", admin["email"], admin["password"])
+func buildUsersFileContent(adminCredentials, userCredentials []map[string]string) string {
+	fileContent := "Administrateurs :\n\n"
+	for _, adminCred := range adminCredentials {
+		fileContent += fmt.Sprintf("%s %s\n", adminCred["email"], adminCred["password"])
 	}
-	txt += "\nUtilisateurs :\n\n"
-	for _, user := range users {
-		txt += fmt.Sprintf("%s %s\n", user["email"], user["password"])
+	fileContent += "\nUtilisateurs :\n\n"
+	for _, userCred := range userCredentials {
+		fileContent += fmt.Sprintf("%s %s\n", userCred["email"], userCred["password"])
 	}
-	return txt
+	return fileContent
 }
 
 // writeUsersFile genere le fichier users.txt.
 //
-// @param admins []map[string]string Credentials admin
-// @param users []map[string]string Credentials utilisateur
-func writeUsersFile(admins, users []map[string]string) {
+// @param adminCredentials []map[string]string Credentials admin
+// @param userCredentials []map[string]string Credentials utilisateur
+func writeUsersFile(adminCredentials, userCredentials []map[string]string) {
 	log.Println("Generation du fichier users.txt...")
-	path := filepath.Join(".", "users.txt")
-	txt := buildUsersFileContent(admins, users)
-	if err := os.WriteFile(path, []byte(txt), 0644); err != nil {
-		log.Fatalf("Erreur ecriture users.txt : %v", err)
+	outputFilePath := filepath.Join(".", "users.txt")
+	fileContent := buildUsersFileContent(adminCredentials, userCredentials)
+	if writeError := os.WriteFile(outputFilePath, []byte(fileContent), 0644); writeError != nil {
+		log.Fatalf("Erreur ecriture users.txt : %v", writeError)
 	}
 	log.Println("Fichier users.txt genere.")
 }
 
+// ==============================================================================
+// Fonction principale
+// ==============================================================================
+
 // Seed execute le seed complet de la base de donnees.
 //
-// @param db *gorm.DB Client GORM de base de donnees
-func Seed(db *gorm.DB) {
-	log.Println("🚀 Lancement de la seed…")
+// @param dbConnection *gorm.DB Client GORM de base de donnees
+func Seed(dbConnection *gorm.DB) {
+	log.Println("Lancement de la seed...")
 	rand.Seed(time.Now().UnixNano())
-	reset(db)
-	admins := createAdmins(db)
-	users := createUsers(db)
-	plants := createPlants(db)
-	writeUsersFile(admins, users)
-	createOrders(db, plants)
-	log.Println("🎉 Seed terminée avec succès !")
+	resetDatabase(dbConnection)
+	adminCredentials := createAdmins(dbConnection)
+	userCredentials := createUsers(dbConnection)
+	plantList := createPlants(dbConnection)
+	writeUsersFile(adminCredentials, userCredentials)
+	createOrders(dbConnection, plantList)
+	log.Println("Seed terminee avec succes!")
 }

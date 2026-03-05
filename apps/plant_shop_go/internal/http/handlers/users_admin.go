@@ -1,5 +1,9 @@
 package handlers
 
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 import (
 	"encoding/json"
 	"net/http"
@@ -13,6 +17,10 @@ import (
 	"strings"
 )
 
+// ==============================================================================
+// Types
+// ==============================================================================
+
 // adminUserInput structure pour creation/update user admin.
 type adminUserInput struct {
 	Email    string `json:"email"`
@@ -21,115 +29,123 @@ type adminUserInput struct {
 	Admin    bool   `json:"admin"`
 }
 
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
 // decodeAdminUserInput decode le JSON d'entree pour user admin.
 //
-// @param r *http.Request Requete HTTP entrante
+// @param httpRequest *http.Request Requete HTTP entrante
 // @return *adminUserInput Input decode ou nil si erreur
 // @return error Erreur de decodage
-func decodeAdminUserInput(r *http.Request) (*adminUserInput, error) {
-	var in adminUserInput
-	err := json.NewDecoder(r.Body).Decode(&in)
-	if err != nil {
-		return nil, err
+func decodeAdminUserInput(httpRequest *http.Request) (*adminUserInput, error) {
+	var userInput adminUserInput
+	decodeError := json.NewDecoder(httpRequest.Body).Decode(&userInput)
+	if decodeError != nil {
+		return nil, decodeError
 	}
-	return &in, nil
+	return &userInput, nil
 }
 
 // hashPassword genere le hash bcrypt du mot de passe.
 //
-// @param password string Mot de passe en clair
+// @param clearPassword string Mot de passe en clair
 // @return string Hash bcrypt
-func hashPassword(password string) string {
-	hash, _ := bcrypt.GenerateFromPassword([]byte(password), 10)
-	return string(hash)
+func hashPassword(clearPassword string) string {
+	passwordHash, _ := bcrypt.GenerateFromPassword([]byte(clearPassword), 10)
+	return string(passwordHash)
 }
 
 // handleDuplicateEmail gere l'erreur de duplication email.
 //
-// @param w http.ResponseWriter Writer HTTP
-// @param err error Erreur a analyser
-func handleDuplicateEmail(w http.ResponseWriter, err error) {
-	if strings.Contains(err.Error(), "duplicate key") {
-		http.Error(w, "email exists", http.StatusConflict)
+// @param responseWriter http.ResponseWriter Writer HTTP
+// @param dbError error Erreur a analyser
+func handleDuplicateEmail(responseWriter http.ResponseWriter, dbError error) {
+	if strings.Contains(dbError.Error(), "duplicate key") {
+		http.Error(responseWriter, "email exists", http.StatusConflict)
 	} else {
-		http.Error(w, "failed to create user", http.StatusInternalServerError)
+		http.Error(responseWriter, "failed to create user", http.StatusInternalServerError)
 	}
 }
 
 // sendUserResponse envoie la reponse JSON user sans mot de passe.
 //
-// @param w http.ResponseWriter Writer HTTP
-// @param u *models.User Utilisateur a envoyer
-// @param status int Code HTTP
-func sendUserResponse(w http.ResponseWriter, u *models.User, status int) {
-	if status != 0 {
-		w.WriteHeader(status)
+// @param responseWriter http.ResponseWriter Writer HTTP
+// @param targetUser *models.User Utilisateur a envoyer
+// @param httpStatus int Code HTTP
+func sendUserResponse(responseWriter http.ResponseWriter, targetUser *models.User, httpStatus int) {
+	if httpStatus != 0 {
+		responseWriter.WriteHeader(httpStatus)
 	}
-	u.Password = ""
-	json.NewEncoder(w).Encode(u)
+	targetUser.Password = ""
+	json.NewEncoder(responseWriter).Encode(targetUser)
 }
+
+// ==============================================================================
+// Handlers admin
+// ==============================================================================
 
 // AdminListUsers liste tous les utilisateurs (route admin).
 //
-// @param w http.ResponseWriter Writer de reponse HTTP
-// @param r *http.Request Requete HTTP entrante
-func AdminListUsers(w http.ResponseWriter, r *http.Request) {
-	var list []models.User
-	db.Connect().Select("id", "created_at", "updated_at", "email", "name", "admin").Order("admin DESC, name ASC").Find(&list)
-	if list == nil {
-		list = make([]models.User, 0)
+// @param responseWriter http.ResponseWriter Writer de reponse HTTP
+// @param httpRequest *http.Request Requete HTTP entrante
+func AdminListUsers(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	var userList []models.User
+	db.Connect().Select("id", "created_at", "updated_at", "email", "name", "admin").Order("admin DESC, name ASC").Find(&userList)
+	if userList == nil {
+		userList = make([]models.User, 0)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(list)
+	responseWriter.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(responseWriter).Encode(userList)
 }
 
 // AdminCreateUser cree un utilisateur (route admin).
 //
-// @param w http.ResponseWriter Writer de reponse HTTP
-// @param r *http.Request Requete HTTP entrante
-func AdminCreateUser(w http.ResponseWriter, r *http.Request) {
-	in, err := decodeAdminUserInput(r)
-	if err != nil {
-		http.Error(w, "bad request", 400)
+// @param responseWriter http.ResponseWriter Writer de reponse HTTP
+// @param httpRequest *http.Request Requete HTTP entrante
+func AdminCreateUser(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	userInput, decodeError := decodeAdminUserInput(httpRequest)
+	if decodeError != nil {
+		http.Error(responseWriter, "bad request", 400)
 		return
 	}
-	u := models.User{Email: in.Email, Name: in.Name, Password: hashPassword(in.Password), Admin: in.Admin}
-	if err := db.Connect().Create(&u).Error; err != nil {
-		handleDuplicateEmail(w, err)
+	newUser := models.User{Email: userInput.Email, Name: userInput.Name, Password: hashPassword(userInput.Password), Admin: userInput.Admin}
+	if createError := db.Connect().Create(&newUser).Error; createError != nil {
+		handleDuplicateEmail(responseWriter, createError)
 		return
 	}
-	sendUserResponse(w, &u, http.StatusCreated)
+	sendUserResponse(responseWriter, &newUser, http.StatusCreated)
 }
 
 // AdminUpdateUser met a jour un utilisateur (route admin).
 //
-// @param w http.ResponseWriter Writer de reponse HTTP
-// @param r *http.Request Requete HTTP entrante
-func AdminUpdateUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-	var in map[string]any
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
+// @param responseWriter http.ResponseWriter Writer de reponse HTTP
+// @param httpRequest *http.Request Requete HTTP entrante
+func AdminUpdateUser(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	pathVars := mux.Vars(httpRequest)
+	userID, _ := strconv.Atoi(pathVars["id"])
+	var updateData map[string]any
+	if decodeError := json.NewDecoder(httpRequest.Body).Decode(&updateData); decodeError != nil {
+		http.Error(responseWriter, "invalid json", http.StatusBadRequest)
 		return
 	}
-	d := db.Connect()
-	if err := d.Model(&models.User{}).Where("id = ?", id).Updates(in).Error; err != nil {
-		http.Error(w, "update failed", http.StatusInternalServerError)
+	gormDB := db.Connect()
+	if updateError := gormDB.Model(&models.User{}).Where("id = ?", userID).Updates(updateData).Error; updateError != nil {
+		http.Error(responseWriter, "update failed", http.StatusInternalServerError)
 		return
 	}
-	var u models.User
-	d.First(&u, id)
-	sendUserResponse(w, &u, 0)
+	var updatedUser models.User
+	gormDB.First(&updatedUser, userID)
+	sendUserResponse(responseWriter, &updatedUser, 0)
 }
 
 // AdminDeleteUser supprime un utilisateur (route admin).
 //
-// @param w http.ResponseWriter Writer de reponse HTTP
-// @param r *http.Request Requete HTTP entrante
-func AdminDeleteUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, _ := strconv.Atoi(vars["id"])
-	db.Connect().Unscoped().Delete(&models.User{}, id)
-	w.WriteHeader(http.StatusOK)
+// @param responseWriter http.ResponseWriter Writer de reponse HTTP
+// @param httpRequest *http.Request Requete HTTP entrante
+func AdminDeleteUser(responseWriter http.ResponseWriter, httpRequest *http.Request) {
+	pathVars := mux.Vars(httpRequest)
+	userID, _ := strconv.Atoi(pathVars["id"])
+	db.Connect().Unscoped().Delete(&models.User{}, userID)
+	responseWriter.WriteHeader(http.StatusOK)
 }

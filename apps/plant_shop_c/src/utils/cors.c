@@ -1,84 +1,90 @@
+/* ==============================================================================
+   Importations
+   ============================================================================== */
 #include "cors.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/** En-têtes CORS standards */
+static const char *CORS_HEADERS =
+	"Access-Control-Allow-Origin: http://localhost:8300\r\n"
+	"Access-Control-Allow-Credentials: true\r\n"
+	"Access-Control-Allow-Methods: GET,POST,PUT,PATCH,DELETE,OPTIONS\r\n"
+	"Access-Control-Allow-Headers: Content-Type,Authorization,Cookie,X-Requested-With\r\n"
+	"Access-Control-Expose-Headers: Set-Cookie\r\n";
+
+/**
+ * Construit les en-têtes complets avec CORS.
+ *
+ * @param buf Buffer de destination
+ * @param buf_size Taille du buffer
+ * @param extra_headers En-têtes supplémentaires (peut être NULL)
+ */
+static void build_cors_headers(char *buf, size_t buf_size, const char *extra_headers) {
+	snprintf(buf, buf_size, "%s%s", CORS_HEADERS, extra_headers ? extra_headers : "");
+}
+
+/**
+ * Alloue et formate le corps de la réponse.
+ *
+ * @param fmt Format printf
+ * @param ap Liste d arguments variadiques
+ * @return Buffer alloué ou NULL si erreur
+ */
+static char* format_body(const char *fmt, va_list ap) {
+	va_list ap_copy;
+	va_copy(ap_copy, ap);
+	int needed = vsnprintf(NULL, 0, fmt, ap_copy) + 1;
+	va_end(ap_copy);
+	char *body = malloc(needed);
+	if (body) vsnprintf(body, needed, fmt, ap);
+	return body;
+}
+
 /**
  * Envoie une réponse HTTP avec les en-têtes CORS.
  *
- * @param c Connexion mongoose
+ * @param conn Connexion mongoose
  * @param status Code HTTP de réponse
  * @param extra_headers En-têtes supplémentaires (peut être NULL)
  * @param fmt Format printf pour le corps de réponse
  * @param ... Arguments variadiques pour le format
  */
-void cors_reply(struct mg_connection *c, int status, const char *extra_headers, const char *fmt, ...) {
-    // En-têtes CORS standards
-    const char *cors_headers =
-        "Access-Control-Allow-Origin: http://localhost:8300\r\n"
-        "Access-Control-Allow-Credentials: true\r\n"
-        "Access-Control-Allow-Methods: GET,POST,PUT,PATCH,DELETE,OPTIONS\r\n"
-        "Access-Control-Allow-Headers: Content-Type,Authorization,Cookie,X-Requested-With\r\n"
-        "Access-Control-Expose-Headers: Set-Cookie\r\n";
-
-    // Construction des headers complets
-    char headers[1024];
-    snprintf(headers, sizeof(headers), "%s%s", cors_headers, extra_headers ? extra_headers : "");
-
-    va_list ap;
-    va_start(ap, fmt);
-
-    // Calculer la taille nécessaire
-    va_list ap_copy;
-    va_copy(ap_copy, ap);
-    int needed = vsnprintf(NULL, 0, fmt, ap_copy) + 1;
-    va_end(ap_copy);
-
-    // Allouer dynamiquement
-    char *body = malloc(needed);
-    if (!body) {
-        va_end(ap);
-        // fprintf(stderr, "❌ [CORS] Allocation mémoire échouée pour %d bytes\n", needed);
-        mg_http_reply(c, 500, headers, "{\"error\":\"Memory allocation failed\"}");
-        return;
-    }
-
-    vsnprintf(body, needed, fmt, ap);
-    va_end(ap);
-
-    // 🔍 LOG DÉTAILLÉ
-    // fprintf(stderr, "✅ [CORS] %d | Body size: %d bytes | Headers: %s\n",
-            // status, needed - 1, extra_headers ? extra_headers : "(none)");
-
-    // Envoi de la réponse
-    mg_http_reply(c, status, headers, "%s", body);
-    free(body);
+void cors_reply(struct mg_connection *conn, int status, const char *extra_headers, const char *fmt, ...) {
+	char headers[1024];
+	build_cors_headers(headers, sizeof(headers), extra_headers);
+	va_list ap;
+	va_start(ap, fmt);
+	char *body = format_body(fmt, ap);
+	va_end(ap);
+	if (!body) { mg_http_reply(conn, 500, headers, "{\"error\":\"Memory allocation failed\"}"); return; }
+	mg_http_reply(conn, status, headers, "%s", body);
+	free(body);
 }
 
 /**
  * Envoie une réponse JSON avec les en-têtes CORS.
  *
- * @param c Connexion mongoose
+ * @param conn Connexion mongoose
  * @param status Code HTTP de réponse
  * @param json Chaîne JSON à envoyer
  */
-void cors_reply_json(struct mg_connection *c, int status, const char *json) {
-    // fprintf(stderr, "📤 [CORS_JSON] Envoi JSON %d | Taille: %zu bytes\n", status, strlen(json));
-    cors_reply(c, status, "Content-Type: application/json\r\n", "%s", json);
+void cors_reply_json(struct mg_connection *conn, int status, const char *json) {
+	cors_reply(conn, status, "Content-Type: application/json\r\n", "%s", json);
 }
 
 /**
  * Gère les requêtes CORS preflight (OPTIONS).
  *
- * @param c Connexion mongoose
+ * @param conn Connexion mongoose
  * @param hm Message HTTP de la requête
  * @return 1 si requête OPTIONS traitée, 0 sinon
  */
-int cors_handle_preflight(struct mg_connection *c, struct mg_http_message *hm) {
-    if (mg_strcmp(hm->method, mg_str("OPTIONS")) == 0) {
-        // fprintf(stderr, "🔄 [PREFLIGHT] %.*s\n", (int)hm->uri.len, hm->uri.buf);
-        cors_reply(c, 204, "", "");
-        return 1;
-    }
-    return 0;
+int cors_handle_preflight(struct mg_connection *conn, struct mg_http_message *hm) {
+	if (mg_strcmp(hm->method, mg_str("OPTIONS")) == 0) {
+		cors_reply(conn, 204, "", "");
+		return 1;
+	}
+	return 0;
 }

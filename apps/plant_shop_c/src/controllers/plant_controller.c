@@ -1,3 +1,6 @@
+/* ==============================================================================
+   Importations
+   ============================================================================== */
 #include "plant_controller.h"
 #include <cjson/cJSON.h>
 #include <string.h>
@@ -8,168 +11,161 @@
 #include <stdint.h>
 #include "../utils/utils.h"
 
+/* ==============================================================================
+   Données
+   ============================================================================== */
 extern PGconn* DB;
 
+/* ==============================================================================
+   Fonctions utilitaires
+   ============================================================================== */
 /**
- * Envoie une réponse JSON formatée.
+ * Envoie une reponse JSON formatee.
  *
  * @param c Connexion Mongoose
- * @param j Objet JSON à envoyer
- * @param code Code HTTP de réponse
+ * @param json_obj Objet JSON a envoyer
+ * @param code Code HTTP de reponse
  */
-static void send_json_reply(struct mg_connection* c, cJSON* j, int code) {
-    char *text = cJSON_PrintUnformatted(j);
-    mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
-    free(text);
-    if (j) cJSON_Delete(j);
+static void send_json_reply(struct mg_connection* c, cJSON* json_obj, int code) {
+	char *text = cJSON_PrintUnformatted(json_obj);
+	mg_http_reply(c, code, "Content-Type: application/json\r\n", "%s", text);
+	free(text);
+	if (json_obj) cJSON_Delete(json_obj);
 }
 
 /**
- * Vérifie si l utilisateur courant est administrateur.
+ * Verifie si l utilisateur courant est administrateur.
  *
  * @param hm Message HTTP contenant le cookie
  * @return 1 si admin, 0 sinon
  */
 static int is_admin(struct mg_http_message* hm) {
-    int uid = get_current_user_id(hm);
-    return user_repo_is_admin(DB, uid);
+	int user_id = get_current_user_id(hm);
+	return user_repo_is_admin(DB, user_id);
 }
 
+/* ==============================================================================
+   Fonctions principales
+   ============================================================================== */
 /**
- * Récupère une plante par son ID.
+ * Recupere une plante par son ID.
  *
  * @param c Connexion Mongoose
- * @param hm Message HTTP reçu
+ * @param hm Message HTTP recu
  * @param id ID de la plante
  */
 void plant_get(struct mg_connection* c, struct mg_http_message *hm, int id) {
-    Plant p;
-    if (!plant_repo_find(DB, id, &p)) {
-        mg_http_reply(c, 404, "", "");
-        return;
-    }
-    cJSON *j = cJSON_CreateObject();
-    cJSON_AddNumberToObject(j, "id", p.id);
-    cJSON_AddStringToObject(j, "name", p.name);
-    cJSON_AddStringToObject(j, "description", p.description);
-    cJSON_AddNumberToObject(j, "price", p.price);
-    cJSON_AddNumberToObject(j, "stock", p.stock);
-    send_json_reply(c, j, 200);
-    (void)hm;
+	Plant plant;
+	if (!plant_repo_find(DB, id, &plant)) { mg_http_reply(c, 404, "", ""); return; }
+	cJSON *json_obj = cJSON_CreateObject();
+	cJSON_AddNumberToObject(json_obj, "id", plant.id);
+	cJSON_AddStringToObject(json_obj, "name", plant.name);
+	cJSON_AddStringToObject(json_obj, "description", plant.description);
+	cJSON_AddNumberToObject(json_obj, "price", plant.price);
+	cJSON_AddNumberToObject(json_obj, "stock", plant.stock);
+	send_json_reply(c, json_obj, 200);
+	(void)hm;
 }
 
 /**
- * Callback pour ajouter une plante à un tableau JSON.
+ * Callback pour ajouter une plante a un tableau JSON.
  *
- * @param p Pointeur vers la plante
- * @param a Tableau JSON cible
+ * @param plant Pointeur vers la plante
+ * @param arr Tableau JSON cible
  */
-static void admin_plants_list_cb(Plant* p, void* a) {
-    cJSON *j = cJSON_CreateObject();
-    cJSON_AddNumberToObject(j, "id", p->id);
-    cJSON_AddStringToObject(j, "name", p->name);
-    cJSON_AddNumberToObject(j, "price", p->price);
-    cJSON_AddNumberToObject(j, "stock", p->stock);
-    cJSON_AddItemToArray((cJSON*)a, j);
+static void admin_plants_list_cb(Plant* plant, void* arr) {
+	cJSON *json_obj = cJSON_CreateObject();
+	cJSON_AddNumberToObject(json_obj, "id", plant->id);
+	cJSON_AddStringToObject(json_obj, "name", plant->name);
+	cJSON_AddNumberToObject(json_obj, "price", plant->price);
+	cJSON_AddNumberToObject(json_obj, "stock", plant->stock);
+	cJSON_AddItemToArray((cJSON*)arr, json_obj);
 }
 
 /**
- * Liste toutes les plantes (accès public).
+ * Liste toutes les plantes (acces public).
  *
  * @param c Connexion Mongoose
- * @param hm Message HTTP reçu
+ * @param hm Message HTTP recu
  */
 void plants_list_public(struct mg_connection* c, struct mg_http_message *hm) {
-    cJSON *arr = cJSON_CreateArray();
-    plant_repo_each(DB, admin_plants_list_cb, arr);
-    send_json_reply(c, arr, 200);
+	cJSON *arr = cJSON_CreateArray();
+	plant_repo_each(DB, admin_plants_list_cb, arr);
+	send_json_reply(c, arr, 200);
 }
 
 /**
- * Liste toutes les plantes (accès admin).
+ * Liste toutes les plantes (acces admin).
  *
  * @param c Connexion Mongoose
- * @param hm Message HTTP reçu
+ * @param hm Message HTTP recu
  */
 void admin_plants_list(struct mg_connection* c, struct mg_http_message *hm) {
-    if (!is_admin(hm)) {
-        mg_http_reply(c, 403, "", "");
-        return;
-    }
-    cJSON *arr = cJSON_CreateArray();
-    plant_repo_each(DB, admin_plants_list_cb, arr);
-    send_json_reply(c, arr, 200);
+	if (!is_admin(hm)) { mg_http_reply(c, 403, "", ""); return; }
+	cJSON *arr = cJSON_CreateArray();
+	plant_repo_each(DB, admin_plants_list_cb, arr);
+	send_json_reply(c, arr, 200);
 }
 
 /**
- * Ajoute une nouvelle plante (accès admin).
+ * Remplit une structure Plant a partir du JSON.
+ *
+ * @param plant Pointeur vers la structure a remplir
+ * @param json Objet JSON source
+ */
+static void fill_plant_from_json(Plant* plant, cJSON* json) {
+	const char *name = cJSON_GetStringValue(cJSON_GetObjectItem(json, "name"));
+	const char *desc = cJSON_GetStringValue(cJSON_GetObjectItem(json, "description"));
+	if (name) strncpy(plant->name, name, sizeof(plant->name) - 1);
+	if (desc) strncpy(plant->description, desc, sizeof(plant->description) - 1);
+	plant->price = cJSON_GetObjectItem(json, "price")->valueint;
+	plant->stock = cJSON_GetObjectItem(json, "stock")->valueint;
+}
+
+/**
+ * Ajoute une nouvelle plante (acces admin).
  *
  * @param c Connexion Mongoose
- * @param hm Message HTTP contenant les données JSON
+ * @param hm Message HTTP contenant les donnees JSON
  */
 void admin_plants_add(struct mg_connection* c, struct mg_http_message *hm) {
-    if (!is_admin(hm)) {
-        mg_http_reply(c, 403, "", "");
-        return;
-    }
-
-    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
-    if (!j) {
-        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
-        return;
-    }
-
-		Plant p = {0};
-		const char *name = cJSON_GetStringValue(cJSON_GetObjectItem(j, "name"));
-		const char *desc = cJSON_GetStringValue(cJSON_GetObjectItem(j, "description"));
-		if (name) strncpy(p.name, name, sizeof(p.name) - 1);
-		if (desc) strncpy(p.description, desc, sizeof(p.description) - 1);
-		p.price = cJSON_GetObjectItem(j, "price")->valueint;
-		p.stock = cJSON_GetObjectItem(j, "stock")->valueint;
-		p.id = plant_repo_add(DB, &p);
-    cJSON_Delete(j);
-
-    cJSON *o = cJSON_CreateObject();
-    cJSON_AddNumberToObject(o, "id", p.id);
-    send_json_reply(c, o, 201);
+	if (!is_admin(hm)) { mg_http_reply(c, 403, "", ""); return; }
+	cJSON* json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+	if (!json) { mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
+	Plant plant = {0};
+	fill_plant_from_json(&plant, json);
+	plant.id = plant_repo_add(DB, &plant);
+	cJSON_Delete(json);
+	cJSON *out = cJSON_CreateObject();
+	cJSON_AddNumberToObject(out, "id", plant.id);
+	send_json_reply(c, out, 201);
 }
 
 /**
- * Modifie une plante existante (accès admin).
+ * Modifie une plante existante (acces admin).
  *
  * @param c Connexion Mongoose
- * @param hm Message HTTP contenant les données JSON
- * @param id ID de la plante à modifier
+ * @param hm Message HTTP contenant les donnees JSON
+ * @param id ID de la plante a modifier
  */
 void admin_plants_patch(struct mg_connection* c, struct mg_http_message *hm, int id) {
-    if (!is_admin(hm)) {
-        mg_http_reply(c, 403, "", "");
-        return;
-    }
-
-    cJSON* j = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
-    if (!j) {
-        mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}");
-        return;
-    }
-
-    plant_repo_patch(DB, id, j);
-    cJSON_Delete(j);
-    mg_http_reply(c, 200, "", "");
+	if (!is_admin(hm)) { mg_http_reply(c, 403, "", ""); return; }
+	cJSON* json = cJSON_ParseWithLength(hm->body.buf, hm->body.len);
+	if (!json) { mg_http_reply(c, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
+	plant_repo_patch(DB, id, json);
+	cJSON_Delete(json);
+	mg_http_reply(c, 200, "", "");
 }
 
 /**
- * Supprime une plante (accès admin).
+ * Supprime une plante (acces admin).
  *
  * @param c Connexion Mongoose
- * @param hm Message HTTP reçu
- * @param id ID de la plante à supprimer
+ * @param hm Message HTTP recu
+ * @param id ID de la plante a supprimer
  */
 void admin_plants_del(struct mg_connection* c, struct mg_http_message *hm, int id) {
-    if (!is_admin(hm)) {
-        mg_http_reply(c, 403, "", "");
-        return;
-    }
-    plant_repo_del(DB, id);
-    mg_http_reply(c, 200, "", "");
+	if (!is_admin(hm)) { mg_http_reply(c, 403, "", ""); return; }
+	plant_repo_del(DB, id);
+	mg_http_reply(c, 200, "", "");
 }

@@ -98,9 +98,9 @@ static char* hash_password_argon2(const char* password) {
 /**
  * Charge les variables de connexion depuis le fichier .env.
  *
- * @param url Buffer pour DATABASE_URL
- * @param user Buffer pour DATABASE_USER
- * @param pass Buffer pour DATABASE_PASS
+ * @param database_url Buffer pour DATABASE_URL
+ * @param database_user Buffer pour DATABASE_USER
+ * @param database_password Buffer pour DATABASE_PASS
  */
 static void read_environment_variables(char* database_url, char* database_user, char* database_password) {
 	FILE* file = fopen(".env", "r");
@@ -164,13 +164,13 @@ static int execute_sql_returning_id(PGconn* db, const char* query, int param_cou
  * @param db Connexion PostgreSQL
  * @param name Nom de l'utilisateur
  * @param email Adresse email
- * @param pwd_hash Hash du mot de passe (Argon2)
+ * @param password_hash Hash du mot de passe (Argon2)
  * @param is_admin 1 si administrateur, 0 sinon
  * @return ID de l'utilisateur créé
  */
 static int insert_user(PGconn* db, const char* name, const char* email,
-						const char* pwd_hash, int is_admin) {
-	const char* params[4] = {name, email, pwd_hash, is_admin ? "t" : "f"};
+						const char* password_hash, int is_admin) {
+	const char* params[4] = {name, email, password_hash, is_admin ? "t" : "f"};
 	const char* query_sql = "INSERT INTO users(name,email,password_hash,is_admin) "
 					  "VALUES($1,$2,$3,$4) RETURNING id";
 	return execute_sql_returning_id(db, query_sql, 4, params);
@@ -181,17 +181,17 @@ static int insert_user(PGconn* db, const char* name, const char* email,
  *
  * @param db Connexion PostgreSQL
  * @param name Nom de la plante
- * @param desc Description de la plante
+ * @param description Description de la plante
  * @param price Prix en centimes
  * @param stock Quantité en stock
  * @return ID de la plante créée
  */
-static int insert_plant(PGconn* db, const char* name, const char* desc,
+static int insert_plant(PGconn* db, const char* name, const char* description,
 						 int price, int stock) {
 	char price_str[12], stock_str[12];
 	sprintf(price_str, "%d.00", price);
 	sprintf(stock_str, "%d", stock);
-	const char* params[4] = {name, desc, price_str, stock_str};
+	const char* params[4] = {name, description, price_str, stock_str};
 	const char* query_sql = "INSERT INTO plants(name,description,price,stock) "
 					  "VALUES($1,$2,$3,$4) RETURNING id";
 	return execute_sql_returning_id(db, query_sql, 4, params);
@@ -259,12 +259,12 @@ static void update_order_total(PGconn* db, int order_id, int total) {
 /**
  * Établit la connexion à la base de données PostgreSQL.
  *
- * @param url URL de la base de données
- * @param user Nom d'utilisateur
- * @param pass Mot de passe
+ * @param database_url URL de la base de données
+ * @param database_user Nom d'utilisateur
+ * @param database_password Mot de passe
  * @return Connexion PostgreSQL ou NULL si erreur
  */
-static PGconn* connect_database(const char* url, const char* user, const char* pass) {
+static PGconn* connect_database(const char* database_url, const char* database_user, const char* database_password) {
 	const char* keys[] = {"dbname", "user", "password", NULL};
 	const char* values[] = {database_url, database_user, database_password, NULL};
 	PGconn* db = PQconnectdbParams(keys, values, 0);
@@ -297,12 +297,12 @@ static void seed_one_admin(PGconn* db, int index, FILE* output_file) {
  * Crée tous les administrateurs.
  *
  * @param db Connexion PostgreSQL
- * @param txt Fichier de sortie
+ * @param output_file Fichier de sortie
  */
-static void seed_admins(PGconn* db, FILE* txt) {
+static void seed_admins(PGconn* db, FILE* output_file) {
 	printf("👑 Création des administrateurs...\n");
 	for (int idx = 0; idx < NB_ADMINS; idx++) {
-		seed_one_admin(db, idx + 1, txt);
+		seed_one_admin(db, idx + 1, output_file);
 	}
 }
 
@@ -310,18 +310,18 @@ static void seed_admins(PGconn* db, FILE* txt) {
  * Crée un utilisateur et l'écrit dans le fichier.
  *
  * @param db Connexion PostgreSQL
- * @param txt Fichier de sortie
+ * @param output_file Fichier de sortie
  * @return ID de l'utilisateur créé
  */
-static int seed_one_user(PGconn* db, FILE* txt) {
+static int seed_one_user(PGconn* db, FILE* output_file) {
 	const char* first = pick_random_string(FIRST, sizeof(FIRST) / sizeof(char*));
 	const char* last  = pick_random_string(LAST,  sizeof(LAST)  / sizeof(char*));
-	char email[64], pwd[16], name[64];
+	char email[64], password[16], name[64];
 	sprintf(email, "%s_%s%d@%s", first, last, random_int_range(20, 99), pick_random_string(EMAIL_DOMAINS, 3));
-	sprintf(pwd, "pw%d", random_int_range(100000000, 999999999));
+	sprintf(password, "pw%d", random_int_range(100000000, 999999999));
 	sprintf(name, "%s %s", first, last);
-	int user_id = insert_user(db, name, email, hash_password_argon2(pwd), 0);
-	fprintf(txt, "%s %s\n", email, pwd);
+	int user_id = insert_user(db, name, email, hash_password_argon2(password), 0);
+	fprintf(output_file, "%s %s\n", email, password);
 	return user_id;
 }
 
@@ -329,13 +329,13 @@ static int seed_one_user(PGconn* db, FILE* txt) {
  * Crée tous les utilisateurs.
  *
  * @param db Connexion PostgreSQL
- * @param txt Fichier de sortie
+ * @param output_file Fichier de sortie
  * @param user_ids Tableau de sortie pour les IDs
  */
-static void seed_users(PGconn* db, FILE* txt, int* user_ids) {
+static void seed_users(PGconn* db, FILE* output_file, int* user_ids) {
 	printf("👥 Création des utilisateurs...\n");
 	for (int idx = 0; idx < NB_USERS; idx++) {
-		user_ids[idx] = seed_one_user(db, txt);
+		user_ids[idx] = seed_one_user(db, output_file);
 	}
 }
 
@@ -430,14 +430,14 @@ static int seed_orders(PGconn* db, int* user_ids, int* plant_ids,
  * Seed les données utilisateurs (admins + users).
  *
  * @param db Connexion PostgreSQL
- * @param txt Fichier de sortie
+ * @param output_file Fichier de sortie
  * @param user_ids Tableau de sortie pour les IDs utilisateurs
  */
-static void seed_all_users(PGconn* db, FILE* txt, int* user_ids) {
-	fprintf(txt, "Administrateurs :\n\n");
-	seed_admins(db, txt);
-	fprintf(txt, "\nUtilisateurs :\n\n");
-	seed_users(db, txt, user_ids);
+static void seed_all_users(PGconn* db, FILE* output_file, int* user_ids) {
+	fprintf(output_file, "Administrateurs :\n\n");
+	seed_admins(db, output_file);
+	fprintf(output_file, "\nUtilisateurs :\n\n");
+	seed_users(db, output_file, user_ids);
 }
 
 /**

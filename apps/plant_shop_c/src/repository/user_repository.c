@@ -3,6 +3,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+/**
+ * Remplit une structure User depuis un résultat PostgreSQL.
+ *
+ * @param u Pointeur vers la structure User à remplir
+ * @param r Résultat PostgreSQL
+ * @param row Index de la ligne à lire
+ */
 static void fill_user(User *u, PGresult *r, int row) {
     u->id = atoi(PQgetvalue(r, row, 0));
     strncpy(u->name, PQgetvalue(r, row, 1), sizeof(u->name) - 1);
@@ -14,6 +21,13 @@ static void fill_user(User *u, PGresult *r, int row) {
     u->is_admin = (PQgetvalue(r, row, 4)[0] == 't');
 }
 
+/**
+ * Ajoute un utilisateur en base de données.
+ *
+ * @param conn Connexion PostgreSQL
+ * @param u Pointeur vers le User à insérer
+ * @return ID de l'utilisateur créé, 0 si erreur
+ */
 int user_repo_add(PGconn *conn, const User *u) {
     const char* params[4] = {u->name, u->email, u->password_hash, u->is_admin ? "t" : "f"};
     PGresult *r = PQexecParams(conn,
@@ -30,6 +44,14 @@ int user_repo_add(PGconn *conn, const User *u) {
     return id;
 }
 
+/**
+ * Recherche un utilisateur par son ID.
+ *
+ * @param conn Connexion PostgreSQL
+ * @param id ID de l'utilisateur
+ * @param out Pointeur vers la structure à remplir
+ * @return 1 si trouvé, 0 sinon
+ */
 int user_repo_find(PGconn *conn, int id, User *out) {
     char id_str[12];
     sprintf(id_str, "%d", id);
@@ -47,6 +69,14 @@ int user_repo_find(PGconn *conn, int id, User *out) {
     return found;
 }
 
+/**
+ * Recherche un utilisateur par son email.
+ *
+ * @param conn Connexion PostgreSQL
+ * @param email Adresse email recherchée
+ * @param out Pointeur vers la structure à remplir
+ * @return 1 si trouvé, 0 sinon
+ */
 int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
     // printf("[DEBUG][SQL] Recherche email : '%s'\n", email);
     const char *params[1] = {email};
@@ -66,6 +96,13 @@ int user_repo_find_by_mail(PGconn *conn, const char *email, User *out) {
     return found;
 }
 
+/**
+ * Vérifie si un utilisateur est administrateur.
+ *
+ * @param conn Connexion PostgreSQL
+ * @param id ID de l'utilisateur
+ * @return 1 si admin, 0 sinon
+ */
 int user_repo_is_admin(PGconn *conn, int id) {
 
     if (id == 0) {
@@ -86,6 +123,13 @@ int user_repo_is_admin(PGconn *conn, int id) {
     return is_admin;
 }
 
+/**
+ * Met à jour un utilisateur (name, email, admin).
+ *
+ * @param conn Connexion PostgreSQL
+ * @param id ID de l'utilisateur
+ * @param patch_data Objet JSON contenant les champs à modifier
+ */
 void user_repo_patch(PGconn *conn, int id, cJSON *patch_data) {
     char id_str[12];
     sprintf(id_str, "%d", id);
@@ -109,6 +153,12 @@ void user_repo_patch(PGconn *conn, int id, cJSON *patch_data) {
     }
 }
 
+/**
+ * Supprime un utilisateur.
+ *
+ * @param conn Connexion PostgreSQL
+ * @param id ID de l'utilisateur à supprimer
+ */
 void user_repo_del(PGconn *conn, int id) {
     char id_str[12];
     sprintf(id_str, "%d", id);
@@ -116,6 +166,13 @@ void user_repo_del(PGconn *conn, int id) {
     PQclear(PQexecParams(conn, "DELETE FROM users WHERE id = $1", 1, NULL, params, NULL, NULL, 0));
 }
 
+/**
+ * Parcourt tous les utilisateurs via callback.
+ *
+ * @param conn Connexion PostgreSQL
+ * @param cb Fonction callback appelée pour chaque utilisateur
+ * @param ctx Données utilisateur passées au callback
+ */
 void user_repo_each(PGconn *conn, void (*cb)(User*, void*), void *ctx) {
     PGresult *r = PQexec(conn, "SELECT id, name, email, password_hash, is_admin FROM users");
     if (PQresultStatus(r) != PGRES_TUPLES_OK) {

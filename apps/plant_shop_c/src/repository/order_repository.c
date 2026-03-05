@@ -6,6 +6,14 @@
 #include <string.h>
 #include <stdlib.h>
 
+/**
+ * Met à jour le statut d'une commande.
+ *
+ * @param conn Connexion PostgreSQL
+ * @param order_id ID de la commande
+ * @param status Nouveau statut (pending, shipped, etc.)
+ * @return 1 si succès, 0 sinon
+ */
 int order_repo_update_status(PGconn *conn, int order_id, const char* status) {
     char id_str[12];
     sprintf(id_str, "%d", order_id);
@@ -20,6 +28,15 @@ int order_repo_update_status(PGconn *conn, int order_id, const char* status) {
     return 1;
 }
 
+/**
+ * Crée une commande avec ses articles.
+ * Calcule automatiquement le total.
+ *
+ * @param c Connexion PostgreSQL
+ * @param user_id ID de l'utilisateur
+ * @param items_json Tableau JSON des articles [{plantId, quantity}]
+ * @return ID de la commande créée, 0 si erreur
+ */
 int order_repo_add(PGconn *c, int user_id, cJSON* items_json) {
     int total = 0;
     cJSON* item = NULL;
@@ -66,6 +83,13 @@ int order_repo_add(PGconn *c, int user_id, cJSON* items_json) {
 /* ---------- helpers ---------- */
 struct _item_ctx { PGconn *db; cJSON *dst; };
 
+/**
+ * Convertit un timestamp PostgreSQL en format ISO 8601.
+ *
+ * @param pg_ts Timestamp PostgreSQL (YYYY-MM-DD HH:MM:SS)
+ * @param out Buffer de sortie
+ * @param out_sz Taille du buffer
+ */
 static void format_timestamp_iso(const char *pg_ts, char *out, size_t out_sz) {
 	if (!pg_ts || !out || out_sz == 0) {
 		if (out && out_sz > 0) out[0] = '\0';
@@ -79,6 +103,13 @@ static void format_timestamp_iso(const char *pg_ts, char *out, size_t out_sz) {
 		snprintf(out, out_sz, "%.*s", (int)(out_sz - 1), pg_ts);
 	}
 }
+
+/**
+ * Callback pour convertir un OrderItem en JSON avec infos plante.
+ *
+ * @param it Pointeur vers l'OrderItem
+ * @param ud Contexte contenant la connexion DB et le tableau JSON
+ */
 static void _item_to_json(OrderItem *it, void *ud) {
 	struct _item_ctx *ctx = ud;
 	Plant p = {0};
@@ -149,6 +180,13 @@ cJSON* order_repo_list(PGconn *c, int uid) {
 	return out;
 }
 
+/**
+ * Met à jour une commande (statut uniquement).
+ *
+ * @param c Connexion PostgreSQL
+ * @param id ID de la commande
+ * @param j Objet JSON contenant le champ status
+ */
 void order_repo_patch(PGconn *c, int id, cJSON *j) {
 	char sid[12];
 	sprintf(sid, "%d", id);
@@ -174,6 +212,12 @@ void order_repo_patch(PGconn *c, int id, cJSON *j) {
 	PQclear(r);
 }
 
+/**
+ * Supprime une commande.
+ *
+ * @param c Connexion PostgreSQL
+ * @param id ID de la commande à supprimer
+ */
 void order_repo_del(PGconn *c, int id) {
     char sid[12];
     sprintf(sid, "%d", id);
@@ -181,6 +225,14 @@ void order_repo_del(PGconn *c, int id) {
     PQclear(PQexecParams(c, "DELETE FROM orders WHERE id=$1", 1, NULL, v, NULL, NULL, 0));
 }
 
+/**
+ * Vérifie si une commande appartient à un utilisateur.
+ *
+ * @param c Connexion PostgreSQL
+ * @param order_id ID de la commande
+ * @param user_id ID de l'utilisateur
+ * @return 1 si la commande appartient à l'utilisateur, 0 sinon
+ */
 int order_repo_belongs_to(PGconn *c, int order_id, int user_id) {
     char oid_str[12], uid_str[12];
     sprintf(oid_str, "%d", order_id);

@@ -4,6 +4,13 @@
 #include <stdlib.h>
 #include "mongoose/mongoose.h"
 
+/**
+ * Lit les variables de connexion DB depuis .env.
+ *
+ * @param url Buffer pour DATABASE_URL (min 128 chars)
+ * @param user Buffer pour DATABASE_USER (min 64 chars)
+ * @param pass Buffer pour DATABASE_PASS (min 64 chars)
+ */
 void read_db_env(char* url, char* user, char* pass) {
     FILE* f = fopen(".env", "r");
     if (!f) {
@@ -32,6 +39,12 @@ void read_db_env(char* url, char* user, char* pass) {
     fclose(f);
 }
 
+/**
+ * Lit les variables serveur depuis .env.
+ *
+ * @param port Buffer pour SERVER_ADDRESS (min 16 chars)
+ * @param jwt_secret Buffer pour JWT_SECRET (min 128 chars)
+ */
 void read_server_env(char* port, char* jwt_secret) {
     FILE* f = fopen(".env", "r");
     if (!f) {
@@ -57,6 +70,15 @@ void read_server_env(char* port, char* jwt_secret) {
     fclose(f);
 }
 
+/**
+ * Extrait un cookie par son nom depuis l'en-tête Cookie.
+ *
+ * @param hm Message HTTP contenant les en-têtes
+ * @param name Nom du cookie recherché
+ * @param out Buffer de sortie pour la valeur
+ * @param sz Taille du buffer
+ * @return 1 si trouvé, 0 sinon
+ */
 int get_cookie_manual(struct mg_http_message* hm,
                       const char* name, char* out, size_t sz) {
     // printf("[COOKIE] get_cookie_manual called\n");
@@ -94,7 +116,12 @@ int get_cookie_manual(struct mg_http_message* hm,
     return 0;
 }
 
-/* get_current_user_id avec parsing manuel */
+/**
+ * Récupère l'ID utilisateur depuis le cookie de session.
+ *
+ * @param hm Message HTTP contenant les cookies
+ * @return ID utilisateur si connecté, 0 sinon
+ */
 int get_current_user_id(struct mg_http_message *hm) {
 		// printf("Appel de la fonction : get_current_user_id\n");
     char jwt_val[32];

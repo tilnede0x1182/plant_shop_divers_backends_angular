@@ -3,6 +3,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+/**
+ * Remplit une structure Plant depuis un résultat PostgreSQL.
+ *
+ * @param p Pointeur vers la structure Plant à remplir
+ * @param r Résultat PostgreSQL
+ * @param row Index de la ligne à lire
+ */
 static void fill_plant(Plant *p, PGresult *r, int row) {
 	p->id = atoi(PQgetvalue(r, row, 0));
 	strncpy(p->name, PQgetvalue(r, row, 1), sizeof(p->name) - 1);
@@ -13,6 +20,13 @@ static void fill_plant(Plant *p, PGresult *r, int row) {
 	p->stock = atoi(PQgetvalue(r, row, 4));
 }
 
+/**
+ * Ajoute une plante en base de données.
+ *
+ * @param c Connexion PostgreSQL
+ * @param p Pointeur vers la Plant à insérer
+ * @return ID de la plante créée, 0 si erreur
+ */
 int plant_repo_add(PGconn *c, const Plant *p) {
 	char price_str[12], stock_str[12];
 	sprintf(price_str, "%.2f", (double)p->price);
@@ -35,6 +49,14 @@ int plant_repo_add(PGconn *c, const Plant *p) {
 	return id;
 }
 
+/**
+ * Recherche une plante par son ID.
+ *
+ * @param c Connexion PostgreSQL
+ * @param id ID de la plante
+ * @param p Pointeur vers la structure à remplir
+ * @return 1 si trouvée, 0 sinon
+ */
 int plant_repo_find(PGconn *c, int id, Plant *p) {
 	char sid[12];
 	sprintf(sid, "%d", id);
@@ -51,6 +73,13 @@ int plant_repo_find(PGconn *c, int id, Plant *p) {
 	return found;
 }
 
+/**
+ * Met à jour une plante (name, description, price, stock).
+ *
+ * @param c Connexion PostgreSQL
+ * @param id ID de la plante
+ * @param j Objet JSON contenant les champs à modifier
+ */
 void plant_repo_patch(PGconn *c, int id, cJSON *j) {
     char sid[12];
     sprintf(sid, "%d", id);
@@ -96,6 +125,12 @@ void plant_repo_patch(PGconn *c, int id, cJSON *j) {
     }
 }
 
+/**
+ * Supprime une plante.
+ *
+ * @param c Connexion PostgreSQL
+ * @param id ID de la plante à supprimer
+ */
 void plant_repo_del(PGconn *c, int id) {
 	char sid[12];
 	sprintf(sid, "%d", id);
@@ -107,6 +142,13 @@ void plant_repo_del(PGconn *c, int id) {
 	PQclear(res);
 }
 
+/**
+ * Parcourt toutes les plantes via callback.
+ *
+ * @param c Connexion PostgreSQL
+ * @param cb Fonction callback appelée pour chaque plante
+ * @param ctx Données utilisateur passées au callback
+ */
 void plant_repo_each(PGconn *c, void (*cb)(Plant*, void*), void *ctx) {
 	PGresult *r = PQexec(c, "SELECT id,name,description,price,stock FROM plants ORDER BY name ASC");
 	if (PQresultStatus(r) != PGRES_TUPLES_OK) {

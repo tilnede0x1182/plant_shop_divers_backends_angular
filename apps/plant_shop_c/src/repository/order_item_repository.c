@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * Ajoute un article de commande en base de données.
+ *
+ * @param db Connexion PostgreSQL
+ * @param it Pointeur vers l'OrderItem à insérer
+ */
 void order_item_repo_add(PGconn *db, const OrderItem *it) {
     const char *params[4];
     char buf_order[12], buf_plant[12], buf_qty[12], buf_price[12];
@@ -24,6 +30,14 @@ void order_item_repo_add(PGconn *db, const OrderItem *it) {
     PQclear(r);
 }
 
+/**
+ * Récupère tous les articles d'une commande via callback.
+ *
+ * @param db Connexion PostgreSQL
+ * @param oid ID de la commande
+ * @param cb Fonction callback appelée pour chaque article
+ * @param ud Données utilisateur passées au callback
+ */
 void order_item_repo_by_order(PGconn *db, int oid, void(*cb)(OrderItem*, void*), void *ud) {
     char buf[12];
     sprintf(buf, "%d", oid);
@@ -50,6 +64,13 @@ void order_item_repo_by_order(PGconn *db, int oid, void(*cb)(OrderItem*, void*),
     PQclear(r);
 }
 
+/**
+ * Met à jour un article de commande (quantité).
+ *
+ * @param db Connexion PostgreSQL
+ * @param id ID de l'article
+ * @param data Objet cJSON contenant les champs à modifier
+ */
 void order_item_repo_patch(PGconn* db, int id, cJSON* data) {
     char id_str[12];
     sprintf(id_str, "%d", id);
@@ -62,6 +83,12 @@ void order_item_repo_patch(PGconn* db, int id, cJSON* data) {
     }
 }
 
+/**
+ * Supprime un article de commande.
+ *
+ * @param db Connexion PostgreSQL
+ * @param id ID de l'article à supprimer
+ */
 void order_item_repo_del(PGconn* db, int id) {
     char id_str[12];
     sprintf(id_str, "%d", id);

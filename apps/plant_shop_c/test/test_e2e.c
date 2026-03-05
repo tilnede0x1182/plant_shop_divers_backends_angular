@@ -39,6 +39,15 @@ struct MemoryStruct {
     size_t size;
 };
 
+/**
+ * Callback cURL pour stocker la réponse HTTP en mémoire.
+ *
+ * @param contents Données reçues
+ * @param size Taille d'un élément
+ * @param nmemb Nombre d'éléments
+ * @param userp Pointeur vers le MemoryStruct
+ * @return Nombre d'octets traités
+ */
 static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
     size_t realsize = size * nmemb;
     struct MemoryStruct *mem = (struct MemoryStruct *)userp;
@@ -54,7 +63,14 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
     return realsize;
 }
 
-// Vérifie si le serveur est prêt
+/**
+ * Attend que le serveur soit accessible.
+ *
+ * @param host Adresse IP du serveur
+ * @param port Port du serveur
+ * @param timeout_ms Délai maximum en millisecondes
+ * @return 1 si serveur accessible, 0 si timeout
+ */
 int waitForServer(const char* host, unsigned short port, int timeout_ms) {
     struct timespec start, now;
     clock_gettime(CLOCK_MONOTONIC, &start);
@@ -82,8 +98,11 @@ int waitForServer(const char* host, unsigned short port, int timeout_ms) {
     return 0;
 }
 
-
-// Initialise une session de test (contexte cURL avec cookies)
+/**
+ * Initialise une session de test avec cookie jar.
+ *
+ * @param session Pointeur vers la TestSession à initialiser
+ */
 void init_session(TestSession *session) {
     session->curl = curl_easy_init();
     if (!session->curl) {
@@ -96,6 +115,11 @@ void init_session(TestSession *session) {
     curl_easy_setopt(session->curl, CURLOPT_COOKIEFILE, session->cookie_jar);
 }
 
+/**
+ * Libère les ressources d'une session de test.
+ *
+ * @param session Pointeur vers la TestSession à nettoyer
+ */
 void cleanup_session(TestSession *session) {
     curl_easy_cleanup(session->curl);
     remove(session->cookie_jar); // Supprime le fichier de cookies
@@ -163,6 +187,12 @@ cJSON* api_call(const char* who, const char* method, const char* path, int expec
 // 🔎 Fonctions d'Assertion
 // ------------------------------------------------------
 
+/**
+ * Vérifie qu'une clé JSON est un nombre.
+ *
+ * @param obj Objet JSON parent
+ * @param key Nom de la clé à vérifier
+ */
 void assert_is_number(cJSON* obj, const char* key) {
     if (!cJSON_HasObjectItem(obj, key) || !cJSON_IsNumber(cJSON_GetObjectItem(obj, key))) {
         fprintf(stderr, "Assertion échouée: la clé '%s' n'est pas un nombre ou est absente.\n", key);
@@ -170,6 +200,13 @@ void assert_is_number(cJSON* obj, const char* key) {
     }
 }
 
+/**
+ * Vérifie qu'une clé JSON contient une chaîne attendue.
+ *
+ * @param obj Objet JSON parent
+ * @param key Nom de la clé
+ * @param expected Valeur chaîne attendue
+ */
 void assert_eq_str(cJSON* obj, const char* key, const char* expected) {
     cJSON* item = cJSON_GetObjectItem(obj, key);
     int ok = item && cJSON_IsString(item) && strcmp(item->valuestring, expected) == 0;
@@ -177,6 +214,13 @@ void assert_eq_str(cJSON* obj, const char* key, const char* expected) {
     if (!ok) exit(1);
 }
 
+/**
+ * Vérifie qu'une clé JSON contient un entier attendu.
+ *
+ * @param obj Objet JSON parent
+ * @param key Nom de la clé
+ * @param expected Valeur entière attendue
+ */
 void assert_eq_int(cJSON* obj, const char* key, int expected) {
     cJSON* item = cJSON_GetObjectItem(obj, key);
     int ok = item && cJSON_IsNumber(item) && item->valueint == expected;
@@ -184,6 +228,13 @@ void assert_eq_int(cJSON* obj, const char* key, int expected) {
     if (!ok) exit(1);
 }
 
+/**
+ * Vérifie qu'une clé JSON contient un booléen attendu.
+ *
+ * @param obj Objet JSON parent
+ * @param key Nom de la clé
+ * @param expected 1 pour true, 0 pour false
+ */
 void assert_eq_bool(cJSON* obj, const char* key, int expected) {
     cJSON* item = cJSON_GetObjectItem(obj, key);
     int ok = item && cJSON_IsBool(item) && cJSON_IsTrue(item) == expected;
@@ -195,6 +246,9 @@ void assert_eq_bool(cJSON* obj, const char* key, int expected) {
 // 🧪 Modules de Test
 // ------------------------------------------------------
 
+/**
+ * Teste les opérations CRUD sur les plantes.
+ */
 void test_plants() {
     printf("\n📌 TEST MODULE: PLANTS (admin)\n");
     cJSON *plant_data = cJSON_CreateObject();
@@ -229,6 +283,9 @@ void test_plants() {
     api_call("admin", "DELETE", path, 200, NULL);
 }
 
+/**
+ * Teste les opérations CRUD sur les utilisateurs.
+ */
 void test_users() {
     printf("\n📌 TEST MODULE: USERS (admin)\n");
     char email[64];
@@ -258,6 +315,9 @@ void test_users() {
     api_call("admin", "DELETE", path, 200, NULL);
 }
 
+/**
+ * Teste les opérations sur les commandes et articles.
+ */
 void test_orders() {
     printf("\n📌 TEST MODULE: ORDERS & ORDER ITEMS\n");
     char plant_name[64];
@@ -314,6 +374,11 @@ void test_orders() {
 /* ------------------------------------------------------------------
  * 👤  USER PROFILE
  * ------------------------------------------------------------------*/
+/**
+ * Teste la consultation et modification du profil utilisateur.
+ *
+ * @param user_email Email de l'utilisateur à tester
+ */
 void test_user_profile(const char* user_email) {
 	printf("\n📌 TEST MODULE: USER PROFILE (user)\n");
 	cJSON *users = api_call("admin", "GET", "/users", 200, NULL);
@@ -345,6 +410,9 @@ void test_user_profile(const char* user_email) {
 /* ------------------------------------------------------------------
  * 🌿  ADMIN / PLANTS
  * ------------------------------------------------------------------*/
+/**
+ * Teste les opérations admin sur les plantes.
+ */
 void test_admin_plants() {
 	printf("\n📌 TEST MODULE: ADMIN PLANTS\n");
 	cJSON *list = api_call("admin", "GET", "/admin/plants", 200, NULL);
@@ -365,6 +433,9 @@ void test_admin_plants() {
 /* ------------------------------------------------------------------
  * 👥  ADMIN / USERS
  * ------------------------------------------------------------------*/
+/**
+ * Teste les opérations admin sur les utilisateurs.
+ */
 void test_admin_users() {
 	printf("\n📌 TEST MODULE: ADMIN USERS\n");
 	char email[64]; snprintf(email, sizeof(email), "admin_temp_c_%s@example.com", timestamp_str);
@@ -394,6 +465,9 @@ void test_admin_users() {
 	api_call("admin", "DELETE", path, 200, NULL);
 }
 
+/**
+ * Teste les restrictions de rôles (user vs admin).
+ */
 void test_auth_roles() {
     printf("\n📌 TEST MODULE: ROLES\n");
     cJSON *bad_plant = cJSON_CreateObject();
@@ -406,6 +480,12 @@ void test_auth_roles() {
     api_call("user", "GET", "/users", 403, NULL);
 }
 
+/**
+ * Teste le endpoint /auth/me.
+ *
+ * @param user_email Email attendu de l'utilisateur connecté
+ * @param user_name Nom attendu de l'utilisateur connecté
+ */
 void test_auth_me(const char* user_email, const char* user_name) {
     printf("\n📌 TEST MODULE: AUTH /me\n");
     cJSON *me = api_call("user", "GET", "/auth/me", 200, NULL);
@@ -419,6 +499,11 @@ void test_auth_me(const char* user_email, const char* user_name) {
 // ------------------------------------------------------
 // 🚀 Exécution Principale
 // ------------------------------------------------------
+/**
+ * Point d'entrée des tests end-to-end.
+ *
+ * @return 0 si succès, 2 si serveur injoignable
+ */
 int main(void) {
     if (!waitForServer("127.0.0.1", 4100, 5000)) {
         fprintf(stderr, "❌ Serveur http://localhost:4100 injoignable.\n");

@@ -13,13 +13,34 @@
 #define MAX_ITEMS_PER_ORDER 5
 
 /* ---------- Utils ---------- */
+/**
+ * Génère un entier aléatoire dans un intervalle.
+ *
+ * @param min Borne inférieure incluse
+ * @param max Borne supérieure incluse
+ * @return Entier aléatoire entre min et max
+ */
 static int rnd(int min, int max) {
     if (min > max) return min;
     return min + rand() % (max - min + 1);
 }
+
+/**
+ * Sélectionne un élément aléatoire dans un tableau de chaînes.
+ *
+ * @param arr Tableau de chaînes
+ * @param len Nombre d'éléments dans le tableau
+ * @return Pointeur vers la chaîne sélectionnée
+ */
 static const char* pick(const char* const arr[], int len) { return arr[rnd(0, len - 1)]; }
 
-// Génère un sel aléatoire. Pour une vraie app, utiliser une source plus forte.
+/**
+ * Génère un sel aléatoire pour le hachage.
+ * Note: pour une vraie application, utiliser une source cryptographique.
+ *
+ * @param salt Buffer de destination pour le sel
+ * @param len Taille du sel en octets
+ */
 static void generate_salt(uint8_t *salt, size_t len) {
     for (size_t i = 0; i < len; i++) {
         salt[i] = rand();
@@ -44,7 +65,13 @@ static char* hash_argon2(const char* pwd) {
     return encoded_hash;
 }
 
-/** Charge .env */
+/**
+ * Charge les variables de connexion depuis le fichier .env.
+ *
+ * @param url Buffer pour DATABASE_URL
+ * @param user Buffer pour DATABASE_USER
+ * @param pass Buffer pour DATABASE_PASS
+ */
 static void read_env(char* url, char* user, char* pass) {
     FILE* f = fopen(".env", "r");
     if (!f) { perror(".env"); exit(1); }
@@ -63,6 +90,12 @@ static void read_env(char* url, char* user, char* pass) {
 }
 
 /* ---------- SQL helpers ---------- */
+/**
+ * Exécute une requête SQL sans retour de données.
+ *
+ * @param db Connexion PostgreSQL
+ * @param query Requête SQL à exécuter
+ */
 static void exec(PGconn* db, const char* q) {
     PGresult* r = PQexec(db, q);
     if (PQresultStatus(r) != PGRES_COMMAND_OK) {
@@ -71,6 +104,15 @@ static void exec(PGconn* db, const char* q) {
     PQclear(r);
 }
 
+/**
+ * Exécute une requête SQL INSERT RETURNING id.
+ *
+ * @param db Connexion PostgreSQL
+ * @param query Requête SQL paramétrée avec RETURNING id
+ * @param nParams Nombre de paramètres
+ * @param paramValues Tableau des valeurs de paramètres
+ * @return ID de la ligne insérée, ou -1 en cas d'erreur
+ */
 static int exec_returning_id(PGconn* db, const char* query, int nParams, const char* const* paramValues) {
     PGresult* r = PQexecParams(db, query, nParams, NULL, paramValues, NULL, NULL, 0);
     if (PQresultStatus(r) != PGRES_TUPLES_OK || PQntuples(r) == 0) {
@@ -83,11 +125,31 @@ static int exec_returning_id(PGconn* db, const char* query, int nParams, const c
     return id;
 }
 
+/**
+ * Insère un utilisateur dans la base de données.
+ *
+ * @param db Connexion PostgreSQL
+ * @param name Nom de l'utilisateur
+ * @param email Adresse email
+ * @param pwd_hash Hash du mot de passe (Argon2)
+ * @param is_admin 1 si administrateur, 0 sinon
+ * @return ID de l'utilisateur créé
+ */
 static int insert_user(PGconn* db, const char* name, const char* email, const char* pwd_hash, int is_admin) {
     const char* p[4] = {name, email, pwd_hash, is_admin ? "t" : "f"};
     return exec_returning_id(db, "INSERT INTO users(name,email,password_hash,is_admin) VALUES($1,$2,$3,$4) RETURNING id", 4, p);
 }
 
+/**
+ * Insère une plante dans la base de données.
+ *
+ * @param db Connexion PostgreSQL
+ * @param name Nom de la plante
+ * @param desc Description de la plante
+ * @param price Prix en centimes
+ * @param stock Quantité en stock
+ * @return ID de la plante créée
+ */
 static int insert_plant(PGconn* db, const char* name, const char* desc, int price, int stock) {
     char pr[12], st[12];
     sprintf(pr, "%d.00", price); // Envoi comme NUMERIC
@@ -96,6 +158,13 @@ static int insert_plant(PGconn* db, const char* name, const char* desc, int pric
     return exec_returning_id(db, "INSERT INTO plants(name,description,price,stock) VALUES($1,$2,$3,$4) RETURNING id", 4, p);
 }
 
+/**
+ * Insère une commande vide pour un utilisateur.
+ *
+ * @param db Connexion PostgreSQL
+ * @param user_id ID de l'utilisateur
+ * @return ID de la commande créée
+ */
 static int insert_order(PGconn* db, int user_id) {
     char uid_str[12];
     sprintf(uid_str, "%d", user_id);
@@ -103,6 +172,15 @@ static int insert_order(PGconn* db, int user_id) {
     return exec_returning_id(db, "INSERT INTO orders(user_id, total, status) VALUES($1, $2, 'pending') RETURNING id", 2, p);
 }
 
+/**
+ * Insère un article dans une commande.
+ *
+ * @param db Connexion PostgreSQL
+ * @param order_id ID de la commande
+ * @param plant_id ID de la plante
+ * @param qty Quantité commandée
+ * @param price Prix unitaire
+ */
 static void insert_order_item(PGconn* db, int order_id, int plant_id, int qty, int price) {
     char oid_str[12], pid_str[12], qty_str[12], price_str[12];
     sprintf(oid_str, "%d", order_id);
@@ -114,6 +192,13 @@ static void insert_order_item(PGconn* db, int order_id, int plant_id, int qty, i
     PQclear(r);
 }
 
+/**
+ * Met à jour le total d'une commande.
+ *
+ * @param db Connexion PostgreSQL
+ * @param order_id ID de la commande
+ * @param total Nouveau total en centimes
+ */
 static void update_order_total(PGconn* db, int order_id, int total) {
     char oid_str[12], total_str[12];
     sprintf(oid_str, "%d", order_id);

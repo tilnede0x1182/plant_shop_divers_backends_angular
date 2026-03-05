@@ -3,6 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * Envoie une réponse HTTP avec les en-têtes CORS.
+ *
+ * @param c Connexion mongoose
+ * @param status Code HTTP de réponse
+ * @param extra_headers En-têtes supplémentaires (peut être NULL)
+ * @param fmt Format printf pour le corps de réponse
+ * @param ... Arguments variadiques pour le format
+ */
 void cors_reply(struct mg_connection *c, int status, const char *extra_headers, const char *fmt, ...) {
     // En-têtes CORS standards
     const char *cors_headers =
@@ -46,11 +55,25 @@ void cors_reply(struct mg_connection *c, int status, const char *extra_headers, 
     free(body);
 }
 
+/**
+ * Envoie une réponse JSON avec les en-têtes CORS.
+ *
+ * @param c Connexion mongoose
+ * @param status Code HTTP de réponse
+ * @param json Chaîne JSON à envoyer
+ */
 void cors_reply_json(struct mg_connection *c, int status, const char *json) {
     // fprintf(stderr, "📤 [CORS_JSON] Envoi JSON %d | Taille: %zu bytes\n", status, strlen(json));
     cors_reply(c, status, "Content-Type: application/json\r\n", "%s", json);
 }
 
+/**
+ * Gère les requêtes CORS preflight (OPTIONS).
+ *
+ * @param c Connexion mongoose
+ * @param hm Message HTTP de la requête
+ * @return 1 si requête OPTIONS traitée, 0 sinon
+ */
 int cors_handle_preflight(struct mg_connection *c, struct mg_http_message *hm) {
     if (mg_strcmp(hm->method, mg_str("OPTIONS")) == 0) {
         // fprintf(stderr, "🔄 [PREFLIGHT] %.*s\n", (int)hm->uri.len, hm->uri.buf);

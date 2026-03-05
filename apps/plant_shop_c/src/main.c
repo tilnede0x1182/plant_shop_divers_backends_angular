@@ -54,8 +54,8 @@ static void database_connect(void) {
 /**
  * Initialise le manager Mongoose et démarre l écoute.
  *
- * @param mgr Pointeur vers le manager Mongoose
- * @param url URL d écoute
+ * @param mongoose_manager Pointeur vers le manager Mongoose
+ * @param listen_url URL d écoute
  * @return 1 si succès, 0 si erreur
  */
 static int start_server(struct mg_mgr* mongoose_manager, const char* listen_url) {
@@ -69,10 +69,10 @@ static int start_server(struct mg_mgr* mongoose_manager, const char* listen_url)
 /**
  * Boucle principale du serveur.
  *
- * @param mgr Pointeur vers le manager Mongoose
+ * @param mongoose_manager Pointeur vers le manager Mongoose
  */
-static void run_server_loop(struct mg_mgr* mgr) {
-	for (;;) mg_mgr_poll(mgr, 1000);
+static void run_server_loop(struct mg_mgr* mongoose_manager) {
+	for (;;) mg_mgr_poll(mongoose_manager, 1000);
 }
 
 /* ==============================================================================

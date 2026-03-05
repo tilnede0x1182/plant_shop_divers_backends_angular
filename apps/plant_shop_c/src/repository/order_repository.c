@@ -20,89 +20,89 @@
  * @param status Nouveau statut (pending, shipped, etc.)
  * @return 1 si succès, 0 sinon
  */
-int order_repo_update_status(PGconn *conn, int order_id, const char* status) {
-	char id_str[12];
-	sprintf(id_str, "%d", order_id);
-	const char *params[2] = {status, id_str};
-	PGresult *res = PQexecParams(conn, "UPDATE orders SET status=$1 WHERE id=$2", 2, NULL, params, NULL, NULL, 0);
-	int ok = (PQresultStatus(res) == PGRES_COMMAND_OK);
-	PQclear(res);
+int order_repo_update_status(PGconn *database_connection, int order_id, const char* status) {
+	char id_string[12];
+	sprintf(id_string, "%d", order_id);
+	const char *params[2] = {status, id_string};
+	PGresult *query_result = PQexecParams(database_connection, "UPDATE orders SET status=$1 WHERE id=$2", 2, NULL, params, NULL, NULL, 0);
+	int ok = (PQresultStatus(query_result) == PGRES_COMMAND_OK);
+	PQclear(query_result);
 	return ok;
 }
 
 /**
  * Insère une commande vide et retourne son ID.
  *
- * @param conn Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param user_id ID de l utilisateur
  * @return ID de la commande créée, 0 si erreur
  */
-static int insert_empty_order(PGconn *conn, int user_id) {
-	char uid_str[12];
-	sprintf(uid_str, "%d", user_id);
-	const char *params[3] = {uid_str, "0", "pending"};
-	PGresult *res = PQexecParams(conn, "INSERT INTO orders(user_id,total,status) VALUES($1,$2,$3) RETURNING id", 3, NULL, params, NULL, NULL, 0);
-	if (PQresultStatus(res) != PGRES_TUPLES_OK) { PQclear(res); return 0; }
-	int order_id = atoi(PQgetvalue(res, 0, 0));
-	PQclear(res);
+static int insert_empty_order(PGconn *database_connection, int user_id) {
+	char user_id_string[12];
+	sprintf(user_id_string, "%d", user_id);
+	const char *params[3] = {user_id_string, "0", "pending"};
+	PGresult *query_result = PQexecParams(database_connection, "INSERT INTO orders(user_id,total,status) VALUES($1,$2,$3) RETURNING id", 3, NULL, params, NULL, NULL, 0);
+	if (PQresultStatus(query_result) != PGRES_TUPLES_OK) { PQclear(query_result); return 0; }
+	int order_id = atoi(PQgetvalue(query_result, 0, 0));
+	PQclear(query_result);
 	return order_id;
 }
 
 /**
  * Ajoute un article à une commande et retourne le sous-total.
  *
- * @param conn Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param order_id ID de la commande
- * @param item JSON de l article
- * @return Sous-total (price * qty), 0 si erreur
+ * @param json_item JSON de l article
+ * @return Sous-total (price * quantity), 0 si erreur
  */
-static int add_order_item(PGconn *conn, int order_id, cJSON* item) {
-	OrderItem oi = {0};
-	oi.order_id = order_id;
-	oi.plant_id = cJSON_GetObjectItem(item, "plantId")->valueint;
-	oi.qty = cJSON_GetObjectItem(item, "quantity")->valueint;
-	Plant pl;
-	if (!plant_repo_find(conn, oi.plant_id, &pl)) return 0;
-	oi.price = pl.price;
-	order_item_repo_add(conn, &oi);
-	return oi.price * oi.qty;
+static int add_order_item(PGconn *database_connection, int order_id, cJSON* json_item) {
+	OrderItem order_item = {0};
+	order_item.order_id = order_id;
+	order_item.plant_id = cJSON_GetObjectItem(json_item, "plantId")->valueint;
+	order_item.qty = cJSON_GetObjectItem(json_item, "quantity")->valueint;
+	Plant plant_data;
+	if (!plant_repo_find(database_connection, order_item.plant_id, &plant_data)) return 0;
+	order_item.price = plant_data.price;
+	order_item_repo_add(database_connection, &order_item);
+	return order_item.price * order_item.qty;
 }
 
 /**
  * Met à jour le total d une commande.
  *
- * @param conn Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param order_id ID de la commande
  * @param total Nouveau total
  */
-static void update_order_total(PGconn *conn, int order_id, int total) {
-	char oid_str[12], total_str[12];
-	sprintf(oid_str, "%d", order_id);
-	sprintf(total_str, "%d", total);
-	const char *params[2] = {total_str, oid_str};
-	PQclear(PQexecParams(conn, "UPDATE orders SET total = $1 WHERE id = $2", 2, NULL, params, NULL, NULL, 0));
+static void update_order_total(PGconn *database_connection, int order_id, int total) {
+	char order_id_string[12], total_string[12];
+	sprintf(order_id_string, "%d", order_id);
+	sprintf(total_string, "%d", total);
+	const char *params[2] = {total_string, order_id_string};
+	PQclear(PQexecParams(database_connection, "UPDATE orders SET total = $1 WHERE id = $2", 2, NULL, params, NULL, NULL, 0));
 }
 
 /**
  * Crée une commande avec ses articles.
  *
- * @param conn Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param user_id ID de l utilisateur
  * @param items_json Tableau JSON des articles
  * @return ID de la commande créée, 0 si erreur
  */
-int order_repo_add(PGconn *conn, int user_id, cJSON* items_json) {
-	int order_id = insert_empty_order(conn, user_id);
+int order_repo_add(PGconn *database_connection, int user_id, cJSON* items_json) {
+	int order_id = insert_empty_order(database_connection, user_id);
 	if (order_id == 0) return 0;
 	int total = 0;
-	cJSON* item = NULL;
-	cJSON_ArrayForEach(item, items_json) { total += add_order_item(conn, order_id, item); }
-	update_order_total(conn, order_id, total);
+	cJSON* json_item = NULL;
+	cJSON_ArrayForEach(json_item, items_json) { total += add_order_item(database_connection, order_id, json_item); }
+	update_order_total(database_connection, order_id, total);
 	return order_id;
 }
 
 /* ---------- helpers ---------- */
-struct _item_ctx { PGconn *db; cJSON *dst; };
+struct _item_ctx { PGconn *database_connection; cJSON *destination_array; };
 
 /**
  * Convertit un timestamp PostgreSQL en format ISO 8601.
@@ -144,13 +144,13 @@ static cJSON* plant_to_json(Plant *pl) {
 static void _item_to_json(OrderItem *it, void *ud) {
 	struct _item_ctx *ctx = ud;
 	Plant pl = {0};
-	if (!plant_repo_find(ctx->db, it->plant_id, &pl)) return;
+	if (!plant_repo_find(ctx->database_connection, it->plant_id, &pl)) return;
 	cJSON *obj = cJSON_CreateObject();
 	cJSON_AddNumberToObject(obj, "id", it->id);
 	cJSON_AddNumberToObject(obj, "quantity", it->qty);
 	cJSON_AddNumberToObject(obj, "price", it->price);
 	cJSON_AddItemToObject(obj, "plant", plant_to_json(&pl));
-	cJSON_AddItemToArray(ctx->dst, obj);
+	cJSON_AddItemToArray(ctx->destination_array, obj);
 }
 
 /**
@@ -181,23 +181,23 @@ static cJSON* build_order_json(PGresult *res, int row, int uid) {
  * @param uid User ID
  * @return Tableau cJSON
  */
-cJSON* order_repo_list(PGconn *conn, int uid) {
-	char uid_str[12];
-	sprintf(uid_str, "%d", uid);
-	const char *params[1] = {uid_str};
-	PGresult *res = PQexecParams(conn, "SELECT id,total,status,created_at, row_number() OVER (ORDER BY created_at ASC) AS number FROM orders WHERE user_id=$1 ORDER BY created_at DESC", 1, NULL, params, NULL, NULL, 0);
-	if (PQresultStatus(res) != PGRES_TUPLES_OK) { PQclear(res); return cJSON_CreateArray(); }
-	cJSON *arr = cJSON_CreateArray();
-	for (int idx = 0; idx < PQntuples(res); idx++) {
-		cJSON *obj = build_order_json(res, idx, uid);
-		cJSON *items = cJSON_CreateArray();
-		struct _item_ctx ctx = { .db = conn, .dst = items };
-		order_item_repo_by_order(conn, atoi(PQgetvalue(res, idx, 0)), _item_to_json, &ctx);
-		cJSON_AddItemToObject(obj, "orderItems", items);
-		cJSON_AddItemToArray(arr, obj);
+cJSON* order_repo_list(PGconn *database_connection, int user_id) {
+	char user_id_string[12];
+	sprintf(user_id_string, "%d", user_id);
+	const char *params[1] = {user_id_string};
+	PGresult *query_result = PQexecParams(database_connection, "SELECT id,total,status,created_at, row_number() OVER (ORDER BY created_at ASC) AS number FROM orders WHERE user_id=$1 ORDER BY created_at DESC", 1, NULL, params, NULL, NULL, 0);
+	if (PQresultStatus(query_result) != PGRES_TUPLES_OK) { PQclear(query_result); return cJSON_CreateArray(); }
+	cJSON *json_array = cJSON_CreateArray();
+	for (int row_index = 0; row_index < PQntuples(query_result); row_index++) {
+		cJSON *json_object = build_order_json(query_result, row_index, user_id);
+		cJSON *items_array = cJSON_CreateArray();
+		struct _item_ctx item_context = { .database_connection = database_connection, .destination_array = items_array };
+		order_item_repo_by_order(database_connection, atoi(PQgetvalue(query_result, row_index, 0)), _item_to_json, &item_context);
+		cJSON_AddItemToObject(json_object, "orderItems", items_array);
+		cJSON_AddItemToArray(json_array, json_object);
 	}
-	PQclear(res);
-	return arr;
+	PQclear(query_result);
+	return json_array;
 }
 
 /**

@@ -113,9 +113,9 @@ struct _item_ctx { PGconn *database_connection; cJSON *destination_array; };
  */
 static void format_timestamp_iso(const char *pg_ts, char *out, size_t out_sz) {
 	if (!pg_ts || !out || out_sz == 0) { if (out && out_sz > 0) out[0] = '\0'; return; }
-	int yr, mo, dy, hr, mi, sc;
-	if (sscanf(pg_ts, "%d-%d-%d %d:%d:%d", &yr, &mo, &dy, &hr, &mi, &sc) == 6) {
-		snprintf(out, out_sz, "%04d-%02d-%02dT%02d:%02d:%02dZ", yr, mo, dy, hr, mi, sc);
+	int year, month, day, hour, minute, second;
+	if (sscanf(pg_ts, "%d-%d-%d %d:%d:%d", &year, &month, &day, &hour, &minute, &second) == 6) {
+		snprintf(out, out_sz, "%04d-%02d-%02dT%02d:%02d:%02dZ", year, month, day, hour, minute, second);
 	} else {
 		snprintf(out, out_sz, "%.*s", (int)(out_sz - 1), pg_ts);
 	}
@@ -124,54 +124,54 @@ static void format_timestamp_iso(const char *pg_ts, char *out, size_t out_sz) {
 /**
  * Crée l objet JSON d une plante.
  *
- * @param pl Pointeur vers la plante
+ * @param plant_data Pointeur vers la plante
  * @return Objet cJSON
  */
-static cJSON* plant_to_json(Plant *pl) {
-	cJSON *obj = cJSON_CreateObject();
-	cJSON_AddNumberToObject(obj, "id", pl->id);
-	cJSON_AddStringToObject(obj, "name", pl->name);
-	cJSON_AddNumberToObject(obj, "price", pl->price);
-	return obj;
+static cJSON* plant_to_json(Plant *plant_data) {
+	cJSON *json_object = cJSON_CreateObject();
+	cJSON_AddNumberToObject(json_object, "id", plant_data->id);
+	cJSON_AddStringToObject(json_object, "name", plant_data->name);
+	cJSON_AddNumberToObject(json_object, "price", plant_data->price);
+	return json_object;
 }
 
 /**
  * Callback pour convertir un OrderItem en JSON.
  *
- * @param it Pointeur vers l OrderItem
+ * @param order_item Pointeur vers l OrderItem
  * @param callback_data Contexte
  */
-static void _item_to_json(OrderItem *it, void *ud) {
-	struct _item_ctx *ctx = ud;
-	Plant pl = {0};
-	if (!plant_repo_find(ctx->database_connection, it->plant_id, &pl)) return;
-	cJSON *obj = cJSON_CreateObject();
-	cJSON_AddNumberToObject(obj, "id", it->id);
-	cJSON_AddNumberToObject(obj, "quantity", it->qty);
-	cJSON_AddNumberToObject(obj, "price", it->price);
-	cJSON_AddItemToObject(obj, "plant", plant_to_json(&pl));
-	cJSON_AddItemToArray(ctx->destination_array, obj);
+static void _item_to_json(OrderItem *order_item, void *callback_data) {
+	struct _item_ctx *item_context = callback_data;
+	Plant plant_data = {0};
+	if (!plant_repo_find(item_context->database_connection, order_item->plant_id, &plant_data)) return;
+	cJSON *json_object = cJSON_CreateObject();
+	cJSON_AddNumberToObject(json_object, "id", order_item->id);
+	cJSON_AddNumberToObject(json_object, "quantity", order_item->qty);
+	cJSON_AddNumberToObject(json_object, "price", order_item->price);
+	cJSON_AddItemToObject(json_object, "plant", plant_to_json(&plant_data));
+	cJSON_AddItemToArray(item_context->destination_array, json_object);
 }
 
 /**
  * Construit l objet JSON d une commande.
  *
- * @param res Résultat PostgreSQL
- * @param row Index de la ligne
- * @param uid User ID
+ * @param query_result Résultat PostgreSQL
+ * @param row_index Index de la ligne
+ * @param user_id User ID
  * @return Objet cJSON
  */
-static cJSON* build_order_json(PGresult *res, int row, int uid) {
-	cJSON *obj = cJSON_CreateObject();
-	cJSON_AddNumberToObject(obj, "id", atoi(PQgetvalue(res, row, 0)));
-	cJSON_AddNumberToObject(obj, "userId", uid);
-	cJSON_AddNumberToObject(obj, "totalPrice", atof(PQgetvalue(res, row, 1)));
-	cJSON_AddStringToObject(obj, "status", PQgetvalue(res, row, 2));
-	char iso[32];
-	format_timestamp_iso(PQgetvalue(res, row, 3), iso, sizeof(iso));
-	cJSON_AddStringToObject(obj, "createdAt", iso);
-	cJSON_AddNumberToObject(obj, "number", atoi(PQgetvalue(res, row, 4)));
-	return obj;
+static cJSON* build_order_json(PGresult *query_result, int row_index, int user_id) {
+	cJSON *json_object = cJSON_CreateObject();
+	cJSON_AddNumberToObject(json_object, "id", atoi(PQgetvalue(query_result, row_index, 0)));
+	cJSON_AddNumberToObject(json_object, "userId", user_id);
+	cJSON_AddNumberToObject(json_object, "totalPrice", atof(PQgetvalue(query_result, row_index, 1)));
+	cJSON_AddStringToObject(json_object, "status", PQgetvalue(query_result, row_index, 2));
+	char iso_timestamp[32];
+	format_timestamp_iso(PQgetvalue(query_result, row_index, 3), iso_timestamp, sizeof(iso_timestamp));
+	cJSON_AddStringToObject(json_object, "createdAt", iso_timestamp);
+	cJSON_AddNumberToObject(json_object, "number", atoi(PQgetvalue(query_result, row_index, 4)));
+	return json_object;
 }
 
 /**
@@ -203,47 +203,47 @@ cJSON* order_repo_list(PGconn *database_connection, int user_id) {
 /**
  * Met à jour une commande (statut uniquement).
  *
- * @param conn Connexion PostgreSQL
- * @param id ID de la commande
- * @param json Objet JSON contenant le champ status
+ * @param database_connection Connexion PostgreSQL
+ * @param order_id ID de la commande
+ * @param json_data Objet JSON contenant le champ status
  */
-void order_repo_patch(PGconn *conn, int id, cJSON *json) {
-	cJSON *status = cJSON_GetObjectItem(json, "status");
-	if (!status || !cJSON_IsString(status)) return;
-	char sid[12];
-	sprintf(sid, "%d", id);
-	const char *params[2] = {status->valuestring, sid};
-	PQclear(PQexecParams(conn, "UPDATE orders SET status=$1 WHERE id=$2", 2, NULL, params, NULL, NULL, 0));
+void order_repo_patch(PGconn *database_connection, int order_id, cJSON *json_data) {
+	cJSON *status_value = cJSON_GetObjectItem(json_data, "status");
+	if (!status_value || !cJSON_IsString(status_value)) return;
+	char string_id[12];
+	sprintf(string_id, "%d", order_id);
+	const char *params[2] = {status_value->valuestring, string_id};
+	PQclear(PQexecParams(database_connection, "UPDATE orders SET status=$1 WHERE id=$2", 2, NULL, params, NULL, NULL, 0));
 }
 
 /**
  * Supprime une commande.
  *
- * @param conn Connexion PostgreSQL
- * @param id ID de la commande à supprimer
+ * @param database_connection Connexion PostgreSQL
+ * @param order_id ID de la commande à supprimer
  */
-void order_repo_del(PGconn *conn, int id) {
-	char sid[12];
-	sprintf(sid, "%d", id);
-	const char *params[1] = {sid};
-	PQclear(PQexecParams(conn, "DELETE FROM orders WHERE id=$1", 1, NULL, params, NULL, NULL, 0));
+void order_repo_del(PGconn *database_connection, int order_id) {
+	char string_id[12];
+	sprintf(string_id, "%d", order_id);
+	const char *params[1] = {string_id};
+	PQclear(PQexecParams(database_connection, "DELETE FROM orders WHERE id=$1", 1, NULL, params, NULL, NULL, 0));
 }
 
 /**
  * Vérifie si une commande appartient à un utilisateur.
  *
- * @param conn Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param order_id ID de la commande
  * @param user_id ID de l utilisateur
  * @return 1 si la commande appartient à l utilisateur, 0 sinon
  */
-int order_repo_belongs_to(PGconn *conn, int order_id, int user_id) {
-	char oid_str[12], uid_str[12];
-	sprintf(oid_str, "%d", order_id);
-	sprintf(uid_str, "%d", user_id);
-	const char *params[2] = {oid_str, uid_str};
-	PGresult *res = PQexecParams(conn, "SELECT 1 FROM orders WHERE id=$1 AND user_id=$2", 2, NULL, params, NULL, NULL, 0);
-	int found = PQntuples(res);
-	PQclear(res);
+int order_repo_belongs_to(PGconn *database_connection, int order_id, int user_id) {
+	char order_id_string[12], user_id_string[12];
+	sprintf(order_id_string, "%d", order_id);
+	sprintf(user_id_string, "%d", user_id);
+	const char *params[2] = {order_id_string, user_id_string};
+	PGresult *query_result = PQexecParams(database_connection, "SELECT 1 FROM orders WHERE id=$1 AND user_id=$2", 2, NULL, params, NULL, NULL, 0);
+	int found = PQntuples(query_result);
+	PQclear(query_result);
 	return found;
 }

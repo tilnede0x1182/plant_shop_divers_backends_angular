@@ -128,10 +128,10 @@ static void read_environment_variables(char* database_url, char* database_user, 
  * @param database_connection Connexion PostgreSQL
  * @param query Requête SQL à exécuter
  */
-static void execute_sql(PGconn* db, const char* query) {
-	PGresult* result = PQexec(db, query);
+static void execute_sql(PGconn* database_connection, const char* query) {
+	PGresult* result = PQexec(database_connection, query);
 	if (PQresultStatus(result) != PGRES_COMMAND_OK) {
-		fprintf(stderr, "Exec failed: %s\nQuery: %s\n", PQerrorMessage(db), query);
+		fprintf(stderr, "Exec failed: %s\nQuery: %s\n", PQerrorMessage(database_connection), query);
 	}
 	PQclear(result);
 }
@@ -139,17 +139,17 @@ static void execute_sql(PGconn* db, const char* query) {
 /**
  * Exécute une requête SQL INSERT RETURNING id.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param query Requête SQL paramétrée avec RETURNING id
  * @param param_count Nombre de paramètres
  * @param paramValues Tableau des valeurs de paramètres
  * @return ID de la ligne insérée, ou -1 en cas d'erreur
  */
-static int execute_sql_returning_id(PGconn* db, const char* query, int param_count,
+static int execute_sql_returning_id(PGconn* database_connection, const char* query, int param_count,
 							  const char* const* paramValues) {
-	PGresult* result = PQexecParams(db, query, param_count, NULL, paramValues, NULL, NULL, 0);
+	PGresult* result = PQexecParams(database_connection, query, param_count, NULL, paramValues, NULL, NULL, 0);
 	if (PQresultStatus(result) != PGRES_TUPLES_OK || PQntuples(result) == 0) {
-		fprintf(stderr, "Exec returning ID failed: %s\nQuery: %s\n", PQerrorMessage(db), query);
+		fprintf(stderr, "Exec returning ID failed: %s\nQuery: %s\n", PQerrorMessage(database_connection), query);
 		PQclear(result);
 		return -1;
 	}
@@ -161,32 +161,32 @@ static int execute_sql_returning_id(PGconn* db, const char* query, int param_cou
 /**
  * Insère un utilisateur dans la base de données.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param name Nom de l'utilisateur
  * @param email Adresse email
  * @param password_hash Hash du mot de passe (Argon2)
  * @param is_admin 1 si administrateur, 0 sinon
  * @return ID de l'utilisateur créé
  */
-static int insert_user(PGconn* db, const char* name, const char* email,
+static int insert_user(PGconn* database_connection, const char* name, const char* email,
 						const char* password_hash, int is_admin) {
 	const char* params[4] = {name, email, password_hash, is_admin ? "t" : "f"};
 	const char* query_sql = "INSERT INTO users(name,email,password_hash,is_admin) "
 					  "VALUES($1,$2,$3,$4) RETURNING id";
-	return execute_sql_returning_id(db, query_sql, 4, params);
+	return execute_sql_returning_id(database_connection, query_sql, 4, params);
 }
 
 /**
  * Insère une plante dans la base de données.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param name Nom de la plante
  * @param description Description de la plante
  * @param price Prix en centimes
  * @param stock Quantité en stock
  * @return ID de la plante créée
  */
-static int insert_plant(PGconn* db, const char* name, const char* description,
+static int insert_plant(PGconn* database_connection, const char* name, const char* description,
 						 int price, int stock) {
 	char price_str[12], stock_str[12];
 	sprintf(price_str, "%d.00", price);
@@ -194,35 +194,35 @@ static int insert_plant(PGconn* db, const char* name, const char* description,
 	const char* params[4] = {name, description, price_str, stock_str};
 	const char* query_sql = "INSERT INTO plants(name,description,price,stock) "
 					  "VALUES($1,$2,$3,$4) RETURNING id";
-	return execute_sql_returning_id(db, query_sql, 4, params);
+	return execute_sql_returning_id(database_connection, query_sql, 4, params);
 }
 
 /**
  * Insère une commande vide pour un utilisateur.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param user_id ID de l'utilisateur
  * @return ID de la commande créée
  */
-static int insert_order(PGconn* db, int user_id) {
+static int insert_order(PGconn* database_connection, int user_id) {
 	char user_id_string[12];
 	sprintf(user_id_string, "%d", user_id);
 	const char* params[2] = {user_id_string, "0.00"};
 	const char* query_sql = "INSERT INTO orders(user_id, total, status) "
 					  "VALUES($1, $2, 'pending') RETURNING id";
-	return execute_sql_returning_id(db, query_sql, 2, params);
+	return execute_sql_returning_id(database_connection, query_sql, 2, params);
 }
 
 /**
  * Insère un article dans une commande.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param order_id ID de la commande
  * @param plant_id ID de la plante
  * @param quantity Quantité commandée
  * @param price Prix unitaire
  */
-static void insert_order_item(PGconn* db, int order_id, int plant_id,
+static void insert_order_item(PGconn* database_connection, int order_id, int plant_id,
 							   int quantity, int price) {
 	char order_id_string[12], plant_id_string[12], quantity_string[12], price_str[12];
 	sprintf(order_id_string, "%d", order_id);
@@ -232,23 +232,23 @@ static void insert_order_item(PGconn* db, int order_id, int plant_id,
 	const char* params[4] = {order_id_string, plant_id_string, quantity_string, price_str};
 	const char* query_sql = "INSERT INTO order_items(order_id, plant_id, quantity, price) "
 					  "VALUES ($1,$2,$3,$4)";
-	PGresult* result = PQexecParams(db, query_sql, 4, NULL, params, NULL, NULL, 0);
+	PGresult* result = PQexecParams(database_connection, query_sql, 4, NULL, params, NULL, NULL, 0);
 	PQclear(result);
 }
 
 /**
  * Met à jour le total d'une commande.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param order_id ID de la commande
  * @param total Nouveau total en centimes
  */
-static void update_order_total(PGconn* db, int order_id, int total) {
+static void update_order_total(PGconn* database_connection, int order_id, int total) {
 	char order_id_string[12], total_str[12];
 	sprintf(order_id_string, "%d", order_id);
 	sprintf(total_str, "%d.00", total);
 	const char* params[2] = {total_str, order_id_string};
-	PGresult* result = PQexecParams(db, "UPDATE orders SET total=$1 WHERE id=$2",
+	PGresult* result = PQexecParams(database_connection, "UPDATE orders SET total=$1 WHERE id=$2",
 									 2, NULL, params, NULL, NULL, 0);
 	PQclear(result);
 }
@@ -267,60 +267,60 @@ static void update_order_total(PGconn* db, int order_id, int total) {
 static PGconn* connect_database(const char* database_url, const char* database_user, const char* database_password) {
 	const char* keys[] = {"dbname", "user", "password", NULL};
 	const char* values[] = {database_url, database_user, database_password, NULL};
-	PGconn* db = PQconnectdbParams(keys, values, 0);
-	if (PQstatus(db) != CONNECTION_OK) {
-		fprintf(stderr, "DB connection error: %s\n", PQerrorMessage(db));
+	PGconn* database_connection = PQconnectdbParams(keys, values, 0);
+	if (PQstatus(database_connection) != CONNECTION_OK) {
+		fprintf(stderr, "DB connection error: %s\n", PQerrorMessage(database_connection));
 		return NULL;
 	}
 	printf("✅ Connexion à la base de données réussie.\n");
-	return db;
+	return database_connection;
 }
 
 /**
  * Crée un administrateur et l'écrit dans le fichier.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param index Numéro de l'admin (1-based)
  * @param output_file Fichier de sortie
  */
-static void seed_one_admin(PGconn* db, int index, FILE* output_file) {
+static void seed_one_admin(PGconn* database_connection, int index, FILE* output_file) {
 	const char* first = pick_random_string(FIRST, sizeof(FIRST) / sizeof(char*));
 	const char* last  = pick_random_string(LAST,  sizeof(LAST)  / sizeof(char*));
 	char name[64], email[64];
 	sprintf(name,  "%s %s", first, last);
 	sprintf(email, "admin%d@planteshop.com", index);
-	insert_user(db, name, email, hash_password_argon2("password"), 1);
+	insert_user(database_connection, name, email, hash_password_argon2("password"), 1);
 	fprintf(output_file, "%s password\n", email);
 }
 
 /**
  * Crée tous les administrateurs.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param output_file Fichier de sortie
  */
-static void seed_admins(PGconn* db, FILE* output_file) {
+static void seed_admins(PGconn* database_connection, FILE* output_file) {
 	printf("👑 Création des administrateurs...\n");
 	for (int idx = 0; idx < NB_ADMINS; idx++) {
-		seed_one_admin(db, idx + 1, output_file);
+		seed_one_admin(database_connection, idx + 1, output_file);
 	}
 }
 
 /**
  * Crée un utilisateur et l'écrit dans le fichier.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param output_file Fichier de sortie
  * @return ID de l'utilisateur créé
  */
-static int seed_one_user(PGconn* db, FILE* output_file) {
+static int seed_one_user(PGconn* database_connection, FILE* output_file) {
 	const char* first = pick_random_string(FIRST, sizeof(FIRST) / sizeof(char*));
 	const char* last  = pick_random_string(LAST,  sizeof(LAST)  / sizeof(char*));
 	char email[64], password[16], name[64];
 	sprintf(email, "%s_%s%d@%s", first, last, random_int_range(20, 99), pick_random_string(EMAIL_DOMAINS, 3));
 	sprintf(password, "pw%d", random_int_range(100000000, 999999999));
 	sprintf(name, "%s %s", first, last);
-	int user_id = insert_user(db, name, email, hash_password_argon2(password), 0);
+	int user_id = insert_user(database_connection, name, email, hash_password_argon2(password), 0);
 	fprintf(output_file, "%s %s\n", email, password);
 	return user_id;
 }
@@ -328,31 +328,31 @@ static int seed_one_user(PGconn* db, FILE* output_file) {
 /**
  * Crée tous les utilisateurs.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param output_file Fichier de sortie
  * @param user_ids Tableau de sortie pour les IDs
  */
-static void seed_users(PGconn* db, FILE* output_file, int* user_ids) {
+static void seed_users(PGconn* database_connection, FILE* output_file, int* user_ids) {
 	printf("👥 Création des utilisateurs...\n");
 	for (int idx = 0; idx < NB_USERS; idx++) {
-		user_ids[idx] = seed_one_user(db, output_file);
+		user_ids[idx] = seed_one_user(database_connection, output_file);
 	}
 }
 
 /**
  * Crée toutes les plantes.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param plant_ids Tableau de sortie pour les IDs
  * @param plant_prices Tableau de sortie pour les prix
  * @param plant_stocks Tableau de sortie pour les stocks
  */
-static void seed_plants(PGconn* db, int* plant_ids, int* plant_prices, int* plant_stocks) {
+static void seed_plants(PGconn* database_connection, int* plant_ids, int* plant_prices, int* plant_stocks) {
 	printf("🌱 Création des plantes...\n");
 	for (int idx = 0; idx < NB_PLANTS; idx++) {
 		plant_prices[idx] = random_int_range(5, 50);
 		plant_stocks[idx] = random_int_range(10, 50);
-		plant_ids[idx] = insert_plant(db, PLANT_NAMES[idx], "Une belle plante à découvrir.",
+		plant_ids[idx] = insert_plant(database_connection, PLANT_NAMES[idx], "Une belle plante à découvrir.",
 									   plant_prices[idx], plant_stocks[idx]);
 	}
 }
@@ -360,66 +360,66 @@ static void seed_plants(PGconn* db, int* plant_ids, int* plant_prices, int* plan
 /**
  * Ajoute un article à une commande si stock disponible.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param order_id ID de la commande
  * @param plant_ids Tableau des IDs de plantes
  * @param plant_prices Tableau des prix
  * @param plant_stocks Tableau des stocks (modifié)
  * @return Montant ajouté au total
  */
-static int add_order_item_if_stock(PGconn* db, int order_id, int* plant_ids,
+static int add_order_item_if_stock(PGconn* database_connection, int order_id, int* plant_ids,
 									int* plant_prices, int* plant_stocks) {
 	int plant_index = random_int_range(0, NB_PLANTS - 1);
 	if (plant_stocks[plant_index] <= 0) return 0;
-	int qty = random_int_range(1, 3);
-	if (qty > plant_stocks[plant_index]) qty = plant_stocks[plant_index];
-	insert_order_item(db, order_id, plant_ids[plant_index], qty, plant_prices[plant_index]);
-	plant_stocks[plant_index] -= qty;
-	return plant_prices[plant_index] * qty;
+	int quantity = random_int_range(1, 3);
+	if (quantity > plant_stocks[plant_index]) quantity = plant_stocks[plant_index];
+	insert_order_item(database_connection, order_id, plant_ids[plant_index], quantity, plant_prices[plant_index]);
+	plant_stocks[plant_index] -= quantity;
+	return plant_prices[plant_index] * quantity;
 }
 
 /**
  * Crée une commande avec ses articles pour un utilisateur.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param user_id ID de l'utilisateur
  * @param plant_ids Tableau des IDs de plantes
  * @param plant_prices Tableau des prix
  * @param plant_stocks Tableau des stocks (modifié)
  * @return 1 si commande créée, 0 sinon
  */
-static int seed_one_order(PGconn* db, int user_id, int* plant_ids,
+static int seed_one_order(PGconn* database_connection, int user_id, int* plant_ids,
 						   int* plant_prices, int* plant_stocks) {
-	int order_id = insert_order(db, user_id);
+	int order_id = insert_order(database_connection, user_id);
 	if (order_id == -1) return 0;
 	int order_total = 0;
 	int item_count = random_int_range(1, MAX_ITEMS_PER_ORDER);
 	for (int item_index = 0; item_index < item_count; item_index++) {
-		order_total += add_order_item_if_stock(db, order_id, plant_ids,
+		order_total += add_order_item_if_stock(database_connection, order_id, plant_ids,
 												plant_prices, plant_stocks);
 	}
-	if (order_total > 0) update_order_total(db, order_id, order_total);
+	if (order_total > 0) update_order_total(database_connection, order_id, order_total);
 	return 1;
 }
 
 /**
  * Crée toutes les commandes pour tous les utilisateurs.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param user_ids Tableau des IDs utilisateurs
  * @param plant_ids Tableau des IDs de plantes
  * @param plant_prices Tableau des prix
  * @param plant_stocks Tableau des stocks (modifié)
  * @return Nombre total de commandes créées
  */
-static int seed_orders(PGconn* db, int* user_ids, int* plant_ids,
+static int seed_orders(PGconn* database_connection, int* user_ids, int* plant_ids,
 						int* plant_prices, int* plant_stocks) {
 	printf("🛒 Création des commandes et articles...\n");
 	int total_orders = 0;
 	for (int user_index = 0; user_index < NB_USERS; user_index++) {
 		int order_count = random_int_range(1, MAX_ORDERS_PER_USER);
 		for (int order_index = 0; order_index < order_count; order_index++) {
-			total_orders += seed_one_order(db, user_ids[user_index], plant_ids,
+			total_orders += seed_one_order(database_connection, user_ids[user_index], plant_ids,
 											plant_prices, plant_stocks);
 		}
 	}
@@ -429,36 +429,36 @@ static int seed_orders(PGconn* db, int* user_ids, int* plant_ids,
 /**
  * Seed les données utilisateurs (admins + users).
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  * @param output_file Fichier de sortie
  * @param user_ids Tableau de sortie pour les IDs utilisateurs
  */
-static void seed_all_users(PGconn* db, FILE* output_file, int* user_ids) {
+static void seed_all_users(PGconn* database_connection, FILE* output_file, int* user_ids) {
 	fprintf(output_file, "Administrateurs :\n\n");
-	seed_admins(db, output_file);
+	seed_admins(database_connection, output_file);
 	fprintf(output_file, "\nUtilisateurs :\n\n");
-	seed_users(db, output_file, user_ids);
+	seed_users(database_connection, output_file, user_ids);
 }
 
 /**
  * Initialise et exécute le seed de la base de données.
  *
- * @param db Connexion PostgreSQL
+ * @param database_connection Connexion PostgreSQL
  */
-static void run_seed(PGconn* db) {
+static void run_seed(PGconn* database_connection) {
 	printf("🧹 Nettoyage des tables...\n");
-	execute_sql(db, "TRUNCATE order_items,orders,plants,users RESTART IDENTITY CASCADE");
+	execute_sql(database_connection, "TRUNCATE order_items,orders,plants,users RESTART IDENTITY CASCADE");
 
 	FILE* output_file = fopen("users.txt", "w");
 	int user_ids[NB_USERS];
-	seed_all_users(db, output_file, user_ids);
+	seed_all_users(database_connection, output_file, user_ids);
 	fclose(output_file);
 
 	int plant_ids[NB_PLANTS], plant_prices[NB_PLANTS], plant_stocks[NB_PLANTS];
-	seed_plants(db, plant_ids, plant_prices, plant_stocks);
-	int total = seed_orders(db, user_ids, plant_ids, plant_prices, plant_stocks);
+	seed_plants(database_connection, plant_ids, plant_prices, plant_stocks);
+	int total = seed_orders(database_connection, user_ids, plant_ids, plant_prices, plant_stocks);
 	printf("✅ %d commandes créées.\n", total);
-	PQfinish(db);
+	PQfinish(database_connection);
 	puts("🎉 Seed terminée !");
 }
 
@@ -474,8 +474,8 @@ int main(void) {
 	srand((unsigned)time(NULL));
 	char database_url[128] = "", database_user[64] = "", database_password[64] = "";
 	read_environment_variables(database_url, database_user, database_password);
-	PGconn* db = connect_database(database_url, database_user, database_password);
-	if (!db) return 1;
-	run_seed(db);
+	PGconn* database_connection = connect_database(database_url, database_user, database_password);
+	if (!database_connection) return 1;
+	run_seed(database_connection);
 	return 0;
 }

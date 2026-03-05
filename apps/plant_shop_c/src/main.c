@@ -10,7 +10,7 @@
 /* ==============================================================================
    Données
    ============================================================================== */
-PGconn *DB = NULL;
+PGconn *DATABASE_CONNECTION = NULL;
 char JWT_SECRET[128] = {0};
 
 /* ==============================================================================
@@ -35,20 +35,20 @@ static void http_event_handler(struct mg_connection *connection, int event, void
  * Établit la connexion à la base de données PostgreSQL.
  * Lit les paramètres depuis les variables d environnement.
  */
-static void db_connect(void) {
-    char db_url[128], db_user[64], db_pass[64];
-    read_db_env(db_url, db_user, db_pass);
+static void database_connect(void) {
+    char database_url[128], database_user[64], database_password[64];
+    read_db_env(database_url, database_user, database_password);
 
     char conn_str[512];
-    snprintf(conn_str, sizeof(conn_str), "dbname=%s user=%s password=%s", db_url, db_user, db_pass);
+    snprintf(conn_str, sizeof(conn_str), "dbname=%s user=%s password=%s", database_url, database_user, database_password);
 
-    DB = PQconnectdb(conn_str);
-    if (PQstatus(DB) != CONNECTION_OK) {
-        printf("❌ Connexion à la base de données échouée : %s\n", PQerrorMessage(DB));
-        PQfinish(DB);
+    DATABASE_CONNECTION = PQconnectdb(conn_str);
+    if (PQstatus(DATABASE_CONNECTION) != CONNECTION_OK) {
+        printf("❌ Connexion à la base de données échouée : %s\n", PQerrorMessage(DATABASE_CONNECTION));
+        PQfinish(DATABASE_CONNECTION);
         exit(1);
     }
-    printf("✅ Connexion à la base de données '%s' réussie\n", db_url);
+    printf("✅ Connexion à la base de données '%s' réussie\n", database_url);
 }
 
 /**
@@ -85,15 +85,15 @@ static void run_server_loop(struct mg_mgr* mgr) {
  * @return Code de sortie (0 = succès)
  */
 int main(void) {
-	struct mg_mgr mgr;
-	char port[16], url[32];
+	struct mg_mgr mongoose_manager;
+	char port[16], server_url[32];
 	mg_log_set(MG_LL_NONE);
-	db_connect();
+	database_connect();
 	read_server_env(port, JWT_SECRET);
-	snprintf(url, sizeof(url), "http://0.0.0.0:%s", port);
-	if (!start_server(&mgr, url)) { PQfinish(DB); return 1; }
-	run_server_loop(&mgr);
-	mg_mgr_free(&mgr);
-	PQfinish(DB);
+	snprintf(server_url, sizeof(server_url), "http://0.0.0.0:%s", port);
+	if (!start_server(&mongoose_manager, server_url)) { PQfinish(DATABASE_CONNECTION); return 1; }
+	run_server_loop(&mongoose_manager);
+	mg_mgr_free(&mongoose_manager);
+	PQfinish(DATABASE_CONNECTION);
 	return 0;
 }

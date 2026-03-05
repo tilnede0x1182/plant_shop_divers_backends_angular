@@ -14,7 +14,7 @@
 /* ==============================================================================
    Données
    ============================================================================== */
-extern PGconn* DB;
+extern PGconn* DATABASE_CONNECTION;
 
 /* ==============================================================================
    Fonctions utilitaires
@@ -41,7 +41,7 @@ static void send_json_reply(struct mg_connection* mongoose_connection, cJSON* js
  */
 static int is_admin(struct mg_http_message* hm) {
 	int user_id = get_current_user_id(hm);
-	return user_repo_is_admin(DB, user_id);
+	return user_repo_is_admin(DATABASE_CONNECTION, user_id);
 }
 
 /* ==============================================================================
@@ -56,7 +56,7 @@ static int is_admin(struct mg_http_message* hm) {
  */
 void plant_get(struct mg_connection* mongoose_connection, struct mg_http_message *http_message, int plant_identifier) {
 	Plant plant;
-	if (!plant_repo_find(DB, plant_identifier, &plant)) { mg_http_reply(mongoose_connection, 404, "", ""); return; }
+	if (!plant_repo_find(DATABASE_CONNECTION, plant_identifier, &plant)) { mg_http_reply(mongoose_connection, 404, "", ""); return; }
 	cJSON *json_obj = cJSON_CreateObject();
 	cJSON_AddNumberToObject(json_obj, "id", plant.id);
 	cJSON_AddStringToObject(json_obj, "name", plant.name);
@@ -91,7 +91,7 @@ static void admin_plants_list_cb(Plant* plant, void* json_array) {
 void plants_list_public(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
 	(void)http_message;
 	cJSON *json_array = cJSON_CreateArray();
-	plant_repo_each(DB, admin_plants_list_cb, json_array);
+	plant_repo_each(DATABASE_CONNECTION, admin_plants_list_cb, json_array);
 	send_json_reply(mongoose_connection, json_array, 200);
 }
 
@@ -104,7 +104,7 @@ void plants_list_public(struct mg_connection* mongoose_connection, struct mg_htt
 void admin_plants_list(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
 	if (!is_admin(http_message)) { mg_http_reply(mongoose_connection, 403, "", ""); return; }
 	cJSON *json_array = cJSON_CreateArray();
-	plant_repo_each(DB, admin_plants_list_cb, json_array);
+	plant_repo_each(DATABASE_CONNECTION, admin_plants_list_cb, json_array);
 	send_json_reply(mongoose_connection, json_array, 200);
 }
 
@@ -135,7 +135,7 @@ void admin_plants_add(struct mg_connection* mongoose_connection, struct mg_http_
 	if (!json_data) { mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
 	Plant plant = {0};
 	fill_plant_from_json(&plant, json_data);
-	plant.id = plant_repo_add(DB, &plant);
+	plant.id = plant_repo_add(DATABASE_CONNECTION, &plant);
 	cJSON_Delete(json_data);
 	cJSON *response_json = cJSON_CreateObject();
 	cJSON_AddNumberToObject(response_json, "id", plant.id);
@@ -153,7 +153,7 @@ void admin_plants_patch(struct mg_connection* mongoose_connection, struct mg_htt
 	if (!is_admin(http_message)) { mg_http_reply(mongoose_connection, 403, "", ""); return; }
 	cJSON* json_data = cJSON_ParseWithLength(http_message->body.buf, http_message->body.len);
 	if (!json_data) { mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
-	plant_repo_patch(DB, plant_identifier, json_data);
+	plant_repo_patch(DATABASE_CONNECTION, plant_identifier, json_data);
 	cJSON_Delete(json_data);
 	mg_http_reply(mongoose_connection, 200, "", "");
 }
@@ -167,6 +167,6 @@ void admin_plants_patch(struct mg_connection* mongoose_connection, struct mg_htt
  */
 void admin_plants_del(struct mg_connection* mongoose_connection, struct mg_http_message *http_message, int plant_identifier) {
 	if (!is_admin(http_message)) { mg_http_reply(mongoose_connection, 403, "", ""); return; }
-	plant_repo_del(DB, plant_identifier);
+	plant_repo_del(DATABASE_CONNECTION, plant_identifier);
 	mg_http_reply(mongoose_connection, 200, "", "");
 }

@@ -14,7 +14,7 @@
 /* ==============================================================================
    Données
    ============================================================================== */
-extern PGconn* DB;
+extern PGconn* DATABASE_CONNECTION;
 
 /* ==============================================================================
    Fonctions utilitaires
@@ -96,7 +96,7 @@ static int create_user_from_data(const char* name, const char* email, const char
 	snprintf(user.name, sizeof(user.name), "%s", name);
 	snprintf(user.email, sizeof(user.email), "%s", email);
 	snprintf(user.password_hash, sizeof(user.password_hash), "%s", encoded_hash);
-	user.id = user_repo_add(DB, &user);
+	user.id = user_repo_add(DATABASE_CONNECTION, &user);
 	return user.id;
 }
 
@@ -154,7 +154,7 @@ static int parse_login_json(struct mg_http_message *http_message, char* email_bu
  * @return 1 si credentials valides, 0 sinon
  */
 static int verify_credentials(const char* email_buffer, const char* password_buffer, User* user) {
-	if (!user_repo_find_by_mail(DB, email_buffer, user)) return 0;
+	if (!user_repo_find_by_mail(DATABASE_CONNECTION, email_buffer, user)) return 0;
 	return argon2id_verify(user->password_hash, password_buffer, strlen(password_buffer)) == ARGON2_OK;
 }
 
@@ -231,7 +231,7 @@ void auth_me(struct mg_connection* mongoose_connection, struct mg_http_message *
 	int user_identifier = atoi(cookie_value_string);
 	if (user_identifier == 0) { mg_http_reply(mongoose_connection, 401, "Content-Type: application/json\r\n", "{\"error\":\"Invalid token\"}\n"); return; }
 	User user;
-	if (!user_repo_find(DB, user_identifier, &user)) { mg_http_reply(mongoose_connection, 401, "Content-Type: application/json\r\n", "{\"error\":\"User not found\"}\n"); return; }
+	if (!user_repo_find(DATABASE_CONNECTION, user_identifier, &user)) { mg_http_reply(mongoose_connection, 401, "Content-Type: application/json\r\n", "{\"error\":\"User not found\"}\n"); return; }
 	send_me_response(mongoose_connection, &user);
 }
 

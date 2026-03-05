@@ -15,7 +15,7 @@
 /* ==============================================================================
    Données
    ============================================================================== */
-extern PGconn* DB;
+extern PGconn* DATABASE_CONNECTION;
 
 /* ==============================================================================
    Fonctions utilitaires
@@ -42,7 +42,7 @@ static void send_json_reply(struct mg_connection* mongoose_connection, cJSON* js
  */
 static int is_admin(struct mg_http_message* http_message) {
     int user_identifier = get_current_user_id(http_message);
-    return user_repo_is_admin(DB, user_identifier);
+    return user_repo_is_admin(DATABASE_CONNECTION, user_identifier);
 }
 
 /**
@@ -78,12 +78,12 @@ void order_items_by_order(struct mg_connection *mongoose_connection, struct mg_h
         mg_http_reply(mongoose_connection, 401, "", "");
         return;
     }
-    if (!is_admin(http_message) && !order_repo_belongs_to(DB, order_identifier, user_identifier)) {
+    if (!is_admin(http_message) && !order_repo_belongs_to(DATABASE_CONNECTION, order_identifier, user_identifier)) {
         mg_http_reply(mongoose_connection, 403, "", "");
         return;
     }
     cJSON *items_array = cJSON_CreateArray();
-    order_item_repo_by_order(DB, order_identifier, order_items_by_order_cb, items_array);
+    order_item_repo_by_order(DATABASE_CONNECTION, order_identifier, order_items_by_order_cb, items_array);
     send_json_reply(mongoose_connection, items_array, 200);
 }
 
@@ -106,7 +106,7 @@ void order_item_patch(struct mg_connection *mongoose_connection, struct mg_http_
         return;
     }
 
-    order_item_repo_patch(DB, item_identifier, update_data);
+    order_item_repo_patch(DATABASE_CONNECTION, item_identifier, update_data);
     cJSON_Delete(update_data);
     mg_http_reply(mongoose_connection, 200, "", "");
 }
@@ -123,6 +123,6 @@ void order_item_del(struct mg_connection *mongoose_connection, struct mg_http_me
         mg_http_reply(mongoose_connection, 403, "", "");
         return;
     }
-    order_item_repo_del(DB, item_identifier);
+    order_item_repo_del(DATABASE_CONNECTION, item_identifier);
     mg_http_reply(mongoose_connection, 200, "", "");
 }

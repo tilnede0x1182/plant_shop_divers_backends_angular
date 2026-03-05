@@ -13,7 +13,7 @@
 /* ==============================================================================
    Données
    ============================================================================== */
-extern PGconn* DB;
+extern PGconn* DATABASE_CONNECTION;
 
 /* ==============================================================================
    Fonctions utilitaires
@@ -41,7 +41,7 @@ static void send_json_reply(struct mg_connection* mongoose_connection, cJSON* js
 static int is_admin(struct mg_http_message* http_message) {
 	int user_id = get_current_user_id(http_message);
 	if (user_id == 0) return 0;
-	return user_repo_is_admin(DB, user_id);
+	return user_repo_is_admin(DATABASE_CONNECTION, user_id);
 }
 
 /**
@@ -121,7 +121,7 @@ void user_create(struct mg_connection* mongoose_connection, struct mg_http_messa
 	if (!hash_password(pwd_str, encoded_hash, sizeof(encoded_hash))) { cJSON_Delete(json_obj); mg_http_reply(mongoose_connection, 500, "Content-Type: application/json\r\n", "{\"error\":\"Hashing failed\"}"); return; }
 	User user = {0};
 	fill_user_struct(&user, name_str, email_str, encoded_hash, json_obj);
-	user.id = user_repo_add(DB, &user);
+	user.id = user_repo_add(DATABASE_CONNECTION, &user);
 	cJSON_Delete(json_obj);
 	cJSON *response = cJSON_CreateObject();
 	cJSON_AddNumberToObject(response, "id", user.id);
@@ -152,7 +152,7 @@ static cJSON* build_user_json(User* user) {
  */
 void user_get(struct mg_connection* mongoose_connection, struct mg_http_message *http_message, int user_id) {
 	User user;
-	if (!user_repo_find(DB, user_id, &user)) { mg_http_reply(mongoose_connection, 404, "", ""); return; }
+	if (!user_repo_find(DATABASE_CONNECTION, user_id, &user)) { mg_http_reply(mongoose_connection, 404, "", ""); return; }
 	send_json_reply(mongoose_connection, build_user_json(&user), 200);
 	(void)http_message;
 }
@@ -167,7 +167,7 @@ void user_get(struct mg_connection* mongoose_connection, struct mg_http_message 
  */
 static int check_patch_rights(struct mg_http_message *http_message, int target_user_id, int* current_user_is_admin) {
 	int current_user_id = get_current_user_id(http_message);
-	*current_user_is_admin = user_repo_is_admin(DB, current_user_id);
+	*current_user_is_admin = user_repo_is_admin(DATABASE_CONNECTION, current_user_id);
 	return (current_user_id == target_user_id || *current_user_is_admin);
 }
 
@@ -184,7 +184,7 @@ void user_patch(struct mg_connection* mongoose_connection, struct mg_http_messag
 	cJSON* json_obj = cJSON_ParseWithLength(http_message->body.buf, http_message->body.len);
 	if (!json_obj) { mg_http_reply(mongoose_connection, 400, "Content-Type: application/json\r\n", "{\"error\":\"Invalid JSON\"}"); return; }
 	if (!current_user_is_admin && cJSON_HasObjectItem(json_obj, "admin")) cJSON_DeleteItemFromObject(json_obj, "admin");
-	user_repo_patch(DB, user_id, json_obj);
+	user_repo_patch(DATABASE_CONNECTION, user_id, json_obj);
 	cJSON_Delete(json_obj);
 	mg_http_reply(mongoose_connection, 200, "", "");
 }
@@ -198,7 +198,7 @@ void user_patch(struct mg_connection* mongoose_connection, struct mg_http_messag
  */
 void user_del(struct mg_connection* mongoose_connection, struct mg_http_message *http_message, int user_id) {
 	if (!is_admin(http_message)) { mg_http_reply(mongoose_connection, 403, "", ""); return; }
-	user_repo_del(DB, user_id);
+	user_repo_del(DATABASE_CONNECTION, user_id);
 	mg_http_reply(mongoose_connection, 200, "", "");
 }
 
@@ -222,6 +222,6 @@ static void admin_users_list_cb(User* user_data, void* callback_data) {
 void admin_users_list(struct mg_connection* mongoose_connection, struct mg_http_message *http_message) {
 	if (!is_admin(http_message)) { mg_http_reply(mongoose_connection, 403, "", ""); return; }
 	cJSON* json_array = cJSON_CreateArray();
-	user_repo_each(DB, admin_users_list_cb, json_array);
+	user_repo_each(DATABASE_CONNECTION, admin_users_list_cb, json_array);
 	send_json_reply(mongoose_connection, json_array, 200);
 }

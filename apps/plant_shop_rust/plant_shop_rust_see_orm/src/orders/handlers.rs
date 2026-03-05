@@ -1,6 +1,11 @@
+//! Handlers Poem pour gestion des commandes.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use std::collections::HashMap;
 
-/// Gestion des commandes avec SeaORM
 use poem::{
     handler,
     http::StatusCode,
@@ -23,7 +28,11 @@ use crate::errors::AppError;
 use crate::orders::models::OrderSummary;
 use crate::orders::query::{summaries_for_user, summary_by_id};
 
-/// DTO pour création de commande (contient id plante + quantité)
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// DTO pour un item dans une nouvelle commande.
 #[derive(Deserialize, Clone)]
 pub struct NewOrderItemDto {
     #[serde(alias = "plantId")]
@@ -31,19 +40,23 @@ pub struct NewOrderItemDto {
     pub quantity: i32,
 }
 
-/// Payload pour la création d'une commande
+/// Payload pour la creation d'une commande.
 #[derive(Deserialize)]
 pub struct NewOrderPayload {
     pub items: Vec<NewOrderItemDto>,
 }
 
-/// Mise à jour du statut de commande
+/// DTO pour la mise a jour du statut d'une commande.
 #[derive(Deserialize)]
 pub struct UpdateOrderDto {
     pub status: Option<String>,
 }
 
-/// Création d’une commande utilisateur courant (JWT obligatoire)
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Création d'une commande utilisateur courant (JWT obligatoire)
 #[handler]
 pub async fn create_order(
     Data(db): Data<&DatabaseConnection>,
@@ -137,7 +150,12 @@ pub async fn get_order(
     Ok(Json(summary))
 }
 
-/// Mise à jour du statut de commande
+/// Mise a jour du statut de commande.
+///
+/// @param db Connection a la base de donnees
+/// @param order_id ID de la commande
+/// @param payload Nouveau statut
+/// @return Json<OrderSummary> mis a jour ou erreur
 #[handler]
 pub async fn update_order(
     Data(db): Data<&DatabaseConnection>,

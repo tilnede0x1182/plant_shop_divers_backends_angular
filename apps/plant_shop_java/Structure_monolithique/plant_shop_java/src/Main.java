@@ -21,6 +21,11 @@ public final class Main {
 		private static Connection db = null;
 		private static HttpServer server = null;
 
+    /**
+     * Charge les variables d'environnement depuis le fichier .env.
+     * @return Map<String, String> Dictionnaire des clés-valeurs du fichier .env
+     * @throws IOException Si le fichier .env ne peut pas être lu
+     */
     private static Map<String, String> env() throws IOException {
         Map<String, String> m = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader(".env"))) {
@@ -36,6 +41,13 @@ public final class Main {
         }
         return m;
     }
+		/**
+		 * Point d'entrée principal de l'application.
+		 * Charge la configuration, initialise la connexion à la base de données,
+		 * démarre le serveur HTTP et configure le routeur principal.
+		 * @param args String[] Arguments de ligne de commande (non utilisés)
+		 * @throws Exception En cas d'erreur de configuration ou de connexion
+		 */
 		public static void main(String[] args) throws Exception {
 				/* ---------- Configuration ---------- */
 				Map<String, String> cfg = env();

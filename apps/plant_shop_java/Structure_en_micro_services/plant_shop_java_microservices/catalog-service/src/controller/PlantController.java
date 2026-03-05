@@ -13,6 +13,9 @@ import org.json.JSONObject;
 import util.AuthContext;
 
 // Définition locale de BaseController pour résoudre les dépendances du classpath lors de la compilation
+/**
+ * Contrôleur de base avec utilitaires communs.
+ */
 abstract class BaseController implements HttpHandler {
     protected final Connection db;
 
@@ -20,12 +23,25 @@ abstract class BaseController implements HttpHandler {
         this.db = db;
     }
 
+    /**
+     * Parse le corps JSON d'une requête.
+     * @param ex Échange HTTP
+     * @return Objet JSON parsé
+     * @throws IOException En cas d'erreur de lecture
+     */
     protected JSONObject parseJson(HttpExchange ex) throws IOException {
         String body = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         return body.isBlank() ? new JSONObject() : new JSONObject(body);
     }
 
     // Définition de sendJson pour JSONObject
+    /**
+     * Envoie une réponse JSON.
+     * @param ex Échange HTTP
+     * @param code Code HTTP
+     * @param body Corps JSON
+     * @throws IOException En cas d'erreur I/O
+     */
     protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
         byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
@@ -37,6 +53,13 @@ abstract class BaseController implements HttpHandler {
     }
 
     // Définition de sendJson pour String
+    /**
+     * Envoie une réponse JSON en string.
+     * @param ex Échange HTTP
+     * @param code Code HTTP
+     * @param jsonBody Corps JSON en string
+     * @throws IOException En cas d'erreur I/O
+     */
     protected void sendJson(HttpExchange ex, int code, String jsonBody) throws IOException {
         byte[] bytes = jsonBody.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
@@ -47,6 +70,12 @@ abstract class BaseController implements HttpHandler {
         ex.close();
     }
 
+    /**
+     * Envoie une réponse vide.
+     * @param ex Échange HTTP
+     * @param code Code HTTP
+     * @throws IOException En cas d'erreur I/O
+     */
     protected void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
@@ -57,18 +86,30 @@ abstract class BaseController implements HttpHandler {
     public abstract void handle(HttpExchange exchange) throws IOException;
 }
 
+/**
+ * Contrôleur pour les routes des plantes.
+ */
 public final class PlantController extends BaseController {
 
     private static final String ADMIN_BASE = "/admin/plants";
 
     private final PlantRepository repo;
 
+    /**
+     * Constructeur.
+     * @param db Connexion à la base de données
+     */
     public PlantController(Connection db) {
         super(db);
         this.repo = new PlantRepository(db);
     }
 
     @Override
+    /**
+     * Traite une requête HTTP.
+     * @param ex Échange HTTP
+     * @throws IOException En cas d'erreur I/O
+     */
     public void handle(HttpExchange ex) throws IOException {
         String path = ex.getRequestURI().getPath();
         String method = ex.getRequestMethod();
@@ -169,6 +210,12 @@ public final class PlantController extends BaseController {
         sendJson(ex, 200, repo.find(id).toJson());
     }
 
+    /**
+     * Extrait l'ID de plante depuis le chemin.
+     * @param path Chemin de la requête
+     * @param prefix Préfixe à retirer
+     * @return ID de la plante ou -1
+     */
     private int extractPlantId(String path, String prefix) {
         if (!path.startsWith(prefix)) {
             return -1;
@@ -180,6 +227,11 @@ public final class PlantController extends BaseController {
         }
     }
 
+    /**
+     * Crée une nouvelle plante.
+     * @param ex Échange HTTP
+     * @throws Exception En cas d'erreur
+     */
     private void create(HttpExchange ex) throws Exception {
         JSONObject body = parseJson(ex);
         Plant plant = Plant.fromJson(body);
@@ -191,6 +243,12 @@ public final class PlantController extends BaseController {
         sendJson(ex, 201, created.toJson());
     }
 
+    /**
+     * Remplace une plante existante.
+     * @param ex Échange HTTP
+     * @param id ID de la plante
+     * @throws Exception En cas d'erreur
+     */
     private void replace(HttpExchange ex, int id) throws Exception {
         JSONObject body = parseJson(ex);
         Plant plant = Plant.fromJson(body).withId(id);
@@ -199,6 +257,12 @@ public final class PlantController extends BaseController {
         sendJson(ex, 200, (updated != null ? updated : plant).toJson());
     }
 
+    /**
+     * Met à jour partiellement une plante.
+     * @param ex Échange HTTP
+     * @param id ID de la plante
+     * @throws Exception En cas d'erreur
+     */
     private void patch(HttpExchange ex, int id) throws Exception {
         Plant existing = repo.find(id);
         if (existing == null) {
@@ -213,6 +277,12 @@ public final class PlantController extends BaseController {
         sendJson(ex, 200, (updated != null ? updated : patched).toJson());
     }
 
+    /**
+     * Supprime une plante.
+     * @param ex Échange HTTP
+     * @param id ID de la plante
+     * @throws Exception En cas d'erreur
+     */
     private void delete(HttpExchange ex, int id) throws Exception {
         Plant existing = repo.find(id);
         if (existing == null) {
@@ -223,14 +293,31 @@ public final class PlantController extends BaseController {
         sendEmpty(ex, 200);
     }
 
+    /**
+     * Liste les plantes pour l'admin.
+     * @param ex Échange HTTP
+     * @throws Exception En cas d'erreur
+     */
     private void listAdmin(HttpExchange ex) throws Exception {
         sendPlantList(ex);
     }
 
+    /**
+     * Récupère toutes les plantes.
+     * @param ex Échange HTTP
+     * @param ctx Contexte d'authentification
+     * @throws Exception En cas d'erreur
+     */
     private void getAll(HttpExchange ex, AuthContext ctx) throws Exception {
         sendPlantList(ex);
     }
 
+    /**
+     * Récupère une plante par ID.
+     * @param ex Échange HTTP
+     * @param ctx Contexte d'authentification
+     * @throws Exception En cas d'erreur
+     */
     private void getOne(HttpExchange ex, AuthContext ctx) throws Exception {
         try {
             int id = Integer.parseInt(ex.getRequestURI().getPath().substring("/plants/".length()));
@@ -240,6 +327,12 @@ public final class PlantController extends BaseController {
         }
     }
 
+    /**
+     * Envoie une plante en réponse.
+     * @param ex Échange HTTP
+     * @param id ID de la plante
+     * @throws Exception En cas d'erreur
+     */
     private void sendPlant(HttpExchange ex, int id) throws Exception {
         Plant plant = repo.find(id);
         if (plant != null) {
@@ -249,6 +342,12 @@ public final class PlantController extends BaseController {
         }
     }
 
+    /**
+     * Applique un patch à une plante.
+     * @param base Plante de base
+     * @param body Données du patch
+     * @return Plante patchée
+     */
     private Plant applyPatch(Plant base, JSONObject body) {
         Plant current = base;
         if (body.has("name")) {
@@ -275,6 +374,11 @@ public final class PlantController extends BaseController {
         return current;
     }
 
+    /**
+     * Envoie la liste des plantes en réponse.
+     * @param ex Échange HTTP
+     * @throws Exception En cas d'erreur
+     */
     private void sendPlantList(HttpExchange ex) throws Exception {
         var plants = repo.findAllOrderedByName();
         String json = plants.stream()

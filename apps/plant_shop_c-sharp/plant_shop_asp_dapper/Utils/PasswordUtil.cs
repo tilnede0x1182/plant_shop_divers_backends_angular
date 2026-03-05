@@ -1,8 +1,15 @@
 namespace plant_shop_asp_dapper.Utils
 {
-    // (Identique au Projet 2)
+    /// <summary>
+    /// Utilitaire de hachage BCrypt.
+    /// </summary>    // (Identique au Projet 2)
     public static class PasswordUtil
     {
+        /// <summary>
+        /// Hache un mot de passe avec BCrypt.
+        /// </summary>
+        /// <param name="password">Mot de passe en clair.</param>
+        /// <returns>Hash BCrypt.</returns>
         public static string HashPassword(string password)
         {
             return BCrypt.Net.BCrypt.HashPassword(password);

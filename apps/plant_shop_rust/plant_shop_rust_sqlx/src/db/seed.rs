@@ -1,4 +1,11 @@
+//! Seed de la base de donnees.
+
 #![allow(dead_code)]
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use crate::errors::AppError;
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
@@ -12,7 +19,10 @@ use std::env;
 use std::fs::File;
 use std::io::Write;
 
-// # Constantes
+// ==============================================================================
+// Constantes
+// ==============================================================================
+
 const NB_ADMINS: u32 = 3;
 const NB_USERS: u32 = 20;
 const NB_PLANTS: u32 = 50;
@@ -81,7 +91,11 @@ const PLANT_NAMES: &[&str] = &[
     "Mimosa (Acacia dealbata)",
 ];
 
-// Structures temporaires
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// Structure temporaire pour le seed des plantes.
 #[derive(Clone)]
 struct TempPlant {
     id: i32,
@@ -89,9 +103,14 @@ struct TempPlant {
     stock: i32,
 }
 
+/// Structure temporaire pour le seed des utilisateurs.
 struct TempUser {
     id: i32,
 }
+
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
 
 /// Exécute une requête SQL, affiche l’erreur sans panique.
 /// @pool   Connexion/Pool
@@ -407,6 +426,10 @@ fn write_users_file(
     println!("✅ Fichier users.txt généré.");
     Ok(())
 }
+
+// ==============================================================================
+// Main
+// ==============================================================================
 
 /// Point d'entrée de la seed (appelé depuis src/bin/seed.rs)
 pub async fn run_seed() -> Result<(), AppError> {

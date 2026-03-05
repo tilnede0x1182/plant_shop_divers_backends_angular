@@ -17,6 +17,9 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
+/**
+ * Contrôleur REST pour les plantes.
+ */
 public class PlantController {
 
     @Autowired
@@ -30,6 +33,12 @@ public class PlantController {
         COLLATOR = Collator.getInstance(Locale.ROOT);
         COLLATOR.setStrength(Collator.PRIMARY);
     }
+    /**
+     * Compare deux plantes par nom.
+     * @param a Première plante
+     * @param b Deuxième plante
+     * @return Résultat de comparaison
+     */
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }
@@ -37,6 +46,11 @@ public class PlantController {
     // --- Endpoints Publics ---
 
     @GetMapping("/plants")
+    /**
+     * Liste toutes les plantes publiquement.
+     * @return Réponse avec liste des plantes
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<List<?>> listPublic() throws Exception {
         List<?> payload = repo.list().stream()
             .sorted(this::comparePlants)

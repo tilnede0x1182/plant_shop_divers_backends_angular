@@ -8,12 +8,19 @@ using System.Linq;
 
 namespace plant_shop_asp_dapper.Controllers
 {
+    /// <summary>
+    /// Controleur CRUD pour les utilisateurs (routes standards).
+    /// </summary>
     [ApiController]
     [Authorize(Roles = "Admin")] // Routes admin
     public class UsersController : BaseController
     {
         private readonly UserRepository _userRepo;
 
+        /// <summary>
+        /// Constructeur avec injection du repository.
+        /// </summary>
+        /// <param name="userRepo">Repository utilisateurs.</param>
         public UsersController(UserRepository userRepo)
         {
             _userRepo = userRepo;

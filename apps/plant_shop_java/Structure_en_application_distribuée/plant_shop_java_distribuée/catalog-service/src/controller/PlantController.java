@@ -11,33 +11,62 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Routes HTTP pour le service catalogue.
+ */
 final class CatalogRoutes implements HttpHandler {
 
     private final PlantController controller;
 
-    public CatalogRoutes(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	public CatalogRoutes(Connection db) {
         this.controller = new PlantController(db);
     }
 
     @Override
-    public void handle(HttpExchange ex) throws IOException {
+    /**
+	 * Traite une requête HTTP entrante.
+	 * @param ex L'échange HTTP
+	 */
+	public void handle(HttpExchange ex) throws IOException {
         controller.handle(ex);
     }
 }
 
+/**
+ * Contrôleur de base avec méthodes utilitaires.
+ */
 abstract class CatalogBaseController {
     protected final Connection db;
 
-    CatalogBaseController(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	CatalogBaseController(Connection db) {
         this.db = db;
     }
 
-    protected JSONObject parseJson(HttpExchange ex) throws IOException {
+    /**
+	 * Parse le corps JSON de la requête.
+	 * @param ex L'échange HTTP
+	 * @return L'objet JSON parsé
+	 */
+	protected JSONObject parseJson(HttpExchange ex) throws IOException {
         String body = new String(ex.getRequestBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         return body.isBlank() ? new JSONObject() : new JSONObject(body);
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
+    /**
+	 * Envoie une réponse JSON Object.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le corps JSON
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
         byte[] bytes = body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -47,7 +76,13 @@ abstract class CatalogBaseController {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONArray body) throws IOException {
+    /**
+	 * Envoie une réponse JSON Array.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le tableau JSON
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONArray body) throws IOException {
         byte[] bytes = body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -57,7 +92,13 @@ abstract class CatalogBaseController {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, String body) throws IOException {
+    /**
+	 * Envoie une réponse JSON en chaîne.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le corps en chaîne
+	 */
+	protected void sendJson(HttpExchange ex, int code, String body) throws IOException {
         byte[] bytes = body.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -67,23 +108,40 @@ abstract class CatalogBaseController {
         ex.close();
     }
 
-    protected void sendEmpty(HttpExchange ex, int code) throws IOException {
+    /**
+	 * Envoie une réponse vide.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 */
+	protected void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
     }
 
-    protected void handleException(HttpExchange ex, Exception e) throws IOException {
+    /**
+	 * Gère une exception et envoie une erreur 500.
+	 * @param ex L'échange HTTP
+	 * @param e L'exception
+	 */
+	protected void handleException(HttpExchange ex, Exception e) throws IOException {
         e.printStackTrace();
         sendJson(ex, 500, new JSONObject().put("error", e.getMessage()));
     }
 }
 
+/**
+ * Contrôleur pour la gestion des plantes.
+ */
 public final class PlantController extends CatalogBaseController {
 
     private final PlantRepository repo;
     private final Comparator<Plant> nameComparator;
 
-    public PlantController(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	public PlantController(Connection db) {
         super(db);
         this.repo = new PlantRepository(db);
         java.text.Collator col = java.text.Collator.getInstance(Locale.ROOT);
@@ -91,7 +149,11 @@ public final class PlantController extends CatalogBaseController {
         this.nameComparator = (a, b) -> col.compare(a.name, b.name);
     }
 
-    public void handle(HttpExchange ex) throws IOException {
+    /**
+	 * Route les requêtes vers les bonnes méthodes.
+	 * @param ex L'échange HTTP
+	 */
+	public void handle(HttpExchange ex) throws IOException {
         String path = ex.getRequestURI().getPath();
         String method = ex.getRequestMethod();
         AuthContext ctx = AuthContext.fromHeaders(ex);
@@ -117,7 +179,14 @@ public final class PlantController extends CatalogBaseController {
         }
     }
 
-    private void handlePublic(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
+    /**
+	 * Gère les routes publiques.
+	 * @param ex L'échange HTTP
+	 * @param method La méthode HTTP
+	 * @param path Le chemin de la requête
+	 * @param ctx Le contexte d'authentification
+	 */
+	private void handlePublic(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
         if ("GET".equals(method)) {
             int id = extractId(path);
             if (id == -1) {
@@ -130,7 +199,13 @@ public final class PlantController extends CatalogBaseController {
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
-    private void handleAdmin(HttpExchange ex, String method, String path) throws Exception {
+    /**
+	 * Gère les routes administrateur.
+	 * @param ex L'échange HTTP
+	 * @param method La méthode HTTP
+	 * @param path Le chemin de la requête
+	 */
+	private void handleAdmin(HttpExchange ex, String method, String path) throws Exception {
         int id = extractId(path);
         if ("GET".equals(method)) {
             if (id == -1) {
@@ -155,7 +230,12 @@ public final class PlantController extends CatalogBaseController {
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
-    private int extractId(String path) {
+    /**
+	 * Extrait l'identifiant depuis le chemin.
+	 * @param path Le chemin de la requête
+	 * @return L'identifiant ou -1
+	 */
+	private int extractId(String path) {
         String[] parts = path.split("/");
         if (parts.length >= 3) {
             try {
@@ -165,7 +245,11 @@ public final class PlantController extends CatalogBaseController {
         return -1;
     }
 
-    private void list(HttpExchange ex) throws Exception {
+    /**
+	 * Liste toutes les plantes.
+	 * @param ex L'échange HTTP
+	 */
+	private void list(HttpExchange ex) throws Exception {
         List<Plant> plants = repo.list();
         plants.sort(nameComparator);
         JSONArray array = new JSONArray();
@@ -175,7 +259,12 @@ public final class PlantController extends CatalogBaseController {
         sendJson(ex, 200, array);
     }
 
-    private void show(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Affiche une plante par son identifiant.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant de la plante
+	 */
+	private void show(HttpExchange ex, int id) throws Exception {
         Plant plant = repo.find(id);
         if (plant == null) {
             sendJson(ex, 404, "{\"error\":\"Plante introuvable\"}");
@@ -184,7 +273,11 @@ public final class PlantController extends CatalogBaseController {
         sendJson(ex, 200, plant.toJson());
     }
 
-    private void create(HttpExchange ex) throws Exception {
+    /**
+	 * Crée une nouvelle plante.
+	 * @param ex L'échange HTTP
+	 */
+	private void create(HttpExchange ex) throws Exception {
         JSONObject body = parseJson(ex);
         String name = body.optString("name", null);
         BigDecimal price = body.has("price") ? body.getBigDecimal("price") : null;
@@ -206,7 +299,12 @@ public final class PlantController extends CatalogBaseController {
         sendJson(ex, 201, plant.toJson());
     }
 
-    private void update(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Met à jour une plante.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant de la plante
+	 */
+	private void update(HttpExchange ex, int id) throws Exception {
         Plant existing = repo.find(id);
         if (existing == null) {
             sendJson(ex, 404, "{\"error\":\"Plante introuvable\"}");
@@ -221,7 +319,12 @@ public final class PlantController extends CatalogBaseController {
         sendJson(ex, 200, existing.toJson());
     }
 
-    private void destroy(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Supprime une plante.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant de la plante
+	 */
+	private void destroy(HttpExchange ex, int id) throws Exception {
         repo.delete(id);
         sendEmpty(ex, 200);
     }

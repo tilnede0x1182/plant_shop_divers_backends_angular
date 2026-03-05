@@ -19,12 +19,15 @@ jsonError s msg = status s >> json (object ["error" .= msg])
 ok :: ToJSON a => a -> ActionM ()
 ok = jsonResponse status200
 
+-- | Envoie une réponse 201 Created avec le body JSON.
 created :: ToJSON a => a -> ActionM ()
 created = jsonResponse status201
 
+-- | Envoie une erreur 400 Bad Request.
 badRequest :: String -> ActionM ()
 badRequest = jsonError status400
 
+-- | Envoie une erreur 401 Unauthorized.
 unauthorized :: String -> ActionM ()
 unauthorized = jsonError status401
 

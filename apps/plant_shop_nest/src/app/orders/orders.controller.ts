@@ -22,28 +22,46 @@ import { Request } from 'express';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  // ✅ Tout utilisateur authentifié voit uniquement ses propres commandes
+  //**
+   * Liste les commandes de l'utilisateur courant
+   * @param req Requête contenant l'utilisateur courant
+   * @return Liste des commandes
+   */
   @Get()
   findAll(@Req() req: any) {
     const userId = req.user.id;
     return this.ordersService.findAll(userId);
   }
 
-  // ✅ Tout utilisateur authentifié peut créer une commande
+  //**
+   * Crée une nouvelle commande pour l'utilisateur courant
+   * @param data Données de la commande (items)
+   * @param req Requête contenant l'utilisateur courant
+   * @return Commande créée
+   */
   @Post()
   create(@Body() data: any, @Req() req: any) {
     const user = req.user;
     return this.ordersService.create(data, user);
   }
 
-  // ✅ Un admin peut mettre à jour une commande (ex. statut)
+  /**
+   * Met à jour une commande (admin)
+   * @param id Identifiant de la commande
+   * @param data Données à mettre à jour
+   * @return Commande mise à jour
+   */
   @Roles('admin')
   @Patch(':id')
   update(@Param('id') id: string, @Body() data: any) {
     return this.ordersService.update(+id, data);
   }
 
-  // ✅ Un admin peut supprimer une commande
+  /**
+   * Supprime une commande (admin)
+   * @param id Identifiant de la commande
+   * @return Commande supprimée
+   */
   @Roles('admin')
   @Delete(':id')
   remove(@Param('id') id: string) {

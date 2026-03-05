@@ -12,10 +12,18 @@ import models.User;
 public class AuthenticatedUser {
     private User user;
 
+    /**
+     * Récupère l'utilisateur authentifié.
+     * @return Utilisateur ou null si non authentifié
+     */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Définit l'utilisateur authentifié.
+     * @param user Utilisateur à stocker
+     */
     public void setUser(User user) {
         this.user = user;
     }

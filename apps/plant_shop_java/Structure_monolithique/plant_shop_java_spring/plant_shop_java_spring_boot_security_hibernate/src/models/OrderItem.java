@@ -9,6 +9,9 @@ import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 
+/**
+ * Entité JPA représentant un article de commande.
+ */
 @Entity
 @Table(name = "order_items")
 public class OrderItem {
@@ -28,6 +31,7 @@ public class OrderItem {
     @Column(nullable = false)
     public BigDecimal price;
 
+    /** Constructeur complet. */
     public OrderItem(int id, int orderId, int plantId, int quantity, BigDecimal price) {
         this.id = id;
         this.orderId = orderId;
@@ -35,6 +39,7 @@ public class OrderItem {
         this.quantity = quantity;
         this.price = price;
     }
+    /** Constructeur pour création. */
     public OrderItem(int orderId, int plantId, int quantity, BigDecimal price) {
         this(0, orderId, plantId, quantity, price);
     }

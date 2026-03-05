@@ -6,7 +6,14 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
 
+/**
+ * Script d'installation des dépendances.
+ */
 public class InstallLibs {
+    /**
+     * Point d'entrée principal.
+     * @param args String[] Arguments de ligne de commande
+     */
     public static void main(String[] args) throws Exception {
         Path yaml = Path.of("config/libs.yaml");
         if (!Files.exists(yaml)) {

@@ -2,11 +2,22 @@ package util;
 
 import org.mindrot.jbcrypt.BCrypt;
 
+/**
+ * Utilitaire de hachage de mots de passe BCrypt.
+ */
 public final class PasswordUtil {
 
-    private PasswordUtil() {}
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private PasswordUtil() {}
 
-    public static String hashPassword(String plainTextPassword) {
+    /**
+ * Hash un mot de passe avec BCrypt.
+ * @param plainTextPassword Mot de passe en clair
+ * @return Hash BCrypt
+ */
+public static String hashPassword(String plainTextPassword) {
         return BCrypt.hashpw(plainTextPassword, BCrypt.gensalt());
     }
 

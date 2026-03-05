@@ -4,12 +4,25 @@ import java.sql.*;
 import java.util.*;
 import model.OrderItem;
 
+/**
+ * Repository pour les items de commande.
+ */
 public final class OrderItemRepository extends BaseRepository<OrderItem> {
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public OrderItemRepository(Connection db) {
         super(db, "order_items");
     }
 
+    /**
+     * Mappe un ResultSet vers un OrderItem.
+     * @param rs ResultSet Résultat SQL
+     * @return OrderItem Item
+     * @throws SQLException En cas d erreur SQL
+     */
     @Override
     protected OrderItem mapFromResultSet(ResultSet rs) throws SQLException {
         return new OrderItem(
@@ -21,7 +34,12 @@ public final class OrderItemRepository extends BaseRepository<OrderItem> {
         );
     }
 
-    // La méthode `create` remplace `addItem` pour la cohérence
+    /**
+     * Crée un item de commande.
+     * @param it OrderItem Item
+     * @return int ID généré
+     * @throws SQLException En cas d erreur SQL
+     */
     public int create(OrderItem it) throws SQLException {
         String sql = "INSERT INTO order_items(order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {

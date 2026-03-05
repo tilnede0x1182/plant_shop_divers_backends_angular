@@ -5,6 +5,9 @@ import io.micronaut.serde.annotation.Serdeable;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+/**
+ * Modèle représentant une commande.
+ */
 @Introspected
 @Serdeable
 public final class Order {
@@ -14,6 +17,14 @@ public final class Order {
     public String status;
     public Timestamp createdAt; // null lors de l’insertion
 
+    /**
+     * Constructeur complet.
+     * @param id int Identifiant
+     * @param userId int ID utilisateur
+     * @param total BigDecimal Total
+     * @param status String Statut
+     * @param createdAt Timestamp Date de création
+     */
     public Order(int id, int userId, BigDecimal total, String status, Timestamp createdAt) {
         this.id = id;
         this.userId = userId;
@@ -22,6 +33,12 @@ public final class Order {
         this.createdAt = createdAt;
     }
 
+    /**
+     * Constructeur pour nouvelle commande.
+     * @param userId int ID utilisateur
+     * @param total BigDecimal Total
+     * @param status String Statut
+     */
     public Order(int userId, BigDecimal total, String status) {
         this(0, userId, total, status, null);
     }

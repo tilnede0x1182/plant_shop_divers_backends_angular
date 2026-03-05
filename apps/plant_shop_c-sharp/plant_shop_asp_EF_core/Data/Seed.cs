@@ -6,16 +6,27 @@ using plant_shop_asp_EF_core.Utils; // Accès au PasswordUtil local
 
 namespace Db; // Correspond au 'package db'
 
-/** Seed aligné sur la version C++ : noms réalistes, descriptions, prix cohérents,
-    décrémentation du stock, génération users.txt                           */
+/// <summary>
+/// Seed aligne sur la version C++ : noms realistes, descriptions, prix coherents,
+/// decrementation du stock, generation users.txt.
+/// </summary>
 public sealed class Seed
 {
+    /// <summary>
+    /// Information sur une plante pour le seed.
+    /// </summary>
     private sealed class PlantInfo
     {
         public int Id { get; }
         public int Price { get; }
         public int Stock { get; set; }
 
+        /// <summary>
+        /// Constructeur de PlantInfo.
+        /// </summary>
+        /// <param name="id">Identifiant</param>
+        /// <param name="price">Prix</param>
+        /// <param name="stock">Stock</param>
         public PlantInfo(int id, int price, int stock)
         {
             Id = id;
@@ -24,10 +35,10 @@ public sealed class Seed
         }
     }
 
-    /* ---------- Lecture .env ---------- */
-    // Note : C# utilise souvent des variables d'environnement chargées
-    // ou des fichiers JSON (appsettings.json). Cette méthode imite
-    // directement le parseur manuel simple du code Java.
+    /// <summary>
+    /// Lit le fichier .env et retourne les variables.
+    /// </summary>
+    /// <returns>Dictionnaire des variables</returns>
     private static Dictionary<string, string> Env()
     {
         var outDict = new Dictionary<string, string>();
@@ -101,14 +112,35 @@ public sealed class Seed
     // des problèmes de génération de nombres identiques.
     private static readonly Random RNG = new Random();
 
-    /* ---------- Helpers ---------- */
-    // Note : Le .Next(min, max) de C# a une borne supérieure *exclusive*,
-    // d'où le 'max + 1'.
+    /// <summary>
+    /// Entier aleatoire inclusif.
+    /// </summary>
+    /// <param name="min">Borne min</param>
+    /// <param name="max">Borne max</param>
+    /// <returns>Entier aleatoire</returns>
     private static int Rnd(int min, int max) { return min + RNG.Next(max - min + 1); }
+    /// <summary>
+    /// Choisit un element aleatoire dans un tableau.
+    /// </summary>
+    /// <param name="arr">Tableau source</param>
+    /// <returns>Element choisi</returns>
     private static T Pick<T>(T[] arr) { return arr[Rnd(0, arr.Length - 1)]; }
+    /// <summary>
+    /// Genere un mot de passe aleatoire.
+    /// </summary>
+    /// <returns>Mot de passe</returns>
     private static string RandPwd() { return "pw" + Rnd(100000000, 999999999); }
+    /// <summary>
+    /// Hache un mot de passe.
+    /// </summary>
+    /// <param name="p">Mot de passe en clair</param>
+    /// <returns>Hash</returns>
     private static string Hash(string p) { return PasswordUtil.HashPassword(p); }
 
+    /// <summary>
+    /// Genere une phrase lorem ipsum.
+    /// </summary>
+    /// <returns>Phrase generee</returns>
     private static string LoremSentence()
     {
         string[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
@@ -125,7 +157,10 @@ public sealed class Seed
         return sb.ToString();
     }
 
-    /* ---------- Main ---------- */
+    /// <summary>
+    /// Point d entree du programme de seed.
+    /// </summary>
+    /// <param name="args">Arguments CLI</param>
     public static void Main(string[] args)
     {
         var cfg = Env();
@@ -335,6 +370,13 @@ public sealed class Seed
         Console.WriteLine("🎉 Seed terminée !");
     }
 
+    /// <summary>
+    /// Construit la chaine de connexion PostgreSQL.
+    /// </summary>
+    /// <param name="rawUrl">URL brute</param>
+    /// <param name="user">Utilisateur</param>
+    /// <param name="pass">Mot de passe</param>
+    /// <returns>Chaine de connexion</returns>
     private static string BuildConnectionString(string rawUrl, string user, string pass)
     {
         if (string.IsNullOrWhiteSpace(rawUrl))

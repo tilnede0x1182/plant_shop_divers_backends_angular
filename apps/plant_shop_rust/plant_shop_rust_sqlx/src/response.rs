@@ -1,3 +1,9 @@
+//! Utilitaires de reponse HTTP.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use bytes::{BufMut, BytesMut};
 use poem::{http::StatusCode, Body, Response};
 use serde::Serialize;
@@ -6,10 +12,23 @@ use std::cell::RefCell;
 
 use crate::errors::AppError;
 
+// ==============================================================================
+// Constantes
+// ==============================================================================
+
 thread_local! {
     static JSON_BUFFER: RefCell<BytesMut> = RefCell::new(BytesMut::with_capacity(16 * 1024));
 }
 
+// ==============================================================================
+// Fonctions
+// ==============================================================================
+
+/// Serialise une valeur en JSON dans un buffer reutilisable.
+///
+/// @param value Valeur a serialiser
+/// @param status Code HTTP de la reponse
+/// @return Response HTTP ou erreur
 pub fn buffered_json<T: Serialize>(value: &T, status: StatusCode) -> Result<Response, AppError> {
     JSON_BUFFER.with(|buffer| {
         let mut buf = buffer.borrow_mut();
@@ -21,6 +40,11 @@ pub fn buffered_json<T: Serialize>(value: &T, status: StatusCode) -> Result<Resp
     })
 }
 
+// ==============================================================================
+// Structures internes
+// ==============================================================================
+
+/// Writer pour serialiser directement dans un BytesMut.
 struct BytesMutWriter<'a> {
     buf: &'a mut BytesMut,
 }

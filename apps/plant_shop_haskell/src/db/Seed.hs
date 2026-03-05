@@ -84,9 +84,11 @@ nbUsers = 20
 nbPlants :: Int
 nbPlants = 50
 
+-- | Nombre maximum de commandes par utilisateur.
 maxOrdersPerUser :: Int
 maxOrdersPerUser = 7
 
+-- | Liste des noms de plantes disponibles.
 plantNames :: [T.Text]
 plantNames = [
     "Rose","Tulipe","Lavande","Orchidée","Basilic","Menthe","Pivoine","Tournesol",
@@ -107,12 +109,15 @@ plantNames = [
     "Pothos (Epipremnum aureum)","Agave (Agave americana)","Cactus raquette (Opuntia ficus-indica)"
   ]
 
+-- | Liste des prénoms pour la génération de données.
 firstNames :: [T.Text]
 firstNames = ["Alice","Bruno","Cathy","David","Emma","Franck", "Gwen","Hugo","Inès","Jules","Katia","Léo"]
 
+-- | Liste des noms de famille pour la génération de données.
 lastNames :: [T.Text]
 lastNames = ["Dupont","Martin","Bernard","Petit","Robert","Richard","Durand","Moreau","Roux","Fournier"]
 
+-- | Liste des domaines email pour la génération de données.
 emailDomains :: [T.Text]
 emailDomains = ["gmail.com","yahoo.com","hotmail.com"]
 
@@ -162,6 +167,8 @@ loremSentence = do
 -- LOGIQUE PRINCIPALE DU SEEDING
 --------------------------------------------------------------------------------
 
+-- | Point d'\''entrée du script de seed.
+-- Nettoie la base et crée les données de test.
 main :: IO ()
 main = do
     putStrLn "🔧 Lecture de la configuration .env..."

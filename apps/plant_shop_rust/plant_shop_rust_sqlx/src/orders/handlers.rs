@@ -1,3 +1,9 @@
+//! Handlers de gestion des commandes.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use std::collections::HashMap;
 
 use poem::{
@@ -17,6 +23,11 @@ use crate::plants::models::PriceExt;
 use crate::response::buffered_json;
 use crate::state::AppState;
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// DTO pour un item dans une nouvelle commande.
 #[derive(Deserialize, Clone)]
 pub struct NewOrderItemDto {
     #[serde(alias = "plantId")]
@@ -24,16 +35,28 @@ pub struct NewOrderItemDto {
     pub quantity: i32,
 }
 
+/// Payload pour la creation d'une commande.
 #[derive(Deserialize)]
 pub struct NewOrderPayload {
     pub items: Vec<NewOrderItemDto>,
 }
 
+/// DTO pour la mise a jour du statut d'une commande.
 #[derive(Deserialize)]
 pub struct UpdateOrderDto {
     pub status: Option<String>,
 }
 
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Cree une nouvelle commande.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param auth Session d'authentification
+/// @param payload Items de la commande
+/// @return Tuple (StatusCode, Json<OrderSummary>) ou erreur
 #[handler]
 pub async fn create_order(
     Data(state): Data<&AppState>,
@@ -167,6 +190,11 @@ pub async fn create_order(
     Ok((StatusCode::CREATED, Json(summary)))
 }
 
+/// Liste les commandes de l'utilisateur.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param auth Session d'authentification
+/// @return Response JSON ou erreur
 #[handler]
 pub async fn list_orders(
     Data(state): Data<&AppState>,
@@ -180,6 +208,11 @@ pub async fn list_orders(
     buffered_json(&summaries, StatusCode::OK)
 }
 
+/// Recupere une commande par ID.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param order_id ID de la commande
+/// @return Response JSON ou erreur 404
 #[handler]
 pub async fn get_order(
     Data(state): Data<&AppState>,
@@ -189,6 +222,12 @@ pub async fn get_order(
     buffered_json(&summary, StatusCode::OK)
 }
 
+/// Met a jour le statut d'une commande (admin).
+///
+/// @param state Etat applicatif (pools DB)
+/// @param order_id ID de la commande
+/// @param payload Nouveau statut
+/// @return Json<OrderSummary> mis a jour ou erreur
 #[handler]
 pub async fn update_order(
     Data(state): Data<&AppState>,
@@ -208,6 +247,11 @@ pub async fn update_order(
     Ok(Json(summary))
 }
 
+/// Supprime une commande (admin).
+///
+/// @param state Etat applicatif (pools DB)
+/// @param order_id ID de la commande a supprimer
+/// @return () ou erreur
 #[handler]
 pub async fn delete_order(
     Data(state): Data<&AppState>,
@@ -225,6 +269,11 @@ pub async fn delete_order(
     Ok(())
 }
 
+// ==============================================================================
+// Structures internes
+// ==============================================================================
+
+/// Ligne brute de la requete SQL (avant agregation).
 #[derive(sqlx::FromRow)]
 struct DbOrderRow {
     order_id: i32,
@@ -239,6 +288,7 @@ struct DbOrderRow {
     plant_price: Option<BigDecimal>,
 }
 
+/// Ligne retournee apres insertion d'un item.
 #[derive(sqlx::FromRow)]
 struct InsertedOrderItemRow {
     id: i32,
@@ -247,6 +297,15 @@ struct InsertedOrderItemRow {
     price: BigDecimal,
 }
 
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
+/// Recupere les lignes brutes pour un utilisateur.
+///
+/// @param pool Pool de lecture
+/// @param user_id ID de l'utilisateur
+/// @return Vec<DbOrderRow> ou erreur
 async fn fetch_rows_for_user(pool: &PgPool, user_id: i32) -> Result<Vec<DbOrderRow>, AppError> {
     sqlx::query_as!(
         DbOrderRow,
@@ -278,6 +337,11 @@ async fn fetch_rows_for_user(pool: &PgPool, user_id: i32) -> Result<Vec<DbOrderR
     })
 }
 
+/// Recupere une commande par ID avec ses items.
+///
+/// @param pool Pool de lecture
+/// @param order_id ID de la commande
+/// @return OrderSummary ou erreur 404
 async fn fetch_single_summary(pool: &PgPool, order_id: i32) -> Result<OrderSummary, AppError> {
     let rows = sqlx::query_as!(
         DbOrderRow,
@@ -311,6 +375,10 @@ async fn fetch_single_summary(pool: &PgPool, order_id: i32) -> Result<OrderSumma
     fold_rows(rows).into_iter().next().ok_or(AppError::NotFound)
 }
 
+/// Agrege les lignes SQL en OrderSummary.
+///
+/// @param rows Lignes brutes de la requete
+/// @return Vec<OrderSummary> agreges
 fn fold_rows(rows: Vec<DbOrderRow>) -> Vec<OrderSummary> {
     let mut summaries = Vec::new();
     let mut index = HashMap::new();
@@ -336,6 +404,10 @@ fn fold_rows(rows: Vec<DbOrderRow>) -> Vec<OrderSummary> {
     summaries
 }
 
+/// Convertit une ligne SQL en OrderItemResponse.
+///
+/// @param row Reference a une ligne brute
+/// @return Some(OrderItemResponse) ou None si item incomplet
 fn map_row_to_item(row: &DbOrderRow) -> Option<OrderItemResponse> {
     let item_id = row.order_item_id?;
     let plant_id = match row.plant_id {

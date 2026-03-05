@@ -17,21 +17,38 @@ import util.ApiMapper;
 import util.PasswordUtil;
 import io.micronaut.http.HttpRequest;
 
+/**
+ * Contrôleur d'authentification Micronaut.
+ * Gère inscription, connexion, déconnexion et sessions.
+ */
 @Controller("/auth")
 public class AuthController {
 
     private final UserRepository userRepo;
     private static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
+    /**
+     * Constructeur avec injection de la connexion DB.
+     * @param db Connexion à la base de données
+     */
     @Inject
     public AuthController(Connection db) {
         this.userRepo = new UserRepository(db);
     }
 
+    /**
+     * Retourne la map des sessions actives.
+     * @return Map sessionId vers userId
+     */
     public static Map<String, Integer> getSessions() {
         return sessions;
     }
 
+    /**
+     * Inscrit un nouvel utilisateur.
+     * @param body Corps de la requête
+     * @return Réponse HTTP
+     */
     @Post("/register")
     public HttpResponse<?> register(@Body Map<String, String> body) throws Exception {
         String name = body.get("name");
@@ -48,6 +65,11 @@ public class AuthController {
         return HttpResponse.created(ApiMapper.toUser(created));
     }
 
+    /**
+     * Connecte un utilisateur et crée une session.
+     * @param body Corps de la requête
+     * @return Réponse HTTP avec cookie
+     */
     @Post("/login")
     public MutableHttpResponse<?> login(@Body Map<String, String> body) throws Exception {
         User user = userRepo.findByEmailWithPassword(body.get("email"));
@@ -69,6 +91,11 @@ public class AuthController {
             .body(ApiMapper.toUser(user));
     }
 
+    /**
+     * Déconnecte l'utilisateur et supprime la session.
+     * @param sessionId ID de session
+     * @return Réponse HTTP
+     */
     @Post("/logout")
     public HttpResponse<?> logout(@CookieValue("session_id") String sessionId) {
         if (sessionId != null) {

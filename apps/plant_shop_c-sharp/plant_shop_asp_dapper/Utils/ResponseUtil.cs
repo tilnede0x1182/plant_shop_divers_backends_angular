@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace plant_shop_asp_dapper.Utils
 {
-    // Cette classe est redondante avec ControllerBase, mais nous la remplissons.
+    /// <summary>
+    /// Utilitaire d envoi de reponses.
+    /// </summary>    // Cette classe est redondante avec ControllerBase, mais nous la remplissons.
     public static class ResponseUtil
     {
         public static IActionResult SendJson(int statusCode, object payload)

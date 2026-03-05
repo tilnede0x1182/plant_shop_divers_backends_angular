@@ -2,6 +2,9 @@ package model;
 
 import java.math.BigDecimal;
 
+/**
+ * Modèle représentant un item de commande.
+ */
 public final class OrderItem {
     public int        id;
     public int        orderId;
@@ -9,6 +12,14 @@ public final class OrderItem {
     public int        quantity;
     public BigDecimal price;
 
+    /**
+     * Constructeur complet pour lecture DB.
+     * @param id int Identifiant
+     * @param orderId int ID commande
+     * @param plantId int ID plante
+     * @param quantity int Quantité
+     * @param price BigDecimal Prix unitaire
+     */
     public OrderItem(int id, int orderId, int plantId,
                      int quantity, BigDecimal price) {
         this.id = id;
@@ -18,6 +29,13 @@ public final class OrderItem {
         this.price = price;
     }
 
+    /**
+     * Constructeur pour insertion.
+     * @param orderId int ID commande
+     * @param plantId int ID plante
+     * @param quantity int Quantité
+     * @param price BigDecimal Prix unitaire
+     */
     public OrderItem(int orderId, int plantId, int quantity, BigDecimal price) {
         this(0, orderId, plantId, quantity, price);
     }

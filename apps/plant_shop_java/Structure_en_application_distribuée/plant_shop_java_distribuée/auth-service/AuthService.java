@@ -22,12 +22,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Service d'authentification pour la gestion des utilisateurs et sessions.
+ */
 public final class AuthService {
 
     private static Connection db;
     private static HttpServer server;
 
-    public static void main(String[] args) throws Exception {
+    /**
+	 * Point d'entrée du service d'authentification.
+	 * @param args Arguments de ligne de commande
+	 */
+	public static void main(String[] args) throws Exception {
         Map<String, String> cfg = loadEnv();
 
         int port = Integer.parseInt(cfg.getOrDefault("AUTH_SERVICE_PORT", "6101"));
@@ -59,14 +66,23 @@ public final class AuthService {
         }));
     }
 
-    private static Map<String, String> loadEnv() throws IOException {
+    /**
+	 * Charge les variables d'environnement depuis les fichiers .env.
+	 * @return Map des variables d'environnement
+	 */
+	private static Map<String, String> loadEnv() throws IOException {
         Map<String, String> values = new HashMap<>();
         readEnv(Path.of("../config/.env"), values);
         readEnv(Path.of(".env"), values);
         return values;
     }
 
-    private static void readEnv(Path path, Map<String, String> values) throws IOException {
+    /**
+	 * Lit un fichier .env et ajoute les valeurs à la map.
+	 * @param path Chemin du fichier .env
+	 * @param values Map où stocker les valeurs
+	 */
+	private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
         }
@@ -86,29 +102,52 @@ public final class AuthService {
     }
 }
 
+/**
+ * Routes HTTP pour le service d'authentification.
+ */
 final class AuthRoutes implements HttpHandler {
     private final AuthController auth;
 
-    AuthRoutes(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	AuthRoutes(Connection db) {
         this.auth = new AuthController(db);
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    /**
+	 * Traite une requête HTTP entrante.
+	 * @param exchange L'échange HTTP
+	 */
+	public void handle(HttpExchange exchange) throws IOException {
         auth.handle(exchange);
     }
 }
 
+/**
+ * Contrôleur de base avec méthodes utilitaires communes.
+ */
 abstract class BaseController {
     protected final Connection db;
     private final UserRepository userRepo;
 
-    BaseController(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	BaseController(Connection db) {
         this.db = db;
         this.userRepo = new UserRepository(db);
     }
 
-    protected JSONObject parseJson(HttpExchange ex) throws IOException {
+    /**
+	 * Parse le corps JSON de la requête.
+	 * @param ex L'échange HTTP
+	 * @return L'objet JSON parsé
+	 */
+	protected JSONObject parseJson(HttpExchange ex) throws IOException {
         String body = new String(ex.getRequestBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         if (body.isBlank()) {
             return new JSONObject();
@@ -116,7 +155,13 @@ abstract class BaseController {
         return new JSONObject(body);
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
+    /**
+	 * Envoie une réponse JSON.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le corps JSON
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
         byte[] bytes = body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -126,7 +171,13 @@ abstract class BaseController {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, String jsonBody) throws IOException {
+    /**
+	 * Envoie une réponse JSON sous forme de chaîne.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param jsonBody Le corps JSON en chaîne
+	 */
+	protected void sendJson(HttpExchange ex, int code, String jsonBody) throws IOException {
         byte[] bytes = jsonBody.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -136,12 +187,22 @@ abstract class BaseController {
         ex.close();
     }
 
-    protected void sendEmpty(HttpExchange ex, int code) throws IOException {
+    /**
+	 * Envoie une réponse vide.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 */
+	protected void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
     }
 
-    protected User getAuthenticatedUser(HttpExchange ex) throws SQLException {
+    /**
+	 * Récupère l'utilisateur authentifié depuis la session.
+	 * @param ex L'échange HTTP
+	 * @return L'utilisateur ou null
+	 */
+	protected User getAuthenticatedUser(HttpExchange ex) throws SQLException {
         String sessionId = Request.extractSessionId(ex);
         if (sessionId == null) {
             return null;
@@ -153,24 +214,40 @@ abstract class BaseController {
         return userRepo.find(userId);
     }
 
-    protected void handleException(HttpExchange ex, Exception e) throws IOException {
+    /**
+	 * Gère une exception et envoie une erreur 500.
+	 * @param ex L'échange HTTP
+	 * @param e L'exception à gérer
+	 */
+	protected void handleException(HttpExchange ex, Exception e) throws IOException {
         e.printStackTrace();
         JSONObject error = new JSONObject().put("error", "Erreur interne: " + e.getMessage());
         sendJson(ex, 500, error);
     }
 }
 
+/**
+ * Contrôleur pour les opérations d'authentification.
+ */
 final class AuthController extends BaseController {
 
     static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
     private final UserRepository userRepo;
 
-    AuthController(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	AuthController(Connection db) {
         super(db);
         this.userRepo = new UserRepository(db);
     }
 
-    public void handle(HttpExchange ex) throws IOException {
+    /**
+	 * Route les requêtes vers les bonnes méthodes.
+	 * @param ex L'échange HTTP
+	 */
+	public void handle(HttpExchange ex) throws IOException {
         String path = ex.getRequestURI().getPath().substring("/auth".length());
         if (path.isEmpty()) {
             path = "/";
@@ -204,7 +281,11 @@ final class AuthController extends BaseController {
         }
     }
 
-    private void register(HttpExchange ex) throws Exception {
+    /**
+	 * Enregistre un nouvel utilisateur.
+	 * @param ex L'échange HTTP
+	 */
+	private void register(HttpExchange ex) throws Exception {
         JSONObject body = parseJson(ex);
         String name = body.optString("name", null);
         String email = body.optString("email", null);
@@ -226,7 +307,11 @@ final class AuthController extends BaseController {
         sendJson(ex, 201, response);
     }
 
-    private void login(HttpExchange ex) throws Exception {
+    /**
+	 * Connecte un utilisateur.
+	 * @param ex L'échange HTTP
+	 */
+	private void login(HttpExchange ex) throws Exception {
         JSONObject body = parseJson(ex);
         String email = body.optString("email", null);
         String password = body.optString("password", null);
@@ -256,7 +341,11 @@ final class AuthController extends BaseController {
         sendJson(ex, 201, payload);
     }
 
-    private void logout(HttpExchange ex) throws Exception {
+    /**
+	 * Déconnecte l'utilisateur.
+	 * @param ex L'échange HTTP
+	 */
+	private void logout(HttpExchange ex) throws Exception {
         String sessionId = Request.extractSessionId(ex);
         if (sessionId != null) {
             sessions.remove(sessionId);
@@ -266,7 +355,11 @@ final class AuthController extends BaseController {
         sendEmpty(ex, 204);
     }
 
-    private void me(HttpExchange ex) throws Exception {
+    /**
+	 * Retourne les infos de l'utilisateur connecté.
+	 * @param ex L'échange HTTP
+	 */
+	private void me(HttpExchange ex) throws Exception {
         User user = getAuthenticatedUser(ex);
         if (user == null) {
             sendJson(ex, 401, "{\"error\":\"Non authentifié\"}");
@@ -275,7 +368,11 @@ final class AuthController extends BaseController {
         sendJson(ex, 200, user.toJson());
     }
 
-    private void sessionInfo(HttpExchange ex) throws Exception {
+    /**
+	 * Retourne les infos de session pour la gateway.
+	 * @param ex L'échange HTTP
+	 */
+	private void sessionInfo(HttpExchange ex) throws Exception {
         User user = getAuthenticatedUser(ex);
         if (user == null) {
             sendJson(ex, 401, "{\"error\":\"Session invalide\"}");
@@ -285,6 +382,9 @@ final class AuthController extends BaseController {
     }
 }
 
+/**
+ * Modèle représentant un utilisateur.
+ */
 final class User {
     int id;
     String name;
@@ -293,7 +393,16 @@ final class User {
     boolean isAdmin;
     Instant createdAt;
 
-    User(int id, String name, String email, String passwordHash, boolean isAdmin, Instant createdAt) {
+    /**
+	 * Constructeur complet.
+	 * @param id Identifiant
+	 * @param name Nom
+	 * @param email Email
+	 * @param passwordHash Hash du mot de passe
+	 * @param isAdmin Si administrateur
+	 * @param createdAt Date de création
+	 */
+	User(int id, String name, String email, String passwordHash, boolean isAdmin, Instant createdAt) {
         this.id = id;
         this.name = name;
         this.email = email;
@@ -302,11 +411,22 @@ final class User {
         this.createdAt = createdAt;
     }
 
-    User(String name, String email, String passwordHash, boolean isAdmin) {
+    /**
+	 * Constructeur pour création.
+	 * @param name Nom
+	 * @param email Email
+	 * @param passwordHash Hash du mot de passe
+	 * @param isAdmin Si administrateur
+	 */
+	User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }
 
-    JSONObject toJson() {
+    /**
+	 * Convertit l'utilisateur en JSON.
+	 * @return L'objet JSON
+	 */
+	JSONObject toJson() {
         JSONObject json = new JSONObject();
         json.put("id", id);
         json.put("name", name);
@@ -319,14 +439,26 @@ final class User {
     }
 }
 
+/**
+ * Repository pour les opérations sur les utilisateurs.
+ */
 final class UserRepository {
     private final Connection db;
 
-    UserRepository(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	UserRepository(Connection db) {
         this.db = db;
     }
 
-    User find(int id) throws SQLException {
+    /**
+	 * Trouve un utilisateur par son identifiant.
+	 * @param id L'identifiant de l'utilisateur
+	 * @return L'utilisateur ou null
+	 */
+	User find(int id) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("SELECT * FROM users WHERE id=?")) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -338,7 +470,12 @@ final class UserRepository {
         return null;
     }
 
-    User findByEmailWithPassword(String email) throws SQLException {
+    /**
+	 * Trouve un utilisateur par email avec son mot de passe.
+	 * @param email L'email de l'utilisateur
+	 * @return L'utilisateur ou null
+	 */
+	User findByEmailWithPassword(String email) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("SELECT * FROM users WHERE email=?")) {
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
@@ -350,7 +487,12 @@ final class UserRepository {
         return null;
     }
 
-    int create(User u) throws SQLException {
+    /**
+	 * Crée un nouvel utilisateur.
+	 * @param u L'utilisateur à créer
+	 * @return L'identifiant généré
+	 */
+	int create(User u) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement(
             "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -366,7 +508,13 @@ final class UserRepository {
         }
     }
 
-    private User map(ResultSet rs, boolean includePassword) throws SQLException {
+    /**
+	 * Mappe un ResultSet vers un objet User.
+	 * @param rs Le ResultSet
+	 * @param includePassword Si inclure le mot de passe
+	 * @return L'utilisateur mappé
+	 */
+	private User map(ResultSet rs, boolean includePassword) throws SQLException {
         return new User(
             rs.getInt("id"),
             rs.getString("name"),

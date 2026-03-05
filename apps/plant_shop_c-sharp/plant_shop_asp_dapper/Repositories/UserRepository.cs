@@ -7,8 +7,15 @@ using System.Threading.Tasks;
 
 namespace plant_shop_asp_dapper.Repositories
 {
+    /// <summary>
+    /// Repository CRUD pour les utilisateurs.
+    /// </summary>
     public class UserRepository : BaseRepository
     {
+        /// <summary>
+        /// Constructeur avec injection de la factory.
+        /// </summary>
+        /// <param name="factory">Factory de connexions.</param>
         public UserRepository(DbConnectionFactory factory) : base(factory) { }
 
         // SQL Mappage (snake_case -> PascalCase)
@@ -21,6 +28,11 @@ namespace plant_shop_asp_dapper.Repositories
                    created_at AS CreatedAt
             FROM users";
 
+        /// <summary>
+        /// Trouve un utilisateur par email.
+        /// </summary>
+        /// <param name="email">Email a rechercher.</param>
+        /// <returns>Utilisateur ou null.</returns>
         public async Task<User?> FindByEmailAsync(string email)
         {
             using var connection = CreateConnection();
@@ -28,6 +40,11 @@ namespace plant_shop_asp_dapper.Repositories
                 $"{SelectSql} WHERE email = @Email", new { Email = email });
         }
 
+        /// <summary>
+        /// Trouve un utilisateur par ID.
+        /// </summary>
+        /// <param name="id">ID a rechercher.</param>
+        /// <returns>Utilisateur ou null.</returns>
         public async Task<User?> FindByIdAsync(int id)
         {
             using var connection = CreateConnection();
@@ -35,6 +52,10 @@ namespace plant_shop_asp_dapper.Repositories
                 $"{SelectSql} WHERE id = @Id", new { Id = id });
         }
 
+        /// <summary>
+        /// Liste tous les utilisateurs.
+        /// </summary>
+        /// <returns>Liste des utilisateurs.</returns>
         public async Task<IEnumerable<User>> FindAllAsync()
         {
             using var connection = CreateConnection();
@@ -44,6 +65,11 @@ namespace plant_shop_asp_dapper.Repositories
                 $"{sql} ORDER BY is_admin DESC, name ASC");
         }
 
+        /// <summary>
+        /// Cree un nouvel utilisateur.
+        /// </summary>
+        /// <param name="user">Utilisateur a creer.</param>
+        /// <returns>Utilisateur avec ID genere.</returns>
         public async Task<User> CreateAsync(User user)
         {
             using var connection = CreateConnection();
@@ -57,6 +83,10 @@ namespace plant_shop_asp_dapper.Repositories
             return user;
         }
 
+        /// <summary>
+        /// Met a jour un utilisateur.
+        /// </summary>
+        /// <param name="user">Utilisateur modifie.</param>
         public async Task UpdateAsync(User user)
         {
             using var connection = CreateConnection();
@@ -69,6 +99,10 @@ namespace plant_shop_asp_dapper.Repositories
             await connection.ExecuteAsync(sql, user);
         }
 
+        /// <summary>
+        /// Supprime un utilisateur.
+        /// </summary>
+        /// <param name="id">ID a supprimer.</param>
         public async Task DeleteAsync(int id)
         {
             using var connection = CreateConnection();

@@ -19,19 +19,30 @@ import { Roles } from '../auth/roles.decorator';
 export class PlantsController {
   constructor(private readonly plantsService: PlantsService) {}
 
-  // Public
+  //**
+   * Retourne toutes les plantes disponibles
+   * @return Liste des plantes
+   */
   @Get()
   findAll() {
     return this.plantsService.findAll();
   }
 
-  // Public
+  /**
+   * Retourne une plante par son identifiant
+   * @param id Identifiant de la plante
+   * @return Plante trouvée
+   */
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.plantsService.findOne(+id);
   }
 
-  // Admin
+  /**
+   * Crée une nouvelle plante (admin)
+   * @param data Données de la plante
+   * @return Plante créée
+   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Post()
@@ -39,6 +50,12 @@ export class PlantsController {
     return this.plantsService.create(data);
   }
 
+  /**
+   * Met à jour une plante (admin)
+   * @param id Identifiant de la plante
+   * @param data Données à mettre à jour
+   * @return Plante mise à jour
+   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Patch(':id')
@@ -46,6 +63,11 @@ export class PlantsController {
     return this.plantsService.update(+id, data);
   }
 
+  /**
+   * Supprime une plante (admin)
+   * @param id Identifiant de la plante
+   * @return Plante supprimée
+   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @Delete(':id')

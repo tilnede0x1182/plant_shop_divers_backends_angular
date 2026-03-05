@@ -11,12 +11,21 @@ public final class AuthContext {
     private final Integer userId;
     private final boolean admin;
 
+    /**
+     * Constructeur privé.
+     * @param userId Integer ID utilisateur
+     * @param admin boolean Si admin
+     */
     private AuthContext(Integer userId, boolean admin) {
         this.userId = userId;
         this.admin = admin;
     }
 
-    public static AuthContext anonymous() {
+    /**
+ * Crée un contexte anonyme.
+ * @return Contexte non authentifié
+ */
+public static AuthContext anonymous() {
         return new AuthContext(null, false);
     }
 

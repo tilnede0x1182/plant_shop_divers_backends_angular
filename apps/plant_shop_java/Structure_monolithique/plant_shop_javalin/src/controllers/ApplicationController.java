@@ -14,6 +14,10 @@ import repository.UserRepository;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+/**
+ * Contrôleur principal qui centralise toutes les routes de l'API.
+ * Gère l'authentification et l'autorisation via des middlewares.
+ */
 public final class ApplicationController {
 
     private final AuthController authController;
@@ -22,6 +26,10 @@ public final class ApplicationController {
     private final OrderController orderController;
     private final UserRepository userRepoForAuth;
 
+    /**
+     * Constructeur du contrôleur principal.
+     * @param db Connexion à la base de données.
+     */
     public ApplicationController(Connection db) {
         this.authController = new AuthController(db);
         this.plantController = new PlantController(db);
@@ -86,14 +94,31 @@ public final class ApplicationController {
         };
     }
 
+    /**
+     * Middleware qui exige qu'un utilisateur soit authentifié.
+     * @param handler Le handler à protéger.
+     * @return Handler encapsulé avec vérification d'authentification.
+     */
     private Handler requireUser(Handler handler) {
         return ctx -> handleWithUser(ctx, handler, false);
     }
 
+    /**
+     * Middleware qui exige qu'un utilisateur soit administrateur.
+     * @param handler Le handler à protéger.
+     * @return Handler encapsulé avec vérification d'admin.
+     */
     private Handler requireAdmin(Handler handler) {
         return ctx -> handleWithUser(ctx, handler, true);
     }
 
+    /**
+     * Gère l'authentification et appelle le handler.
+     * @param ctx Le contexte Javalin.
+     * @param handler Le handler à exécuter.
+     * @param adminOnly true si seul un admin est autorisé.
+     * @throws Exception Si l'authentification échoue ou le handler lève une exception.
+     */
     private void handleWithUser(Context ctx, Handler handler, boolean adminOnly) throws Exception {
         User user = authenticate(ctx);
         if (adminOnly && !user.isAdmin) {
@@ -103,6 +128,12 @@ public final class ApplicationController {
         handler.handle(ctx);
     }
 
+    /**
+     * Authentifie un utilisateur à partir du cookie de session.
+     * @param ctx Le contexte Javalin.
+     * @return L'utilisateur authentifié.
+     * @throws Exception Si l'authentification échoue.
+     */
     private User authenticate(Context ctx) throws Exception {
         String sessionId = ctx.cookie("session_id");
         if (sessionId == null) {

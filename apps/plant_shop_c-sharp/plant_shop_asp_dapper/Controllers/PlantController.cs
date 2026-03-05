@@ -5,12 +5,19 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace plant_shop_asp_dapper.Controllers
 {
+    /// <summary>
+    /// Controleur CRUD pour les plantes.
+    /// </summary>
     [ApiController]
     [Authorize(Roles = "Admin")] // Routes admin sécurisées
     public class PlantController : BaseController
     {
         private readonly PlantRepository _plantRepo;
 
+        /// <summary>
+        /// Constructeur avec injection du repository.
+        /// </summary>
+        /// <param name="plantRepo">Repository plantes.</param>
         public PlantController(PlantRepository plantRepo)
         {
             _plantRepo = plantRepo;

@@ -15,18 +15,30 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Handler HTTP qui route les requêtes vers les services.
+ */
 final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
     private final HttpClient http;
 
-    GatewayHandler(GatewayConfig config, HttpClient http) {
+    /**
+ * Constructeur.
+ * @param config Configuration de la gateway
+ * @param http Client HTTP
+ */
+GatewayHandler(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
-    @Override
-    public void handle(HttpExchange ex) throws IOException {
+    /**
+ * Gère une requête HTTP entrante.
+ * @param ex Échange HTTP
+ */
+@Override
+public void handle(HttpExchange ex) throws IOException {
         try {
             forward(ex);
         } catch (Exception e) {
@@ -35,7 +47,11 @@ final class GatewayHandler implements HttpHandler {
         }
     }
 
-    private void forward(HttpExchange ex) throws Exception {
+    /**
+ * Transmet la requête au service approprié.
+ * @param ex Échange HTTP
+ */
+private void forward(HttpExchange ex) throws Exception {
         URI uri = ex.getRequestURI();
         String path = uri.getPath();
         if (!path.startsWith("/api")) {

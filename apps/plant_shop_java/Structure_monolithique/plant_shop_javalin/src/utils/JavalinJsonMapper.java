@@ -21,6 +21,12 @@ public final class JavalinJsonMapper implements JsonMapper {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
+    /**
+     * Désérialise une chaîne JSON en objet.
+     * @param json String JSON source
+     * @param targetType Type Type cible
+     * @return T Objet désérialisé
+     */
     @Override
     public <T> T fromJsonString(String json, Type targetType) {
         Objects.requireNonNull(json, "Le contenu JSON ne peut pas être null");
@@ -36,6 +42,12 @@ public final class JavalinJsonMapper implements JsonMapper {
         }
     }
 
+    /**
+     * Sérialise un objet en chaîne JSON.
+     * @param obj Object Objet à sérialiser
+     * @param type Type Type de l objet
+     * @return String JSON
+     */
     @Override
     public String toJsonString(Object obj, Type type) {
         Object normalized = wrap(obj);
@@ -48,6 +60,11 @@ public final class JavalinJsonMapper implements JsonMapper {
         return String.valueOf(normalized);
     }
 
+    /**
+     * Convertit une valeur en objet JSON.
+     * @param value Object Valeur à convertir
+     * @return Object JSONObject, JSONArray ou valeur primitive
+     */
     private Object wrap(Object value) {
         if (value == null) {
             return JSONObject.NULL;

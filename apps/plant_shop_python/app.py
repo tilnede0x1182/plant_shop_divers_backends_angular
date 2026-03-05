@@ -30,9 +30,13 @@ register_routes(api_bp, db_connection)
 # Enregistrer le Blueprint principal sur l'application
 app.register_blueprint(api_bp)
 
+"""
+	Route racine pour vérifier que le serveur est en ligne.
+
+	@return str Message de bienvenue indiquant que le serveur est opérationnel
+"""
 @app.route('/')
 def index():
-	"""Route racine pour vérifier que le serveur est en ligne."""
 	return "👋 Serveur Python PlantShop en ligne !"
 
 # Point d'entrée pour l'exécution du serveur

@@ -6,13 +6,25 @@ import model.Plant;
 import java.math.BigDecimal;
 import catalog.repositories.BaseRepository;
 
+/**
+ * Repository pour les plantes.
+ */
 public final class PlantRepository extends BaseRepository<Plant> {
 
-    public PlantRepository(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public PlantRepository(Connection db) {
         super(db, "plants");
     }
 
-    @Override
+    /**
+	 * Mappe un ResultSet vers une Plant.
+	 * @param rs Le ResultSet
+	 * @return La plante mappée
+	 */
+	@Override
     protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
             rs.getInt("id"),
@@ -24,7 +36,12 @@ public final class PlantRepository extends BaseRepository<Plant> {
         );
     }
 
-    public int create(Plant p) throws SQLException {
+    /**
+	 * Crée une plante.
+	 * @param p La plante à créer
+	 * @return L'identifiant généré
+	 */
+	public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, p.name);
@@ -39,7 +56,11 @@ public final class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
-    public void update(Plant p) throws SQLException {
+    /**
+	 * Met à jour une plante.
+	 * @param p La plante à mettre à jour
+	 */
+	public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setString(1, p.name);
@@ -51,8 +72,12 @@ public final class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
-    // AJOUTÉ : Méthode pour mettre à jour uniquement le stock
-    public void updateStock(int id, int newStock) throws SQLException {
+    //**
+	 * Met à jour le stock d'une plante.
+	 * @param id L'identifiant
+	 * @param newStock Le nouveau stock
+	 */
+	public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setInt(1, newStock);

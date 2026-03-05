@@ -6,8 +6,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 @Component
+/**
+ * Garde de sécurité pour vérifier les autorisations.
+ */
 public class Guards {
 
+    /**
+     * Exige un utilisateur authentifié.
+     * @return L'utilisateur authentifié
+     */
     public User requireUser() {
         User user = AuthContext.get();
         if (user == null) {
@@ -16,6 +23,10 @@ public class Guards {
         return user;
     }
 
+    /**
+     * Exige un utilisateur administrateur.
+     * @return L'utilisateur admin
+     */
     public User requireAdmin() {
         User user = requireUser();
         if (!user.isAdmin) {

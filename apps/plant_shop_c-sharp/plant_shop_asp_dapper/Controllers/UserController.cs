@@ -6,12 +6,19 @@ using plant_shop_asp_dapper.Models;
 
 namespace plant_shop_asp_dapper.Controllers
 {
+    /// <summary>
+    /// Controleur CRUD pour les utilisateurs.
+    /// </summary>
     [ApiController]
     [Authorize] // Routes profil
     public class UserController : BaseController
     {
         private readonly UserRepository _userRepo;
 
+        /// <summary>
+        /// Constructeur avec injection du repository.
+        /// </summary>
+        /// <param name="userRepo">Repository utilisateurs.</param>
         public UserController(UserRepository userRepo)
         {
             _userRepo = userRepo;

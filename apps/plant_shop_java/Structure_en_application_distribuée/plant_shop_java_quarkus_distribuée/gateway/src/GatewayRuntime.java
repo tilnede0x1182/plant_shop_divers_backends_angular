@@ -9,22 +9,39 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Runtime de la passerelle API.
+ */
 final class GatewayRuntime {
 
     private final GatewayConfig config;
     private final HttpClient http;
 
+    /**
+     * Constructeur privé.
+     * @param config Configuration de la gateway
+     * @param http Client HTTP
+     */
     private GatewayRuntime(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
+    /**
+     * Crée une instance de GatewayRuntime.
+     * @return Instance configurée
+     * @throws Exception En cas d'erreur de configuration
+     */
     static GatewayRuntime create() throws Exception {
         GatewayConfig config = GatewayConfig.load();
         HttpClient http = HttpClient.newBuilder().build();
         return new GatewayRuntime(config, http);
     }
 
+    /**
+     * Démarre le serveur gateway.
+     * @throws Exception En cas d'erreur au démarrage
+     */
     void start() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port()), 0);
         server.createContext("/api", new GatewayHandler(config, http));
@@ -34,13 +51,25 @@ final class GatewayRuntime {
     }
 }
 
+/**
+ * Configuration de la passerelle API.
+ */
 final class GatewayConfig {
     private final Map<String, String> values;
 
+    /**
+     * Constructeur privé.
+     * @param values Valeurs de configuration
+     */
     private GatewayConfig(Map<String, String> values) {
         this.values = values;
     }
 
+    /**
+     * Charge la configuration depuis les fichiers .env.
+     * @return Configuration chargée
+     * @throws IOException En cas d'erreur de lecture
+     */
     static GatewayConfig load() throws IOException {
         Map<String, String> values = new HashMap<>();
         readEnv(locateProjectRoot().resolve("config/.env"), values);
@@ -48,10 +77,19 @@ final class GatewayConfig {
         return new GatewayConfig(values);
     }
 
+    /**
+     * Retourne le port d'écoute.
+     * @return Port configuré
+     */
     int port() {
         return Integer.parseInt(values.getOrDefault("GATEWAY_SERVICE_PORT", "4100"));
     }
 
+    /**
+     * Retourne l'URL d'un service.
+     * @param service Nom du service
+     * @return URL complète du service
+     */
     String serviceUrl(String service) {
         String host = values.getOrDefault("SERVICE_HOST", "http://localhost");
         return switch (service) {
@@ -63,6 +101,13 @@ final class GatewayConfig {
         };
     }
 
+    /**
+     * Vérifie si une route nécessite une authentification.
+     * @param service Nom du service
+     * @param method Méthode HTTP
+     * @param path Chemin de la requête
+     * @return true si authentification requise
+     */
     boolean requiresAuth(String service, String method, String path) {
         if ("auth".equals(service)) {
             return false;
@@ -76,6 +121,12 @@ final class GatewayConfig {
         return true;
     }
 
+    /**
+     * Lit un fichier .env et remplit la map de valeurs.
+     * @param path Chemin du fichier .env
+     * @param values Map à remplir
+     * @throws IOException En cas d'erreur de lecture
+     */
     private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
@@ -95,6 +146,10 @@ final class GatewayConfig {
         }
     }
 
+    /**
+     * Localise la racine du projet.
+     * @return Chemin de la racine
+     */
     private static Path locateProjectRoot() {
         Path current = Path.of("").toAbsolutePath();
         while (current != null) {

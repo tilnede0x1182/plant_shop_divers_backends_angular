@@ -16,14 +16,21 @@ import auth.util.ApiMapper;
 import util.PasswordUtil;
 import io.micronaut.http.HttpRequest;
 
+/**
+ * Contrôleur des routes d'authentification.
+ */
 @Controller("/auth")
 public class AuthController {
 
     private final UserRepository userRepo;
     private static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
-    @Inject
-    public AuthController(Connection db) {
+    /**
+ * Constructeur avec injection de dépendances.
+ * @param db Connexion à la base de données
+ */
+@Inject
+public AuthController(Connection db) {
         this.userRepo = new UserRepository(db);
     }
 

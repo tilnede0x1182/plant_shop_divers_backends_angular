@@ -1,13 +1,27 @@
+//! Handlers des items de commande.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use super::models::{NewOrderItem, OrderItem};
 use crate::errors::AppError;
 use crate::state::AppState;
-/// Handlers Poem pour gestion des éléments de commande
 use poem::{
     handler,
     web::{Data, Json, Path},
     Result as PoemResult,
 };
 
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Recupere un item de commande par son ID.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param order_item_id ID de l'item
+/// @return Json<OrderItem> ou erreur 404
 #[handler]
 pub async fn get_order_item(
     Data(state): Data<&AppState>,
@@ -25,6 +39,12 @@ pub async fn get_order_item(
     Ok(Json(item))
 }
 
+/// Met a jour un item de commande.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param order_item_id ID de l'item a modifier
+/// @param payload Nouvelles valeurs
+/// @return Json<OrderItem> mis a jour ou erreur
 #[handler]
 pub async fn update_order_item(
     Data(state): Data<&AppState>,
@@ -52,6 +72,11 @@ pub async fn update_order_item(
     Ok(Json(item))
 }
 
+/// Supprime un item de commande.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param order_item_id ID de l'item a supprimer
+/// @return () ou erreur
 #[handler]
 pub async fn delete_order_item(
     Data(state): Data<&AppState>,

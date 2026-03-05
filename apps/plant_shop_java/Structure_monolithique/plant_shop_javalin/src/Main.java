@@ -28,6 +28,11 @@ public final class Main {
         "http://127.0.0.1:8300"
     );
 
+    /**
+     * Charge les variables d'environnement depuis le fichier config/.env.
+     * @return Map contenant les paires clé=valeur du fichier .env.
+     * @throws IOException Si une erreur de lecture se produit.
+     */
     private static Map<String, String> env() throws IOException {
         Map<String, String> m = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
@@ -44,6 +49,11 @@ public final class Main {
         return m;
     }
 
+    /**
+     * Vérifie si un port TCP est disponible.
+     * @param port Le numéro de port à vérifier.
+     * @return true si le port est disponible, false sinon.
+     */
     private static boolean isPortAvailable(int port) {
         try (ServerSocket socket = new ServerSocket(port)) {
             socket.setReuseAddress(true);
@@ -53,6 +63,10 @@ public final class Main {
         }
     }
 
+    /**
+     * Point d'entrée de l'application.
+     * @param args Arguments de ligne de commande (non utilisés).
+     */
     public static void main(String[] args) {
         try {
             /* ---------- Configuration ---------- */
@@ -139,6 +153,11 @@ public final class Main {
         }));
     }
 
+    /**
+     * Vérifie si une origine est autorisée pour CORS.
+     * @param origin L'origine HTTP à vérifier.
+     * @return true si l'origine est autorisée, false sinon.
+     */
     private static boolean isAllowedOrigin(String origin) {
         return origin != null && ALLOWED_ORIGINS.contains(origin);
     }

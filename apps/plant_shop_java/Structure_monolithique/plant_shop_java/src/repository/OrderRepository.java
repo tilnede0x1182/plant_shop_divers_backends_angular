@@ -4,12 +4,25 @@ import java.sql.*;
 import java.math.BigDecimal;
 import model.Order;
 
+/**
+ * Repository pour les commandes.
+ */
 public final class OrderRepository extends BaseRepository<Order> {
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public OrderRepository(Connection db) {
         super(db, "orders");
     }
 
+    /**
+     * Mappe un ResultSet vers un Order.
+     * @param rs ResultSet Résultat SQL
+     * @return Order Commande créée
+     * @throws SQLException En cas d erreur SQL
+     */
     @Override
     protected Order mapFromResultSet(ResultSet rs) throws SQLException {
         return new Order(
@@ -23,6 +36,12 @@ public final class OrderRepository extends BaseRepository<Order> {
 
     // Les méthodes `find(id)`, `list()` et `delete(id)` sont maintenant héritées de BaseRepository.
 
+    /**
+     * Crée une commande.
+     * @param o Order Commande à créer
+     * @return int ID généré
+     * @throws SQLException En cas d erreur SQL
+     */
     public int create(Order o) throws SQLException {
         String sql = "INSERT INTO orders(user_id, total, status) VALUES (?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -37,6 +56,12 @@ public final class OrderRepository extends BaseRepository<Order> {
         }
     }
 
+    /**
+     * Met à jour le total d une commande.
+     * @param id int ID de la commande
+     * @param total BigDecimal Nouveau total
+     * @throws SQLException En cas d erreur SQL
+     */
     public void updateTotal(int id, BigDecimal total) throws SQLException {
         String sql = "UPDATE orders SET total=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {

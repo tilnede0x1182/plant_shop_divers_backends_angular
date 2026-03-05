@@ -10,6 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gestionnaire des services via PM2.
+ */
 public final class Pm2Manager {
 
     private static final Map<String, Service> SERVICES = new LinkedHashMap<>();
@@ -22,7 +25,11 @@ public final class Pm2Manager {
         SERVICES.put("gateway", new Service("gateway", "gateway", "Gateway"));
     }
 
-    public static void main(String[] args) throws Exception {
+    /**
+ * Point d'entrée.
+ * @param args Arguments de la ligne de commande
+ */
+public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             printUsage();
             return;
@@ -50,7 +57,10 @@ public final class Pm2Manager {
         }
     }
 
-    private static void printUsage() {
+    /**
+ * Affiche l'aide d'utilisation.
+ */
+private static void printUsage() {
         System.out.println("""
             Usage: java util.Pm2Manager <commande>
               start-all       Démarre tous les services (via pm2)

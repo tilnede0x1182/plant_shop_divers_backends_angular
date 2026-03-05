@@ -1,8 +1,19 @@
+//! Modeles DTO pour les utilisateurs.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::entity::users::Model as UserModel;
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// DTO representant un utilisateur en sortie API.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct User {
     pub id: i32,
@@ -14,7 +25,15 @@ pub struct User {
     pub created_at: DateTime<Utc>,
 }
 
+// ==============================================================================
+// Implementations
+// ==============================================================================
+
 impl From<UserModel> for User {
+    /// Convertit un UserModel en DTO User.
+    ///
+    /// @param model Modele SeaORM source
+    /// @return DTO User
     fn from(model: UserModel) -> Self {
         Self {
             id: model.id,
@@ -27,6 +46,10 @@ impl From<UserModel> for User {
 }
 
 impl From<&UserModel> for User {
+    /// Convertit une reference UserModel en DTO User.
+    ///
+    /// @param model Reference au modele SeaORM
+    /// @return DTO User
     fn from(model: &UserModel) -> Self {
         Self {
             id: model.id,
@@ -38,6 +61,7 @@ impl From<&UserModel> for User {
     }
 }
 
+/// DTO pour la mise a jour d'un utilisateur (champs optionnels).
 #[derive(Deserialize, Serialize, Debug)]
 pub struct UpdateUser {
     #[serde(alias = "name")]
@@ -47,6 +71,7 @@ pub struct UpdateUser {
     pub admin: Option<bool>,
 }
 
+/// DTO pour la creation d'un utilisateur.
 #[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct NewUser {

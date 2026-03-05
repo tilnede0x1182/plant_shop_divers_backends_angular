@@ -37,7 +37,8 @@ secretKey = do
     Just k  -> pure (pack k)
     Nothing -> fail "JWT_SECRET non défini dans .env"
 
--- Création d'un JWT HS256 valable 24h, compatible front + tests
+-- | Crée un token JWT HS256 valable 24h pour un utilisateur.
+-- @param user Utilisateur pour lequel créer le token
 createToken :: User -> IO Text
 createToken user = do
   key <- secretKey
@@ -57,7 +58,8 @@ createToken user = do
         }
   pure $ encodeSigned (hmacSecret key) mempty claims
 
--- Vérification + extraction des claims
+-- | Vérifie et extrait les claims d'un token JWT.
+-- @param tok Token JWT à vérifier
 getClaimsFromToken :: Text -> Maybe JWTClaimsSet
 getClaimsFromToken tok = do
   let key = unsafePerformIO secretKey

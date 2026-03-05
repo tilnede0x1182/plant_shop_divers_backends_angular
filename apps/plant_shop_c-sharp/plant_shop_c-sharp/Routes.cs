@@ -6,7 +6,9 @@ using plant_shop_c_sharp.Utils;
 
 namespace plant_shop_c_sharp
 {
-    // Le routeur principal qui délègue aux contrôleurs
+    /// <summary>
+    /// Routeur principal qui delegue aux controleurs.
+    /// </summary>
     public class Routes
     {
         private readonly AuthController _authController;
@@ -17,6 +19,10 @@ namespace plant_shop_c_sharp
         // Map pour les contrôleurs
         private readonly Dictionary<string, BaseController> _controllerMap;
 
+        /// <summary>
+        /// Constructeur avec injection de la source de donnees.
+        /// </summary>
+        /// <param name="dataSource">Source Npgsql.</param>
         public Routes(NpgsqlDataSource dataSource)
         {
             _authController = new AuthController(dataSource);
@@ -37,6 +43,10 @@ namespace plant_shop_c_sharp
             };
         }
 
+        /// <summary>
+        /// Gere une requete HTTP en la routant vers le bon controleur.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
         public async Task Handle(HttpListenerContext context)
         {
             var request = context.Request;

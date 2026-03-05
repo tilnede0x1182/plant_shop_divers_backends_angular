@@ -101,6 +101,10 @@ routes conn = do
         then status status200
         else R.notFound "Utilisateur non trouvé"
 
+-- | Applique les modifications d'un payload à un utilisateur.
+-- @param user Utilisateur existant
+-- @param payload Modifications à appliquer
+-- @param isAdminCaller Indique si l'appelant est admin
 applyUserPatch :: User -> UpdateUserPayload -> Bool -> User
 applyUserPatch user payload isAdminCaller =
   user {

@@ -1,10 +1,15 @@
+//! Handlers Poem pour gestion des plantes (version SeaORM).
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use crate::auth::session::AdminGuard;
 use crate::config::env_u64;
 use crate::entity::plants::{ActiveModel as ActivePlant, Column, Entity as Plant};
 use crate::errors::AppError;
 use crate::plants::helpers::apply_plant_updates;
 use crate::plants::models::{NewPlant, Plant as PlantDto, UpdatePlant};
-/// Handlers Poem pour gestion des plantes (version SeaORM)
 use poem::{
     handler,
     http::StatusCode,
@@ -16,7 +21,11 @@ use sea_orm::{
     Set,
 };
 
-/// Création d’une plante (201 Created)
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Création d'une plante (201 Created)
 #[handler]
 pub async fn create_plant(
     Data(db): Data<&DatabaseConnection>,
@@ -40,7 +49,12 @@ pub async fn create_plant(
     Ok((StatusCode::CREATED, Json(PlantDto::from(inserted))))
 }
 
-/// Liste des plantes (GET /plants)
+/// Liste des plantes (GET /plants).
+///
+/// Retourne toutes les plantes paginées et triées par nom.
+///
+/// @param db Connection a la base de donnees
+/// @return Json<Vec<PlantDto>> ou erreur
 #[handler]
 pub async fn list_plants(
     Data(db): Data<&DatabaseConnection>,

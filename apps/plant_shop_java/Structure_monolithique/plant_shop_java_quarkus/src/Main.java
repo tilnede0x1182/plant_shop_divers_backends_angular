@@ -7,10 +7,21 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Point d'entrée du serveur Quarkus.
+ * Vérifie le port et lance le fast-jar Quarkus.
+ */
 public final class Main {
 
+    /**
+     * Constructeur privé pour empêcher l'instanciation.
+     */
     private Main() {}
 
+    /**
+     * Point d'entrée principal.
+     * @param args Arguments de ligne de commande
+     */
     public static void main(String[] args) {
         System.setProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager");
 
@@ -31,6 +42,10 @@ public final class Main {
         runFastJar(jarPath, port);
     }
 
+    /**
+     * Charge les variables d'environnement depuis config/.env.
+     * @return Map clé-valeur
+     */
     private static Map<String, String> loadEnv() {
         Path envPath = Path.of("config", ".env");
         if (!Files.exists(envPath)) {
@@ -55,6 +70,11 @@ public final class Main {
         return values;
     }
 
+    /**
+     * Parse le port depuis une chaîne (format port ou host:port).
+     * @param raw Chaîne à parser
+     * @return Port numérique
+     */
     private static int parsePort(String raw) {
         try {
             if (raw.contains(":")) {
@@ -68,6 +88,11 @@ public final class Main {
         }
     }
 
+    /**
+     * Vérifie si un port est disponible.
+     * @param port Port à vérifier
+     * @return true si disponible
+     */
     private static boolean isPortAvailable(int port) {
         try (ServerSocket socket = new ServerSocket(port)) {
             socket.setReuseAddress(true);
@@ -77,6 +102,11 @@ public final class Main {
         }
     }
 
+    /**
+     * Lance le fast-jar Quarkus.
+     * @param jarPath Chemin vers quarkus-run.jar
+     * @param port Port d'écoute
+     */
     private static void runFastJar(Path jarPath, int port) {
         ProcessBuilder pb = new ProcessBuilder(
             "java",

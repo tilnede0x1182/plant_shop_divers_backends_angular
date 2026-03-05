@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace plant_shop_c_sharp.Models
 {
+    /// <summary>
+    /// Entite commande avec statut et total.
+    /// </summary>
     public class Order
     {
         public int Id { get; set; }

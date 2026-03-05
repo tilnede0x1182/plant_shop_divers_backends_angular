@@ -9,6 +9,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository de base avec opérations CRUD communes.
+ * @param <T> Type d'entité
+ */
 abstract class CatalogBaseRepository<T> {
     protected final Connection db;
     protected final String table;
@@ -21,6 +25,12 @@ abstract class CatalogBaseRepository<T> {
     abstract T map(ResultSet rs) throws SQLException;
 
     // Rendu public pour accès direct par le Controller
+    /**
+     * Trouve une entité par ID.
+     * @param id ID à rechercher
+     * @return Entité ou null
+     * @throws SQLException En cas d'erreur SQL
+     */
     public T find(int id) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("SELECT * FROM " + table + " WHERE id=?")) {
             ps.setInt(1, id);
@@ -38,6 +48,12 @@ abstract class CatalogBaseRepository<T> {
         return findAllOrderedBy(null);
     }
 
+    /**
+     * Trouve toutes les entités avec tri optionnel.
+     * @param orderClause Clause ORDER BY
+     * @return Liste des entités
+     * @throws SQLException En cas d'erreur SQL
+     */
     protected List<T> findAllOrderedBy(String orderClause) throws SQLException {
         List<T> out = new ArrayList<>();
         String sql = "SELECT * FROM " + table;
@@ -54,6 +70,11 @@ abstract class CatalogBaseRepository<T> {
         return out;
     }
 
+    /**
+     * Supprime une entité par ID.
+     * @param id ID à supprimer
+     * @throws SQLException En cas d'erreur SQL
+     */
     void delete(int id) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("DELETE FROM " + table + " WHERE id=?")) {
             ps.setInt(1, id);
@@ -62,13 +83,26 @@ abstract class CatalogBaseRepository<T> {
     }
 }
 
+/**
+ * Repository pour les opérations sur les plantes.
+ */
 public final class PlantRepository extends CatalogBaseRepository<Plant> {
 
+    /**
+     * Constructeur.
+     * @param db Connexion à la base de données
+     */
     public PlantRepository(Connection db) {
         super(db, "plants");
     }
 
     @Override
+    /**
+     * Mappe un ResultSet vers une Plant.
+     * @param rs ResultSet à mapper
+     * @return Plante créée
+     * @throws SQLException En cas d'erreur SQL
+     */
     Plant map(ResultSet rs) throws SQLException {
         return new Plant(
             rs.getInt("id"),
@@ -80,6 +114,12 @@ public final class PlantRepository extends CatalogBaseRepository<Plant> {
         );
     }
 
+    /**
+     * Crée une nouvelle plante.
+     * @param plant Plante à créer
+     * @return ID de la plante créée
+     * @throws SQLException En cas d'erreur SQL
+     */
     public int create(Plant plant) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement(
             "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)",
@@ -96,6 +136,11 @@ public final class PlantRepository extends CatalogBaseRepository<Plant> {
         }
     }
 
+    /**
+     * Met à jour une plante.
+     * @param plant Plante à mettre à jour
+     * @throws SQLException En cas d'erreur SQL
+     */
     public void update(Plant plant) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement(
             "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?")) {
@@ -108,10 +153,20 @@ public final class PlantRepository extends CatalogBaseRepository<Plant> {
         }
     }
 
+    /**
+     * Trouve toutes les plantes triées par nom.
+     * @return Liste des plantes
+     * @throws SQLException En cas d'erreur SQL
+     */
     public List<Plant> findAllOrderedByName() throws SQLException {
         return findAllOrderedBy("name ASC");
     }
 
+    /**
+     * Supprime une plante par ID.
+     * @param id ID de la plante
+     * @throws SQLException En cas d'erreur SQL
+     */
     public void delete(int id) throws SQLException {
         super.delete(id);
     }

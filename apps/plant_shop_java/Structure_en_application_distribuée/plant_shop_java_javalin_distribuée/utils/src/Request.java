@@ -9,10 +9,15 @@ import java.util.stream.Stream;
  */
 public final class Request {
 
-    private Request() {}
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private Request() {}
 
     /**
-     * Extrait la valeur du cookie `session_id` si présent.
+     * Extrait la valeur du cookie session_id si présent.
+     * @param ex HttpExchange Échange HTTP
+     * @return String ID de session ou null
      */
     public static String extractSessionId(HttpExchange ex) {
         String cookieHeader = ex.getRequestHeaders().getFirst("Cookie");

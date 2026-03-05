@@ -6,8 +6,11 @@ import java.sql.*;
 import java.util.*;
 import util.PasswordUtil;
 
-/** Seed aligné sur la version C++ : noms réalistes, descriptions, prix cohérents,
-    décrémentation du stock, génération users.txt                                     */
+/**
+ * Seed aligné sur la version C++ : noms réalistes, descriptions, prix cohérents,
+ * décrémentation du stock, génération users.txt.
+ * Classe de seeding de la base de données pour les tests.
+ */
 public final class Seed {
 
 	/* ---------- Lecture .env ---------- */
@@ -59,7 +62,13 @@ public final class Seed {
 
 	private static final Random RNG = new Random();
 
-	/* ---------- Helpers ---------- */
+	/**
+	 * Génère un entier aléatoire entre min et max inclus.
+	 *
+	 * @param min int Borne inférieure
+	 * @param max int Borne supérieure
+	 * @return int Entier aléatoire
+	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
@@ -78,7 +87,11 @@ public final class Seed {
 		return sb.toString();
 	}
 
-	/* ---------- Main ---------- */
+	/**
+	 * Point d'entrée principal du seed.
+	 *
+	 * @param args String[] Arguments de la ligne de commande
+	 */
 	public static void main(String[] args) throws Exception {
 
 		Map<String,String> cfg = env();

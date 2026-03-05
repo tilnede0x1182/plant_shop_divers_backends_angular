@@ -2,6 +2,9 @@ package model;
 
 import java.sql.Timestamp;
 
+/**
+ * Modèle représentant un utilisateur.
+ */
 public final class User {
     public int      id;
     public String   name;
@@ -10,7 +13,15 @@ public final class User {
     public boolean  isAdmin;
     public Timestamp createdAt;     // null lors de l’insertion
 
-    /* constructeur complet (lecture DB) */
+    /**
+     * Constructeur complet pour lecture DB.
+     * @param id int Identifiant
+     * @param name String Nom
+     * @param email String Email
+     * @param passwordHash String Hash du mot de passe
+     * @param isAdmin boolean Est admin
+     * @param createdAt Timestamp Date création
+     */
     public User(int id, String name, String email,
                 String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
@@ -21,7 +32,13 @@ public final class User {
         this.createdAt = createdAt;
     }
 
-    /* constructeur pour insertion (id et createdAt générés par la DB) */
+    /**
+     * Constructeur pour insertion.
+     * @param name String Nom
+     * @param email String Email
+     * @param passwordHash String Hash du mot de passe
+     * @param isAdmin boolean Est admin
+     */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }

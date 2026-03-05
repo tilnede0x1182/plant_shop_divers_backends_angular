@@ -5,10 +5,22 @@ using System.Threading.Tasks;
 
 namespace plant_shop_c_sharp.Repositories
 {
+    /// <summary>
+    /// Repository CRUD pour les commandes.
+    /// </summary>
     public class OrderRepository : BaseRepository
     {
+        /// <summary>
+        /// Constructeur avec injection de la source de donnees.
+        /// </summary>
+        /// <param name="dataSource">Source Npgsql.</param>
         public OrderRepository(NpgsqlDataSource dataSource) : base(dataSource) { }
 
+        /// <summary>
+        /// Trouve une commande par ID.
+        /// </summary>
+        /// <param name="id">ID a rechercher.</param>
+        /// <returns>Commande ou null.</returns>
         public async Task<Order?> FindByIdAsync(int id)
         {
             await using var conn = GetConnection();
@@ -23,6 +35,11 @@ namespace plant_shop_c_sharp.Repositories
             return null;
         }
 
+        /// <summary>
+        /// Liste les commandes d un utilisateur.
+        /// </summary>
+        /// <param name="userId">ID de l utilisateur.</param>
+        /// <returns>Liste des commandes.</returns>
         public async Task<List<Order>> FindByUserIdAsync(int userId)
         {
             var orders = new List<Order>();
@@ -39,6 +56,11 @@ namespace plant_shop_c_sharp.Repositories
             return orders;
         }
 
+        /// <summary>
+        /// Cree une nouvelle commande.
+        /// </summary>
+        /// <param name="order">Commande a creer.</param>
+        /// <returns>Commande avec ID genere.</returns>
         public async Task<Order> CreateAsync(Order order)
         {
             await using var conn = GetConnection();
@@ -54,6 +76,10 @@ namespace plant_shop_c_sharp.Repositories
             return order;
         }
 
+        /// <summary>
+        /// Met a jour une commande.
+        /// </summary>
+        /// <param name="order">Commande modifiee.</param>
         public async Task UpdateAsync(Order order)
         {
             await using var conn = GetConnection();
@@ -67,6 +93,10 @@ namespace plant_shop_c_sharp.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        /// <summary>
+        /// Supprime une commande.
+        /// </summary>
+        /// <param name="id">ID a supprimer.</param>
         public async Task DeleteAsync(int id)
         {
             await using var conn = GetConnection();
@@ -77,6 +107,11 @@ namespace plant_shop_c_sharp.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        /// <summary>
+        /// Mappe un reader vers une Order.
+        /// </summary>
+        /// <param name="reader">Reader Npgsql.</param>
+        /// <returns>Entite Order.</returns>
         private Order MapOrder(NpgsqlDataReader reader)
         {
             return new Order

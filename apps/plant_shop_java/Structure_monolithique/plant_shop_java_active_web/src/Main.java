@@ -11,8 +11,17 @@ import java.util.HashMap;
 import java.util.Map;
 import util.CorsUtil;
 
+/**
+ * Point d entree de l application ActiveWeb.
+ * Configure et demarre le serveur Jetty avec le filtre ActiveWeb.
+ */
 public class Main {
 
+    /**
+     * Methode principale de l application.
+     * @param args Arguments de la ligne de commande
+     * @throws Exception Exception si erreur de demarrage
+     */
     public static void main(String[] args) throws Exception {
         System.setProperty("bootstrap", "launch.AppBootstrap");
         System.setProperty("controllerConfig", "launch.AppControllerConfig");
@@ -65,6 +74,14 @@ public class Main {
         CorsUtil.enable(context);
 
 				context.addFilter(new org.eclipse.jetty.servlet.FilterHolder(new javax.servlet.Filter() {
+						/**
+						 * Filtre les requêtes HTTP et log les erreurs.
+						 * @param req ServletRequest Requête
+						 * @param res ServletResponse Réponse
+						 * @param chain FilterChain Chaîne de filtres
+						 * @throws IOException En cas d erreur I/O
+						 * @throws ServletException En cas d erreur servlet
+						 */
 						@Override
 						public void doFilter(javax.servlet.ServletRequest req, javax.servlet.ServletResponse res, javax.servlet.FilterChain chain)
 										throws java.io.IOException, javax.servlet.ServletException {
@@ -91,14 +108,20 @@ public class Main {
 								}
 						}
 
+						/**
+						 * Initialise le filtre.
+						 * @param filterConfig FilterConfig Configuration
+						 * @throws ServletException En cas d erreur
+						 */
 						@Override
 						public void init(javax.servlet.FilterConfig filterConfig) throws javax.servlet.ServletException {
-								// Rien à initialiser
 						}
 
+						/**
+						 * Détruit le filtre.
+						 */
 						@Override
 						public void destroy() {
-								// Rien à nettoyer
 						}
 				}), "/*", java.util.EnumSet.of(javax.servlet.DispatcherType.REQUEST));
 
@@ -138,6 +161,10 @@ public class Main {
 				server.join();
     }
 
+    /**
+     * Charge les variables d environnement depuis le fichier config/.env.
+     * @return Map Dictionnaire des variables d environnement
+     */
     private static Map<String, String> loadEnv() {
         Map<String, String> map = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
@@ -155,6 +182,11 @@ public class Main {
         return map;
     }
 
+    /**
+     * Parse le port depuis une chaine de configuration.
+     * @param value String Valeur a parser (format: port ou host:port)
+     * @return int Port parse ou 4100 par defaut
+     */
     private static int parsePort(String value) {
         try {
             if (value.contains(":")) {

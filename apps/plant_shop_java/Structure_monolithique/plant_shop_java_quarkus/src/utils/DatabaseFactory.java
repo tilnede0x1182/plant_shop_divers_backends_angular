@@ -25,6 +25,10 @@ public final class DatabaseFactory {
     private static final Path ENV_FILE = Path.of("config", ".env");
     private static Map<String, String> envCache;
 
+    /**
+     * Charge les variables d'environnement depuis le fichier .env.
+     * @return Map clé-valeur du fichier
+     */
     private synchronized Map<String, String> loadEnv() throws IOException {
         if (envCache == null) {
             if (!Files.exists(ENV_FILE)) {
@@ -46,6 +50,10 @@ public final class DatabaseFactory {
         return envCache;
     }
 
+    /**
+     * Produit une connexion JDBC pour la requête courante.
+     * @return Connexion à la base de données
+     */
     @Produces
     @RequestScoped
     public Connection connection() throws SQLException, IOException {
@@ -60,6 +68,10 @@ public final class DatabaseFactory {
         return DriverManager.getConnection(url, user, pass);
     }
 
+    /**
+     * Ferme la connexion à la fin de la requête.
+     * @param connection Connexion à fermer
+     */
     public void closeConnection(@Disposes Connection connection) {
         if (connection != null) {
             try {

@@ -33,6 +33,12 @@ from dotenv import load_dotenv
 load_dotenv()
 PORT = int(os.getenv("SERVER_ADDRESS", "4100"))
 
+"""
+	Hook Gunicorn appelé avant le démarrage du serveur.
+	Vérifie si le port est déjà utilisé et quitte proprement si c est le cas.
+
+	@param server object Instance du serveur Gunicorn
+"""
 def on_starting(server):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     in_use = sock.connect_ex(("0.0.0.0", PORT)) == 0
@@ -42,11 +48,23 @@ def on_starting(server):
         sys.exit(0)
     print(f"🚀 Serveur démarré sur http://localhost:{PORT}")
 
+"""
+	Hook Gunicorn appelé quand le serveur est prêt.
+	Configure les niveaux de log pour accès et erreurs.
+
+	@param server object Instance du serveur Gunicorn
+"""
 def when_ready(server):
     # Active explicitement le log d'accès
     server.log.access_log.setLevel("INFO")
     server.log.error_log.setLevel("INFO")
 
+"""
+	Hook Gunicorn appelé à l arrêt du serveur.
+	Affiche un message de confirmation d arrêt.
+
+	@param server object Instance du serveur Gunicorn
+"""
 def on_exit(server):
     print("🔌 Serveur arrêté calmement.")
 

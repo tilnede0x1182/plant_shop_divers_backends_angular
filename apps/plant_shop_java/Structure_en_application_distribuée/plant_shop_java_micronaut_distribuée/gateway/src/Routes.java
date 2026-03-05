@@ -16,6 +16,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Handler HTTP qui route les requêtes vers les services.
+ */
 final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
@@ -24,14 +27,24 @@ final class GatewayHandler implements HttpHandler {
     private final SessionRegistry sessions;
     private final CorsSupport cors = new CorsSupport();
 
-    GatewayHandler(GatewayConfig config, HttpClient http, SessionRegistry sessions) {
+    /**
+ * Constructeur.
+ *
+ * @param config GatewayConfig Configuration de la gateway
+ * @param http HttpClient Client HTTP
+ * @param sessions SessionRegistry Registre des sessions
+ */
+GatewayHandler(GatewayConfig config, HttpClient http, SessionRegistry sessions) {
         this.config = config;
         this.http = http;
         this.sessions = sessions;
     }
 
-    @Override
-    public void handle(HttpExchange ex) throws IOException {
+    /**
+ * Gère une requête HTTP entrante.
+ */
+@Override
+public void handle(HttpExchange ex) throws IOException {
         try {
             if (cors.handlePreflight(ex)) {
                 return;
@@ -43,7 +56,12 @@ final class GatewayHandler implements HttpHandler {
         }
     }
 
-    private void forward(HttpExchange ex) throws Exception {
+    /**
+ * Transmet la requête au service approprié.
+ *
+ * @param ex HttpExchange L'échange HTTP à transmettre
+ */
+private void forward(HttpExchange ex) throws Exception {
         URI uri = ex.getRequestURI();
         String path = uri.getPath();
         if (!path.startsWith("/api")) {

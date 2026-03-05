@@ -24,6 +24,11 @@ public final class DatabaseFactory {
     private static final Path ENV_FILE = Path.of("config/.env");
     private static Map<String, String> envCache;
 
+    /**
+     * Charge les variables d'environnement depuis le fichier .env.
+     * @return Map contenant les paires clé-valeur du fichier .env
+     * @throws IOException Si le fichier ne peut pas être lu
+     */
     private synchronized Map<String, String> loadEnv() throws IOException {
         if (envCache == null) {
             if (!Files.exists(ENV_FILE)) {

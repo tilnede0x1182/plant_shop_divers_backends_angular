@@ -8,10 +8,18 @@ import util.AuthMiddleware;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+/**
+ * Contrôleur principal du service de catalogue.
+ * Définit les routes pour les plantes.
+ */
 public final class ApplicationController {
 
     private final PlantController plantController;
 
+    /**
+     * Constructeur avec connexion à la base de données.
+     * @param db Connexion à la base de données
+     */
     public ApplicationController(Connection db) {
         this.plantController = new PlantController(db);
     }
@@ -39,6 +47,11 @@ public final class ApplicationController {
         };
     }
 
+    /**
+     * Wrapper pour exiger une authentification admin.
+     * @param handler Handler à protéger
+     * @return Handler protégé
+     */
     private Handler requireAdmin(Handler handler) {
         return AuthMiddleware.requireAdmin(handler);
     }

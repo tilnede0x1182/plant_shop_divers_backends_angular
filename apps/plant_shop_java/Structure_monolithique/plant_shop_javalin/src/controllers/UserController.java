@@ -16,20 +16,38 @@ import repository.UserRepository;
 import util.ApiMapper;
 import util.PasswordUtil;
 
+/**
+ * Contrôleur pour les utilisateurs.
+ * Gère les opérations CRUD sur les utilisateurs.
+ */
 public final class UserController {
 
     private final UserRepository repo;
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public UserController(Connection db) {
         this.repo = new UserRepository(db);
     }
 
+    /**
+     * Liste tous les utilisateurs.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void list(Context ctx) throws Exception {
         List<User> users = repo.list();
         users.sort(userComparator());
         ctx.json(mapUsers(users));
     }
 
+    /**
+     * Affiche un utilisateur.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void show(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         User currentUser = ctx.attribute("user");
@@ -41,6 +59,11 @@ public final class UserController {
         ctx.json(ApiMapper.toUser(user));
     }
 
+    /**
+     * Crée un utilisateur.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void create(Context ctx) throws Exception {
         JSONObject body = new JSONObject(ctx.body());
         if (!body.has("email") || !body.has("name") || !body.has("password")) {
@@ -63,6 +86,11 @@ public final class UserController {
         ctx.status(HttpStatus.CREATED).json(ApiMapper.toUser(created));
     }
 
+    /**
+     * Met à jour un utilisateur.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void update(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         User currentUser = ctx.attribute("user");
@@ -96,12 +124,22 @@ public final class UserController {
         ctx.json(ApiMapper.toUser(repo.find(id)));
     }
 
+    /**
+     * Supprime un utilisateur.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void destroy(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         repo.delete(id);
         ctx.status(HttpStatus.OK).json(Map.of("deleted", true));
     }
 
+    /**
+     * Convertit une liste d utilisateurs en liste de maps.
+     * @param users List Liste d utilisateurs
+     * @return List Liste de maps
+     */
     private List<Map<String, Object>> mapUsers(List<User> users) {
         List<Map<String, Object>> mapped = new ArrayList<>(users.size());
         for (User user : users) {
@@ -110,6 +148,10 @@ public final class UserController {
         return mapped;
     }
 
+    /**
+     * Retourne un comparateur pour trier les utilisateurs.
+     * @return Comparator Comparateur admins puis alphabétique
+     */
     private Comparator<User> userComparator() {
         return (a, b) -> {
             if (a.isAdmin != b.isAdmin) {

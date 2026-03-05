@@ -12,11 +12,20 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Service de gestion du catalogue de plantes.
+ */
 public final class CatalogService {
 
     private static Connection db;
     private static HttpServer server;
 
+    /**
+	 * Point d entrée principal du service de catalogue.
+	 * 
+	 * @param args String[] Arguments de la ligne de commande
+	 * @throws Exception En cas d erreur
+	 */
     public static void main(String[] args) throws Exception {
         Map<String, String> cfg = loadEnv();
 
@@ -48,14 +57,23 @@ public final class CatalogService {
         }));
     }
 
-    private static Map<String, String> loadEnv() throws IOException {
+    /**
+	 * Charge les variables d'environnement depuis les fichiers .env.
+	 * @return Map des variables d'environnement
+	 */
+	private static Map<String, String> loadEnv() throws IOException {
         Map<String, String> values = new HashMap<>();
         readEnv(Path.of("../config/.env"), values);
         readEnv(Path.of(".env"), values);
         return values;
     }
 
-    private static void readEnv(Path path, Map<String, String> values) throws IOException {
+    /**
+	 * Lit un fichier .env et ajoute les valeurs à la map.
+	 * @param path Chemin du fichier .env
+	 * @param values Map où stocker les valeurs
+	 */
+	private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
         }

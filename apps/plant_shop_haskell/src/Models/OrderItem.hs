@@ -27,9 +27,11 @@ data FullOrderItem = FullOrderItem
   , fullOrderItemPlant     :: Plant -- Objet Plant imbriqué
   } deriving (Show, Generic)
 
+-- | Options Aeson pour le parsing JSON des OrderItem.
 orderItemOptions :: Options
 orderItemOptions = aesonDrop 9 camelCase -- FIX: Le préfixe est "orderItem" (9 lettres)
 
+-- | Options Aeson pour le parsing JSON des FullOrderItem.
 fullOrderItemOptions :: Options
 fullOrderItemOptions = aesonDrop 13 camelCase -- FIX: Le préfixe est "fullOrderItem" (13 lettres)
 

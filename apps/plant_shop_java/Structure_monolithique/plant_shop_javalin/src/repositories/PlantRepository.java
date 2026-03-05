@@ -5,12 +5,25 @@ import java.sql.*;
 import model.Plant;
 import java.math.BigDecimal;
 
+/**
+ * Repository pour les plantes.
+ */
 public final class PlantRepository extends BaseRepository<Plant> {
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public PlantRepository(Connection db) {
         super(db, "plants");
     }
 
+    /**
+     * Mappe un ResultSet vers un Plant.
+     * @param rs ResultSet Résultat SQL
+     * @return Plant Plante
+     * @throws SQLException En cas d erreur SQL
+     */
     @Override
     protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
@@ -23,6 +36,12 @@ public final class PlantRepository extends BaseRepository<Plant> {
         );
     }
 
+    /**
+     * Crée une plante.
+     * @param p Plant Plante
+     * @return int ID généré
+     * @throws SQLException En cas d erreur SQL
+     */
     public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -38,6 +57,11 @@ public final class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
+    /**
+     * Met à jour une plante.
+     * @param p Plant Plante
+     * @throws SQLException En cas d erreur SQL
+     */
     public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -50,7 +74,12 @@ public final class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
-    // AJOUTÉ : Méthode pour mettre à jour uniquement le stock
+    /**
+     * Met à jour le stock d une plante.
+     * @param id int ID plante
+     * @param newStock int Nouveau stock
+     * @throws SQLException En cas d erreur SQL
+     */
     public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {

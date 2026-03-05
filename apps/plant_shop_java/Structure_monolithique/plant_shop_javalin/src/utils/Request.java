@@ -13,7 +13,10 @@ import repository.UserRepository;
  */
 public final class Request {
 
-    private Request() {} // Empêche l'instanciation
+    /**
+     * Constructeur privé (utilitaire statique).
+     */
+    private Request() {}
 
     /**
      * Récupère l'utilisateur authentifié à partir du cookie de session.

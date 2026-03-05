@@ -7,15 +7,27 @@ import java.util.*;
 import model.OrderItem;
 import order.repositories.BaseRepository;
 
+/**
+ * Repository des éléments de commande.
+ */
 @Singleton
 public final class OrderItemRepository extends BaseRepository<OrderItem> {
 
-    public OrderItemRepository(Connection db) {
+    /**
+ * Constructeur.
+ * @param db Connexion à la base de données
+ */
+public OrderItemRepository(Connection db) {
         super(db, "order_items");
     }
 
-    @Override
-    protected OrderItem mapFromResultSet(ResultSet rs) throws SQLException {
+    /**
+ * Mappe un ResultSet vers un objet OrderItem.
+ * @param rs ResultSet à mapper
+ * @return OrderItem mappé
+ */
+@Override
+protected OrderItem mapFromResultSet(ResultSet rs) throws SQLException {
         return new OrderItem(
             rs.getInt("id"),
             rs.getInt("order_id"),

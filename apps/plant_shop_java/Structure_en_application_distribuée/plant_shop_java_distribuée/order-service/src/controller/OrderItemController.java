@@ -4,15 +4,28 @@ import org.json.JSONObject;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * Contrôleur pour la conversion des articles de commande en JSON.
+ */
 final class OrderItemController {
 
     private final PlantRepository plantRepo;
 
-    OrderItemController(PlantRepository plantRepo) {
+    /**
+	 * Constructeur avec repository de plantes.
+	 * @param plantRepo Repository de plantes
+	 */
+	OrderItemController(PlantRepository plantRepo) {
         this.plantRepo = plantRepo;
     }
 
-    JSONObject toJson(Order order, List<OrderItem> items) throws SQLException {
+    /**
+	 * Convertit une commande et ses articles en JSON.
+	 * @param order La commande
+	 * @param items Les articles de la commande
+	 * @return L'objet JSON
+	 */
+	JSONObject toJson(Order order, List<OrderItem> items) throws SQLException {
         JSONArray itemsJson = new JSONArray();
         for (OrderItem item : items) {
             JSONObject obj = new JSONObject()

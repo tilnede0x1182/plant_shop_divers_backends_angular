@@ -8,8 +8,15 @@ import util.ForwardedIdentity;
 import util.ForwardedIdentityHolder;
 
 @ApplicationScoped
+/**
+ * Garde de sécurité pour vérifier les autorisations.
+ */
 public class Guards {
 
+    /**
+     * Exige un utilisateur authentifié.
+     * @return L'utilisateur authentifié
+     */
     public User requireUser() {
         ForwardedIdentity identity = ForwardedIdentityHolder.get();
         if (!identity.authenticated()) {
@@ -18,6 +25,10 @@ public class Guards {
         return toUser(identity);
     }
 
+    /**
+     * Exige un utilisateur administrateur.
+     * @return L'utilisateur admin
+     */
     public User requireAdmin() {
         User user = requireUser();
         if (!user.isAdmin) {
@@ -26,6 +37,11 @@ public class Guards {
         return user;
     }
 
+    /**
+     * Convertit une identité en User.
+     * @param identity Identité à convertir
+     * @return Utilisateur créé
+     */
     private User toUser(ForwardedIdentity identity) {
         User user = new User();
         user.id = identity.userId();

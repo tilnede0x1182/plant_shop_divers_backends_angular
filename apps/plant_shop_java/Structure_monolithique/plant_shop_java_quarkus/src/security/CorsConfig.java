@@ -23,6 +23,11 @@ public final class CorsConfig implements ContainerRequestFilter, ContainerRespon
         "http://127.0.0.1:8300"
     );
 
+    /**
+     * Vérifie si une origine est dans la liste blanche.
+     * @param origin Origine de la requête
+     * @return true si autorisée
+     */
     private boolean isAllowed(String origin) {
         return origin != null && ALLOWED.contains(origin);
     }

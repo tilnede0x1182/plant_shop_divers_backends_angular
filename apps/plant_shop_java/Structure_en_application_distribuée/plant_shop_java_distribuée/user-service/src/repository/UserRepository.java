@@ -6,14 +6,26 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository pour les utilisateurs.
+ */
 public final class UserRepository {
     private final Connection db;
 
-    public UserRepository(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public UserRepository(Connection db) {
         this.db = db;
     }
 
-    public User find(int id) throws SQLException {
+    /**
+	 * Trouve un utilisateur par identifiant.
+	 * @param id L'identifiant
+	 * @return L'utilisateur ou null
+	 */
+	public User find(int id) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("SELECT * FROM users WHERE id=?")) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -25,7 +37,12 @@ public final class UserRepository {
         return null;
     }
 
-    public User findByEmail(String email) throws SQLException {
+    /**
+	 * Trouve un utilisateur par email.
+	 * @param email L'email
+	 * @return L'utilisateur ou null
+	 */
+	public User findByEmail(String email) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("SELECT * FROM users WHERE email=?")) {
             ps.setString(1, email);
             try (ResultSet rs = ps.executeQuery()) {
@@ -37,7 +54,11 @@ public final class UserRepository {
         return null;
     }
 
-    public List<User> list() throws SQLException {
+    /**
+	 * Liste tous les utilisateurs.
+	 * @return La liste des utilisateurs
+	 */
+	public List<User> list() throws SQLException {
         List<User> out = new ArrayList<>();
         try (Statement st = db.createStatement();
              ResultSet rs = st.executeQuery("SELECT * FROM users")) {
@@ -48,7 +69,12 @@ public final class UserRepository {
         return out;
     }
 
-    public int create(User user) throws SQLException {
+    /**
+	 * Crée un utilisateur.
+	 * @param user L'utilisateur à créer
+	 * @return L'identifiant généré
+	 */
+	public int create(User user) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement(
             "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -64,7 +90,11 @@ public final class UserRepository {
         }
     }
 
-    public void update(User user) throws SQLException {
+    /**
+	 * Met à jour un utilisateur.
+	 * @param user L'utilisateur à mettre à jour
+	 */
+	public void update(User user) throws SQLException {
         boolean updatePassword = user.passwordHash != null && !user.passwordHash.isBlank();
         String sql = updatePassword
             ? "UPDATE users SET name=?, email=?, is_admin=?, password_hash=? WHERE id=?"
@@ -83,14 +113,23 @@ public final class UserRepository {
         }
     }
 
-    public void delete(int id) throws SQLException {
+    /**
+	 * Supprime un utilisateur.
+	 * @param id L'identifiant
+	 */
+	public void delete(int id) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("DELETE FROM users WHERE id=?")) {
             ps.setInt(1, id);
             ps.executeUpdate();
         }
     }
 
-    private User map(ResultSet rs) throws SQLException {
+    /**
+	 * Mappe un ResultSet vers un User.
+	 * @param rs Le ResultSet
+	 * @return L'utilisateur mappé
+	 */
+	private User map(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),
             rs.getString("name"),

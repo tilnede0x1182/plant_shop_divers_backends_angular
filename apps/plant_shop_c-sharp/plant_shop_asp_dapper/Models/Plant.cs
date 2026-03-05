@@ -1,5 +1,8 @@
 namespace plant_shop_asp_dapper.Models
 {
+    /// <summary>
+    /// Entite plante.
+    /// </summary>
     public class Plant
     {
         public int Id { get; set; }

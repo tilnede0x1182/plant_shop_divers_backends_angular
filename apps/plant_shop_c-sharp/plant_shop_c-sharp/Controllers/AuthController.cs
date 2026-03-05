@@ -7,10 +7,22 @@ using Newtonsoft.Json;
 
 namespace plant_shop_c_sharp.Controllers
 {
+    /// <summary>
+    /// Controleur d authentification (register, login, logout, me).
+    /// </summary>
     public class AuthController : BaseController
     {
+        /// <summary>
+        /// Constructeur avec injection de la source de donnees.
+        /// </summary>
+        /// <param name="dataSource">Source Npgsql.</param>
         public AuthController(NpgsqlDataSource dataSource) : base(dataSource) { }
 
+        /// <summary>
+        /// Gere les requetes HTTP pour les routes auth.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
+        /// <param name="currentUser">Utilisateur connecte ou null.</param>
         public override async Task HandleRequest(HttpListenerContext context, User? currentUser)
         {
             var request = context.Request;
@@ -41,6 +53,10 @@ namespace plant_shop_c_sharp.Controllers
             }
         }
 
+        /// <summary>
+        /// Inscription d un nouvel utilisateur.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
         private async Task Register(HttpListenerContext context)
         {
             var body = ParseBody<RegisterRequest>(context.Request);
@@ -69,6 +85,10 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(context.Response, 201, UserDtoMapper.ToDto(createdUser));
         }
 
+        /// <summary>
+        /// Connexion utilisateur et generation du cookie JWT.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
         private async Task Login(HttpListenerContext context)
         {
             var body = ParseBody<LoginRequest>(context.Request);
@@ -99,6 +119,10 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(context.Response, 201, new { token, user = UserDtoMapper.ToDto(user) });
         }
 
+        /// <summary>
+        /// Deconnexion et suppression du cookie JWT.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
         private async Task Logout(HttpListenerContext context)
         {
             var cookie = new Cookie("jwt", "")
@@ -112,6 +136,11 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(context.Response, 200, new { message = "Déconnecté" });
         }
 
+        /// <summary>
+        /// Retourne le profil de l utilisateur connecte.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
+        /// <param name="currentUser">Utilisateur connecte.</param>
         private async Task Me(HttpListenerContext context, User? currentUser)
         {
             if (currentUser == null)

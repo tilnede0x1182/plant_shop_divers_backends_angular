@@ -13,10 +13,18 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Service catalogue autonome.
+ */
 public final class CatalogService {
 
     private static Connection db;
     private static HttpServer server;
+    /**
+     * Point d'entrée principal.
+     * @param args Arguments de ligne de commande
+     * @throws Exception En cas d'erreur au démarrage
+     */
     public static void main(String[] args) throws Exception {
         Map<String, String> cfg = loadEnv();
         int port = Integer.parseInt(cfg.getOrDefault("CATALOG_SERVICE_PORT", "6102"));
@@ -56,6 +64,12 @@ public final class CatalogService {
         return values;
     }
 
+    /**
+     * Lit un fichier .env et remplit la map de valeurs.
+     * @param path Chemin du fichier
+     * @param values Map à remplir
+     * @throws IOException En cas d'erreur de lecture
+     */
     private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;

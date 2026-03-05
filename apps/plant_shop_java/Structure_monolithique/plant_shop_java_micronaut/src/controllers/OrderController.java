@@ -21,6 +21,9 @@ import repository.PlantRepository;
 import security.Guards;
 import util.ApiMapper;
 
+/**
+ * Contrôleur pour les commandes Micronaut.
+ */
 @Controller("/api/orders")
 public class OrderController {
 
@@ -29,6 +32,10 @@ public class OrderController {
     private final PlantRepository plantRepo;
     private final Connection db;
 
+    /**
+     * Constructeur avec injection.
+     * @param db Connection Connexion DB
+     */
     @Inject
     public OrderController(Connection db) {
         this.db = db;
@@ -37,6 +44,12 @@ public class OrderController {
         this.plantRepo = new PlantRepository(db);
     }
 
+    /**
+     * Liste les commandes.
+     * @param request HttpRequest Requête HTTP
+     * @return List Liste de commandes
+     * @throws Exception En cas d erreur
+     */
     @Get
     public List<?> list(HttpRequest<?> request) throws Exception {
         User currentUser = Guards.requireUser(request);
@@ -51,6 +64,13 @@ public class OrderController {
         return payload;
     }
 
+    /**
+     * Crée une commande.
+     * @param body Map Corps de requête
+     * @param request HttpRequest Requête HTTP
+     * @return HttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Post
     public HttpResponse<?> create(@Body Map<String, List<Map<String, Integer>>> body, HttpRequest<?> request) throws Exception {
         User currentUser = Guards.requireUser(request);
@@ -85,6 +105,14 @@ public class OrderController {
         }
     }
 
+    /**
+     * Met à jour une commande.
+     * @param id int ID commande
+     * @param body Map Corps de requête
+     * @param request HttpRequest Requête HTTP
+     * @return HttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Patch("/{id}")
     public HttpResponse<?> patch(@PathVariable int id, @Body Map<String, String> body, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -97,6 +125,13 @@ public class OrderController {
         return HttpResponse.ok(ApiMapper.toOrder(updated, items));
     }
 
+    /**
+     * Supprime une commande.
+     * @param id int ID commande
+     * @param request HttpRequest Requête HTTP
+     * @return HttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Delete("/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -105,6 +140,13 @@ public class OrderController {
         return HttpResponse.ok();
     }
 
+    /**
+     * Crée un item de commande.
+     * @param orderId int ID commande
+     * @param itemMap Map Données de l item
+     * @return BigDecimal Sous-total
+     * @throws Exception En cas d erreur
+     */
     private BigDecimal createOrderItem(int orderId, Map<String, Integer> itemMap) throws Exception {
         int plantId = itemMap.get("plantId");
         int quantity = itemMap.get("quantity");

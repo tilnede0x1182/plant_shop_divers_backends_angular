@@ -6,12 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 import model.Order;
 
+/**
+ * Repository pour les commandes.
+ */
 public final class OrderRepository extends BaseRepository<Order> {
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public OrderRepository(Connection db) {
         super(db, "orders");
     }
 
+    /**
+     * Mappe un ResultSet vers un Order.
+     * @param rs ResultSet Résultat SQL
+     * @return Order Commande
+     * @throws SQLException En cas d erreur SQL
+     */
     @Override
     protected Order mapFromResultSet(ResultSet rs) throws SQLException {
         return new Order(
@@ -23,8 +36,12 @@ public final class OrderRepository extends BaseRepository<Order> {
         );
     }
 
-    // Les méthodes `find(id)`, `list()` et `delete(id)` sont maintenant héritées de BaseRepository.
-
+    /**
+     * Crée une commande.
+     * @param o Order Commande
+     * @return int ID généré
+     * @throws SQLException En cas d erreur SQL
+     */
     public int create(Order o) throws SQLException {
         String sql = "INSERT INTO orders(user_id, total, status) VALUES (?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -39,6 +56,12 @@ public final class OrderRepository extends BaseRepository<Order> {
         }
     }
 
+    /**
+     * Met à jour le total.
+     * @param id int ID commande
+     * @param total BigDecimal Nouveau total
+     * @throws SQLException En cas d erreur SQL
+     */
     public void updateTotal(int id, BigDecimal total) throws SQLException {
         String sql = "UPDATE orders SET total=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -63,6 +86,12 @@ public final class OrderRepository extends BaseRepository<Order> {
         }
     }
 
+    /**
+     * Liste les commandes d un utilisateur.
+     * @param userId int ID utilisateur
+     * @return List Liste de commandes
+     * @throws SQLException En cas d erreur SQL
+     */
     public List<Order> listByUser(int userId) throws SQLException {
         List<Order> results = new ArrayList<>();
         String sql = "SELECT * FROM orders WHERE user_id=?";

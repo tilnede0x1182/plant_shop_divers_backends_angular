@@ -3,9 +3,16 @@ import repository.UserRepository;
 import util.AuthMiddleware;
 import util.ServiceRuntime;
 
+/**
+ * Service d'authentification Javalin.
+ */
 public final class AuthService {
 
-    public static void main(String[] args) throws Exception {
+    /**
+	 * Point d'entrée du service.
+	 * @param args Arguments de ligne de commande
+	 */
+	public static void main(String[] args) throws Exception {
         ServiceRuntime.start(
             ServiceRuntime.descriptor("auth-service", "AUTH_SERVICE_PORT", 6101),
             (app, db) -> {

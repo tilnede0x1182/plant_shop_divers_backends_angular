@@ -21,6 +21,10 @@ import repository.OrderRepository;
 import repository.PlantRepository;
 import util.ApiMapper;
 
+/**
+ * Contrôleur pour les commandes.
+ * Gère les opérations CRUD sur les commandes.
+ */
 public final class OrderController {
 
     private final OrderRepository repo;
@@ -28,6 +32,10 @@ public final class OrderController {
     private final PlantRepository plantRepo;
     private final Connection db;
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public OrderController(Connection db) {
         this.db = db;
         this.repo = new OrderRepository(db);
@@ -35,6 +43,11 @@ public final class OrderController {
         this.plantRepo = new PlantRepository(db);
     }
 
+    /**
+     * Liste les commandes de l utilisateur.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void list(Context ctx) throws Exception {
         User currentUser = ctx.attribute("user");
         if (currentUser == null) {
@@ -53,6 +66,11 @@ public final class OrderController {
         ctx.json(payload);
     }
 
+    /**
+     * Crée une nouvelle commande.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void create(Context ctx) throws Exception {
         User currentUser = ctx.attribute("user");
         if (currentUser == null) {
@@ -98,6 +116,11 @@ public final class OrderController {
         }
     }
 
+    /**
+     * Met à jour une commande.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void patch(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Order order = repo.find(id);
@@ -113,6 +136,11 @@ public final class OrderController {
         ctx.json(ApiMapper.toOrder(updated, items));
     }
 
+    /**
+     * Supprime une commande.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void destroy(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         itemRepo.deleteByOrder(id);
@@ -120,6 +148,13 @@ public final class OrderController {
         ctx.status(HttpStatus.OK).json(Map.of("deleted", true));
     }
 
+    /**
+     * Crée un item de commande.
+     * @param orderId int ID de la commande
+     * @param itemJson JSONObject Données de l item
+     * @return BigDecimal Sous-total de l item
+     * @throws Exception En cas d erreur
+     */
     private BigDecimal createOrderItem(int orderId, JSONObject itemJson) throws Exception {
         if (!itemJson.has("plantId") || !itemJson.has("quantity")) {
             throw new IllegalArgumentException("Chaque item doit contenir plantId et quantity");
@@ -144,6 +179,10 @@ public final class OrderController {
         return plant.price.multiply(BigDecimal.valueOf(quantity));
     }
 
+    /**
+     * Retourne un comparateur pour trier les commandes.
+     * @return Comparator Comparateur par date décroissante
+     */
     private Comparator<Order> orderComparator() {
         return (left, right) -> {
             if (left.createdAt == null || right.createdAt == null) {

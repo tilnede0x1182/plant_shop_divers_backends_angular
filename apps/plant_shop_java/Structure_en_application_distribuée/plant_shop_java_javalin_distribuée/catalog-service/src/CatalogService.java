@@ -2,9 +2,16 @@ import controller.PlantController;
 import util.AuthMiddleware;
 import util.ServiceRuntime;
 
+/**
+ * Service de catalogue des plantes Javalin.
+ */
 public final class CatalogService {
 
-    public static void main(String[] args) throws Exception {
+    /**
+	 * Point d'entrée du service.
+	 * @param args Arguments de ligne de commande
+	 */
+	public static void main(String[] args) throws Exception {
         ServiceRuntime.start(
             ServiceRuntime.descriptor("catalog-service", "CATALOG_SERVICE_PORT", 6102),
             (app, db) -> {

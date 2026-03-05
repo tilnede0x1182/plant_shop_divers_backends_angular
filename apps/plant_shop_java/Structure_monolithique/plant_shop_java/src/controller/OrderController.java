@@ -15,12 +15,19 @@ import repository.OrderItemRepository;
 import repository.OrderRepository;
 import repository.PlantRepository;
 
+/**
+ * Contrôleur gérant les commandes (CRUD).
+ */
 public final class OrderController extends BaseController {
 
     private final OrderRepository repo;
     private final OrderItemRepository itemRepo;
     private final PlantRepository plantRepo; // AJOUTÉ: Pour récupérer les infos des plantes
 
+    /**
+     * Constructeur du contrôleur de commandes.
+     * @param db Connection Connexion à la base de données
+     */
     public OrderController(Connection db) {
         super(db);
         this.repo = new OrderRepository(db);
@@ -28,6 +35,11 @@ public final class OrderController extends BaseController {
         this.plantRepo = new PlantRepository(db); // AJOUTÉ
     }
 
+    /**
+     * Dispatche les requêtes vers les méthodes CRUD.
+     * @param ex HttpExchange Échange HTTP
+     * @throws IOException En cas d'erreur I/O
+     */
     @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
@@ -63,6 +75,12 @@ public final class OrderController extends BaseController {
         }
     }
 
+    /**
+     * Liste les commandes de l'utilisateur.
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @throws Exception En cas d'erreur
+     */
     private void list(HttpExchange ex, User currentUser) throws Exception {
         List<Order> all = repo.list();
         /* ordre décroissant : dernière commande en premier */
@@ -78,6 +96,13 @@ public final class OrderController extends BaseController {
         sendJsonResponse(ex, 200, array.toString());
     }
 
+    /**
+     * Affiche une commande par ID.
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @param id int ID de la commande
+     * @throws Exception En cas d'erreur
+     */
     private void show(HttpExchange ex, User currentUser, int id) throws Exception {
         Order o = repo.find(id);
         if (o == null || (o.userId != currentUser.id && !currentUser.isAdmin)) {
@@ -88,6 +113,12 @@ public final class OrderController extends BaseController {
         sendJsonResponse(ex, 200, toJson(o, items).toString());
     }
 
+    /**
+     * Crée une nouvelle commande.
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @throws Exception En cas d'erreur
+     */
     private void create(HttpExchange ex, User currentUser) throws Exception {
         JSONObject body = parseJsonBody(ex);
         JSONArray itemsJson = body.optJSONArray("items");
@@ -119,6 +150,13 @@ public final class OrderController extends BaseController {
         sendJsonResponse(ex, 201, toJson(newOrder, null).toString());
     }
 
+    /**
+     * Met à jour le statut d'une commande (admin).
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @param id int ID de la commande
+     * @throws Exception En cas d'erreur
+     */
     private void patch(HttpExchange ex, User currentUser, int id) throws Exception {
         if (!currentUser.isAdmin) {
             sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
@@ -140,6 +178,13 @@ public final class OrderController extends BaseController {
         sendJsonResponse(ex, 200, toJson(o, null).toString());
     }
 
+    /**
+     * Supprime une commande (admin).
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @param id int ID de la commande
+     * @throws Exception En cas d'erreur
+     */
     private void destroy(HttpExchange ex, User currentUser, int id) throws Exception {
         if (!currentUser.isAdmin) {
             sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
@@ -150,6 +195,13 @@ public final class OrderController extends BaseController {
         sendEmptyResponse(ex, 200); // CORRIGÉ: Le test attend 200
     }
 
+		/**
+		 * Convertit une commande en JSONObject.
+		 * @param o Order Commande à convertir
+		 * @param items List<OrderItem> Items de la commande
+		 * @return JSONObject Représentation JSON
+		 * @throws Exception En cas d'erreur
+		 */
 		private JSONObject toJson(Order o, List<OrderItem> items) throws Exception {
 				/* Charge toujours les items si absents */
 				if (items == null) {

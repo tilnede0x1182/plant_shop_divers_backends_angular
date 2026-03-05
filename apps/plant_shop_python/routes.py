@@ -6,8 +6,13 @@ from controllers.plants import init_plants_controller
 from controllers.users import init_users_controller
 from controllers.orders import init_orders_controller
 
+"""
+	Enregistre toutes les routes de l'application sur le Blueprint fourni.
+
+	@param app Blueprint Flask sur lequel enregistrer les routes
+	@param db_connection Connexion psycopg2 à la base de données PostgreSQL
+"""
 def register_routes(app, db_connection):
-    """Enregistre toutes les routes de l'application."""
 
     # Création des Blueprints avec la connexion DB
     auth_bp = init_auth_controller(db_connection)

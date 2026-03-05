@@ -12,12 +12,19 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Service de gestion des utilisateurs.
+ */
 public final class UserService {
 
     private static Connection db;
     private static HttpServer server;
 
-    public static void main(String[] args) throws Exception {
+    /**
+	 * Point d'entrée du service utilisateur.
+	 * @param args Arguments de ligne de commande
+	 */
+	public static void main(String[] args) throws Exception {
         Map<String, String> cfg = loadEnv();
 
         int port = Integer.parseInt(cfg.getOrDefault("USER_SERVICE_PORT", "6104"));
@@ -48,14 +55,23 @@ public final class UserService {
         }));
     }
 
-    private static Map<String, String> loadEnv() throws IOException {
+    /**
+	 * Charge les variables d'environnement.
+	 * @return Map des variables
+	 */
+	private static Map<String, String> loadEnv() throws IOException {
         Map<String, String> values = new HashMap<>();
         readEnv(Path.of("../config/.env"), values);
         readEnv(Path.of(".env"), values);
         return values;
     }
 
-    private static void readEnv(Path path, Map<String, String> values) throws IOException {
+    /**
+	 * Lit un fichier .env.
+	 * @param path Chemin du fichier
+	 * @param values Map où stocker les valeurs
+	 */
+	private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
         }

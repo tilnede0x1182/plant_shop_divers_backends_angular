@@ -13,6 +13,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 
+/**
+ * Entité JPA représentant un utilisateur.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -43,6 +46,7 @@ public class User {
     @Transient
     public String password;
 
+    /** Constructeur complet. */
     public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -51,6 +55,7 @@ public class User {
         this.isAdmin = isAdmin;
         this.createdAt = createdAt;
     }
+    /** Constructeur pour création. */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }

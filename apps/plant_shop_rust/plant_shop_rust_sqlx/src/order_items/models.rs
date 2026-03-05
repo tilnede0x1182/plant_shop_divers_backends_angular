@@ -1,7 +1,18 @@
+//! Modeles DTO items de commande.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use serde::{Deserialize, Serialize};
 use sqlx::types::BigDecimal;
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
+/// Modele d'un item de commande (lecture DB).
 pub struct OrderItem {
     pub id: i32,
     #[allow(dead_code)]
@@ -14,6 +25,7 @@ pub struct OrderItem {
 }
 
 #[derive(Deserialize)]
+/// DTO pour la creation/mise a jour d'un item de commande.
 pub struct NewOrderItem {
     pub order_id: i32,
     pub plant_id: i32,

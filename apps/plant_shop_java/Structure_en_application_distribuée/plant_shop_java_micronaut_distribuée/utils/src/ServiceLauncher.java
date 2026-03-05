@@ -10,9 +10,19 @@ import java.util.Map;
  */
 public final class ServiceLauncher {
 
-    private ServiceLauncher() {}
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private ServiceLauncher() {}
 
-    public static void run(String serviceName, String portEnvKey, int defaultPort, String... args) {
+    /**
+ * Lance un microservice Micronaut.
+ * @param serviceName Nom du service
+ * @param portEnvKey Clé env du port
+ * @param defaultPort Port par défaut
+ * @param args Arguments CLI
+ */
+public static void run(String serviceName, String portEnvKey, int defaultPort, String... args) {
         Map<String, String> env = EnvLoader.load();
         int port = parsePort(env.getOrDefault(portEnvKey, String.valueOf(defaultPort)));
         ensurePortAvailable(port, serviceName);

@@ -14,6 +14,10 @@ import repository.UserRepository;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+/**
+ * Contrôleur principal de l'application.
+ * Agrège tous les contrôleurs et définit les routes.
+ */
 public final class ApplicationController {
 
     private final AuthController authController;
@@ -22,7 +26,11 @@ public final class ApplicationController {
     private final OrderController orderController;
     private final UserRepository userRepoForAuth;
 
-    public ApplicationController(Connection db) {
+    /**
+ * Constructeur.
+ * @param db Connexion à la base de données
+ */
+public ApplicationController(Connection db) {
         this.authController = new AuthController(db);
         this.plantController = new PlantController(db);
         this.userController = new UserController(db);
@@ -86,7 +94,12 @@ public final class ApplicationController {
         };
     }
 
-    private Handler requireUser(Handler handler) {
+    /**
+ * Wrapper exigeant une authentification utilisateur.
+ * @param handler Handler à protéger
+ * @return Handler avec vérification d'authentification
+ */
+private Handler requireUser(Handler handler) {
         return ctx -> handleWithUser(ctx, handler, false);
     }
 

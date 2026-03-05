@@ -15,13 +15,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.annotation.RequestScope;
 
+/**
+ * Factory Spring fournissant la connexion JDBC.
+ * Crée une nouvelle connexion pour chaque requête HTTP.
+ */
 @Configuration
 public class DatabaseFactory {
 
     private static final Path ENV_FILE = Path.of("config", ".env");
     private static Map<String, String> envCache;
 
-    // Logique de chargement du .env (identique à votre DatabaseFactory)
+    /** Charge les variables d'environnement depuis config/.env. */
     private synchronized Map<String, String> loadEnv() throws IOException {
         if (envCache == null) {
             if (!Files.exists(ENV_FILE)) {

@@ -18,6 +18,10 @@ import utils.ApiMapper;
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+ * Contrôleur REST pour la gestion des plantes.
+ * Fournit les endpoints publics et admin pour le catalogue.
+ */
 @RequestScoped
 public class PlantController {
 
@@ -32,10 +36,20 @@ public class PlantController {
         COLLATOR = Collator.getInstance(Locale.ROOT);
         COLLATOR.setStrength(Collator.PRIMARY);
     }
+    /**
+     * Compare deux plantes par nom (insensible à la casse).
+     * @param a Première plante
+     * @param b Deuxième plante
+     * @return Résultat de la comparaison
+     */
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }
 
+    /**
+     * Liste toutes les plantes (endpoint public).
+     * @return 200 avec la liste des plantes triées par nom
+     */
     @GET
     @Path("/plants")
     public Response listPublic() throws Exception {
@@ -46,6 +60,10 @@ public class PlantController {
         return Response.ok(payload).build();
     }
 
+    /**
+     * Liste toutes les plantes (endpoint admin).
+     * @return 200 avec la liste des plantes, 401/403 si non admin
+     */
     @GET
     @Path("/admin/plants")
     public Response listAdmin() throws Exception {
@@ -53,6 +71,11 @@ public class PlantController {
         return listPublic(); // Réutilise la logique publique
     }
 
+    /**
+     * Récupère une plante par son ID.
+     * @param id ID de la plante
+     * @return 200 avec la plante, 404 si non trouvée
+     */
     @GET
     @Path("/plants/{id}")
     public Response show(@PathParam("id") int id) throws Exception {
@@ -62,6 +85,11 @@ public class PlantController {
             : Response.status(Response.Status.NOT_FOUND).build();
     }
 
+    /**
+     * Crée une nouvelle plante (admin uniquement).
+     * @param plant Données de la plante à créer
+     * @return 201 avec la plante créée
+     */
     @POST
     @Path("/admin/plants")
     @Transactional
@@ -74,6 +102,12 @@ public class PlantController {
                        .build();
     }
 
+    /**
+     * Met à jour une plante existante (admin uniquement).
+     * @param id ID de la plante
+     * @param updatedData Nouvelles données
+     * @return 200 avec la plante modifiée, 404 si non trouvée
+     */
     @PATCH
     @Path("/admin/plants/{id}")
     @Transactional
@@ -94,6 +128,11 @@ public class PlantController {
         return Response.ok(ApiMapper.toPlant(repo.find(id))).build();
     }
 
+    /**
+     * Supprime une plante (admin uniquement).
+     * @param id ID de la plante
+     * @return 200 OK
+     */
     @DELETE
     @Path("/admin/plants/{id}")
     @Transactional

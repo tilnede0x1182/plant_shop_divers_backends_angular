@@ -7,8 +7,17 @@ using plant_shop_c_sharp.Repositories;
 
 namespace plant_shop_c_sharp.Utils
 {
+    /// <summary>
+    /// Utilitaire de parsing des requetes HTTP.
+    /// </summary>
     public static class RequestUtil
     {
+        /// <summary>
+        /// Parse le body JSON d une requete.
+        /// </summary>
+        /// <typeparam name="T">Type de destination.</typeparam>
+        /// <param name="request">Requete HTTP.</param>
+        /// <returns>Objet deserialise ou null.</returns>
         public static T? ParseJsonBody<T>(HttpListenerRequest request) where T : class
         {
             if (!request.HasEntityBody)
@@ -33,6 +42,13 @@ namespace plant_shop_c_sharp.Utils
             }
         }
 
+        /// <summary>
+        /// Extrait l utilisateur depuis le token JWT.
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <param name="userRepo">Repository utilisateurs.</param>
+        /// <param name="authScheme">Schema d authentification.</param>
+        /// <returns>Utilisateur ou null.</returns>
         public static async Task<User?> GetUserFromAuth(HttpListenerRequest request, UserRepository userRepo, string authScheme = "Bearer ")
         {
             string? token = ExtractTokenFromAuthorization(request, authScheme)
@@ -59,6 +75,12 @@ namespace plant_shop_c_sharp.Utils
             return await userRepo.FindByIdAsync(userId);
         }
 
+        /// <summary>
+        /// Extrait le token du header Authorization.
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <param name="authScheme">Schema d authentification.</param>
+        /// <returns>Token ou null.</returns>
         private static string? ExtractTokenFromAuthorization(HttpListenerRequest request, string authScheme)
         {
             string? authHeader = request.Headers["Authorization"];
@@ -69,6 +91,11 @@ namespace plant_shop_c_sharp.Utils
             return null;
         }
 
+        /// <summary>
+        /// Extrait le token du cookie jwt.
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <returns>Token ou null.</returns>
         private static string? ExtractTokenFromCookies(HttpListenerRequest request)
         {
             // HttpListenerRequest.Cookies n'est pas toujours renseigné suivant l'hôte, on gère donc les deux cas

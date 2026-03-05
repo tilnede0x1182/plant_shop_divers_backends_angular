@@ -1,3 +1,9 @@
+//! Requetes SeaORM pour les commandes.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
@@ -6,6 +12,10 @@ use sea_orm::{DatabaseConnection, DbBackend, FromQueryResult, Statement};
 
 use crate::errors::AppError;
 use crate::orders::models::{OrderItemPlant, OrderItemResponse, OrderSummary};
+
+// ==============================================================================
+// Macros et Constantes
+// ==============================================================================
 
 macro_rules! order_base_sql {
     () => {
@@ -39,7 +49,12 @@ const ROWS_FOR_ORDER_SQL: &str = concat!(
     " WHERE owr.order_id = $1 ORDER BY oi.id ASC"
 );
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
 #[derive(Debug, FromQueryResult)]
+/// Ligne brute de la requete SQL (avant agregation).
 struct OrderFoldRow {
     order_id: i32,
     order_status: String,
@@ -54,6 +69,15 @@ struct OrderFoldRow {
     plant_price: Option<i32>,
 }
 
+// ==============================================================================
+// Fonctions
+// ==============================================================================
+
+/// Recupere les commandes d'un utilisateur avec leurs items.
+///
+/// @param db Connection a la base de donnees
+/// @param user_id ID de l'utilisateur
+/// @return Vec<OrderSummary> ou erreur
 pub async fn summaries_for_user(
     db: &DatabaseConnection,
     user_id: i32,
@@ -62,6 +86,11 @@ pub async fn summaries_for_user(
     Ok(fold_rows(rows))
 }
 
+/// Recupere une commande par son ID avec ses items.
+///
+/// @param db Connection a la base de donnees
+/// @param order_id ID de la commande
+/// @return OrderSummary ou erreur 404
 pub async fn summary_by_id(
     db: &DatabaseConnection,
     order_id: i32,
@@ -70,6 +99,12 @@ pub async fn summary_by_id(
     fold_rows(rows).into_iter().next().ok_or(AppError::NotFound)
 }
 
+/// Execute une requete SQL et retourne les lignes brutes.
+///
+/// @param db Connection a la base de donnees
+/// @param sql Requete SQL parametree
+/// @param bind Valeur du parametre $1
+/// @return Vec<OrderFoldRow> ou erreur
 async fn query_rows(
     db: &DatabaseConnection,
     sql: &str,
@@ -82,6 +117,10 @@ async fn query_rows(
         .map_err(|_| AppError::Internal)
 }
 
+/// Agrege les lignes SQL en OrderSummary (fold/reduce).
+///
+/// @param rows Lignes brutes de la requete
+/// @return Vec<OrderSummary> agreges
 fn fold_rows(rows: Vec<OrderFoldRow>) -> Vec<OrderSummary> {
     let mut summaries = Vec::new();
     let mut index = HashMap::new();
@@ -108,6 +147,10 @@ fn fold_rows(rows: Vec<OrderFoldRow>) -> Vec<OrderSummary> {
     summaries
 }
 
+/// Convertit une ligne SQL en OrderItemResponse.
+///
+/// @param row Reference a une ligne brute
+/// @return Some(OrderItemResponse) ou None si item incomplet
 fn map_row_to_item(row: &OrderFoldRow) -> Option<OrderItemResponse> {
     let item_id = row.order_item_id?;
     let plant_id = row.plant_id?;
@@ -127,6 +170,10 @@ fn map_row_to_item(row: &OrderFoldRow) -> Option<OrderItemResponse> {
     ))
 }
 
+/// Convertit un DateTimeWithTimeZone en DateTime<Utc>.
+///
+/// @param value Valeur avec timezone
+/// @return DateTime<Utc>
 fn to_utc(value: DateTimeWithTimeZone) -> DateTime<Utc> {
     DateTime::<Utc>::from(value)
 }

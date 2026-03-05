@@ -19,7 +19,11 @@ public class AuthenticatedUser {
     private User user;
     private boolean loaded = false;
 
-    public User getUser() {
+    /**
+ * Retourne l'utilisateur authentifié.
+ * @return Utilisateur ou null
+ */
+public User getUser() {
         if (!loaded) {
             loaded = true;
             try {
@@ -40,7 +44,11 @@ public class AuthenticatedUser {
         return user;
     }
 
-    public boolean isAdmin() {
+    /**
+ * Vérifie si l'utilisateur est admin.
+ * @return true si admin
+ */
+public boolean isAdmin() {
         return ForwardedIdentityHolder.get().admin();
     }
 }

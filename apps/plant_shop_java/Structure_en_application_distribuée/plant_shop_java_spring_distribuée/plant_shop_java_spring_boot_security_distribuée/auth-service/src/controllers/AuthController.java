@@ -22,6 +22,9 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
+/**
+ * Contrôleur REST pour l'authentification.
+ */
 public class AuthController {
 
     @Autowired
@@ -114,6 +117,12 @@ public class AuthController {
         ));
     }
 
+    /**
+     * Résout l'utilisateur depuis l'ID de session.
+     * @param sessionId ID de session
+     * @return Utilisateur ou null
+     * @throws Exception En cas d'erreur
+     */
     private User resolveUserFromSession(String sessionId) throws Exception {
         if (sessionId == null || sessionId.isBlank()) {
             return null;
@@ -125,6 +134,10 @@ public class AuthController {
         return userRepo.find(userId);
     }
 
+    /**
+     * Authentifie l'utilisateur dans le contexte Spring Security.
+     * @param user Utilisateur à authentifier
+     */
     private void authenticateUser(User user) {
         List<SimpleGrantedAuthority> authorities = user.isAdmin
             ? List.of(

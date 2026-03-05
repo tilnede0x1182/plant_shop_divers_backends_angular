@@ -15,13 +15,30 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Runtime partagé pour les microservices Javalin.
+ */
 public final class ServiceRuntime {
 
     @FunctionalInterface
-    public interface RouteRegistrar {
+    /**
+ * Interface de configuration des routes.
+ */
+public interface RouteRegistrar {
+        /**
+         * Configure les routes du service.
+         * @param app Javalin Instance Javalin
+         * @param db Connection Connexion à la base de données
+         */
         void configure(Javalin app, Connection db) throws Exception;
     }
 
+    /**
+     * Descripteur d'un service.
+     * @param serviceName String Nom du service
+     * @param portKey String Clé de la variable d'environnement pour le port
+     * @param defaultPort int Port par défaut
+     */
     public record ServiceDescriptor(String serviceName, String portKey, int defaultPort) {
     }
 

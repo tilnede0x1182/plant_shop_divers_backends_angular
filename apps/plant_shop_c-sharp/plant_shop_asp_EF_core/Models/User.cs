@@ -4,6 +4,9 @@ using System.Text.Json.Serialization;
 
 namespace plant_shop_asp_EF_core.Models
 {
+    /// <summary>
+    /// Entite utilisateur avec relation vers ses commandes.
+    /// </summary>
     [Table("users")]
     public class User
     {

@@ -20,6 +20,9 @@ import repository.PlantRepository;
 import order.util.ApiMapper;
 import util.AuthContext;
 
+/**
+ * Contrôleur des routes commandes.
+ */
 @Controller("/orders")
 public class OrderController {
 
@@ -28,8 +31,12 @@ public class OrderController {
     private final PlantRepository plantRepo;
     private final Connection db;
 
-    @Inject
-    public OrderController(Connection db) {
+    /**
+ * Constructeur avec injection de dépendances.
+ * @param db Connexion à la base de données
+ */
+@Inject
+public OrderController(Connection db) {
         this.db = db;
         this.repo = new OrderRepository(db);
         this.itemRepo = new OrderItemRepository(db);

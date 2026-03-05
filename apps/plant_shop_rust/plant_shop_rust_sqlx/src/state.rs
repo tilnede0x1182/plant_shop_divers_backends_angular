@@ -1,9 +1,20 @@
+//! Etat partage de l'application.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use sqlx::PgPool;
 use std::sync::Arc;
 use std::time::Duration;
 
 use crate::cache::{default_plant_cache, default_user_cache, SharedPlantCache, SharedUserCache};
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// Configuration des TTL de cache.
 #[derive(Clone, Copy)]
 pub struct CacheTtls {
     pub users: Duration,
@@ -11,12 +22,22 @@ pub struct CacheTtls {
 }
 
 impl CacheTtls {
+    /// Cree une nouvelle configuration de TTL.
+    ///
+    /// @param users TTL du cache utilisateurs
+    /// @param plants TTL du cache plantes
+    /// @return CacheTtls
     pub fn new(users: Duration, plants: Duration) -> Self {
         Self { users, plants }
     }
 }
 
+// ==============================================================================
+// AppState
+// ==============================================================================
+
 #[derive(Clone)]
+/// Etat partage de l'application (pools DB, caches).
 pub struct AppState {
     read_pool: PgPool,
     write_pool: PgPool,
@@ -25,6 +46,12 @@ pub struct AppState {
 }
 
 impl AppState {
+    /// Cree un nouvel AppState avec les pools et TTL de cache.
+    ///
+    /// @param read_pool Pool de lecture
+    /// @param write_pool Pool d'ecriture
+    /// @param cache_ttls Configuration des TTL
+    /// @return AppState
     pub fn new(read_pool: PgPool, write_pool: PgPool, cache_ttls: CacheTtls) -> Self {
         Self::with_caches(
             read_pool,

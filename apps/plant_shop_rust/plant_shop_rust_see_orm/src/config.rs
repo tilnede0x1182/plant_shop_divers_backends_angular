@@ -1,6 +1,16 @@
-/// Gestion de la configuration d'environnement
+//! Gestion de la configuration d'environnement.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use std::env;
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// Structure de configuration applicative.
 #[allow(dead_code)]
 pub struct Config {
     pub database_url: String,
@@ -8,8 +18,14 @@ pub struct Config {
     pub bcrypt_cost: u32,
 }
 
+// ==============================================================================
+// Implementations
+// ==============================================================================
+
 impl Config {
-    /// Charge la configuration à partir des variables d'environnement
+    /// Charge la configuration a partir des variables d'environnement.
+    ///
+    /// @return Config avec DATABASE_URL, JWT_SECRET, BCRYPT_COST
     #[allow(dead_code)]
     pub fn from_env() -> Self {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL manquant");
@@ -26,7 +42,15 @@ impl Config {
     }
 }
 
-/// Lecture d'une valeur entière non signée avec valeur par défaut.
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
+/// Lecture d'une valeur entiere non signee avec valeur par defaut.
+///
+/// @param key Nom de la variable d'environnement
+/// @param default Valeur par defaut si non definie ou invalide
+/// @return Valeur u64 lue ou default
 pub fn env_u64(key: &str, default: u64) -> u64 {
     std::env::var(key)
         .ok()

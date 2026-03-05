@@ -19,6 +19,11 @@ public final class ApiMapper {
 
     private ApiMapper() {}
 
+    /**
+     * Convertit un User en Map.
+     * @param user Utilisateur à convertir
+     * @return Map représentant l'utilisateur
+     */
     public static Map<String, Object> toUser(User user) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", user.id);
@@ -29,6 +34,11 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit une Plant en Map.
+     * @param plant Plante à convertir
+     * @return Map représentant la plante
+     */
     public static Map<String, Object> toPlant(Plant plant) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", plant.id);
@@ -40,6 +50,12 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit une Order en Map.
+     * @param order Commande à convertir
+     * @param items Items de la commande
+     * @return Map représentant la commande
+     */
     public static Map<String, Object> toOrder(Order order, List<Map<String, Object>> items) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", order.id);
@@ -52,6 +68,12 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit un OrderItem en Map.
+     * @param item Item à convertir
+     * @param plant Plante associée
+     * @return Map représentant l'item
+     */
     public static Map<String, Object> toOrderItem(OrderItem item, Plant plant) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", item.id);
@@ -65,6 +87,13 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit une liste d'OrderItems en liste de Maps.
+     * @param items Items à convertir
+     * @param lookup Fonction de recherche de plantes
+     * @return Liste de Maps
+     * @throws Exception En cas d'erreur de lookup
+     */
     public static List<Map<String, Object>> toOrderItems(List<OrderItem> items, PlantLookup lookup) throws Exception {
         List<Map<String, Object>> mapped = new ArrayList<>(items.size());
         for (OrderItem item : items) {

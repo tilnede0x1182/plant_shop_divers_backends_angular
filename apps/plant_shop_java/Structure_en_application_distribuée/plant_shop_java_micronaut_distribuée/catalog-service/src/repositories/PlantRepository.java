@@ -7,15 +7,27 @@ import model.Plant;
 import java.math.BigDecimal;
 import catalog.repositories.BaseRepository;
 
+/**
+ * Repository des plantes.
+ */
 @Singleton
 public final class PlantRepository extends BaseRepository<Plant> {
 
-    public PlantRepository(Connection db) {
+    /**
+ * Constructeur.
+ * @param db Connexion à la base de données
+ */
+public PlantRepository(Connection db) {
         super(db, "plants");
     }
 
-    @Override
-    protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
+    /**
+ * Mappe un ResultSet vers un objet Plant.
+ * @param rs ResultSet à mapper
+ * @return Plant mappé
+ */
+@Override
+protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
             rs.getInt("id"),
             rs.getString("name"),
@@ -26,7 +38,12 @@ public final class PlantRepository extends BaseRepository<Plant> {
         );
     }
 
-    public int create(Plant p) throws SQLException {
+    /**
+ * Crée une nouvelle plante.
+ * @param p Plante à créer
+ * @return ID généré
+ */
+public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, p.name);
@@ -41,7 +58,11 @@ public final class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
-    public void update(Plant p) throws SQLException {
+    /**
+ * Met à jour une plante.
+ * @param p Plante à mettre à jour
+ */
+public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setString(1, p.name);

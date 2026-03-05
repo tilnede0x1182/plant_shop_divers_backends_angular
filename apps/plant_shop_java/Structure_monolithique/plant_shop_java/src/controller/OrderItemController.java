@@ -17,8 +17,17 @@ public final class OrderItemController implements HttpHandler {
 
     private final OrderItemRepository repo;
 
+    /**
+     * Constructeur du contrôleur d'items de commande.
+     * @param db Connection Connexion à la base de données
+     */
     public OrderItemController(Connection db){ this.repo=new OrderItemRepository(db); }
 
+    /**
+     * Dispatche les requêtes vers les méthodes CRUD.
+     * @param ex HttpExchange Échange HTTP
+     * @throws IOException En cas d'erreur I/O
+     */
     public void handle(HttpExchange ex) throws IOException {
         try{
             URI uri = ex.getRequestURI();                 // /orders/5/items
@@ -39,6 +48,12 @@ public final class OrderItemController implements HttpHandler {
         }
     }
 
+    /**
+     * Liste les items d'une commande.
+     * @param ex HttpExchange Échange HTTP
+     * @param orderId int ID de la commande
+     * @throws Exception En cas d'erreur
+     */
     private void list(HttpExchange ex,int orderId)throws Exception{
         List<OrderItem> items=repo.listByOrder(orderId);
         StringBuilder sb=new StringBuilder("[");
@@ -54,18 +69,36 @@ public final class OrderItemController implements HttpHandler {
         send(ex,200,sb.toString());
     }
 
+    /**
+     * Supprime tous les items d'une commande.
+     * @param ex HttpExchange Échange HTTP
+     * @param orderId int ID de la commande
+     * @throws Exception En cas d'erreur
+     */
     private void flush(HttpExchange ex,int orderId)throws Exception{
         repo.deleteByOrder(orderId);
         sendEmpty(ex,204);
     }
 
-    /* helpers */
+    /**
+     * Envoie une réponse JSON.
+     *
+     * @param ex HttpExchange Échange HTTP
+     * @param code int Code HTTP
+     * @param body String Corps de la réponse
+     */
     private static void send(HttpExchange ex,int code,String body)throws IOException{
         byte[] b=body.getBytes("UTF-8");
         ex.getResponseHeaders().add("Content-Type","application/json; charset=utf-8");
         ex.sendResponseHeaders(code,b.length);
         ex.getResponseBody().write(b); ex.close();
     }
+    /**
+     * Envoie une réponse vide.
+     * @param ex HttpExchange Échange HTTP
+     * @param code int Code HTTP
+     * @throws IOException En cas d'erreur I/O
+     */
     private static void sendEmpty(HttpExchange ex,int code)throws IOException{
         ex.sendResponseHeaders(code,-1); ex.close();
     }

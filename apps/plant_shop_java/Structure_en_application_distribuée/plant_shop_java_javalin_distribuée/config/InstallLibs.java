@@ -6,8 +6,15 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
 
+/**
+ * Utilitaire de téléchargement des dépendances Maven.
+ */
 public class InstallLibs {
-    public static void main(String[] args) throws Exception {
+    /**
+ * Point d'entrée du script d'installation.
+ * @param args Arguments de la ligne de commande
+ */
+public static void main(String[] args) throws Exception {
         Path yaml = Path.of("config/libs.yaml");
         if (!Files.exists(yaml)) {
             System.err.println("Fichier libs.yaml introuvable.");

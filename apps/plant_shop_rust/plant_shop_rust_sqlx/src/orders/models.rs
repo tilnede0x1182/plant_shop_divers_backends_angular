@@ -1,8 +1,19 @@
+//! Modeles DTO commandes.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::types::BigDecimal;
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
 #[derive(Serialize, Deserialize, sqlx::FromRow)]
+/// Modele d'une commande (lecture DB).
 pub struct Order {
     pub id: i32,
     pub user_id: Option<i32>,
@@ -17,6 +28,7 @@ pub struct Order {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+/// Vue simplifiee d'une plante (id, nom, prix).
 pub struct PlantBasic {
     pub id: i32,
     pub name: String,
@@ -27,6 +39,7 @@ pub struct PlantBasic {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+/// Item de commande avec sa plante associee.
 pub struct OrderItemWithPlant {
     pub id: i32,
     pub quantity: i32,
@@ -38,6 +51,7 @@ pub struct OrderItemWithPlant {
 }
 
 #[derive(Debug, Serialize)]
+/// Commande avec tous ses items.
 pub struct OrderWithItems {
     pub id: i32,
     #[allow(dead_code)]

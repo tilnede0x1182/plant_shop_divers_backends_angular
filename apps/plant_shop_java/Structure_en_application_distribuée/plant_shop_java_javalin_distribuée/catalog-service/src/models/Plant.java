@@ -3,6 +3,9 @@ package model;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+/**
+ * Modèle représentant une plante.
+ */
 public final class Plant {
     public int        id;
     public String     name;
@@ -11,7 +14,16 @@ public final class Plant {
     public int        stock;
     public Timestamp  createdAt;    // null lors de l’insertion
 
-    public Plant(int id, String name, String description,
+    /**
+	 * Constructeur complet.
+	 * @param id Identifiant
+	 * @param name Nom
+	 * @param description Description
+	 * @param price Prix
+	 * @param stock Stock
+	 * @param createdAt Date de création
+	 */
+	public Plant(int id, String name, String description,
                  BigDecimal price, int stock, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -21,7 +33,14 @@ public final class Plant {
         this.createdAt = createdAt;
     }
 
-    public Plant(String name, String description, BigDecimal price, int stock) {
+    /**
+	 * Constructeur pour insertion.
+	 * @param name Nom
+	 * @param description Description
+	 * @param price Prix
+	 * @param stock Stock
+	 */
+	public Plant(String name, String description, BigDecimal price, int stock) {
         this(0, name, description, price, stock, null);
     }
 }

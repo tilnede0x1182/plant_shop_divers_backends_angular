@@ -7,10 +7,22 @@ using System.Linq;
 
 namespace plant_shop_c_sharp.Controllers
 {
+    /// <summary>
+    /// Controleur CRUD pour les utilisateurs.
+    /// </summary>
     public class UserController : BaseController
     {
+        /// <summary>
+        /// Constructeur avec injection de la source de donnees.
+        /// </summary>
+        /// <param name="dataSource">Source Npgsql.</param>
         public UserController(NpgsqlDataSource dataSource) : base(dataSource) { }
 
+        /// <summary>
+        /// Gere les requetes HTTP pour les routes users.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
+        /// <param name="currentUser">Utilisateur connecte ou null.</param>
         public override async Task HandleRequest(HttpListenerContext context, User? currentUser)
         {
             var request = context.Request;
@@ -94,7 +106,10 @@ namespace plant_shop_c_sharp.Controllers
             }
         }
 
-        // GET /api/admin/users
+        /// <summary>
+        /// Liste tous les utilisateurs (admin).
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
         private async Task GetAllUsers(HttpListenerResponse response)
         {
             var users = await UserRepo.FindAllAsync();
@@ -102,7 +117,12 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 200, dto);
         }
 
-        // GET /api/users/:id OR /api/admin/users/:id
+        /// <summary>
+        /// Recupere un utilisateur par ID.
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="currentUser">Utilisateur connecte.</param>
+        /// <param name="id">ID de l utilisateur.</param>
         private async Task GetUser(HttpListenerResponse response, User currentUser, int id)
         {
             if (currentUser.Id != id && !currentUser.IsAdmin)
@@ -120,7 +140,11 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 200, UserDtoMapper.ToDto(user));
         }
 
-        // POST /api/admin/users
+        /// <summary>
+        /// Cree un nouvel utilisateur (admin).
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <param name="response">Reponse HTTP.</param>
         private async Task CreateUser(HttpListenerRequest request, HttpListenerResponse response)
         {
             var body = ParseBody<UserCreateRequest>(request);
@@ -149,7 +173,14 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 201, UserDtoMapper.ToDto(created));
         }
 
-        // PATCH /api/users/:id OR /api/admin/users/:id
+        /// <summary>
+        /// Met a jour un utilisateur.
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="currentUser">Utilisateur connecte.</param>
+        /// <param name="id">ID de l utilisateur.</param>
+        /// <param name="isAdminCall">True si route admin.</param>
         private async Task UpdateUser(HttpListenerRequest request, HttpListenerResponse response, User currentUser, int id, bool isAdminCall)
         {
             if (currentUser.Id != id && !currentUser.IsAdmin)
@@ -185,7 +216,11 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 200, UserDtoMapper.ToDto(user));
         }
 
-        // DELETE /api/admin/users/:id
+        /// <summary>
+        /// Supprime un utilisateur (admin).
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="id">ID de l utilisateur.</param>
         private async Task DeleteUser(HttpListenerResponse response, int id)
         {
             await UserRepo.DeleteAsync(id);

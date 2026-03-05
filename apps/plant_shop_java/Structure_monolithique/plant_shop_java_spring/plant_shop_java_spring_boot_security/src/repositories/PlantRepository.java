@@ -6,15 +6,20 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.context.annotation.RequestScope;
 import java.sql.*;
 
+/**
+ * Repository pour les plantes.
+ */
 @Repository
 @RequestScope
 public class PlantRepository extends BaseRepository<Plant> {
 
+    /** Constructeur avec injection. */
     @Autowired // Injecte la connexion @RequestScoped
     public PlantRepository(Connection db) {
         super(db, "plants");
     }
 
+    /** {@inheritDoc} */
     @Override
     protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
@@ -27,6 +32,12 @@ public class PlantRepository extends BaseRepository<Plant> {
         );
     }
 
+    /**
+     * Crée une nouvelle plante.
+     *
+     * @param p Plant La plante à créer
+     * @return int L'ID généré
+     */
     public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -42,6 +53,11 @@ public class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
+    /**
+     * Met à jour une plante existante.
+     *
+     * @param p Plant La plante à mettre à jour
+     */
     public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -54,6 +70,12 @@ public class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
+    /**
+     * Met à jour le stock d'une plante.
+     *
+     * @param id int Identifiant de la plante
+     * @param newStock int Nouveau stock
+     */
     public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {

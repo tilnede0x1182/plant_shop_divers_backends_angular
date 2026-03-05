@@ -5,13 +5,26 @@ import jakarta.inject.Singleton;
 import java.sql.*;
 import model.User;
 
+/**
+ * Repository pour les utilisateurs.
+ */
 @Singleton
 public final class UserRepository extends BaseRepository<User> {
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public UserRepository(Connection db) {
         super(db, "users");
     }
 
+    /**
+     * Mappe un ResultSet vers un User (sans mot de passe).
+     * @param rs ResultSet Résultat SQL
+     * @return User Utilisateur
+     * @throws SQLException En cas d erreur SQL
+     */
     @Override
     protected User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
@@ -24,6 +37,12 @@ public final class UserRepository extends BaseRepository<User> {
         );
     }
 
+    /**
+     * Trouve un utilisateur par email avec mot de passe.
+     * @param email String Email
+     * @return User Utilisateur ou null
+     * @throws SQLException En cas d erreur SQL
+     */
     public User findByEmailWithPassword(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -44,6 +63,12 @@ public final class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Crée un utilisateur.
+     * @param u User Utilisateur
+     * @return int ID généré
+     * @throws SQLException En cas d erreur SQL
+     */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -59,6 +84,11 @@ public final class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Met à jour un utilisateur.
+     * @param u User Utilisateur
+     * @throws SQLException En cas d erreur SQL
+     */
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword

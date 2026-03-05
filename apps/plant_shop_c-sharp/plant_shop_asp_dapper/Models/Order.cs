@@ -1,5 +1,8 @@
 namespace plant_shop_asp_dapper.Models
 {
+    /// <summary>
+    /// Entite commande.
+    /// </summary>
     public class Order
     {
         public int Id { get; set; }

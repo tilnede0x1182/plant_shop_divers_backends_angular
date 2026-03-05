@@ -8,19 +8,38 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository générique abstrait.
+ * @param <T> Type d'entité
+ */
 public abstract class BaseRepository<T> {
 
     protected final Connection db;
     protected final String tableName;
 
-    public BaseRepository(Connection db, String tableName) {
+    /**
+ * Constructeur.
+ * @param db Connexion à la base de données
+ * @param tableName Nom de la table
+ */
+public BaseRepository(Connection db, String tableName) {
         this.db = db;
         this.tableName = tableName;
     }
 
-    protected abstract T mapFromResultSet(ResultSet rs) throws SQLException;
+    /**
+ * Mappe un ResultSet vers une entité.
+ * @param rs ResultSet à mapper
+ * @return Entité mappée
+ */
+protected abstract T mapFromResultSet(ResultSet rs) throws SQLException;
 
-    public T find(int id) throws SQLException {
+    /**
+ * Trouve une entité par son ID.
+ * @param id ID de l'entité
+ * @return Entité ou null
+ */
+public T find(int id) throws SQLException {
         String sql = "SELECT * FROM " + tableName + " WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -45,7 +64,11 @@ public abstract class BaseRepository<T> {
         return results;
     }
 
-    public void delete(int id) throws SQLException {
+    /**
+ * Supprime une entité par son ID.
+ * @param id ID de l'entité
+ */
+public void delete(int id) throws SQLException {
         String sql = "DELETE FROM " + tableName + " WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setInt(1, id);

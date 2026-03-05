@@ -158,6 +158,11 @@ catch (Exception ex)
     Environment.ExitCode = 2;
 }
 
+/// <summary>
+/// Charge les variables d environnement depuis le fichier .env.
+/// </summary>
+/// <param name="rootPath">Chemin racine du projet.</param>
+/// <returns>Dictionnaire cle-valeur.</returns>
 Dictionary<string, string> LoadEnv(string rootPath)
 {
     var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -189,6 +194,12 @@ Dictionary<string, string> LoadEnv(string rootPath)
     return map;
 }
 
+/// <summary>
+/// Resout la chaine de connexion depuis config ou env.
+/// </summary>
+/// <param name="config">Configuration ASP.NET.</param>
+/// <param name="env">Variables d environnement.</param>
+/// <returns>Chaine de connexion PostgreSQL.</returns>
 string ResolveConnectionString(IConfiguration config, IDictionary<string, string> env)
 {
     if (env.TryGetValue("DATABASE_URL", out var rawUrl) && !string.IsNullOrWhiteSpace(rawUrl))
@@ -199,6 +210,12 @@ string ResolveConnectionString(IConfiguration config, IDictionary<string, string
     return config.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=plant_shop_c-sharp";
 }
 
+/// <summary>
+/// Normalise une URL de connexion PostgreSQL.
+/// </summary>
+/// <param name="rawUrl">URL brute (jdbc: ou postgresql://).</param>
+/// <param name="env">Variables d environnement.</param>
+/// <returns>Chaine de connexion Npgsql.</returns>
 string NormalizeConnectionString(string rawUrl, IDictionary<string, string> env)
 {
     string normalized = rawUrl.Trim();
@@ -264,6 +281,11 @@ string NormalizeConnectionString(string rawUrl, IDictionary<string, string> env)
     }
 }
 
+/// <summary>
+/// Verifie si l exception indique un port deja utilise.
+/// </summary>
+/// <param name="ex">Exception IOException.</param>
+/// <returns>True si port occupe.</returns>
 bool IsPortInUse(IOException ex)
 {
     if (ex.InnerException is Microsoft.AspNetCore.Connections.AddressInUseException)

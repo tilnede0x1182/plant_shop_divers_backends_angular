@@ -93,6 +93,9 @@ routes conn = do
       then status status200 -- Le test e2e attend 200, pas 204
       else R.notFound "Plante non trouvée"
 
+-- | Recherche une clé dans un objet JSON et parse la valeur.
+-- @param key Clé à rechercher
+-- @param o Objet JSON source
 objLookup :: FromJSON a => T.Text -> Object -> Maybe a
 objLookup key o = join $ parseMaybe (.:? fromText key) o
 

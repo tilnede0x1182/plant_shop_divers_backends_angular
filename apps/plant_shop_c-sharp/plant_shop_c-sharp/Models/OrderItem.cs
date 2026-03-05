@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace plant_shop_c_sharp.Models
 {
+    /// <summary>
+    /// Ligne de commande reliant commande et plante.
+    /// </summary>
     public class OrderItem
     {
         public int Id { get; set; }

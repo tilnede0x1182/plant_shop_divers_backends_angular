@@ -174,7 +174,13 @@ public final class Test {
 	}
 
 
-	/* -------- Auth -------- */
+	/**
+	 * Effectue une connexion.
+	 *
+	 * @param mail String Email de l'utilisateur
+	 * @param pw String Mot de passe
+	 * @param who String Descriptif de la connexion
+	 */
 	private void login(String mail, String pw, String who) throws Exception {
 		JSONObject j = new JSONObject().put("email", mail).put("password", pw);
 		call("POST", "/auth/login", 201, j, who);
@@ -185,7 +191,13 @@ public final class Test {
 		call("POST", "/auth/register", 201, j, who);
 	}
 
-	/* -------- Assertions -------- */
+	/**
+	 * Vérifie l'égalité d'une valeur dans un JSONObject.
+	 *
+	 * @param o JSONObject Objet JSON à vérifier
+	 * @param k String Clé à vérifier
+	 * @param e Object Valeur attendue
+	 */
 	private static void assert_eq(JSONObject o, String k, Object e) {
 		if (!o.has(k)) {
 			System.out.printf("❌   ↳ Clé '%s' manquante dans l'objet JSON%n", k);
@@ -401,7 +413,11 @@ public final class Test {
 		System.out.printf("   ↳ Utilisateur connecté: %s (%s)%n", mail, nom);
 	}
 
-	/* -------- Main -------- */
+	/**
+	 * Point d'entrée des tests.
+	 *
+	 * @param args String[] Arguments de la ligne de commande
+	 */
 	public static void main(String[] args) {
 		try {
 			if (!waitForServer("127.0.0.1", Integer.parseInt(PORT), 5000)) {

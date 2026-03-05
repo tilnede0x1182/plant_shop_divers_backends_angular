@@ -8,12 +8,19 @@ import org.springframework.http.HttpStatus;
 
 @Component
 @RequestScope
+/**
+ * Classe de garde pour vérifier les autorisations d'accès.
+ */
 public class Guards {
 
     @Autowired
     AuthenticatedUser authenticatedUser;
 
-    public User requireUser() {
+    /**
+	 * Vérifie que l'utilisateur est authentifié.
+	 * @return L'utilisateur authentifié
+	 */
+	public User requireUser() {
         if (authenticatedUser.getUser() == null) {
             // Lance une exception que le GlobalExceptionHandler interceptera
             throw new AuthException(HttpStatus.UNAUTHORIZED, "Authentification requise");
@@ -22,7 +29,11 @@ public class Guards {
         return authenticatedUser.getUser();
     }
 
-    public User requireAdmin() {
+    /**
+	 * Vérifie que l'utilisateur est administrateur.
+	 * @return L'utilisateur administrateur
+	 */
+	public User requireAdmin() {
         User user = requireUser(); // Valide d'abord l'authentification
         if (!user.isAdmin) {
             // Lance une exception 403

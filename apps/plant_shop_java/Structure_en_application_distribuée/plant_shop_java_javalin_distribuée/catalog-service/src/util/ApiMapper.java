@@ -7,9 +7,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import model.Plant;
 
+/**
+ * Utilitaire de conversion modèles vers format API.
+ */
 public final class ApiMapper {
 
-    private ApiMapper() {
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private ApiMapper() {
         // utilitaire statique
     }
 
@@ -24,11 +30,21 @@ public final class ApiMapper {
         return map;
     }
 
-    private static Double toDecimal(BigDecimal value) {
+    /**
+ * Convertit un BigDecimal en Double.
+ * @param value Valeur à convertir
+ * @return Double ou null
+ */
+private static Double toDecimal(BigDecimal value) {
         return value == null ? null : value.doubleValue();
     }
 
-    private static String toIso(Timestamp timestamp) {
+    /**
+ * Convertit un Timestamp en format ISO 8601.
+ * @param timestamp Timestamp à convertir
+ * @return Chaîne ISO 8601 ou null
+ */
+private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 

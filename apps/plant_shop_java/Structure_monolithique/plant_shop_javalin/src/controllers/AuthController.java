@@ -15,19 +15,36 @@ import repository.UserRepository;
 import util.ApiMapper;
 import util.PasswordUtil;
 
+/**
+ * Contrôleur d authentification.
+ * Gère login, logout, register et me.
+ */
 public final class AuthController {
 
     private final UserRepository userRepo;
     private static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public AuthController(Connection db) {
         this.userRepo = new UserRepository(db);
     }
 
+    /**
+     * Retourne le cache des sessions.
+     * @return Map Sessions actives
+     */
     public static Map<String, Integer> getSessions() {
         return sessions;
     }
 
+    /**
+     * Inscription d un nouvel utilisateur.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void register(Context ctx) throws Exception {
         JSONObject body = new JSONObject(ctx.body());
         String name = body.getString("name");
@@ -46,6 +63,11 @@ public final class AuthController {
         ctx.status(HttpStatus.CREATED).json(ApiMapper.toUser(created));
     }
 
+    /**
+     * Connexion d un utilisateur.
+     * @param ctx Context Contexte Javalin
+     * @throws Exception En cas d erreur
+     */
     public void login(Context ctx) throws Exception {
         JSONObject body = new JSONObject(ctx.body());
         String email = body.getString("email");
@@ -71,6 +93,10 @@ public final class AuthController {
         ctx.status(HttpStatus.CREATED).json(ApiMapper.toUser(sanitized));
     }
 
+    /**
+     * Déconnexion d un utilisateur.
+     * @param ctx Context Contexte Javalin
+     */
     public void logout(Context ctx) {
         String sessionId = ctx.cookie("session_id");
         if (sessionId != null) {
@@ -87,6 +113,10 @@ public final class AuthController {
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
+    /**
+     * Retourne l utilisateur connecté.
+     * @param ctx Context Contexte Javalin
+     */
     public void me(Context ctx) {
         User user = ctx.attribute("user");
         if (user == null) {

@@ -13,7 +13,10 @@ import java.util.Map;
  */
 public final class EnvLoader {
 
-    private EnvLoader() {}
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private EnvLoader() {}
 
     public static Map<String, String> load() {
         Map<String, String> values = new HashMap<>();
@@ -25,6 +28,11 @@ public final class EnvLoader {
         return values;
     }
 
+    /**
+     * Lit un fichier .env et ajoute les valeurs à la map.
+     * @param path Path Chemin du fichier
+     * @param values Map Map à remplir
+     */
     private static void read(Path path, Map<String, String> values) {
         if (!Files.exists(path)) {
             return;

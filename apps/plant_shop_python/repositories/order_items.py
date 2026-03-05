@@ -5,9 +5,23 @@ from models.order_item import OrderItem
 from models.plant import Plant # Pour le mapping joint
 
 class OrderItemRepository(BaseRepository):
+    """
+    	Constructeur du repository des items de commande.
+
+    	@param db_connection Connection Connexion psycopg2 à PostgreSQL
+    """
     def __init__(self, db_connection):
         super().__init__(db_connection, "order_items")
 
+    """
+    	Mappe une ligne SQL vers un objet OrderItem.
+    	Peut inclure les données de la plante associée.
+
+    	@param row tuple Ligne de résultat de la requête
+    	@param columns list Noms des colonnes
+    	@param with_plant bool Inclure les données de la plante (défaut: False)
+    	@return OrderItem Instance OrderItem avec plant si demandé
+    """
     def _map_from_row(self, row, columns, with_plant=False):
         col_map = {col: val for col, val in zip(columns, row)}
         order_item = OrderItem(
@@ -26,8 +40,14 @@ class OrderItemRepository(BaseRepository):
             )
         return order_item
 
+    """
+    	Récupère tous les items pour une commande avec les infos plante.
+    	Effectue une jointure avec la table plants.
+
+    	@param order_id int Identifiant de la commande
+    	@return list Liste d instances OrderItem avec plant attaché
+    """
     def find_all_for_order(self, order_id):
-        """Récupère tous les items pour une commande, en joignant les infos de la plante."""
         with self.db.cursor() as cursor:
             sql = """
                 SELECT oi.*, p.name as plant_name, p.price as plant_price

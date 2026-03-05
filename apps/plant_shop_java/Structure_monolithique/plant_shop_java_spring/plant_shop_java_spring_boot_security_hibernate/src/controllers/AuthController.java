@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Contrôleur REST pour l'authentification.
+ * Gère l'inscription, la connexion, la déconnexion et le profil.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -31,6 +35,7 @@ public class AuthController {
     @Autowired
     Guards guards;
 
+    /** Inscrit un nouvel utilisateur. */
     @PostMapping("/register")
     public ResponseEntity<Object> register(@RequestBody User body) throws Exception {
         if (userRepo.existsByEmail(body.email)) {
@@ -45,6 +50,7 @@ public class AuthController {
                              .body(ApiMapper.toUser(created));
     }
 
+    /** Connecte un utilisateur et crée une session. */
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody Map<String, String> body, HttpServletResponse response) throws Exception {
         User user = userRepo.findByEmail(body.get("email")).orElse(null);
@@ -68,6 +74,7 @@ public class AuthController {
                              .body(ApiMapper.toUser(user));
     }
 
+    /** Déconnecte l'utilisateur et supprime la session. */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CookieValue(name = "session_id", required = false) String sessionId, HttpServletResponse response) {
         if (sessionId != null) {
@@ -86,6 +93,7 @@ public class AuthController {
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 
+    /** Retourne le profil de l'utilisateur connecté. */
     @GetMapping("/me")
     public ResponseEntity<Object> me() {
         // Le Guard lève une AuthException (401) si l'utilisateur n'est pas trouvé
@@ -93,6 +101,7 @@ public class AuthController {
         return ResponseEntity.ok(ApiMapper.toUser(user));
     }
 
+    /** Authentifie un utilisateur dans le contexte Spring Security. */
     private void authenticateUser(User user) {
         List<SimpleGrantedAuthority> authorities = user.isAdmin
             ? List.of(

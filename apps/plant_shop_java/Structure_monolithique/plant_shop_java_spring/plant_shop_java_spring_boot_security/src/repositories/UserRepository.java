@@ -6,15 +6,20 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.context.annotation.RequestScope;
 import java.sql.*;
 
+/**
+ * Repository pour les utilisateurs.
+ */
 @Repository
 @RequestScope
 public class UserRepository extends BaseRepository<User> {
 
+    /** Constructeur avec injection. */
     @Autowired
     public UserRepository(Connection db) {
         super(db, "users");
     }
 
+    /** {@inheritDoc} */
     @Override
     protected User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
@@ -27,6 +32,12 @@ public class UserRepository extends BaseRepository<User> {
         );
     }
 
+    /**
+     * Trouve un utilisateur par email avec le hash du mot de passe.
+     *
+     * @param email String Email de l'utilisateur
+     * @return User L'utilisateur trouvé ou null
+     */
     public User findByEmailWithPassword(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -47,6 +58,12 @@ public class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Crée un nouvel utilisateur.
+     *
+     * @param u User L'utilisateur à créer
+     * @return int L'ID généré
+     */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -62,6 +79,11 @@ public class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Met à jour un utilisateur existant.
+     *
+     * @param u User L'utilisateur à mettre à jour
+     */
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword

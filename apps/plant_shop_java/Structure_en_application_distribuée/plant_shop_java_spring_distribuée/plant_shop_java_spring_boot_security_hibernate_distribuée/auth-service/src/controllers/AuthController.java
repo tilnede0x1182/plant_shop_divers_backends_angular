@@ -21,6 +21,9 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
+/**
+ * Contrôleur REST pour l'authentification (Hibernate).
+ */
 public class AuthController {
 
     private static final int SESSION_TTL_SECONDS = 3600;
@@ -98,6 +101,10 @@ public class AuthController {
         ));
     }
 
+    /**
+     * Authentifie l'utilisateur dans le contexte Spring Security.
+     * @param user Utilisateur à authentifier
+     */
     private void authenticateUser(User user) {
         List<SimpleGrantedAuthority> authorities = user.isAdmin
             ? List.of(
@@ -112,6 +119,11 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
+    /**
+     * Résout l'utilisateur depuis l'ID de session.
+     * @param sessionId ID de session
+     * @return Utilisateur ou null
+     */
     private User resolveUserFromSession(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             return null;
@@ -123,6 +135,12 @@ public class AuthController {
         return userRepo.findById(userId).orElse(null);
     }
 
+    /**
+     * Définit le cookie de session.
+     * @param response Réponse HTTP
+     * @param value Valeur du cookie
+     * @param maxAgeSeconds Durée de vie en secondes
+     */
     private void setSessionCookie(HttpServletResponse response, String value, int maxAgeSeconds) {
         // SameSite=Lax pour correspondre au comportement attendu côté Angular
         String cookieValue = String.format("session_id=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax",

@@ -8,14 +8,27 @@ import util.DatabaseFactory; // Import pour la connexion
 import util.ForwardedIdentityHolder; // Ajout si besoin
 
 @Dependent
+/**
+ * Repository pour les opérations sur les utilisateurs.
+ */
 public class UserRepository extends BaseRepository<User> {
 
     @Inject
+    /**
+     * Constructeur avec injection de connexion.
+     * @param db Connexion à la base de données
+     */
     public UserRepository(Connection db) {
         super(db, "users");
     }
 
     @Override
+    /**
+     * Mappe un ResultSet vers un User.
+     * @param rs ResultSet à mapper
+     * @return User créé
+     * @throws SQLException En cas d'erreur SQL
+     */
     protected User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),
@@ -27,6 +40,12 @@ public class UserRepository extends BaseRepository<User> {
         );
     }
 
+    /**
+     * Trouve un utilisateur par email avec le hash du mot de passe.
+     * @param email Email à rechercher
+     * @return User trouvé ou null
+     * @throws SQLException En cas d'erreur SQL
+     */
     public User findByEmailWithPassword(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -47,6 +66,12 @@ public class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Crée un nouvel utilisateur.
+     * @param u Utilisateur à créer
+     * @return ID de l'utilisateur créé
+     * @throws SQLException En cas d'erreur SQL
+     */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -62,6 +87,11 @@ public class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Met à jour un utilisateur.
+     * @param u Utilisateur à mettre à jour
+     * @throws SQLException En cas d'erreur SQL
+     */
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword

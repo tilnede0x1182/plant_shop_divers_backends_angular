@@ -2,7 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace plant_shop_asp_dapper.Models
 {
-    // Dapper mappe directement aux noms de colonnes (snake_case)
+    /// <summary>
+    /// Entite utilisateur.
+    /// </summary>    // Dapper mappe directement aux noms de colonnes (snake_case)
     // si nous n'utilisons pas de mappeur customisé.
     // Pour la simplicité, nous utilisons des propriétés C# standards (PascalCase)
     // et nous utiliserons des alias SQL dans les repositories.

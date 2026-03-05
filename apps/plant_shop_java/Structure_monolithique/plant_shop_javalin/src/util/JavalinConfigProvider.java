@@ -20,6 +20,8 @@ public final class JavalinConfigProvider {
 
     /**
      * Configure les paramètres Javalin (JSON mapper, content-type par défaut).
+     *
+     * @param config JavalinConfig Configuration Javalin à modifier
      */
     public static void configureJavalin(JavalinConfig config) {
         config.jsonMapper(new JavalinJsonMapper());
@@ -66,6 +68,9 @@ public final class JavalinConfigProvider {
 
     /**
      * Vérifie si l'origine est autorisée.
+     *
+     * @param origin String L'origine de la requête
+     * @return boolean true si l'origine est autorisée
      */
     public static boolean isAllowedOrigin(String origin) {
         return origin != null && ALLOWED_ORIGINS.contains(origin);

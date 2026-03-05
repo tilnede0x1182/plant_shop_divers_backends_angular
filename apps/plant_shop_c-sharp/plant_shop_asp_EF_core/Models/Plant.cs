@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace plant_shop_asp_EF_core.Models
 {
+    /// <summary>
+    /// Entite plante avec nom, description, prix et stock.
+    /// </summary>
     [Table("plants")]
     public class Plant
     {

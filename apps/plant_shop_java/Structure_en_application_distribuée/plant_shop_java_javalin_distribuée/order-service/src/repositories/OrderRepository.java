@@ -7,14 +7,26 @@ import java.util.List;
 import model.Order;
 import order.repositories.BaseRepository;
 
+/**
+ * Repository des commandes.
+ */
 public final class OrderRepository extends BaseRepository<Order> {
 
-    public OrderRepository(Connection db) {
+    /**
+ * Constructeur.
+ * @param db Connexion à la base de données
+ */
+public OrderRepository(Connection db) {
         super(db, "orders");
     }
 
-    @Override
-    protected Order mapFromResultSet(ResultSet rs) throws SQLException {
+    /**
+ * Mappe un ResultSet vers un objet Order.
+ * @param rs ResultSet à mapper
+ * @return Order mappé
+ */
+@Override
+protected Order mapFromResultSet(ResultSet rs) throws SQLException {
         return new Order(
             rs.getInt("id"),
             rs.getInt("user_id"),

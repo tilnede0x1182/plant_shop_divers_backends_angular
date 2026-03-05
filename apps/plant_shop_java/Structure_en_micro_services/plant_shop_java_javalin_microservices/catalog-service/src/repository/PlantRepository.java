@@ -7,14 +7,26 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository pour la gestion des plantes en base.
+ */
 public final class PlantRepository {
 
     private final Connection db;
 
+    /**
+     * Constructeur avec connexion à la base de données.
+     * @param db Connexion à la base de données
+     */
     public PlantRepository(Connection db) {
         this.db = db;
     }
 
+    /**
+     * Trouve une plante par son ID.
+     * @param id Identifiant de la plante
+     * @return Plante trouvée ou null
+     */
     public Plant find(int id) throws SQLException {
         String sql = "SELECT * FROM plants WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -28,6 +40,10 @@ public final class PlantRepository {
         }
     }
 
+    /**
+     * Liste toutes les plantes.
+     * @return Liste des plantes
+     */
     public List<Plant> list() throws SQLException {
         String sql = "SELECT * FROM plants ORDER BY id";
         List<Plant> plants = new ArrayList<>();
@@ -40,6 +56,10 @@ public final class PlantRepository {
         return plants;
     }
 
+    /**
+     * Supprime une plante par son ID.
+     * @param id Identifiant de la plante
+     */
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM plants WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -48,6 +68,11 @@ public final class PlantRepository {
         }
     }
 
+    /**
+     * Mappe un ResultSet vers un objet Plant.
+     * @param rs ResultSet positionné sur une ligne
+     * @return Objet Plant
+     */
     private Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
             rs.getInt("id"),
@@ -59,6 +84,11 @@ public final class PlantRepository {
         );
     }
 
+    /**
+     * Crée une nouvelle plante en base.
+     * @param p Plante à créer
+     * @return ID généré
+     */
     public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -74,6 +104,10 @@ public final class PlantRepository {
         }
     }
 
+    /**
+     * Met à jour une plante existante.
+     * @param p Plante avec les nouvelles données
+     */
     public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -86,7 +120,11 @@ public final class PlantRepository {
         }
     }
 
-    // AJOUTÉ : Méthode pour mettre à jour uniquement le stock
+    /**
+     * Met à jour uniquement le stock d'une plante.
+     * @param id Identifiant de la plante
+     * @param newStock Nouveau stock
+     */
     public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {

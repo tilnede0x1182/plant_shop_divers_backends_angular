@@ -19,6 +19,10 @@ import utils.PasswordUtil;
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+ * Contrôleur REST pour l'authentification.
+ * Gère l'inscription, la connexion, la déconnexion et la récupération du profil.
+ */
 @RequestScoped // Par défaut dans Quarkus, mais explicite c'est bien
 public class AuthController {
 
@@ -31,6 +35,11 @@ public class AuthController {
     @Inject
     Guards guards;
 
+    /**
+     * Inscrit un nouvel utilisateur.
+     * @param body Contient name, email, password
+     * @return 201 avec l'utilisateur créé, 409 si email déjà utilisé
+     */
     @POST
     @Path("/register")
     public Response register(Map<String, String> body) throws Exception {
@@ -53,6 +62,11 @@ public class AuthController {
                        .build();
     }
 
+    /**
+     * Connecte un utilisateur existant.
+     * @param body Contient email, password
+     * @return 201 avec cookie de session, 401 si identifiants invalides
+     */
     @POST
     @Path("/login")
     public Response login(Map<String, String> body) throws Exception {
@@ -80,6 +94,11 @@ public class AuthController {
                        .build();
     }
 
+    /**
+     * Déconnecte l'utilisateur courant.
+     * @param sessionId ID de session depuis le cookie
+     * @return 204 No Content
+     */
     @POST
     @Path("/logout")
     public Response logout(@CookieParam("session_id") String sessionId) {
@@ -99,6 +118,10 @@ public class AuthController {
         return Response.noContent().cookie(expiredCookie).build();
     }
 
+    /**
+     * Retourne le profil de l'utilisateur connecté.
+     * @return 200 avec les données utilisateur, 401 si non connecté
+     */
     @GET
     @Path("/me")
     public Response me() {

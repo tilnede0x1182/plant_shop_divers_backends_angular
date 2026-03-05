@@ -11,11 +11,22 @@ import io.javalin.http.UnauthorizedResponse;
  */
 public final class AuthMiddleware {
 
-    private AuthMiddleware() {
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private AuthMiddleware() {
     }
 
     @FunctionalInterface
-    public interface UserResolver {
+    /**
+ * Interface de résolution d'utilisateur.
+ */
+public interface UserResolver {
+        /**
+         * Résout l'utilisateur depuis le contexte d'auth.
+         * @param auth AuthContext Contexte d'authentification
+         * @return Object Utilisateur résolu
+         */
         Object resolve(AuthContext auth) throws Exception;
     }
 

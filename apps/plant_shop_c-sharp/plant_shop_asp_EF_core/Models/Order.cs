@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace plant_shop_asp_EF_core.Models
 {
+    /// <summary>
+    /// Entite commande avec statut, total et relation vers items.
+    /// </summary>
     [Table("orders")]
     public class Order
     {

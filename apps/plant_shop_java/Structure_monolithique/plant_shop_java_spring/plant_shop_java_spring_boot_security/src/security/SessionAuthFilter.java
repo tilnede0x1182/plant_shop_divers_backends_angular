@@ -20,6 +20,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Filtre d'authentification par session cookie.
+ * Vérifie le cookie et attache l'utilisateur au contexte Spring Security.
+ */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1) // S'exécute juste après CorsFilter
 public class SessionAuthFilter extends OncePerRequestFilter {
@@ -35,6 +39,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     @Autowired
     UserRepository userRepo; // Le repo est @RequestScope, Spring injecte le bon proxy
 
+    /** Filtre principal d'authentification par session. */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -51,6 +56,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /** Extrait le cookie de session de la requête. */
     private Cookie extractSessionCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
@@ -64,6 +70,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
+    /** Traite la session et authentifie l'utilisateur si valide. */
     private void handleSession(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             return;
@@ -93,6 +100,7 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         }
     }
 
+    /** Construit les autorités Spring Security selon le rôle. */
     private List<SimpleGrantedAuthority> buildAuthorities(boolean isAdmin) {
         if (isAdmin) {
             return List.of(

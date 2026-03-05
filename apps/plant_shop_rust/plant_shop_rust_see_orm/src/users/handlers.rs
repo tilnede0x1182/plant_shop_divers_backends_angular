@@ -1,3 +1,9 @@
+//! Handlers Poem pour gestion des utilisateurs.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use crate::auth::session::{AdminGuard, AuthSession};
 use crate::config::env_u64;
 use crate::entity::users::{ActiveModel as ActiveUser, Column, Entity as User};
@@ -7,7 +13,6 @@ use crate::users::models::{NewUser, UpdateUser, User as UserDto};
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
 use once_cell::sync::Lazy;
-/// Handlers Poem pour gestion utilisateurs (SeaORM)
 use poem::{
     handler,
     http::StatusCode,
@@ -19,8 +24,21 @@ use sea_orm::{
     Set,
 };
 
+// ==============================================================================
+// Constantes
+// ==============================================================================
+
 static ARGON2: Lazy<Argon2> = Lazy::new(Argon2::default);
 
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Liste tous les utilisateurs (admin uniquement).
+///
+/// @param db Connection a la base de donnees
+/// @param admin Guard verifiant les droits admin
+/// @return Json<Vec<UserDto>> ou erreur
 #[handler]
 pub async fn list_users(
     Data(db): Data<&DatabaseConnection>,
@@ -49,6 +67,11 @@ pub async fn list_users(
     Ok(Json(mapped))
 }
 
+/// Cree un nouvel utilisateur.
+///
+/// @param db Connection a la base de donnees
+/// @param payload Donnees du nouvel utilisateur
+/// @return Tuple (StatusCode, Json<UserDto>) ou erreur
 #[handler]
 pub async fn create_user(
     Data(db): Data<&DatabaseConnection>,
@@ -72,6 +95,11 @@ pub async fn create_user(
     Ok((StatusCode::CREATED, Json(UserDto::from(inserted))))
 }
 
+/// Recupere un utilisateur par ID.
+///
+/// @param db Connection a la base de donnees
+/// @param user_id ID de l'utilisateur
+/// @return Json<UserDto> ou erreur 404
 #[handler]
 pub async fn get_user(
     Data(db): Data<&DatabaseConnection>,
@@ -86,6 +114,13 @@ pub async fn get_user(
     Ok(Json(UserDto::from(user)))
 }
 
+/// Met a jour un utilisateur.
+///
+/// @param auth Session d'authentification
+/// @param db Connection a la base de donnees
+/// @param user_id ID de l'utilisateur a modifier
+/// @param payload Champs a mettre a jour
+/// @return Json<UserDto> mis a jour ou erreur
 #[handler]
 pub async fn update_user(
     auth: AuthSession,
@@ -116,6 +151,11 @@ pub async fn update_user(
     Ok(Json(UserDto::from(updated)))
 }
 
+/// Supprime un utilisateur.
+///
+/// @param db Connection a la base de donnees
+/// @param user_id ID de l'utilisateur a supprimer
+/// @return () ou erreur
 #[handler]
 pub async fn delete_user(
     Data(db): Data<&DatabaseConnection>,

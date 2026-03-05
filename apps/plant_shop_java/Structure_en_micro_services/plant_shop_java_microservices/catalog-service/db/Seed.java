@@ -7,6 +7,9 @@ import java.util.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Script de seed pour peupler la base de données.
+ */
 public final class Seed {
 
     private static final int NB_PLANTS = 50;
@@ -30,9 +33,19 @@ public final class Seed {
     };
 
     private static final Random RNG = new Random();
+    /**
+     * Génère un nombre aléatoire entre min et max.
+     * @param min Valeur minimum
+     * @param max Valeur maximum
+     * @return Nombre aléatoire
+     */
     private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
     private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
 
+    /**
+     * Génère une phrase lorem ipsum.
+     * @return Phrase générée
+     */
     private static String loremSentence() {
         String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
                 "sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};
@@ -65,6 +78,11 @@ public final class Seed {
         return out;
     }
 
+    /**
+     * Point d'entrée principal.
+     * @param args Arguments de ligne de commande
+     * @throws Exception En cas d'erreur
+     */
     public static void main(String[] args) throws Exception {
         Map<String,String> cfg = env();
         Connection db = DriverManager.getConnection(

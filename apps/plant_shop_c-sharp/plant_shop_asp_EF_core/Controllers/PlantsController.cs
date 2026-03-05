@@ -11,12 +11,19 @@ namespace plant_shop_asp_EF_core.Controllers
     {
         private readonly AppDbContext _context;
 
+        /// <summary>
+        /// Constructeur du controleur des plantes.
+        /// </summary>
+        /// <param name="context">Contexte de base de donnees</param>
         public PlantsController(AppDbContext context)
         {
             _context = context;
         }
 
-        // GET: api/plants
+        /// <summary>
+        /// Liste toutes les plantes en stock.
+        /// </summary>
+        /// <returns>Liste des plantes</returns>
         [HttpGet("api/plants")]
         public async Task<ActionResult<IEnumerable<Plant>>> GetPlants()
         {
@@ -27,7 +34,11 @@ namespace plant_shop_asp_EF_core.Controllers
                 .ToListAsync();
         }
 
-        // GET: api/plants/5
+        /// <summary>
+        /// Recupere une plante par son ID.
+        /// </summary>
+        /// <param name="id">Identifiant de la plante</param>
+        /// <returns>Plante trouvee</returns>
         [HttpGet("api/plants/{id}")]
         public async Task<ActionResult<Plant>> GetPlant(int id)
         {
@@ -41,9 +52,10 @@ namespace plant_shop_asp_EF_core.Controllers
             return plant;
         }
 
-        // --- Routes Admin ---
-
-        // GET: api/admin/plants
+        /// <summary>
+        /// Liste toutes les plantes (admin).
+        /// </summary>
+        /// <returns>Liste complete des plantes</returns>
         [HttpGet("api/admin/plants")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<Plant>>> GetAdminPlants()
@@ -54,7 +66,11 @@ namespace plant_shop_asp_EF_core.Controllers
                 .ToListAsync();
         }
 
-        // POST: api/admin/plants
+        /// <summary>
+        /// Cree une nouvelle plante (admin).
+        /// </summary>
+        /// <param name="plant">Donnees de la plante</param>
+        /// <returns>Plante creee</returns>
         [HttpPost("api/admin/plants")]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Plant>> PostPlant(Plant plant)
@@ -65,7 +81,12 @@ namespace plant_shop_asp_EF_core.Controllers
             return CreatedAtAction(nameof(GetPlant), new { id = plant.Id }, plant);
         }
 
-        // PATCH: api/admin/plants/5
+        /// <summary>
+        /// Met a jour une plante (admin).
+        /// </summary>
+        /// <param name="id">Identifiant de la plante</param>
+        /// <param name="dto">Donnees de mise a jour</param>
+        /// <returns>Plante mise a jour</returns>
         [HttpPatch("api/admin/plants/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PatchPlant(int id, [FromBody] PlantUpdateDto dto)
@@ -101,7 +122,11 @@ namespace plant_shop_asp_EF_core.Controllers
             return Ok(plant);
         }
 
-        // DELETE: api/admin/plants/5
+        /// <summary>
+        /// Supprime une plante (admin).
+        /// </summary>
+        /// <param name="id">Identifiant de la plante</param>
+        /// <returns>OK si supprime</returns>
         [HttpDelete("api/admin/plants/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeletePlant(int id)
@@ -119,7 +144,9 @@ namespace plant_shop_asp_EF_core.Controllers
         }
     }
 
-    // DTO pour PATCH
+    /// <summary>
+    /// DTO pour la mise a jour partielle d une plante.
+    /// </summary>
     public class PlantUpdateDto
     {
         public string? Name { get; set; }

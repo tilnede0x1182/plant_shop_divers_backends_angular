@@ -1,15 +1,32 @@
+//! Module de connexion a la base de donnees PostgreSQL via SeaORM.
+
+// ==============================================================================
+// Modules
+// ==============================================================================
+
+/// Migrations SQL.
 pub mod migrations;
+/// Seed de donnees de test.
 pub mod seed;
 
-use sea_orm::DatabaseConnection;
+// ==============================================================================
+// Importations
+// ==============================================================================
 
+use sea_orm::DatabaseConnection;
 use dotenvy::dotenv;
-/// Module `db` simplifié pour SeaORM
-/// Ne crée plus de `PgPool` (SQLx), la connexion est fournie via `connect_db()`.
 use sea_orm::Database;
 use std::env;
 
-/// Connexion à la base PostgreSQL via SeaORM.
+// ==============================================================================
+// Fonctions
+// ==============================================================================
+
+/// Connexion a la base PostgreSQL via SeaORM.
+///
+/// Lit DATABASE_URL depuis l'environnement et etablit la connexion.
+///
+/// @return DatabaseConnection prete a l'emploi
 pub async fn connect_db() -> DatabaseConnection {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL manquant dans .env");

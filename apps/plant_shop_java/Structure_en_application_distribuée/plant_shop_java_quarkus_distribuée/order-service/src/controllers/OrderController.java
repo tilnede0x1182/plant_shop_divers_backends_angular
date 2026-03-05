@@ -25,6 +25,9 @@ import util.ApiMapper;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped
+/**
+ * Contrôleur REST pour les commandes.
+ */
 public class OrderController {
 
     @Inject
@@ -37,6 +40,11 @@ public class OrderController {
     Guards guards;
 
     @GET
+    /**
+     * Liste les commandes de l'utilisateur.
+     * @return Réponse avec liste des commandes
+     * @throws Exception En cas d'erreur
+     */
     public Response list() throws Exception {
         User currentUser = guards.requireUser();
         List<Order> orders = repo.listByUser(currentUser.id);
@@ -56,6 +64,12 @@ public class OrderController {
 
     @POST
     @Transactional // Gère la transaction (commit/rollback)
+    /**
+     * Crée une nouvelle commande.
+     * @param body Données de la commande
+     * @return Réponse avec la commande créée
+     * @throws Exception En cas d'erreur
+     */
     public Response create(Map<String, List<Map<String, Integer>>> body) throws Exception {
         User currentUser = guards.requireUser();
         List<Map<String, Integer>> itemsJson = body.get("items");
@@ -96,6 +110,13 @@ public class OrderController {
     @PATCH
     @Path("/{id}")
     @Transactional
+    /**
+     * Met à jour une commande.
+     * @param id ID de la commande
+     * @param body Données à mettre à jour
+     * @return Réponse avec la commande mise à jour
+     * @throws Exception En cas d'erreur
+     */
     public Response patch(@PathParam("id") int id, Map<String, String> body) throws Exception {
         guards.requireAdmin();
         if (repo.find(id) == null) {
@@ -116,6 +137,12 @@ public class OrderController {
     @DELETE
     @Path("/{id}")
     @Transactional
+    /**
+     * Supprime une commande.
+     * @param id ID de la commande
+     * @return Réponse de succès
+     * @throws Exception En cas d'erreur
+     */
     public Response destroy(@PathParam("id") int id) throws Exception {
         guards.requireAdmin();
         // Doit supprimer les items avant la commande à cause de la clé étrangère

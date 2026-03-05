@@ -12,8 +12,15 @@ import util.PasswordUtil;
 
 import java.util.Map;
 
+/**
+ * Contrôleur pour les utilisateurs.
+ * Gère les opérations CRUD sur les utilisateurs.
+ */
 public final class UserController extends AppController {
 
+    /**
+     * Liste tous les utilisateurs (admin).
+     */
     @GET
     public void index() {
         runAction(() -> {
@@ -23,6 +30,9 @@ public final class UserController extends AppController {
         });
     }
 
+    /**
+     * Affiche un utilisateur.
+     */
     @GET
     public void show() {
         runAction(() -> {
@@ -45,6 +55,9 @@ public final class UserController extends AppController {
         });
     }
 
+    /**
+     * Crée un utilisateur.
+     */
     @POST
     public void create() {
         runAction(() -> {
@@ -81,6 +94,9 @@ public final class UserController extends AppController {
         });
     }
 
+    /**
+     * Met à jour un utilisateur.
+     */
     @PATCH
     public void update() {
         runAction(() -> {
@@ -132,6 +148,9 @@ public final class UserController extends AppController {
         });
     }
 
+    /**
+     * Supprime un utilisateur.
+     */
     @DELETE
     public void destroy() {
         runAction(() -> {
@@ -147,6 +166,12 @@ public final class UserController extends AppController {
         });
     }
 
+    /**
+     * Extrait un booléen d une Map.
+     * @param body Map Corps de requête
+     * @param key String Clé à extraire
+     * @return Boolean Valeur ou null
+     */
     private Boolean extractBoolean(Map<String, Object> body, String key) {
         Object value = body.get(key);
         if (value instanceof Boolean b) {
@@ -159,6 +184,11 @@ public final class UserController extends AppController {
         return null;
     }
 
+    /**
+     * Parse un ID depuis une chaîne.
+     * @param value String Valeur à parser
+     * @return Integer ID ou null
+     */
     private Integer parseId(String value) {
         try {
             return value == null ? null : Integer.valueOf(value);

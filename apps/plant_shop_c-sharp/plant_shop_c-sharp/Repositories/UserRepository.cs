@@ -5,10 +5,22 @@ using System.Threading.Tasks;
 
 namespace plant_shop_c_sharp.Repositories
 {
+    /// <summary>
+    /// Repository CRUD pour les utilisateurs.
+    /// </summary>
     public class UserRepository : BaseRepository
     {
+        /// <summary>
+        /// Constructeur avec injection de la source de donnees.
+        /// </summary>
+        /// <param name="dataSource">Source Npgsql.</param>
         public UserRepository(NpgsqlDataSource dataSource) : base(dataSource) { }
 
+        /// <summary>
+        /// Trouve un utilisateur par email.
+        /// </summary>
+        /// <param name="email">Email a rechercher.</param>
+        /// <returns>Utilisateur ou null.</returns>
         public async Task<User?> FindByEmailAsync(string email)
         {
             await using var conn = GetConnection();
@@ -23,6 +35,11 @@ namespace plant_shop_c_sharp.Repositories
             return null;
         }
 
+        /// <summary>
+        /// Trouve un utilisateur par ID.
+        /// </summary>
+        /// <param name="id">ID a rechercher.</param>
+        /// <returns>Utilisateur ou null.</returns>
         public async Task<User?> FindByIdAsync(int id)
         {
             await using var conn = GetConnection();
@@ -37,6 +54,10 @@ namespace plant_shop_c_sharp.Repositories
             return null;
         }
 
+        /// <summary>
+        /// Liste tous les utilisateurs.
+        /// </summary>
+        /// <returns>Liste des utilisateurs.</returns>
         public async Task<List<User>> FindAllAsync()
         {
             var users = new List<User>();
@@ -51,6 +72,11 @@ namespace plant_shop_c_sharp.Repositories
             return users;
         }
 
+        /// <summary>
+        /// Cree un nouvel utilisateur.
+        /// </summary>
+        /// <param name="user">Utilisateur a creer.</param>
+        /// <returns>Utilisateur avec ID genere.</returns>
         public async Task<User> CreateAsync(User user)
         {
             await using var conn = GetConnection();
@@ -69,6 +95,10 @@ namespace plant_shop_c_sharp.Repositories
             return user;
         }
 
+        /// <summary>
+        /// Met a jour un utilisateur.
+        /// </summary>
+        /// <param name="user">Utilisateur modifie.</param>
         public async Task UpdateAsync(User user)
         {
             await using var conn = GetConnection();
@@ -84,6 +114,10 @@ namespace plant_shop_c_sharp.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        /// <summary>
+        /// Supprime un utilisateur.
+        /// </summary>
+        /// <param name="id">ID a supprimer.</param>
         public async Task DeleteAsync(int id)
         {
             await using var conn = GetConnection();
@@ -92,6 +126,12 @@ namespace plant_shop_c_sharp.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        /// <summary>
+        /// Mappe un reader vers un User.
+        /// </summary>
+        /// <param name="reader">Reader Npgsql.</param>
+        /// <param name="includePassword">Inclure le hash du password.</param>
+        /// <returns>Entite User.</returns>
         private User MapUser(NpgsqlDataReader reader, bool includePassword = true)
         {
             return new User

@@ -12,8 +12,15 @@ import util.ApiMapper;
 import java.math.BigDecimal;
 import java.util.Map;
 
+/**
+ * Controleur de gestion des plantes.
+ * Gere les operations CRUD sur les plantes.
+ */
 public final class PlantController extends AppController {
 
+    /**
+     * Liste toutes les plantes.
+     */
     @GET
     public void index() {
         runAction(() -> {
@@ -22,6 +29,9 @@ public final class PlantController extends AppController {
         });
     }
 
+    /**
+     * Affiche une plante specifique.
+     */
     @GET
     public void show() {
         runAction(() -> {
@@ -35,6 +45,9 @@ public final class PlantController extends AppController {
         });
     }
 
+    /**
+     * Liste toutes les plantes (admin uniquement).
+     */
     public void adminPlants() {
         runAction(() -> {
             requireAdmin();
@@ -43,6 +56,9 @@ public final class PlantController extends AppController {
         });
     }
 
+    /**
+     * Cree une nouvelle plante (admin uniquement).
+     */
     @POST
     public void createAdminPlant() {
         runAction(() -> {
@@ -59,6 +75,9 @@ public final class PlantController extends AppController {
         });
     }
 
+    /**
+     * Met a jour une plante (admin uniquement).
+     */
     @PATCH
     public void updateAdminPlant() {
         runAction(() -> {
@@ -79,6 +98,9 @@ public final class PlantController extends AppController {
         });
     }
 
+    /**
+     * Supprime une plante (admin uniquement).
+     */
     @DELETE
     public void deleteAdminPlant() {
         runAction(() -> {
@@ -94,6 +116,12 @@ public final class PlantController extends AppController {
         });
     }
 
+    /**
+     * Applique les donnees du payload sur une plante.
+     * @param plant Plant Plante a modifier
+     * @param payload Map<String,Object> Donnees a appliquer
+     * @param requireAll boolean Si true, tous les champs sont requis
+     */
     private void applyPlantPayload(Plant plant, Map<String, Object> payload, boolean requireAll) {
         Object name = payload.get("name");
         Object price = payload.get("price");
@@ -120,6 +148,11 @@ public final class PlantController extends AppController {
         }
     }
 
+    /**
+     * Convertit un objet en BigDecimal.
+     * @param value Object Valeur a convertir
+     * @return BigDecimal Valeur convertie
+     */
     private BigDecimal toBigDecimal(Object value) {
         if (value instanceof Number number) {
             return BigDecimal.valueOf(number.doubleValue());
@@ -127,6 +160,11 @@ public final class PlantController extends AppController {
         return new BigDecimal(value.toString());
     }
 
+    /**
+     * Convertit un objet en Integer.
+     * @param value Object Valeur a convertir
+     * @return Integer Valeur convertie
+     */
     private Integer toInteger(Object value) {
         if (value instanceof Number number) {
             return number.intValue();
@@ -134,6 +172,11 @@ public final class PlantController extends AppController {
         return Integer.parseInt(value.toString());
     }
 
+    /**
+     * Parse un ID depuis une chaine.
+     * @param id String ID a parser
+     * @return Integer ID parse ou null
+     */
     private Integer parseId(String id) {
         try {
             return Integer.valueOf(id);

@@ -16,6 +16,10 @@ import org.json.JSONObject;
 import repository.PlantRepository;
 import util.ApiMapper;
 
+/**
+ * Contrôleur pour la gestion des plantes.
+ * Gère les opérations CRUD sur les plantes.
+ */
 public final class PlantController {
 
     private final PlantRepository repo;
@@ -25,22 +29,38 @@ public final class PlantController {
         COLLATOR.setStrength(Collator.PRIMARY);
     }
 
+    /**
+     * Constructeur avec connexion à la base de données.
+     * @param db Connexion à la base de données
+     */
     public PlantController(Connection db) {
         this.repo = new PlantRepository(db);
     }
 
+    /**
+     * Liste toutes les plantes (accès public).
+     * @param ctx Contexte de la requête
+     */
     public void listPublic(Context ctx) throws Exception {
         List<Plant> plants = repo.list();
         plants.sort(this::comparePlants);
         ctx.json(mapPlants(plants));
     }
 
+    /**
+     * Liste toutes les plantes (accès admin).
+     * @param ctx Contexte de la requête
+     */
     public void listAdmin(Context ctx) throws Exception {
         List<Plant> plants = repo.list();
         plants.sort(this::comparePlants);
         ctx.json(mapPlants(plants));
     }
 
+    /**
+     * Affiche une plante par son ID.
+     * @param ctx Contexte de la requête
+     */
     public void show(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Plant plant = repo.find(id);
@@ -51,6 +71,10 @@ public final class PlantController {
         ctx.json(ApiMapper.toPlant(plant));
     }
 
+    /**
+     * Crée une nouvelle plante.
+     * @param ctx Contexte de la requête
+     */
     public void create(Context ctx) throws Exception {
         JSONObject body = new JSONObject(ctx.body());
         if (!body.has("name") || !body.has("price")) {
@@ -69,6 +93,10 @@ public final class PlantController {
         ctx.status(HttpStatus.CREATED).json(ApiMapper.toPlant(created));
     }
 
+    /**
+     * Met à jour une plante existante.
+     * @param ctx Contexte de la requête
+     */
     public void update(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Plant plant = repo.find(id);
@@ -95,6 +123,10 @@ public final class PlantController {
         ctx.json(ApiMapper.toPlant(repo.find(id)));
     }
 
+    /**
+     * Supprime une plante.
+     * @param ctx Contexte de la requête
+     */
     public void destroy(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         repo.delete(id);
@@ -122,6 +154,11 @@ public final class PlantController {
         ctx.status(HttpStatus.OK).json(Map.of("success", true, "stock", newStock));
     }
 
+    /**
+     * Convertit une liste de plantes en liste de Maps.
+     * @param plants Liste de plantes
+     * @return Liste de Maps
+     */
     private List<Map<String, Object>> mapPlants(List<Plant> plants) {
         List<Map<String, Object>> mapped = new ArrayList<>(plants.size());
         for (Plant plant : plants) {
@@ -130,6 +167,12 @@ public final class PlantController {
         return mapped;
     }
 
+    /**
+     * Compare deux plantes pour le tri alphabétique.
+     * @param left Première plante
+     * @param right Seconde plante
+     * @return Résultat de comparaison
+     */
     private int comparePlants(Plant left, Plant right) {
         String ln = normalizeName(left.name);
         String rn = normalizeName(right.name);
@@ -140,6 +183,11 @@ public final class PlantController {
         return Integer.compare(left.id, right.id);
     }
 
+    /**
+     * Normalise un nom pour la comparaison.
+     * @param name Nom à normaliser
+     * @return Nom normalisé
+     */
     private String normalizeName(String name) {
         return name == null ? "" : name.trim();
     }

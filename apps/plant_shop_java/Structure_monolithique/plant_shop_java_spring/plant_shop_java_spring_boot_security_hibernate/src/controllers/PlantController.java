@@ -12,6 +12,10 @@ import repositories.PlantRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Contrôleur REST pour la gestion des plantes.
+ * Fournit les endpoints publics et admin pour le catalogue.
+ */
 @RestController
 @RequestMapping("/api")
 public class PlantController {
@@ -23,6 +27,7 @@ public class PlantController {
 
     // --- Endpoints Publics ---
 
+    /** Liste toutes les plantes (endpoint public). */
     @GetMapping("/plants")
     public ResponseEntity<List<?>> listPublic() throws Exception {
         List<?> payload = repo.findAllByOrderByNameAsc().stream()
@@ -31,6 +36,7 @@ public class PlantController {
         return ResponseEntity.ok(payload);
     }
 
+    /** Récupère une plante par son ID. */
     @GetMapping("/plants/{id}")
     public ResponseEntity<Object> show(@PathVariable("id") int id) throws Exception {
         Plant plant = repo.findById(id).orElse(null);
@@ -42,12 +48,14 @@ public class PlantController {
 
     // --- Endpoints Admin (/admin/plants) ---
 
+    /** Liste toutes les plantes (endpoint admin). */
     @GetMapping("/admin/plants")
     public ResponseEntity<List<?>> listAdmin() throws Exception {
         guards.requireAdmin(); // Sécurise la route
         return listPublic();   // Réutilise la logique publique
     }
 
+    /** Crée une nouvelle plante (admin uniquement). */
     @PostMapping("/admin/plants")
     public ResponseEntity<Object> create(@RequestBody Plant plant) throws Exception {
         guards.requireAdmin();
@@ -59,6 +67,7 @@ public class PlantController {
                              .body(ApiMapper.toPlant(created));
     }
 
+    /** Met à jour une plante (admin uniquement). */
     @PatchMapping("/admin/plants/{id}")
     public ResponseEntity<Object> update(@PathVariable("id") int id, @RequestBody Plant updatedData) throws Exception {
         guards.requireAdmin();
@@ -75,6 +84,7 @@ public class PlantController {
         return ResponseEntity.ok(ApiMapper.toPlant(existing));
     }
 
+    /** Supprime une plante (admin uniquement). */
     @DeleteMapping("/admin/plants/{id}")
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin();

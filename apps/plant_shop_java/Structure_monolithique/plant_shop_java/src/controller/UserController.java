@@ -10,6 +10,10 @@ import org.json.JSONObject;
 import repository.UserRepository;
 import util.PasswordUtil;
 
+/**
+ * Contrôleur pour la gestion des utilisateurs.
+ * Gère les opérations CRUD sur les utilisateurs.
+ */
 public final class UserController extends BaseController {
 
     private final UserRepository repo;
@@ -19,6 +23,11 @@ public final class UserController extends BaseController {
         this.repo = new UserRepository(db);
     }
 
+    /**
+     * Gère les requêtes HTTP pour les utilisateurs.
+     * @param ex HttpExchange Échange HTTP
+     * @throws IOException En cas d'erreur I/O
+     */
     @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
@@ -53,6 +62,12 @@ public final class UserController extends BaseController {
         }
     }
 
+    /**
+     * Liste tous les utilisateurs (admin uniquement).
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @throws Exception En cas d'erreur
+     */
     private void list(HttpExchange ex, User currentUser) throws Exception {
         // La route GET /users est protégée et réservée aux admins
         if (currentUser == null || !currentUser.isAdmin) {
@@ -67,6 +82,13 @@ public final class UserController extends BaseController {
         sendJsonResponse(ex, 200, jsonArray.toString());
     }
 
+    /**
+     * Affiche le détail d'un utilisateur.
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @param id int Identifiant de l'utilisateur
+     * @throws Exception En cas d'erreur
+     */
     private void show(HttpExchange ex, User currentUser, int id) throws Exception {
         if (currentUser == null || (currentUser.id != id && !currentUser.isAdmin)) {
             sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
@@ -80,6 +102,12 @@ public final class UserController extends BaseController {
         sendJsonResponse(ex, 200, toJson(u).toString());
     }
 
+    /**
+     * Crée un nouvel utilisateur.
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @throws Exception En cas d'erreur
+     */
     private void create(HttpExchange ex, User currentUser) throws Exception {
         // La création d'utilisateur est réservée aux admins dans ce contexte de test
         if (currentUser == null || !currentUser.isAdmin) {
@@ -105,6 +133,13 @@ public final class UserController extends BaseController {
         sendJsonResponse(ex, 201, toJson(newUser).toString());
     }
 
+    /**
+     * Met à jour un utilisateur.
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @param id int Identifiant de l'utilisateur
+     * @throws Exception En cas d'erreur
+     */
     private void update(HttpExchange ex, User currentUser, int id) throws Exception {
         if (currentUser == null || (currentUser.id != id && !currentUser.isAdmin)) {
             sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
@@ -128,6 +163,13 @@ public final class UserController extends BaseController {
         sendJsonResponse(ex, 200, toJson(u).toString());
     }
 
+    /**
+     * Supprime un utilisateur.
+     * @param ex HttpExchange Échange HTTP
+     * @param currentUser User Utilisateur connecté
+     * @param id int Identifiant de l'utilisateur
+     * @throws Exception En cas d'erreur
+     */
     private void destroy(HttpExchange ex, User currentUser, int id) throws Exception {
         if (currentUser == null || !currentUser.isAdmin) {
             sendJsonResponse(ex, 403, "{\"error\":\"Accès interdit\"}");
@@ -137,6 +179,11 @@ public final class UserController extends BaseController {
         sendEmptyResponse(ex, 200);
     }
 
+    /**
+     * Convertit un utilisateur en JSON.
+     * @param u User Utilisateur à convertir
+     * @return JSONObject Objet JSON
+     */
     private JSONObject toJson(User u) {
         JSONObject json = new JSONObject();
         json.put("id", u.id);

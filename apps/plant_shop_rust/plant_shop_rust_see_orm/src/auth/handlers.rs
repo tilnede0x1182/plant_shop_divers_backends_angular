@@ -1,3 +1,9 @@
+//! Handlers Poem pour auth (login, register, me, logout) - version SeaORM.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use crate::auth::jwt::generate_jwt;
 use crate::auth::session::AuthSession;
 use crate::entity::users::{ActiveModel as ActiveUser, Column, Entity as User};
@@ -6,7 +12,6 @@ use crate::users::models::User as UserDto;
 use argon2::password_hash::{rand_core::OsRng, PasswordHash, SaltString};
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
 use once_cell::sync::Lazy;
-/// Handlers Poem pour auth (login, register, me, logout) — version SeaORM
 use poem::{
     handler,
     http::StatusCode,
@@ -16,16 +21,24 @@ use poem::{
 };
 use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 
+// ==============================================================================
+// Constantes
+// ==============================================================================
+
 static ARGON2: Lazy<Argon2> = Lazy::new(Argon2::default);
 
-/// Payload de login
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// Payload pour la connexion utilisateur.
 #[derive(serde::Deserialize)]
 pub struct LoginPayload {
     pub email: String,
     pub password: String,
 }
 
-/// Payload de register
+/// Payload pour l'inscription utilisateur.
 #[derive(serde::Deserialize)]
 pub struct RegisterPayload {
     pub email: String,
@@ -34,6 +47,18 @@ pub struct RegisterPayload {
     pub password: String,
 }
 
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Handler de connexion utilisateur.
+///
+/// Verifie les credentials et genere un cookie JWT.
+///
+/// @param db Connection a la base de donnees
+/// @param payload Credentials (email, password)
+/// @param jar CookieJar pour stocker le token
+/// @return Tuple (StatusCode, Json<UserDto>) ou erreur
 #[handler]
 pub async fn login(
     Data(db): Data<&DatabaseConnection>,
@@ -67,6 +92,14 @@ pub async fn login(
     Ok((StatusCode::CREATED, Json(UserDto::from(user))))
 }
 
+/// Handler d'inscription utilisateur.
+///
+/// Cree un nouvel utilisateur et genere un cookie JWT.
+///
+/// @param db Connection a la base de donnees
+/// @param payload Donnees d'inscription (email, username, password)
+/// @param jar CookieJar pour stocker le token
+/// @return Tuple (StatusCode, Json<UserDto>) ou erreur
 #[handler]
 pub async fn register(
     Data(db): Data<&DatabaseConnection>,
@@ -111,6 +144,13 @@ pub async fn register(
     Ok((StatusCode::CREATED, Json(UserDto::from(inserted))))
 }
 
+/// Handler du profil utilisateur connecte.
+///
+/// Retourne les informations de l'utilisateur authentifie.
+///
+/// @param db Connection a la base de donnees
+/// @param auth Session d'authentification contenant l'ID utilisateur
+/// @return Tuple (StatusCode, Json<UserDto>) ou erreur
 #[handler]
 pub async fn me(
     Data(db): Data<&DatabaseConnection>,
@@ -125,6 +165,12 @@ pub async fn me(
     Ok((StatusCode::OK, Json(UserDto::from(user))))
 }
 
+/// Handler de deconnexion.
+///
+/// Supprime le cookie d'authentification.
+///
+/// @param jar CookieJar pour supprimer le cookie
+/// @return Ok(()) ou erreur
 #[handler]
 pub async fn logout(jar: &CookieJar) -> PoemResult<()> {
     jar.remove("auth_token");

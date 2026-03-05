@@ -14,12 +14,22 @@ namespace plant_shop_asp_EF_core.Controllers
         private readonly AuthService _authService;
         private readonly UserService _userService;
 
+        /// <summary>
+        /// Constructeur du controleur d authentification.
+        /// </summary>
+        /// <param name="authService">Service d authentification</param>
+        /// <param name="userService">Service utilisateur</param>
         public AuthController(AuthService authService, UserService userService)
         {
             _authService = authService;
             _userService = userService;
         }
 
+        /// <summary>
+        /// Inscription d un nouvel utilisateur.
+        /// </summary>
+        /// <param name="model">Donnees d inscription</param>
+        /// <returns>Utilisateur cree</returns>
         [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -48,6 +58,11 @@ namespace plant_shop_asp_EF_core.Controllers
             }
         }
 
+        /// <summary>
+        /// Connexion d un utilisateur.
+        /// </summary>
+        /// <param name="model">Donnees de connexion</param>
+        /// <returns>Utilisateur connecte</returns>
         [HttpPost("login")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -73,6 +88,10 @@ namespace plant_shop_asp_EF_core.Controllers
             return CreatedAtAction(nameof(Login), UserService.SanitizeUser(user));
         }
 
+        /// <summary>
+        /// Deconnexion de l utilisateur.
+        /// </summary>
+        /// <returns>Message de confirmation</returns>
         [HttpPost("logout")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult Logout()
@@ -86,6 +105,10 @@ namespace plant_shop_asp_EF_core.Controllers
             return Ok(new { message = "Déconnecté" });
         }
 
+        /// <summary>
+        /// Recupere le profil de l utilisateur connecte.
+        /// </summary>
+        /// <returns>Profil utilisateur</returns>
         [HttpGet("me")]
         [Authorize] // Nécessite un token valide
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -107,7 +130,9 @@ namespace plant_shop_asp_EF_core.Controllers
         }
     }
 
-    // DTOs
+    /// <summary>
+    /// DTO pour l inscription.
+    /// </summary>
     public class RegisterDto
     {
         [Required]
@@ -118,6 +143,9 @@ namespace plant_shop_asp_EF_core.Controllers
         public string? Name { get; set; }
     }
 
+    /// <summary>
+    /// DTO pour la connexion.
+    /// </summary>
     public class LoginDto
     {
         [Required]

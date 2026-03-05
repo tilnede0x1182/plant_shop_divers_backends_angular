@@ -4,14 +4,26 @@ import java.sql.*;
 import model.User;
 import user.repositories.BaseRepository;
 
+/**
+ * Repository des utilisateurs.
+ */
 public final class UserRepository extends BaseRepository<User> {
 
-    public UserRepository(Connection db) {
+    /**
+ * Constructeur.
+ * @param db Connexion à la base de données
+ */
+public UserRepository(Connection db) {
         super(db, "users");
     }
 
-    @Override
-    protected User mapFromResultSet(ResultSet rs) throws SQLException {
+    /**
+ * Mappe un ResultSet vers un objet User.
+ * @param rs ResultSet à mapper
+ * @return User mappé
+ */
+@Override
+protected User mapFromResultSet(ResultSet rs) throws SQLException {
         // Ce mapping de base exclut le hash du mot de passe pour des raisons de sécurité
         // lors de la récupération de listes d'utilisateurs ou d'un utilisateur public.
         // Note: Le constructeur de User attend `createdAt`, qui doit être dans le SELECT.

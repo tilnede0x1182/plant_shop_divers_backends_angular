@@ -16,20 +16,35 @@ import auth.util.ApiMapper;
 import util.AuthContext;
 import util.PasswordUtil;
 
+/**
+ * Contrôleur pour l'authentification.
+ */
 public final class AuthController {
 
     private final UserRepository userRepo;
     private static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
-    public AuthController(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public AuthController(Connection db) {
         this.userRepo = new UserRepository(db);
     }
 
-    public static Map<String, Integer> getSessions() {
+    /**
+	 * Retourne la map des sessions.
+	 * @return La map sessionId -> userId
+	 */
+	public static Map<String, Integer> getSessions() {
         return sessions;
     }
 
-    public void register(Context ctx) throws Exception {
+    /**
+	 * Enregistre un nouvel utilisateur.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void register(Context ctx) throws Exception {
         JSONObject body = new JSONObject(ctx.body());
         String name = body.getString("name");
         String email = body.getString("email");
@@ -47,7 +62,11 @@ public final class AuthController {
         ctx.status(HttpStatus.CREATED).json(ApiMapper.toUser(created));
     }
 
-    public void login(Context ctx) throws Exception {
+    /**
+	 * Connecte un utilisateur.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void login(Context ctx) throws Exception {
         JSONObject body = new JSONObject(ctx.body());
         String email = body.getString("email");
         String password = body.getString("password");
@@ -72,7 +91,11 @@ public final class AuthController {
         ctx.status(HttpStatus.CREATED).json(ApiMapper.toUser(sanitized));
     }
 
-    public void logout(Context ctx) {
+    /**
+	 * Déconnecte l'utilisateur.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void logout(Context ctx) {
         String sessionId = ctx.cookie("session_id");
         if (sessionId != null) {
             sessions.remove(sessionId);
@@ -88,7 +111,11 @@ public final class AuthController {
         ctx.status(HttpStatus.NO_CONTENT);
     }
 
-    public void me(Context ctx) throws Exception {
+    /**
+	 * Retourne les infos de l'utilisateur connecté.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void me(Context ctx) throws Exception {
         AuthContext auth = ctx.attribute("auth");
         if (auth == null || !auth.isAuthenticated()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
@@ -104,6 +131,7 @@ public final class AuthController {
 
     /**
      * Endpoint interne utilisé par la gateway pour valider les sessions.
+     * @param ctx Context Contexte Javalin
      */
     public void sessionStatus(Context ctx) throws Exception {
         String sessionId = ctx.cookie("session_id");

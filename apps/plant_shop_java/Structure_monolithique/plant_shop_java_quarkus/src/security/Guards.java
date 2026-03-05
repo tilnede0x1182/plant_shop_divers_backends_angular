@@ -17,6 +17,11 @@ public class Guards {
     @Inject
     AuthenticatedUser authenticatedUser;
 
+    /**
+     * Vérifie qu'un utilisateur est authentifié.
+     * @return L'utilisateur authentifié
+     * @throws WebApplicationException 401 si non authentifié
+     */
     public User requireUser() {
         if (authenticatedUser.getUser() == null) {
             // Lance une exception JAX-RS qui se traduit par une réponse 401
@@ -25,6 +30,11 @@ public class Guards {
         return authenticatedUser.getUser();
     }
 
+    /**
+     * Vérifie qu'un utilisateur est admin.
+     * @return L'utilisateur admin
+     * @throws WebApplicationException 401 si non authentifié, 403 si non admin
+     */
     public User requireAdmin() {
         User user = requireUser();
         if (!user.isAdmin) {

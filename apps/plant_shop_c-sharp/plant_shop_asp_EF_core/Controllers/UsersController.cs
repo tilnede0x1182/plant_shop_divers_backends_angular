@@ -12,11 +12,19 @@ namespace plant_shop_asp_EF_core.Controllers
     {
         private readonly UserService _userService;
 
+        /// <summary>
+        /// Constructeur du controleur des utilisateurs.
+        /// </summary>
+        /// <param name="userService">Service utilisateur</param>
         public UsersController(UserService userService)
         {
             _userService = userService;
         }
 
+        /// <summary>
+        /// Recupere l ID de l utilisateur connecte.
+        /// </summary>
+        /// <returns>ID utilisateur</returns>
         private int GetCurrentUserId()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -24,12 +32,19 @@ namespace plant_shop_asp_EF_core.Controllers
             return int.Parse(userId);
         }
 
+        /// <summary>
+        /// Verifie si l utilisateur connecte est admin.
+        /// </summary>
+        /// <returns>true si admin</returns>
         private bool IsAdmin()
         {
              return User.IsInRole("Admin");
         }
 
-        // GET: api/users (liste)
+        /// <summary>
+        /// Liste tous les utilisateurs (admin requis).
+        /// </summary>
+        /// <returns>Liste des utilisateurs</returns>
         [HttpGet("api/users")]
         public async Task<IActionResult> GetUsers()
         {
@@ -41,7 +56,11 @@ namespace plant_shop_asp_EF_core.Controllers
             return Ok(await _userService.GetAllUsers());
         }
 
-        // GET: api/users/5 (Route profil ET admin)
+        /// <summary>
+        /// Recupere un utilisateur par ID.
+        /// </summary>
+        /// <param name="id">Identifiant utilisateur</param>
+        /// <returns>Utilisateur trouve</returns>
         [HttpGet("api/users/{id}")]
         public async Task<IActionResult> GetUser(int id)
         {
@@ -59,7 +78,12 @@ namespace plant_shop_asp_EF_core.Controllers
             return Ok(user);
         }
 
-        // PATCH: api/users/5 (Route profil ET admin)
+        /// <summary>
+        /// Met a jour un utilisateur.
+        /// </summary>
+        /// <param name="id">Identifiant utilisateur</param>
+        /// <param name="dto">Donnees de mise a jour</param>
+        /// <returns>Utilisateur mis a jour</returns>
         [HttpPatch("api/users/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateRequestDto dto)
         {
@@ -75,8 +99,11 @@ namespace plant_shop_asp_EF_core.Controllers
             }
         }
 
-        // --- Routes Admin ---
-
+        /// <summary>
+        /// Cree un nouvel utilisateur (admin).
+        /// </summary>
+        /// <param name="dto">Donnees de creation</param>
+        /// <returns>Utilisateur cree</returns>
         [HttpPost("api/users")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateUser([FromBody] UserCreateRequestDto dto)
@@ -90,7 +117,10 @@ namespace plant_shop_asp_EF_core.Controllers
         public Task<IActionResult> CreateAdminUser([FromBody] UserCreateRequestDto dto)
             => CreateUser(dto);
 
-        // GET: api/admin/users
+        /// <summary>
+        /// Liste tous les utilisateurs (route admin).
+        /// </summary>
+        /// <returns>Liste des utilisateurs</returns>
         [HttpGet("api/admin/users")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllUsers()
@@ -116,7 +146,11 @@ namespace plant_shop_asp_EF_core.Controllers
             return await UpdateUser(id, dto);
         }
 
-        // DELETE: api/users/5 (Admin)
+        /// <summary>
+        /// Supprime un utilisateur (admin).
+        /// </summary>
+        /// <param name="id">Identifiant utilisateur</param>
+        /// <returns>OK si supprime</returns>
         [HttpDelete("api/users/{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(int id)

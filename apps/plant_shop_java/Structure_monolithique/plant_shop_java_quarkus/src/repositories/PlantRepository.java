@@ -5,14 +5,24 @@ import jakarta.inject.Inject;
 import java.sql.*;
 import models.Plant;
 
+/**
+ * Repository pour les plantes.
+ */
 @Dependent
 public class PlantRepository extends BaseRepository<Plant> {
 
+    /**
+     * Constructeur avec injection de la connexion.
+     * @param db Connexion à la base de données
+     */
     @Inject
     public PlantRepository(Connection db) {
         super(db, "plants");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
@@ -25,6 +35,11 @@ public class PlantRepository extends BaseRepository<Plant> {
         );
     }
 
+    /**
+     * Crée une nouvelle plante.
+     * @param p Plante à créer
+     * @return ID de la plante créée
+     */
     public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -40,6 +55,10 @@ public class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
+    /**
+     * Met à jour une plante existante.
+     * @param p Plante avec les nouvelles données
+     */
     public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -52,6 +71,11 @@ public class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
+    /**
+     * Met à jour le stock d'une plante.
+     * @param id ID de la plante
+     * @param newStock Nouveau stock
+     */
     public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {

@@ -1,3 +1,9 @@
+//! Point d'entree du serveur Poem (version SQLx).
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
@@ -11,6 +17,10 @@ use poem::{
     middleware::{AddData, Cors},
     patch, post, EndpointExt, Route, Server,
 };
+
+// ==============================================================================
+// Modules
+// ==============================================================================
 
 mod auth;
 mod cache;
@@ -34,6 +44,10 @@ use crate::{
     state::{AppState, CacheTtls},
     users::handlers::{create_user, delete_user, get_user, list_users, update_user},
 };
+
+// ==============================================================================
+// Main
+// ==============================================================================
 
 /// Point d'entrée principal du serveur.
 /// Configure le runtime Tokio et démarre le serveur async.
@@ -156,9 +170,15 @@ async fn async_main() -> Result<(), std::io::Error> {
         .await
 }
 
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
 /// Lit une variable d'environnement u32 avec valeur par défaut.
+///
 /// @param key Nom de la variable
 /// @param default Valeur par défaut
+/// @return Valeur u32 lue ou default
 fn env_u32(key: &str, default: u32) -> u32 {
     env::var(key)
         .ok()

@@ -32,9 +32,11 @@ orderSelectAdmin = orderSelectBase <> " ORDER BY created_at DESC"
 orderSelectByUser :: Query
 orderSelectByUser = orderSelectBase <> " WHERE user_id = ? ORDER BY created_at DESC"
 
+-- | Requête SQL pour sélectionner une commande par ID.
 orderSelectById :: Query
 orderSelectById = orderSelectBase <> " WHERE id = ?"
 
+-- | Requête SQL pour sélectionner les items d'une commande.
 orderItemsSelectByOrder :: Query
 orderItemsSelectByOrder =
   "SELECT oi.id, oi.order_id, oi.plant_id, oi.quantity, oi.price::int AS price \
@@ -110,10 +112,17 @@ routes conn = do
       then status status200
       else R.notFound "Commande non trouvée"
 
--- Logique de traitement des articles, maintenant transactionnelle et correcte
+-- | Traite les articles d'une commande et calcule le total.
+-- @param conn Connexion à la base de données
+-- @param orderId ID de la commande
+-- @param items Liste des articles à traiter
 processOrderItems :: Connection -> Int -> [CreateOrderItemPayload] -> IO Int
 processOrderItems conn orderId items = sum <$> mapM (processItem conn orderId) items
 
+-- | Traite un article individuel, vérifie le stock et crée l'entrée.
+-- @param conn Connexion à la base de données
+-- @param orderId ID de la commande
+-- @param item Article à traiter
 processItem :: Connection -> Int -> CreateOrderItemPayload -> IO Int
 processItem conn orderId item = do
   let pId = O.orderItemPlantId item
@@ -163,11 +172,13 @@ fetchFullOrderItem conn item = do
         }
     _ -> return Nothing
 
--- Helper pour extraire une valeur Maybe d'une liste (plus sûr que `head`)
+-- | Extrait le premier élément d'une liste de manière sûre.
+-- @param list La liste source
 listToMaybe :: [a] -> Maybe a
 listToMaybe []    = Nothing
 listToMaybe (x:_) = Just x
 
+-- | Requête SQL pour sélectionner une plante par ID.
 plantSelectSql :: Query
 plantSelectSql =
   "SELECT id, name, description, price::int AS price, stock, created_at FROM plants WHERE id = ?"

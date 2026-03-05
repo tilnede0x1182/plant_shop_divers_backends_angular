@@ -50,26 +50,52 @@ EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "hotmail.com"]
 
 
 # ---------- Helpers ----------
+"""
+	Génère un entier aléatoire dans l intervalle [min_val, max_val].
+
+	@param min_val int Borne inférieure inclusive
+	@param max_val int Borne supérieure inclusive
+	@return int Entier aléatoire
+"""
 def rnd(min_val, max_val):
-	"""Génère un entier aléatoire dans l'intervalle [min_val, max_val]."""
 	return random.randint(min_val, max_val)
 
+"""
+	Choisit un élément au hasard dans une liste.
+
+	@param arr list Liste source
+	@return any Élément choisi aléatoirement
+"""
 def pick(arr):
-	"""Choisit un élément au hasard dans une liste."""
 	return random.choice(arr)
 
+"""
+	Génère un mot de passe aléatoire simple.
+	Format: pw suivi de 9 chiffres.
+
+	@return str Mot de passe généré
+"""
 def rand_pwd():
-	"""Génère un mot de passe aléatoire simple."""
 	return f"pw{rnd(100000000, 999999999)}"
 
+"""
+	Hache un mot de passe en utilisant bcrypt.
+
+	@param p str Mot de passe en clair
+	@return str Hash bcrypt du mot de passe
+"""
 def hash_password(p):
-	"""Hache un mot de passe en utilisant bcrypt."""
 	password_bytes = p.encode('utf-8')
 	salt = bcrypt.gensalt()
 	return bcrypt.hashpw(password_bytes, salt).decode('utf-8')
 
+"""
+	Génère une phrase de type lorem ipsum.
+	Composée de 10 à 14 mots aléatoires.
+
+	@return str Phrase générée avec majuscule et point
+"""
 def lorem_sentence():
-	"""Génère une phrase de type 'lorem ipsum'."""
 	words = ["lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipiscing", "elit",
 			 "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore", "magna", "aliqua"]
 	n = rnd(10, 14)
@@ -78,8 +104,12 @@ def lorem_sentence():
 	return sentence.capitalize() + '.'
 
 # ---------- Main ----------
+"""
+	Fonction principale du script de seeding.
+	Crée admins, utilisateurs, plantes et commandes de test.
+	Génère un fichier users.txt avec les identifiants.
+"""
 def main():
-	"""Fonction principale du script de seeding."""
 	db = None
 	try:
 		# Connexion à la base de données

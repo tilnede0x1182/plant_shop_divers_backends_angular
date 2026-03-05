@@ -5,11 +5,22 @@ import io.micronaut.http.HttpStatus;
 import io.micronaut.http.exceptions.HttpStatusException;
 import model.User;
 
+/**
+ * Utilitaire de vérification d'autorisation.
+ */
 public final class Guards {
 
-    private Guards() {}
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private Guards() {}
 
-    public static User requireUser(HttpRequest<?> request) {
+    /**
+ * Exige un utilisateur authentifié.
+ * @param request Requête HTTP
+ * @return Utilisateur authentifié
+ */
+public static User requireUser(HttpRequest<?> request) {
         User user = request.getAttribute("user", User.class).orElse(null);
         if (user == null) {
             throw new HttpStatusException(HttpStatus.UNAUTHORIZED, "Authentification requise");
@@ -17,7 +28,12 @@ public final class Guards {
         return user;
     }
 
-    public static User requireAdmin(HttpRequest<?> request) {
+    /**
+ * Exige un administrateur.
+ * @param request Requête HTTP
+ * @return Utilisateur admin
+ */
+public static User requireAdmin(HttpRequest<?> request) {
         User user = requireUser(request);
         if (!user.isAdmin) {
             throw new HttpStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");

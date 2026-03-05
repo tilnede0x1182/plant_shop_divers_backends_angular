@@ -1,4 +1,11 @@
+//! Module de seed pour peupler la base de donnees avec des donnees de test.
+
 #![allow(dead_code)]
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use crate::errors::AppError;
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
@@ -12,7 +19,10 @@ use std::env;
 use std::fs::File;
 use std::io::Write;
 
-// # Constantes
+// ==============================================================================
+// Constantes
+// ==============================================================================
+
 const NB_ADMINS: u32 = 3;
 const NB_USERS: u32 = 20;
 const NB_PLANTS: u32 = 50;
@@ -81,7 +91,11 @@ const PLANT_NAMES: &[&str] = &[
     "Mimosa (Acacia dealbata)",
 ];
 
-// Structures temporaires
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// Structure temporaire pour le seed des plantes.
 #[derive(Clone)]
 struct TempPlant {
     id: i32,
@@ -89,14 +103,20 @@ struct TempPlant {
     stock: i32,
 }
 
+/// Structure temporaire pour le seed des utilisateurs.
 struct TempUser {
     id: i32,
 }
 
-/// Exécute une requête SQL, affiche l’erreur sans panique.
-/// @db     Connexion SeaORM
-/// @query  Requête SQL (texte)
-/// @tag    Tag log pour affichage
+// ==============================================================================
+// Fonctions utilitaires
+// ==============================================================================
+
+/// Exécute une requête SQL, affiche l'erreur sans panique.
+///
+/// @param db Connexion SeaORM
+/// @param query Requête SQL (texte)
+/// @param tag Tag log pour affichage
 async fn safe_execute(db: &DatabaseConnection, query: &str, tag: &str) {
     if let Err(e) = db
         .execute(Statement::from_string(
@@ -109,7 +129,10 @@ async fn safe_execute(db: &DatabaseConnection, query: &str, tag: &str) {
     }
 }
 
-/// Nettoyage complet des tables (sans DROP)
+/// Nettoyage complet des tables (sans DROP).
+///
+/// @param db Connection SeaORM
+/// @return Ok(()) si reussi, Err(AppError) sinon
 async fn reset_db(db: &DatabaseConnection) -> Result<(), AppError> {
     println!("🧹 Nettoyage de la base de données...");
     safe_execute(db, "DELETE FROM order_items", "order_items").await;
@@ -120,7 +143,10 @@ async fn reset_db(db: &DatabaseConnection) -> Result<(), AppError> {
     Ok(())
 }
 
-/// Génère un email réaliste (prénom.nom[numéro]@[fournisseur])
+/// Genere un email realiste (prenom.nom[numero]@[fournisseur]).
+///
+/// @param index Index pour varier les donnees
+/// @return Email genere
 fn generate_realistic_email(index: u32) -> String {
     let prenoms = [
         "charles",
@@ -165,7 +191,9 @@ fn generate_realistic_email(index: u32) -> String {
     format!("{}_{}{}@{}", prenom, nom, numero, domaine)
 }
 
-/// Génère un mot de passe aléatoire de 12 caractères
+/// Genere un mot de passe aleatoire de 12 caracteres.
+///
+/// @return Mot de passe aleatoire
 fn generate_random_password() -> String {
     use rand::distributions::Alphanumeric;
     use rand::{thread_rng, Rng};
@@ -176,7 +204,10 @@ fn generate_random_password() -> String {
         .collect()
 }
 
-/// Crée admins + users et renvoie (creds_admins, creds_users, users_temp)
+/// Cree admins + users et renvoie leurs credentials.
+///
+/// @param db Connection SeaORM
+/// @return Tuple (creds_admins, creds_users, users_temp) ou erreur
 async fn create_users(
     db: &DatabaseConnection,
 ) -> Result<(Vec<(String, String)>, Vec<(String, String)>, Vec<TempUser>), AppError> {
@@ -277,7 +308,10 @@ async fn create_users(
     Ok((admins_creds, users_creds, temp_users))
 }
 
-/// Crée un lot de plantes et renvoie leurs infos (id, price, stock)
+/// Cree un lot de plantes et renvoie leurs infos.
+///
+/// @param db Connection SeaORM
+/// @return Vec<TempPlant> (id, price, stock) ou erreur
 async fn create_plants(db: &DatabaseConnection) -> Result<Vec<TempPlant>, AppError> {
     println!("🌱 Création des plantes...");
     let mut rng = rand::thread_rng();
@@ -323,7 +357,12 @@ async fn create_plants(db: &DatabaseConnection) -> Result<Vec<TempPlant>, AppErr
     Ok(temp_plants)
 }
 
-/// Crée des commandes aléatoires pour chaque user
+/// Cree des commandes aleatoires pour chaque user.
+///
+/// @param db Connection SeaORM
+/// @param users Liste des utilisateurs temporaires
+/// @param plants Liste des plantes avec stock disponible
+/// @return Ok(()) si reussi, Err(AppError) sinon
 async fn create_orders(
     db: &DatabaseConnection,
     users: Vec<TempUser>,
@@ -397,7 +436,11 @@ async fn create_orders(
     Ok(())
 }
 
-/// Écrit un fichier users.txt avec les identifiants
+/// Ecrit un fichier users.txt avec les identifiants.
+///
+/// @param admins Credentials des admins (email, password)
+/// @param users Credentials des users (email, password)
+/// @return Ok(()) si reussi, Err(AppError) sinon
 fn write_users_file(
     admins: Vec<(String, String)>,
     users: Vec<(String, String)>,
@@ -425,7 +468,9 @@ fn write_users_file(
     Ok(())
 }
 
-/// Point d'entrée de la seed (appelé depuis src/bin/seed.rs)
+/// Point d'entree de la seed (appele depuis src/bin/seed.rs).
+///
+/// @return Ok(()) si seed reussie, Err(AppError) sinon
 pub async fn run_seed() -> Result<(), AppError> {
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").map_err(|_| AppError::Internal)?;

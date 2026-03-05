@@ -19,6 +19,10 @@ import utils.PasswordUtil;
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+ * Contrôleur REST pour la gestion des utilisateurs.
+ * Fournit les endpoints pour lister, consulter, créer, modifier et supprimer des utilisateurs.
+ */
 @RequestScoped
 public class UserController {
 
@@ -28,18 +32,32 @@ public class UserController {
     @Inject
     Guards guards;
 
+    /**
+     * Liste tous les utilisateurs (endpoint admin).
+     * @return 200 avec la liste des utilisateurs
+     */
     @GET
     @Path("/admin/users")
     public Response listAdmin() throws Exception {
         return listImpl();
     }
 
+    /**
+     * Liste tous les utilisateurs (alias de l'endpoint admin).
+     * @return 200 avec la liste des utilisateurs
+     */
     @GET
     @Path("/users")
     public Response listAlias() throws Exception {
         return listImpl();
     }
 
+    /**
+     * Met à jour un utilisateur (endpoint admin).
+     * @param id ID de l'utilisateur
+     * @param body Données à modifier
+     * @return 200 avec l'utilisateur modifié
+     */
     @PATCH
     @Path("/admin/users/{id}")
     @Transactional
@@ -47,6 +65,12 @@ public class UserController {
         return updateImpl(id, body);
     }
 
+    /**
+     * Met à jour un utilisateur (endpoint utilisateur).
+     * @param id ID de l'utilisateur
+     * @param body Données à modifier
+     * @return 200 avec l'utilisateur modifié
+     */
     @PATCH
     @Path("/users/{id}")
     @Transactional
@@ -54,6 +78,11 @@ public class UserController {
         return updateImpl(id, body);
     }
 
+    /**
+     * Supprime un utilisateur (endpoint admin).
+     * @param id ID de l'utilisateur
+     * @return 200 OK
+     */
     @DELETE
     @Path("/admin/users/{id}")
     @Transactional
@@ -61,6 +90,11 @@ public class UserController {
         return destroyImpl(id);
     }
 
+    /**
+     * Supprime un utilisateur (endpoint utilisateur).
+     * @param id ID de l'utilisateur
+     * @return 200 OK
+     */
     @DELETE
     @Path("/users/{id}")
     @Transactional
@@ -70,6 +104,10 @@ public class UserController {
 
     // --- IMPLÉMENTATION ---
 
+    /**
+     * Implémentation de la liste des utilisateurs.
+     * @return Réponse avec la liste triée
+     */
     private Response listImpl() throws Exception {
         guards.requireAdmin(); // Seul un admin peut lister les utilisateurs
         List<?> payload = repo.list().stream()
@@ -79,6 +117,11 @@ public class UserController {
         return Response.ok(payload).build();
     }
 
+    /**
+     * Récupère un utilisateur par son ID.
+     * @param id ID de l'utilisateur
+     * @return 200 avec l'utilisateur, 403 si non autorisé, 404 si non trouvé
+     */
     @GET
     @Path("/users/{id}")
     public Response show(@PathParam("id") int id) throws Exception {
@@ -95,6 +138,11 @@ public class UserController {
             : Response.status(Response.Status.NOT_FOUND).build();
     }
 
+    /**
+     * Crée un nouvel utilisateur (admin uniquement).
+     * @param body Contient name, email, password, admin
+     * @return 201 avec l'utilisateur créé, 400/409 en cas d'erreur
+     */
     @POST
     @Path("/users")
     @Transactional
@@ -125,6 +173,12 @@ public class UserController {
                        .build();
     }
 
+    /**
+     * Implémentation de la mise à jour d'un utilisateur.
+     * @param id ID de l'utilisateur
+     * @param body Données à modifier
+     * @return Réponse avec l'utilisateur modifié
+     */
     private Response updateImpl(int id, Map<String, Object> body) throws Exception {
         User currentUser = guards.requireUser();
 
@@ -165,12 +219,21 @@ public class UserController {
         return Response.ok(ApiMapper.toUser(repo.find(id))).build();
     }
 
+    /**
+     * Implémentation de la suppression d'un utilisateur.
+     * @param id ID de l'utilisateur
+     * @return 200 OK
+     */
     private Response destroyImpl(int id) throws Exception {
         guards.requireAdmin(); // Seul un admin peut supprimer un utilisateur
         repo.delete(id);
         return Response.ok().build(); // 200 OK attendu par le test
     }
 
+    /**
+     * Crée un comparateur pour trier les utilisateurs (admins en premier, puis par nom).
+     * @return Comparateur d'utilisateurs
+     */
     private Comparator<User> userComparator() {
         return Comparator.comparing((User u) -> !u.isAdmin) // Admins en premier
             .thenComparing(u -> u.name, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));

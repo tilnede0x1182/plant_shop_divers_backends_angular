@@ -14,8 +14,15 @@ import util.ServiceLauncher;
         SecurityAutoConfiguration.class
     }
 )
+/**
+ * Application Spring Boot pour le service catalogue.
+ */
 public class CatalogApplication {
 
+    /**
+     * Point d'entrée principal.
+     * @param args Arguments de ligne de commande
+     */
     public static void main(String[] args) {
         ServiceLauncher.launch(CatalogApplication.class, "CATALOG_SERVICE_PORT", 6102, "CatalogService", args);
     }

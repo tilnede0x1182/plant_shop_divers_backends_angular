@@ -6,8 +6,15 @@ import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Point d entrée de l application Micronaut.
+ */
 public class Main {
 
+    /**
+     * Méthode principale.
+     * @param args String[] Arguments CLI
+     */
     public static void main(String[] args) {
         try {
             Map<String, String> env = loadEnv();
@@ -34,6 +41,10 @@ public class Main {
         }
     }
 
+    /**
+     * Charge les variables d environnement depuis .env.
+     * @return Map Dictionnaire clé-valeur
+     */
     private static Map<String, String> loadEnv() {
         Map<String, String> map = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
@@ -50,6 +61,11 @@ public class Main {
         return map;
     }
 
+    /**
+     * Parse le port depuis une chaîne.
+     * @param value String Valeur à parser
+     * @return int Port
+     */
     private static int parsePort(String value) {
         try {
             if (value.contains(":")) {
@@ -62,6 +78,11 @@ public class Main {
         }
     }
 
+    /**
+     * Vérifie si un port est disponible.
+     * @param port int Port à vérifier
+     * @return boolean True si disponible
+     */
     private static boolean isPortAvailable(int port) {
         try (ServerSocket socket = new ServerSocket(port)) {
             socket.setReuseAddress(true);

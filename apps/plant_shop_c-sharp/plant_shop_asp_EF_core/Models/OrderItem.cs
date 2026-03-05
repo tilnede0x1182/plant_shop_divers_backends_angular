@@ -4,6 +4,9 @@ using System.Text.Json.Serialization;
 
 namespace plant_shop_asp_EF_core.Models
 {
+    /// <summary>
+    /// Ligne de commande reliant une commande a une plante.
+    /// </summary>
     [Table("order_items")]
     public class OrderItem
     {

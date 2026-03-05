@@ -22,6 +22,9 @@ import java.util.List;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 1) // S'exécute juste après CorsFilter
+/**
+ * Filtre d'authentification par session cookie.
+ */
 public class SessionAuthFilter extends OncePerRequestFilter {
 
     private static final String SESSION_COOKIE = "session_id";
@@ -36,7 +39,13 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     UserRepository userRepo;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
+    /**
+	 * Traite chaque requête pour extraire et valider la session.
+	 * @param request La requête HTTP
+	 * @param response La réponse HTTP
+	 * @param filterChain La chaîne de filtres
+	 */
+	protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
@@ -51,7 +60,12 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private Cookie extractSessionCookie(HttpServletRequest request) {
+    /**
+	 * Extrait le cookie de session de la requête.
+	 * @param request La requête HTTP
+	 * @return Le cookie de session ou null
+	 */
+	private Cookie extractSessionCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             return null;
@@ -64,7 +78,11 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private void handleSession(String sessionId) {
+    /**
+	 * Gère la session et authentifie l'utilisateur.
+	 * @param sessionId L'identifiant de session
+	 */
+	private void handleSession(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             return;
         }
@@ -93,7 +111,12 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         }
     }
 
-    private List<SimpleGrantedAuthority> buildAuthorities(boolean isAdmin) {
+    /**
+	 * Construit la liste des autorités selon le rôle.
+	 * @param isAdmin Si l'utilisateur est administrateur
+	 * @return La liste des autorités
+	 */
+	private List<SimpleGrantedAuthority> buildAuthorities(boolean isAdmin) {
         if (isAdmin) {
             return List.of(
                 new SimpleGrantedAuthority("ROLE_ADMIN"),

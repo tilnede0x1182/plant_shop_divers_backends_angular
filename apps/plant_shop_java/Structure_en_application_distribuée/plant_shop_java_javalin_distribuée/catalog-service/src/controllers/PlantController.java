@@ -16,6 +16,9 @@ import org.json.JSONObject;
 import repository.PlantRepository;
 import catalog.util.ApiMapper;
 
+/**
+ * Contrôleur pour la gestion des plantes.
+ */
 public final class PlantController {
 
     private final PlantRepository repo;
@@ -25,23 +28,39 @@ public final class PlantController {
         COLLATOR.setStrength(Collator.PRIMARY);
     }
 
-    public PlantController(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public PlantController(Connection db) {
         this.repo = new PlantRepository(db);
     }
 
-    public void listPublic(Context ctx) throws Exception {
+    /**
+	 * Liste les plantes publiquement.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void listPublic(Context ctx) throws Exception {
         List<Plant> plants = repo.list();
         plants.sort(this::comparePlants);
         ctx.json(mapPlants(plants));
     }
 
-    public void listAdmin(Context ctx) throws Exception {
+    /**
+	 * Liste les plantes pour l'admin.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void listAdmin(Context ctx) throws Exception {
         List<Plant> plants = repo.list();
         plants.sort(this::comparePlants);
         ctx.json(mapPlants(plants));
     }
 
-    public void show(Context ctx) throws Exception {
+    /**
+	 * Affiche une plante.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void show(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Plant plant = repo.find(id);
         if (plant == null) {
@@ -51,7 +70,11 @@ public final class PlantController {
         ctx.json(ApiMapper.toPlant(plant));
     }
 
-    public void create(Context ctx) throws Exception {
+    /**
+	 * Crée une plante.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void create(Context ctx) throws Exception {
         JSONObject body = new JSONObject(ctx.body());
         if (!body.has("name") || !body.has("price")) {
             ctx.status(HttpStatus.BAD_REQUEST).json(Map.of("error", "Champs name et price requis"));
@@ -69,7 +92,11 @@ public final class PlantController {
         ctx.status(HttpStatus.CREATED).json(ApiMapper.toPlant(created));
     }
 
-    public void update(Context ctx) throws Exception {
+    /**
+	 * Met à jour une plante.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void update(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Plant plant = repo.find(id);
         if (plant == null) {
@@ -95,13 +122,22 @@ public final class PlantController {
         ctx.json(ApiMapper.toPlant(repo.find(id)));
     }
 
-    public void destroy(Context ctx) throws Exception {
+    /**
+	 * Supprime une plante.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void destroy(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         repo.delete(id);
         ctx.status(HttpStatus.OK).json(Map.of("deleted", true));
     }
 
-    private List<Map<String, Object>> mapPlants(List<Plant> plants) {
+    /**
+	 * Convertit une liste de plantes en liste de Maps.
+	 * @param plants Les plantes
+	 * @return La liste de Maps
+	 */
+	private List<Map<String, Object>> mapPlants(List<Plant> plants) {
         List<Map<String, Object>> mapped = new ArrayList<>(plants.size());
         for (Plant plant : plants) {
             mapped.add(ApiMapper.toPlant(plant));
@@ -109,7 +145,13 @@ public final class PlantController {
         return mapped;
     }
 
-    private int comparePlants(Plant left, Plant right) {
+    /**
+	 * Compare deux plantes par nom.
+	 * @param left Première plante
+	 * @param right Seconde plante
+	 * @return Résultat de comparaison
+	 */
+	private int comparePlants(Plant left, Plant right) {
         String ln = normalizeName(left.name);
         String rn = normalizeName(right.name);
         int compared = COLLATOR.compare(ln, rn);
@@ -119,7 +161,12 @@ public final class PlantController {
         return Integer.compare(left.id, right.id);
     }
 
-    private String normalizeName(String name) {
+    /**
+	 * Normalise un nom de plante.
+	 * @param name Le nom
+	 * @return Le nom normalisé
+	 */
+	private String normalizeName(String name) {
         return name == null ? "" : name.trim();
     }
 }

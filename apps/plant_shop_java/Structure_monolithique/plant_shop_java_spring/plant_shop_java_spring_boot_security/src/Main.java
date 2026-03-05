@@ -14,6 +14,10 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Classe principale de l application Spring Boot Security.
+ * Configure le serveur pour utiliser un port personnalise depuis .env et demarre l application.
+ */
 @SpringBootApplication(
     scanBasePackages = {"controllers", "repositories", "security", "utils"},
     exclude = {
@@ -25,6 +29,12 @@ public class Main {
 
     private static final Path ENV_FILE = Path.of("config", ".env");
 
+    /**
+     * Point d entree de l application.
+     *
+     * @param args String[] Arguments de la ligne de commande
+     * @throws Exception Exception En cas d erreur de demarrage
+     */
     public static void main(String[] args) throws Exception {
         Map<String, String> env = loadEnv();
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS",
@@ -45,6 +55,11 @@ public class Main {
         app.run(args);
     }
 
+    /**
+     * Charge les variables d environnement depuis le fichier .env.
+     *
+     * @return Map<String, String> Variables d environnement chargees
+     */
     private static Map<String, String> loadEnv() {
         if (!Files.exists(ENV_FILE)) {
             return Map.of();
@@ -68,6 +83,12 @@ public class Main {
         return values;
     }
 
+    /**
+     * Parse la valeur brute du port depuis le fichier .env.
+     *
+     * @param rawPort String Valeur brute du port
+     * @return int Port parse ou 4100 par defaut
+     */
     private static int parsePort(String rawPort) {
         if (rawPort == null || rawPort.isBlank()) {
             return 4100;
@@ -81,6 +102,12 @@ public class Main {
         }
     }
 
+    /**
+     * Verifie si un port est disponible.
+     *
+     * @param port int Port a verifier
+     * @return boolean true si le port est disponible, false sinon
+     */
     private static boolean isPortAvailable(int port) {
         try (ServerSocket socket = new ServerSocket(port)) {
             socket.setReuseAddress(true);

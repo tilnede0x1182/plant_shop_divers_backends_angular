@@ -6,15 +6,27 @@ import java.sql.*;
 import model.User;
 import auth.repositories.BaseRepository;
 
+/**
+ * Repository des utilisateurs.
+ */
 @Singleton
 public final class UserRepository extends BaseRepository<User> {
 
-    public UserRepository(Connection db) {
+    /**
+ * Constructeur.
+ * @param db Connexion à la base de données
+ */
+public UserRepository(Connection db) {
         super(db, "users");
     }
 
-    @Override
-    protected User mapFromResultSet(ResultSet rs) throws SQLException {
+    /**
+ * Mappe un ResultSet vers un objet User.
+ * @param rs ResultSet à mapper
+ * @return User mappé
+ */
+@Override
+protected User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),
             rs.getString("name"),
@@ -25,7 +37,12 @@ public final class UserRepository extends BaseRepository<User> {
         );
     }
 
-    public User findByEmailWithPassword(String email) throws SQLException {
+    /**
+ * Trouve un utilisateur par email avec le hash du mot de passe.
+ * @param email Email de l'utilisateur
+ * @return User ou null
+ */
+public User findByEmailWithPassword(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setString(1, email);
@@ -45,7 +62,12 @@ public final class UserRepository extends BaseRepository<User> {
         }
     }
 
-    public int create(User u) throws SQLException {
+    /**
+ * Crée un nouvel utilisateur.
+ * @param u Utilisateur à créer
+ * @return ID généré
+ */
+public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, u.name);

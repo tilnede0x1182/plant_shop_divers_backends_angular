@@ -6,10 +6,22 @@ using Newtonsoft.Json;
 
 namespace plant_shop_c_sharp.Controllers
 {
+    /// <summary>
+    /// Controleur CRUD pour les plantes.
+    /// </summary>
     public class PlantController : BaseController
     {
+        /// <summary>
+        /// Constructeur avec injection de la source de donnees.
+        /// </summary>
+        /// <param name="dataSource">Source Npgsql.</param>
         public PlantController(NpgsqlDataSource dataSource) : base(dataSource) { }
 
+        /// <summary>
+        /// Gere les requetes HTTP pour les routes plants.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
+        /// <param name="currentUser">Utilisateur connecte ou null.</param>
         public override async Task HandleRequest(HttpListenerContext context, User? currentUser)
         {
             var request = context.Request;
@@ -66,14 +78,21 @@ namespace plant_shop_c_sharp.Controllers
             }
         }
 
-        // GET /api/plants
+        /// <summary>
+        /// Liste toutes les plantes.
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
         private async Task GetAllPlants(HttpListenerResponse response)
         {
             var plants = await PlantRepo.FindAllAsync();
             await SendJsonResponse(response, 200, plants);
         }
 
-        // GET /api/plants/:id
+        /// <summary>
+        /// Recupere une plante par ID.
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="id">ID de la plante.</param>
         private async Task GetPlant(HttpListenerResponse response, int id)
         {
             var plant = await PlantRepo.FindByIdAsync(id);
@@ -85,7 +104,11 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 200, plant);
         }
 
-        // POST /api/admin/plants
+        /// <summary>
+        /// Cree une nouvelle plante (admin).
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <param name="response">Reponse HTTP.</param>
         private async Task CreatePlant(HttpListenerRequest request, HttpListenerResponse response)
         {
             var body = ParseBody<PlantRequest>(request);
@@ -105,7 +128,12 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 201, createdPlant);
         }
 
-        // PATCH /api/admin/plants/:id
+        /// <summary>
+        /// Met a jour une plante (admin).
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="id">ID de la plante.</param>
         private async Task UpdatePlant(HttpListenerRequest request, HttpListenerResponse response, int id)
         {
             var plant = await PlantRepo.FindByIdAsync(id);
@@ -132,7 +160,11 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 200, plant);
         }
 
-        // DELETE /api/admin/plants/:id
+        /// <summary>
+        /// Supprime une plante (admin).
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="id">ID de la plante.</param>
         private async Task DeletePlant(HttpListenerResponse response, int id)
         {
             var plant = await PlantRepo.FindByIdAsync(id);

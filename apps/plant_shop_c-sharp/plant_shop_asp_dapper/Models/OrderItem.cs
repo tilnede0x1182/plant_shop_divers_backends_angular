@@ -1,5 +1,8 @@
 namespace plant_shop_asp_dapper.Models
 {
+    /// <summary>
+    /// Ligne de commande.
+    /// </summary>
     public class OrderItem
     {
         public int Id { get; set; }

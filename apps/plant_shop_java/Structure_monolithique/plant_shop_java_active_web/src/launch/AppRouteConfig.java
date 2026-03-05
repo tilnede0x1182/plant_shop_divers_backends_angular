@@ -7,8 +7,16 @@ import app.controllers.PlantController;
 import app.controllers.UserController;
 import app.controllers.OrderController;
 
+/**
+ * Configuration des routes ActiveWeb.
+ * Définit le mapping URL vers contrôleurs.
+ */
 public final class AppRouteConfig extends AbstractRouteConfig {
 
+    /**
+     * Initialise les routes de l application.
+     * @param context AppContext Contexte de l application
+     */
     @Override
     public void init(AppContext context) {
         route("/plants")

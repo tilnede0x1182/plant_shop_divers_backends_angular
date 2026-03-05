@@ -21,35 +21,57 @@ import { Roles } from '../auth/roles.decorator';
 export class OrderItemsController {
   constructor(private readonly orderItemsService: OrderItemsService) {}
 
-  // ✅ Un admin peut voir tous les order-items
+  /**
+   * Liste tous les order-items (admin)
+   * @return Liste des order-items
+   */
   @Roles('admin')
   @Get()
   findAll() {
     return this.orderItemsService.findAll();
   }
 
-  // ✅ Un utilisateur peut consulter un order-item uniquement si lié à sa commande
+  /**
+   * Récupère un order-item par id (propriétaire)
+   * @param id Identifiant de l'order-item
+   * @param req Requête contenant l'utilisateur courant
+   * @return Order-item trouvé
+   */
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req: any) {
     const user = req.user;
     return this.orderItemsService.findOneForUser(+id, user);
   }
 
-  // ✅ Tout utilisateur connecté peut ajouter un item à sa commande
+  //**
+   * Crée un nouvel order-item
+   * @param data Données de l'order-item
+   * @param req Requête contenant l'utilisateur courant
+   * @return Order-item créé
+   */
   @Post()
   create(@Body() data: any, @Req() req: any) {
     const user = req.user;
     return this.orderItemsService.create(data, user);
   }
 
-  // ✅ Admin peut modifier un item (ex. quantité)
+  /**
+   * Met à jour un order-item (admin)
+   * @param id Identifiant de l'order-item
+   * @param data Données à mettre à jour
+   * @return Order-item mis à jour
+   */
   @Roles('admin')
   @Patch(':id')
   update(@Param('id') id: string, @Body() data: any) {
     return this.orderItemsService.update(+id, data);
   }
 
-  // ✅ Admin peut supprimer un item
+  /**
+   * Supprime un order-item (admin)
+   * @param id Identifiant de l'order-item
+   * @return Order-item supprimé
+   */
   @Roles('admin')
   @Delete(':id')
   remove(@Param('id') id: string) {

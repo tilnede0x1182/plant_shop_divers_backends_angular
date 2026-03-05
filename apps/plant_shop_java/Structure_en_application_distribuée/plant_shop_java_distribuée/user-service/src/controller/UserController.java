@@ -10,33 +10,62 @@ import java.sql.Connection;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * Routes HTTP pour le service utilisateur.
+ */
 final class UserRoutes implements HttpHandler {
 
     private final UserController controller;
 
-    public UserRoutes(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public UserRoutes(Connection db) {
         this.controller = new UserController(db);
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    /**
+	 * Traite une requête HTTP.
+	 * @param exchange L'échange HTTP
+	 */
+	public void handle(HttpExchange exchange) throws IOException {
         controller.handle(exchange);
     }
 }
 
+/**
+ * Contrôleur de base avec méthodes utilitaires.
+ */
 abstract class UserBaseController {
     protected final Connection db;
 
-    UserBaseController(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	UserBaseController(Connection db) {
         this.db = db;
     }
 
-    protected JSONObject parseJson(HttpExchange ex) throws IOException {
+    /**
+	 * Parse le corps JSON.
+	 * @param ex L'échange HTTP
+	 * @return L'objet JSON
+	 */
+	protected JSONObject parseJson(HttpExchange ex) throws IOException {
         String body = new String(ex.getRequestBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         return body.isBlank() ? new JSONObject() : new JSONObject(body);
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
+    /**
+	 * Envoie une réponse JSON Object.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le corps JSON
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
         byte[] bytes = body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -46,7 +75,13 @@ abstract class UserBaseController {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONArray body) throws IOException {
+    /**
+	 * Envoie une réponse JSON Array.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le tableau JSON
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONArray body) throws IOException {
         byte[] bytes = body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -56,7 +91,13 @@ abstract class UserBaseController {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, String raw) throws IOException {
+    /**
+	 * Envoie une réponse JSON en chaîne.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param raw Le corps en chaîne
+	 */
+	protected void sendJson(HttpExchange ex, int code, String raw) throws IOException {
         byte[] bytes = raw.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -66,27 +107,48 @@ abstract class UserBaseController {
         ex.close();
     }
 
-    protected void sendEmpty(HttpExchange ex, int code) throws IOException {
+    /**
+	 * Envoie une réponse vide.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 */
+	protected void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
     }
 
-    protected void handleException(HttpExchange ex, Exception e) throws IOException {
+    /**
+	 * Gère une exception.
+	 * @param ex L'échange HTTP
+	 * @param e L'exception
+	 */
+	protected void handleException(HttpExchange ex, Exception e) throws IOException {
         e.printStackTrace();
         sendJson(ex, 500, new JSONObject().put("error", e.getMessage()));
     }
 }
 
+/**
+ * Contrôleur pour la gestion des utilisateurs.
+ */
 public final class UserController extends UserBaseController {
 
     private final UserRepository userRepo;
 
-    public UserController(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public UserController(Connection db) {
         super(db);
         this.userRepo = new UserRepository(db);
     }
 
-    public void handle(HttpExchange ex) throws IOException {
+    /**
+	 * Route les requêtes.
+	 * @param ex L'échange HTTP
+	 */
+	public void handle(HttpExchange ex) throws IOException {
         String path = ex.getRequestURI().getPath();
         String method = ex.getRequestMethod();
         AuthContext ctx = AuthContext.fromHeaders(ex);
@@ -117,7 +179,13 @@ public final class UserController extends UserBaseController {
         }
     }
 
-    private void adminRoutes(HttpExchange ex, String method, String path) throws Exception {
+    /**
+	 * Gère les routes admin.
+	 * @param ex L'échange HTTP
+	 * @param method La méthode HTTP
+	 * @param path Le chemin
+	 */
+	private void adminRoutes(HttpExchange ex, String method, String path) throws Exception {
         int id = extractId(path);
         if ("GET".equals(method) && id == -1) {
             list(ex);
@@ -142,7 +210,14 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
-    private void userRoutes(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
+    /**
+	 * Gère les routes utilisateur.
+	 * @param ex L'échange HTTP
+	 * @param method La méthode HTTP
+	 * @param path Le chemin
+	 * @param ctx Le contexte d'authentification
+	 */
+	private void userRoutes(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
         int id = extractId(path);
         if (id == -1) {
             if ("GET".equals(method)) {
@@ -192,7 +267,12 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
-    private int extractId(String path) {
+    /**
+	 * Extrait l'identifiant du chemin.
+	 * @param path Le chemin
+	 * @return L'identifiant ou -1
+	 */
+	private int extractId(String path) {
         String[] parts = path.split("/");
         if (parts.length >= 3) {
             try {
@@ -202,7 +282,11 @@ public final class UserController extends UserBaseController {
         return -1;
     }
 
-    private void list(HttpExchange ex) throws Exception {
+    /**
+	 * Liste les utilisateurs.
+	 * @param ex L'échange HTTP
+	 */
+	private void list(HttpExchange ex) throws Exception {
         List<User> users = userRepo.list();
         users.sort(Comparator.comparing((User u) -> !u.isAdmin).thenComparing(u -> u.name.toLowerCase()));
         JSONArray arr = new JSONArray();
@@ -212,7 +296,12 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 200, arr);
     }
 
-    private void show(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Affiche un utilisateur.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant
+	 */
+	private void show(HttpExchange ex, int id) throws Exception {
         User user = userRepo.find(id);
         if (user == null) {
             sendJson(ex, 404, "{\"error\":\"Utilisateur introuvable\"}");
@@ -221,7 +310,11 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 200, user.toJson());
     }
 
-    private void create(HttpExchange ex) throws Exception {
+    /**
+	 * Crée un utilisateur.
+	 * @param ex L'échange HTTP
+	 */
+	private void create(HttpExchange ex) throws Exception {
         JSONObject body = parseJson(ex);
         String name = body.optString("name", null);
         String email = body.optString("email", null);
@@ -243,7 +336,13 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 201, created.toJson());
     }
 
-    private void update(HttpExchange ex, int id, boolean allowAdminField) throws Exception {
+    /**
+	 * Met à jour un utilisateur.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant
+	 * @param allowAdminField Si modification du champ admin autorisée
+	 */
+	private void update(HttpExchange ex, int id, boolean allowAdminField) throws Exception {
         User user = userRepo.find(id);
         if (user == null) {
             sendJson(ex, 404, "{\"error\":\"Utilisateur introuvable\"}");
@@ -265,7 +364,12 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 200, userRepo.find(id).toJson());
     }
 
-    private void destroy(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Supprime un utilisateur.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant
+	 */
+	private void destroy(HttpExchange ex, int id) throws Exception {
         userRepo.delete(id);
         sendEmpty(ex, 200);
     }

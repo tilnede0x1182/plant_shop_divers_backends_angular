@@ -21,6 +21,9 @@ import repository.PlantRepository;
 import order.util.ApiMapper;
 import util.AuthContext;
 
+/**
+ * Contrôleur pour la gestion des commandes.
+ */
 public final class OrderController {
 
     private final OrderRepository repo;
@@ -28,14 +31,22 @@ public final class OrderController {
     private final PlantRepository plantRepo;
     private final Connection db;
 
-    public OrderController(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public OrderController(Connection db) {
         this.db = db;
         this.repo = new OrderRepository(db);
         this.itemRepo = new OrderItemRepository(db);
         this.plantRepo = new PlantRepository(db);
     }
 
-    public void list(Context ctx) throws Exception {
+    /**
+	 * Liste les commandes de l'utilisateur.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void list(Context ctx) throws Exception {
         AuthContext currentUser = ctx.attribute("auth");
         if (currentUser == null || !currentUser.isAuthenticated()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
@@ -53,7 +64,11 @@ public final class OrderController {
         ctx.json(payload);
     }
 
-    public void create(Context ctx) throws Exception {
+    /**
+	 * Crée une commande.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void create(Context ctx) throws Exception {
         AuthContext currentUser = ctx.attribute("auth");
         if (currentUser == null || !currentUser.isAuthenticated()) {
             ctx.status(HttpStatus.UNAUTHORIZED).json(Map.of("error", "Non authentifié"));
@@ -98,7 +113,11 @@ public final class OrderController {
         }
     }
 
-    public void patch(Context ctx) throws Exception {
+    /**
+	 * Met à jour une commande.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void patch(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Order order = repo.find(id);
         if (order == null) throw new NotFoundResponse();
@@ -113,14 +132,24 @@ public final class OrderController {
         ctx.json(ApiMapper.toOrder(updated, items));
     }
 
-    public void destroy(Context ctx) throws Exception {
+    /**
+	 * Supprime une commande.
+	 * @param ctx Le contexte Javalin
+	 */
+	public void destroy(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         itemRepo.deleteByOrder(id);
         repo.delete(id);
         ctx.status(HttpStatus.OK).json(Map.of("deleted", true));
     }
 
-    private BigDecimal createOrderItem(int orderId, JSONObject itemJson) throws Exception {
+    /**
+	 * Crée un article de commande.
+	 * @param orderId L'identifiant de la commande
+	 * @param itemJson Les données JSON de l'article
+	 * @return Le montant de l'article
+	 */
+	private BigDecimal createOrderItem(int orderId, JSONObject itemJson) throws Exception {
         if (!itemJson.has("plantId") || !itemJson.has("quantity")) {
             throw new IllegalArgumentException("Chaque item doit contenir plantId et quantity");
         }
@@ -144,7 +173,11 @@ public final class OrderController {
         return plant.price.multiply(BigDecimal.valueOf(quantity));
     }
 
-    private Comparator<Order> orderComparator() {
+    /**
+	 * Retourne le comparateur de commandes par date.
+	 * @return Le comparateur
+	 */
+	private Comparator<Order> orderComparator() {
         return (left, right) -> {
             if (left.createdAt == null || right.createdAt == null) {
                 return Integer.compare(right.id, left.id);

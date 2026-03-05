@@ -14,10 +14,12 @@ public class SessionService {
 
     private final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
+    /** Retourne la map des sessions actives. */
     public Map<String, Integer> getSessions() {
         return sessions;
     }
 
+    /** Supprime une session. */
     public void removeSession(String sessionId) {
         if (sessionId != null) {
             sessions.remove(sessionId);

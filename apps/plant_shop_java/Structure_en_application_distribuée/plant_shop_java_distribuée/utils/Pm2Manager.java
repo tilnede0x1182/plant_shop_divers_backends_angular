@@ -10,6 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gestionnaire de processus PM2 pour les microservices.
+ */
 public final class Pm2Manager {
 
     private static final Map<String, Service> SERVICES = new LinkedHashMap<>();
@@ -22,6 +25,12 @@ public final class Pm2Manager {
         SERVICES.put("gateway", new Service("gateway", "gateway", "Gateway"));
     }
 
+    /**
+	 * Point d entrée principal du gestionnaire PM2.
+	 * 
+	 * @param args String[] Arguments de la ligne de commande
+	 * @throws Exception En cas d erreur
+	 */
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             printUsage();
@@ -50,7 +59,10 @@ public final class Pm2Manager {
         }
     }
 
-    private static void printUsage() {
+    /**
+	 * Affiche l'aide d'utilisation.
+	 */
+	private static void printUsage() {
         System.out.println("""
             Usage: java util.Pm2Manager <commande>
               start-all       Démarre tous les services (via pm2)
@@ -64,25 +76,40 @@ public final class Pm2Manager {
             """);
     }
 
-    private static void requireArgs(String[] args, int expected) {
+    /**
+	 * Vérifie le nombre d'arguments.
+	 * @param args Les arguments
+	 * @param expected Le nombre attendu
+	 */
+	private static void requireArgs(String[] args, int expected) {
         if (args.length < expected) {
             throw new IllegalArgumentException("Arguments insuffisants.");
         }
     }
 
-    private static void startAll() throws Exception {
+    /**
+	 * Démarre tous les services.
+	 */
+	private static void startAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             startOne(name);
         }
     }
 
-    private static void stopAll() throws Exception {
+    /**
+	 * Arrête tous les services.
+	 */
+	private static void stopAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             stopOne(name);
         }
     }
 
-    private static void startAllWithLogs(Path dir) throws Exception {
+    /**
+	 * Démarre tous les services avec logs.
+	 * @param dir Dossier des logs
+	 */
+	private static void startAllWithLogs(Path dir) throws Exception {
         Path logDir = dir.toAbsolutePath();
         Files.createDirectories(logDir);
         System.out.printf("🗂️  Logs dans %s%n", logDir);
@@ -91,7 +118,10 @@ public final class Pm2Manager {
         }
     }
 
-    private static void stopAllSilent() {
+    /**
+	 * Arrête tous les services silencieusement.
+	 */
+	private static void stopAllSilent() {
         for (String name : SERVICES.keySet()) {
             try {
                 stopOne(name, true);
@@ -101,11 +131,20 @@ public final class Pm2Manager {
         }
     }
 
-    private static void startOne(String name) throws Exception {
+    /**
+	 * Démarre un service.
+	 * @param name Nom du service
+	 */
+	private static void startOne(String name) throws Exception {
         startOne(name, null);
     }
 
-    private static void startOne(String name, Path logDir) throws Exception {
+    /**
+	 * Démarre un service avec logs optionnels.
+	 * @param name Nom du service
+	 * @param logDir Dossier des logs ou null
+	 */
+	private static void startOne(String name, Path logDir) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
@@ -135,11 +174,20 @@ public final class Pm2Manager {
         }
     }
 
-    private static void stopOne(String name) throws Exception {
+    /**
+	 * Arrête un service.
+	 * @param name Nom du service
+	 */
+	private static void stopOne(String name) throws Exception {
         stopOne(name, false);
     }
 
-    private static void stopOne(String name, boolean quiet) throws Exception {
+    /**
+	 * Arrête un service.
+	 * @param name Nom du service
+	 * @param quiet Si silencieux
+	 */
+	private static void stopOne(String name, boolean quiet) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
@@ -153,14 +201,22 @@ public final class Pm2Manager {
         runCommand(List.of("pm2", "delete", service.name()));
     }
 
-    private static void deleteIfExists(String name) throws Exception {
+    /**
+	 * Supprime un processus PM2 s'il existe.
+	 * @param name Nom du processus
+	 */
+	private static void deleteIfExists(String name) throws Exception {
         if (!processExists(name)) {
             return;
         }
         runCommand(List.of("pm2", "delete", name));
     }
 
-    private static void runCommand(List<String> command) throws Exception {
+    /**
+	 * Exécute une commande système.
+	 * @param command La commande à exécuter
+	 */
+	private static void runCommand(List<String> command) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();
@@ -170,7 +226,12 @@ public final class Pm2Manager {
         }
     }
 
-    private static boolean processExists(String name) throws IOException, InterruptedException {
+    /**
+	 * Vérifie si un processus PM2 existe.
+	 * @param name Nom du processus
+	 * @return true si existe
+	 */
+	private static boolean processExists(String name) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder("pm2", "pid", name);
         pb.redirectError(ProcessBuilder.Redirect.DISCARD);
         Process p = pb.start();
@@ -189,12 +250,26 @@ public final class Pm2Manager {
         return !output.isEmpty() && !"0".equals(output);
     }
 
-    private record Service(String name, String relativeDir, String mainClass) {
-        Path directory() {
+    /**
+	 * Représente un service géré par PM2.
+	 * @param name Nom du service
+	 * @param relativeDir Dossier relatif
+	 * @param mainClass Classe principale
+	 */
+	private record Service(String name, String relativeDir, String mainClass) {
+        /**
+		 * Retourne le dossier absolu.
+		 * @return Le chemin absolu
+		 */
+		Path directory() {
             return Path.of(relativeDir).toAbsolutePath().normalize();
         }
 
-        String classpath() {
+        /**
+		 * Retourne le classpath.
+		 * @return Le classpath
+		 */
+		String classpath() {
             return "bin:../utils/bin:../lib/*";
         }
     }

@@ -10,23 +10,38 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Runtime principal de la gateway API.
+ */
 final class GatewayRuntime {
 
     private final GatewayConfig config;
     private final HttpClient http;
 
-    private GatewayRuntime(GatewayConfig config, HttpClient http) {
+    /**
+	 * Constructeur privé.
+	 * @param config Configuration de la gateway
+	 * @param http Client HTTP
+	 */
+	private GatewayRuntime(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
-    static GatewayRuntime create() throws Exception {
+    /**
+	 * Crée une nouvelle instance de la gateway.
+	 * @return L'instance créée
+	 */
+	static GatewayRuntime create() throws Exception {
         GatewayConfig config = GatewayConfig.load();
         HttpClient http = HttpClient.newBuilder().build();
         return new GatewayRuntime(config, http);
     }
 
-    void start() throws Exception {
+    /**
+	 * Démarre le serveur gateway.
+	 */
+	void start() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port()), 0);
         server.createContext("/api", new GatewayHandler(config, http));
         server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(16));
@@ -35,25 +50,45 @@ final class GatewayRuntime {
     }
 }
 
+/**
+ * Configuration de la gateway.
+ */
 final class GatewayConfig {
     private final Map<String, String> values;
 
-    private GatewayConfig(Map<String, String> values) {
+    /**
+	 * Constructeur privé avec valeurs.
+	 * @param values Les valeurs de configuration
+	 */
+	private GatewayConfig(Map<String, String> values) {
         this.values = values;
     }
 
-    static GatewayConfig load() throws IOException {
+    /**
+	 * Charge la configuration depuis les fichiers .env.
+	 * @return La configuration chargée
+	 */
+	static GatewayConfig load() throws IOException {
         Map<String, String> values = new HashMap<>();
         readEnv(Path.of("../config/.env"), values);
         readEnv(Path.of(".env"), values);
         return new GatewayConfig(values);
     }
 
-    int port() {
+    /**
+	 * Retourne le port d'écoute.
+	 * @return Le port
+	 */
+	int port() {
         return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS", "4100"));
     }
 
-    String serviceUrl(String service) {
+    /**
+	 * Retourne l'URL d'un service backend.
+	 * @param service Le nom du service
+	 * @return L'URL du service
+	 */
+	String serviceUrl(String service) {
         String host = values.getOrDefault("SERVICE_HOST", "http://localhost");
         return switch (service) {
             case "auth" -> host + ":" + values.getOrDefault("AUTH_SERVICE_PORT", "6101");
@@ -64,7 +99,14 @@ final class GatewayConfig {
         };
     }
 
-    boolean requiresAuth(String service, String method, String path) {
+    /**
+	 * Vérifie si la route nécessite une authentification.
+	 * @param service Le service cible
+	 * @param method La méthode HTTP
+	 * @param path Le chemin de la requête
+	 * @return true si authentification requise
+	 */
+	boolean requiresAuth(String service, String method, String path) {
         if ("auth".equals(service)) {
             return false;
         }
@@ -75,7 +117,12 @@ final class GatewayConfig {
         return true;
     }
 
-    private static void readEnv(Path path, Map<String, String> values) throws IOException {
+    /**
+	 * Lit un fichier .env et ajoute les valeurs à la map.
+	 * @param path Chemin du fichier
+	 * @param values Map où stocker les valeurs
+	 */
+	private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
         }

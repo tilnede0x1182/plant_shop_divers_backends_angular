@@ -16,6 +16,9 @@ import repository.PlantRepository;
 import catalog.util.ApiMapper;
 import util.AuthContext;
 
+/**
+ * Contrôleur des routes plantes.
+ */
 @Controller("/")
 public class PlantController {
 
@@ -26,8 +29,12 @@ public class PlantController {
         COLLATOR.setStrength(Collator.PRIMARY);
     }
 
-    @Inject
-    public PlantController(Connection db) {
+    /**
+ * Constructeur avec injection de dépendances.
+ * @param db Connexion à la base de données
+ */
+@Inject
+public PlantController(Connection db) {
         this.repo = new PlantRepository(db);
     }
 
@@ -84,10 +91,20 @@ public class PlantController {
         return HttpResponse.ok();
     }
 
+    /**
+     * Compare deux plantes par nom.
+     * @param a Plant Première plante
+     * @param b Plant Seconde plante
+     * @return int Résultat de comparaison
+     */
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }
 
+    /**
+     * Vérifie que l'utilisateur est admin.
+     * @param request HttpRequest Requête HTTP
+     */
     private void ensureAdmin(HttpRequest<?> request) {
         AuthContext context = AuthContext.fromHeaders(request);
         if (!context.isAdmin()) {

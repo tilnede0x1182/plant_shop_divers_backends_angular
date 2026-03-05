@@ -8,8 +8,14 @@ from repositories.order_items import OrderItemRepository
 
 orders_bp = Blueprint('orders', __name__)
 
+"""
+	Prépare un OrderItem pour la sérialisation JSON.
+	Inclut les informations de la plante associée si disponible.
+
+	@param item OrderItem Objet item de commande depuis la base
+	@return dict Dictionnaire avec id, orderId, plantId, quantity, price et plant
+"""
 def _serialize_item(item):
-    """Prépare un OrderItem pour le JSON (avec la plante)."""
     payload = {
         "id": item.id,
         "orderId": item.order_id,
@@ -25,8 +31,13 @@ def _serialize_item(item):
         }
     return payload
 
+"""
+	Convertit une commande et ses items en dictionnaire JSON.
+
+	@param order Order Objet commande avec ses items attachés
+	@return dict Dictionnaire avec id, userId, total, status, createdAt, orderItems
+"""
 def _serialize_order(order):
-    """Convertit une commande et ses items en dictionnaire."""
     items = getattr(order, 'items', []) or []
     return {
         "id": order.id,
@@ -37,14 +48,26 @@ def _serialize_order(order):
         "orderItems": [_serialize_item(item) for item in items]
     }
 
+"""
+	Initialise le contrôleur des commandes avec la connexion DB.
+	Enregistre les routes CRUD pour les commandes.
+
+	@param db_connection Connection Connexion psycopg2 à PostgreSQL
+	@return Blueprint Blueprint Flask orders_bp avec les routes enregistrées
+"""
 def init_orders_controller(db_connection):
     order_repo = OrderRepository(db_connection)
     item_repo = OrderItemRepository(db_connection)
 
+    """
+    	Retourne les commandes de l utilisateur connecté.
+    	Chaque commande inclut ses items avec les plantes associées.
+
+    	@return Response JSON array des commandes (200)
+    """
     @orders_bp.route('/orders', methods=['GET'])
     @auth_required
     def list_orders():
-        """Retourne les commandes liées à l'utilisateur courant."""
         user_id = g.user['id']
         orders = order_repo.find_all_for_user(user_id)
 
@@ -55,10 +78,15 @@ def init_orders_controller(db_connection):
             serialized.append(_serialize_order(order))
         return json_response(serialized)
 
+    """
+    	Crée une commande pour l utilisateur connecté.
+    	Vérifie le stock et crée les items de manière transactionnelle.
+
+    	@return Response JSON de la commande créée (201) ou erreur (400/500)
+    """
     @orders_bp.route('/orders', methods=['POST'])
     @auth_required
     def create_order():
-        """Crée une commande pour l'utilisateur connecté."""
         user_id = g.user['id']
         data = request.get_json() or {}
         items = data.get('items')
@@ -74,10 +102,15 @@ def init_orders_controller(db_connection):
         except Exception as e:
             return json_response({"error": "Erreur interne du serveur"}, 500)
 
+    """
+    	Met à jour le statut d une commande (admin).
+
+    	@param order_id int Identifiant de la commande
+    	@return Response JSON de la commande mise à jour (200) ou erreur (400/404)
+    """
     @orders_bp.route('/orders/<int:order_id>', methods=['PATCH'])
     @admin_required
     def update_order_status(order_id):
-        """Met à jour le statut d'une commande (admin)."""
         data = request.get_json() or {}
         status = data.get('status')
         if not status:
@@ -90,10 +123,15 @@ def init_orders_controller(db_connection):
         updated_order.items = item_repo.find_all_for_order(order_id)
         return json_response(_serialize_order(updated_order))
 
+    """
+    	Supprime une commande et ses items en cascade (admin).
+
+    	@param order_id int Identifiant de la commande à supprimer
+    	@return Response Réponse vide (200)
+    """
     @orders_bp.route('/orders/<int:order_id>', methods=['DELETE'])
     @admin_required
     def delete_order(order_id):
-        """Supprime une commande ainsi que ses items (admin)."""
         # La suppression en cascade est gérée par la DB
         order_repo.delete(order_id)
         return empty_response(200)

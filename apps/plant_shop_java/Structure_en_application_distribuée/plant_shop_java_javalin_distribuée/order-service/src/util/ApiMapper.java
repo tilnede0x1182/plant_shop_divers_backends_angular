@@ -11,9 +11,15 @@ import model.Order;
 import model.OrderItem;
 import model.Plant;
 
+/**
+ * Utilitaire de conversion modèles vers format API.
+ */
 public final class ApiMapper {
 
-    private ApiMapper() {
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private ApiMapper() {
         // utilitaire statique
     }
 
@@ -60,7 +66,12 @@ public final class ApiMapper {
         return mapped;
     }
 
-    private static Double toDecimal(BigDecimal value) {
+    /**
+ * Convertit un BigDecimal en Double.
+ * @param value Valeur à convertir
+ * @return Double ou null
+ */
+private static Double toDecimal(BigDecimal value) {
         return value == null ? null : value.doubleValue();
     }
 

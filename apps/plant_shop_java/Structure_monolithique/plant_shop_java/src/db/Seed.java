@@ -10,7 +10,11 @@ import util.PasswordUtil;
     décrémentation du stock, génération users.txt                                     */
 public final class Seed {
 
-	/* ---------- Lecture .env ---------- */
+	/**
+	 * Lit les variables d environnement depuis .env.
+	 * @return Map Dictionnaire clé-valeur
+	 * @throws IOException En cas d erreur lecture
+	 */
 	private static Map<String,String> env() throws IOException {
 		Map<String,String> out = new HashMap<>();
 		try (BufferedReader br = new BufferedReader(new FileReader(".env"))) {
@@ -59,12 +63,35 @@ public final class Seed {
 
 	private static final Random RNG = new Random();
 
-	/* ---------- Helpers ---------- */
+	/**
+	 * Génère un entier aléatoire dans un intervalle.
+	 * @param min int Borne min
+	 * @param max int Borne max
+	 * @return int Entier aléatoire
+	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/**
+	 * Sélectionne un élément aléatoire dans un tableau.
+	 * @param arr T[] Tableau source
+	 * @return T Élément choisi
+	 */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+	/**
+	 * Génère un mot de passe aléatoire.
+	 * @return String Mot de passe
+	 */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+	/**
+	 * Hash un mot de passe avec BCrypt.
+	 * @param p String Mot de passe
+	 * @return String Hash BCrypt
+	 */
 	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
 
+	/**
+	 * Génère une phrase lorem ipsum.
+	 * @return String Phrase générée
+	 */
 	private static String loremSentence() {
 		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
 				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};
@@ -78,7 +105,11 @@ public final class Seed {
 		return sb.toString();
 	}
 
-	/* ---------- Main ---------- */
+	/**
+	 * Point d entrée du script de seed.
+	 * @param args String[] Arguments CLI
+	 * @throws Exception En cas d erreur
+	 */
 	public static void main(String[] args) throws Exception {
 
 		Map<String,String> cfg = env();

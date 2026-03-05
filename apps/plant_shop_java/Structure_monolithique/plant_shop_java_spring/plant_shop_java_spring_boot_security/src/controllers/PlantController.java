@@ -15,6 +15,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+/**
+ * Contrôleur REST pour la gestion des plantes.
+ * Fournit les endpoints publics et admin pour le catalogue.
+ */
 @RestController
 @RequestMapping("/api")
 public class PlantController {
@@ -30,12 +34,23 @@ public class PlantController {
         COLLATOR = Collator.getInstance(Locale.ROOT);
         COLLATOR.setStrength(Collator.PRIMARY);
     }
+    /**
+     * Compare deux plantes par nom (insensible à la casse).
+     *
+     * @param a Plant Première plante
+     * @param b Plant Deuxième plante
+     * @return int Résultat de la comparaison
+     */
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }
 
     // --- Endpoints Publics ---
 
+    /**
+     * Liste toutes les plantes (endpoint public).
+     * @return 200 avec la liste des plantes triées par nom
+     */
     @GetMapping("/plants")
     public ResponseEntity<List<?>> listPublic() throws Exception {
         List<?> payload = repo.list().stream()
@@ -45,6 +60,11 @@ public class PlantController {
         return ResponseEntity.ok(payload);
     }
 
+    /**
+     * Récupère une plante par son ID.
+     * @param id ID de la plante
+     * @return 200 avec la plante, 404 si non trouvée
+     */
     @GetMapping("/plants/{id}")
     public ResponseEntity<Object> show(@PathVariable("id") int id) throws Exception {
         Plant plant = repo.find(id);
@@ -55,12 +75,21 @@ public class PlantController {
 
     // --- Endpoints Admin (/admin/plants) ---
 
+    /**
+     * Liste toutes les plantes (endpoint admin).
+     * @return 200 avec la liste des plantes
+     */
     @GetMapping("/admin/plants")
     public ResponseEntity<List<?>> listAdmin() throws Exception {
         guards.requireAdmin(); // Sécurise la route
         return listPublic();   // Réutilise la logique publique
     }
 
+    /**
+     * Crée une nouvelle plante (admin uniquement).
+     * @param plant Données de la plante
+     * @return 201 avec la plante créée
+     */
     @PostMapping("/admin/plants")
     public ResponseEntity<Object> create(@RequestBody Plant plant) throws Exception {
         guards.requireAdmin();
@@ -70,6 +99,12 @@ public class PlantController {
                              .body(ApiMapper.toPlant(created));
     }
 
+    /**
+     * Met à jour une plante (admin uniquement).
+     * @param id ID de la plante
+     * @param updatedData Nouvelles données
+     * @return 200 avec la plante modifiée, 404 si non trouvée
+     */
     @PatchMapping("/admin/plants/{id}")
     public ResponseEntity<Object> update(@PathVariable("id") int id, @RequestBody Plant updatedData) throws Exception {
         guards.requireAdmin();
@@ -87,6 +122,11 @@ public class PlantController {
         return ResponseEntity.ok(ApiMapper.toPlant(repo.find(id)));
     }
 
+    /**
+     * Supprime une plante (admin uniquement).
+     * @param id ID de la plante
+     * @return 200 OK
+     */
     @DeleteMapping("/admin/plants/{id}")
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin();

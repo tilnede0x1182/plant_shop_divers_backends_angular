@@ -1,3 +1,9 @@
+//! Extracteurs de session.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use std::future::Future;
 
 use poem::web::{cookie::CookieJar, Data};
@@ -8,19 +14,35 @@ use crate::state::AppState;
 
 use super::jwt::{verify_jwt, Claims};
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// Session d'authentification contenant les claims JWT.
 pub struct AuthSession(pub Claims);
 
+/// Guard verifiant que l'utilisateur est admin.
+pub struct AdminGuard {
+    session: AuthSession,
+}
+
+// ==============================================================================
+// Implementations
+// ==============================================================================
+
 impl AuthSession {
+    /// Retourne l'ID de l'utilisateur authentifie.
+    ///
+    /// @return ID utilisateur (i32)
     pub fn user_id(&self) -> i32 {
         self.0.sub
     }
 }
 
-pub struct AdminGuard {
-    session: AuthSession,
-}
-
 impl AdminGuard {
+    /// Retourne l'ID de l'utilisateur admin.
+    ///
+    /// @return ID utilisateur (i32)
     pub fn user_id(&self) -> i32 {
         self.session.user_id()
     }

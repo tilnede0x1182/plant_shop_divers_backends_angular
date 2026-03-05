@@ -10,6 +10,9 @@ using plant_shop_asp_dapper.Data;
 
 namespace plant_shop_asp_dapper.Controllers
 {
+    /// <summary>
+    /// Controleur CRUD pour les commandes (routes standards).
+    /// </summary>
     [ApiController]
     [Authorize] // Routes Commandes
     public class OrdersController : BaseController

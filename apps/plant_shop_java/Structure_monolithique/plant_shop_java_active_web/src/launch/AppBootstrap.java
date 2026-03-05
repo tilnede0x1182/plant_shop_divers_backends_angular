@@ -7,8 +7,16 @@ import util.DatabaseFactory;
 
 import java.util.Map;
 
+/**
+ * Bootstrap de l application ActiveWeb.
+ * Initialise la configuration et l environnement.
+ */
 public final class AppBootstrap extends Bootstrap {
 
+    /**
+     * Initialise l application.
+     * @param context AppContext Contexte de l application
+     */
     @Override
     public void init(AppContext context) {
         AppConfig.setActiveEnv(System.getenv().getOrDefault("APP_ENV", "development"));

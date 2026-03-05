@@ -3,6 +3,9 @@ import java.sql.Timestamp;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Modèle représentant un utilisateur.
+ */
 public final class User {
     public int id;
     public String name;
@@ -19,6 +22,15 @@ public final class User {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String password;
 
+    /**
+     * Constructeur complet (lecture DB).
+     * @param id ID de l'utilisateur
+     * @param name Nom
+     * @param email Email
+     * @param passwordHash Hash du mot de passe
+     * @param isAdmin Statut admin
+     * @param createdAt Date de création
+     */
     public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -27,6 +39,13 @@ public final class User {
         this.isAdmin = isAdmin;
         this.createdAt = createdAt;
     }
+    /**
+     * Constructeur pour insertion.
+     * @param name Nom
+     * @param email Email
+     * @param passwordHash Hash du mot de passe
+     * @param isAdmin Statut admin
+     */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }

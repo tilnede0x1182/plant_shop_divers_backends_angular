@@ -13,12 +13,19 @@ import util.Request;
 import util.Response;
 import org.json.JSONObject;
 
+/**
+ * Contrôleur gérant l'authentification (register, login, logout, me).
+ */
 public final class AuthController extends BaseController {
 
     private final UserRepository userRepo;
     // AJOUTÉ: Rendre la map de sessions statique et publique pour être accessible par BaseController
     private static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
+    /**
+     * Constructeur du contrôleur d'authentification.
+     * @param db Connection Connexion à la base de données
+     */
     public AuthController(Connection db) {
         super(db); // AJOUTÉ: Appel au constructeur parent
         this.userRepo = new UserRepository(db);
@@ -29,8 +36,12 @@ public final class AuthController extends BaseController {
         return sessions;
     }
 
-		@Override
-		public void handle(HttpExchange ex) throws IOException {
+	/**
+	 * Dispatche les requêtes vers les méthodes d'authentification.
+	 * @param ex Échange HTTP
+	 */
+	@Override
+	public void handle(HttpExchange ex) throws IOException {
 			String path = ex.getRequestURI().getPath().substring("/api/auth".length());
 
 			try {
@@ -61,6 +72,11 @@ public final class AuthController extends BaseController {
 			}
 		}
 
+    /**
+     * Enregistre un nouvel utilisateur.
+     * @param ex HttpExchange Échange HTTP contenant les données d'inscription
+     * @throws Exception En cas d'erreur
+     */
     private void register(HttpExchange ex) throws Exception {
         JSONObject body = parseJsonBody(ex);
         String name = body.optString("name", null);
@@ -87,6 +103,11 @@ public final class AuthController extends BaseController {
         sendJsonResponse(ex, 201, "{\"message\":\"Utilisateur créé avec succès.\", \"userId\":" + userId + "}");
     }
 
+    /**
+     * Authentifie un utilisateur et crée une session.
+     * @param ex HttpExchange Échange HTTP contenant les credentials
+     * @throws Exception En cas d'erreur
+     */
     private void login(HttpExchange ex) throws Exception {
         JSONObject body = parseJsonBody(ex);
         String email = body.optString("email", null);
@@ -112,6 +133,11 @@ public final class AuthController extends BaseController {
         sendJsonResponse(ex, 201, "{\"message\":\"Connexion réussie.\"}");
     }
 
+		/**
+		 * Déconnecte l'utilisateur en supprimant sa session.
+		 * @param ex HttpExchange Échange HTTP
+		 * @throws Exception En cas d'erreur
+		 */
 		private void logout(HttpExchange ex) throws Exception {
 			String cookieHeader = ex.getRequestHeaders().getFirst("Cookie");
 			if (cookieHeader != null) {
@@ -130,6 +156,11 @@ public final class AuthController extends BaseController {
 			sendEmptyResponse(ex, 204);   // helper déjà présent dans BaseController :contentReference[oaicite:0]{index=0}
 		}
 
+		/**
+		 * Retourne les informations de l'utilisateur connecté.
+		 * @param ex HttpExchange Échange HTTP
+		 * @throws Exception En cas d'erreur
+		 */
 		private void me(HttpExchange ex) throws Exception {
 			User currentUser = getAuthenticatedUser(ex);
 

@@ -17,11 +17,21 @@ public final class CorsConfig {
         "http://127.0.0.1:8300"
     );
 
-    public boolean isAllowed(String origin) {
+    /**
+ * Vérifie si l'origine est autorisée.
+ * @param origin Origine de la requête
+ * @return true si autorisée
+ */
+public boolean isAllowed(String origin) {
         return origin != null && ALLOWED.contains(origin);
     }
 
-    public boolean isPreflight(HttpRequest<?> request) {
+    /**
+ * Vérifie si c'est une requête preflight.
+ * @param request Requête HTTP
+ * @return true si OPTIONS
+ */
+public boolean isPreflight(HttpRequest<?> request) {
         return "OPTIONS".equals(request.getMethodName());
     }
 

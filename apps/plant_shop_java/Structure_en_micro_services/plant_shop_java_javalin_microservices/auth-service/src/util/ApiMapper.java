@@ -11,10 +11,18 @@ import model.User;
  */
 public final class ApiMapper {
 
+    /**
+     * Constructeur privé (classe utilitaire).
+     */
     private ApiMapper() {
         // utilitaire statique
     }
 
+    /**
+     * Convertit un User en Map pour l'API.
+     * @param user Utilisateur à convertir
+     * @return Map des propriétés
+     */
     public static Map<String, Object> toUser(User user) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", user.id);
@@ -25,6 +33,11 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit un Timestamp en chaîne ISO 8601.
+     * @param timestamp Timestamp à convertir
+     * @return Chaîne ISO ou null
+     */
     private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }

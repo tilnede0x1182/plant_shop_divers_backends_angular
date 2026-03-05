@@ -1,102 +1,105 @@
+//! Module de cache en memoire.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-
-use async_trait::async_trait;
 use tokio::sync::RwLock;
 
 use crate::dto::{PlantResponse, UserResponse};
 
-#[async_trait]
+// ==============================================================================
+// Traits
+// ==============================================================================
+
+/// Trait pour le cache utilisateurs.
 pub trait UserCache: Send + Sync {
-    async fn get(&self) -> Option<Vec<UserResponse>>;
-    async fn set(&self, data: &[UserResponse]);
-    async fn invalidate(&self);
+    fn get(&self) -> impl std::future::Future<Output = Option<Vec<UserResponse>>> + Send;
+    fn set(&self, data: &[UserResponse]) -> impl std::future::Future<Output = ()> + Send;
+    fn invalidate(&self) -> impl std::future::Future<Output = ()> + Send;
 }
 
-#[async_trait]
+/// Trait pour le cache plantes.
 pub trait PlantCache: Send + Sync {
-    async fn get(&self) -> Option<Vec<PlantResponse>>;
-    async fn set(&self, data: &[PlantResponse]);
-    async fn invalidate(&self);
+    fn get(&self) -> impl std::future::Future<Output = Option<Vec<PlantResponse>>> + Send;
+    fn set(&self, data: &[PlantResponse]) -> impl std::future::Future<Output = ()> + Send;
+    fn invalidate(&self) -> impl std::future::Future<Output = ()> + Send;
 }
 
+/// Cache partage pour les utilisateurs.
+pub type SharedUserCache = Arc<dyn UserCache>;
+/// Cache partage pour les plantes.
+pub type SharedPlantCache = Arc<dyn PlantCache>;
+
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// Cache avec expiration temporelle pour une liste d'elements.
 struct TimedVecCache<T> {
+    data: RwLock<Option<(Vec<T>, Instant)>>,
     ttl: Duration,
-    inner: RwLock<Option<(Instant, Vec<T>)>>,
 }
 
-impl<T> TimedVecCache<T> {
+impl<T: Clone + Send + Sync> TimedVecCache<T> {
     fn new(ttl: Duration) -> Self {
         Self {
+            data: RwLock::new(None),
             ttl,
-            inner: RwLock::new(None),
         }
     }
-}
 
-impl<T: Clone> TimedVecCache<T> {
-    async fn get_fresh(&self) -> Option<Vec<T>> {
-        let mut guard = self.inner.write().await;
-        if let Some((stored_at, data)) = guard.as_ref() {
-            if stored_at.elapsed() <= self.ttl {
-                return Some(data.clone());
+    async fn get_data(&self) -> Option<Vec<T>> {
+        let guard = self.data.read().await;
+        if let Some((ref vec, instant)) = *guard {
+            if instant.elapsed() < self.ttl {
+                return Some(vec.clone());
             }
         }
-        guard.take();
         None
     }
 
-    async fn set_snapshot(&self, data: &[T]) {
-        self.inner
-            .write()
-            .await
-            .replace((Instant::now(), data.to_vec()));
+    async fn set_data(&self, items: &[T]) {
+        let mut guard = self.data.write().await;
+        *guard = Some((items.to_vec(), Instant::now()));
+    }
+
+    async fn clear(&self) {
+        let mut guard = self.data.write().await;
+        *guard = None;
     }
 }
 
-impl<T> TimedVecCache<T> {
-    async fn invalidate_inner(&self) {
-        self.inner.write().await.take();
-    }
-}
+// ==============================================================================
+// Implementations
+// ==============================================================================
 
-#[async_trait]
 impl UserCache for TimedVecCache<UserResponse> {
-    async fn get(&self) -> Option<Vec<UserResponse>> {
-        self.get_fresh().await
-    }
-
-    async fn set(&self, data: &[UserResponse]) {
-        self.set_snapshot(data).await;
-    }
-
-    async fn invalidate(&self) {
-        self.invalidate_inner().await;
-    }
+    /// Implementation du cache utilisateurs.
+    async fn get(&self) -> Option<Vec<UserResponse>> { self.get_data().await }
+    async fn set(&self, data: &[UserResponse]) { self.set_data(data).await }
+    async fn invalidate(&self) { self.clear().await }
 }
 
-#[async_trait]
 impl PlantCache for TimedVecCache<PlantResponse> {
-    async fn get(&self) -> Option<Vec<PlantResponse>> {
-        self.get_fresh().await
-    }
-
-    async fn set(&self, data: &[PlantResponse]) {
-        self.set_snapshot(data).await;
-    }
-
-    async fn invalidate(&self) {
-        self.invalidate_inner().await;
-    }
+    /// Implementation du cache plantes.
+    async fn get(&self) -> Option<Vec<PlantResponse>> { self.get_data().await }
+    async fn set(&self, data: &[PlantResponse]) { self.set_data(data).await }
+    async fn invalidate(&self) { self.clear().await }
 }
 
-pub type SharedUserCache = Arc<dyn UserCache>;
-pub type SharedPlantCache = Arc<dyn PlantCache>;
+// ==============================================================================
+// Fonctions
+// ==============================================================================
 
+/// Cree un cache utilisateurs avec le TTL specifie.
 pub fn default_user_cache(ttl: Duration) -> SharedUserCache {
-    Arc::new(TimedVecCache::new(ttl))
+    Arc::new(TimedVecCache::<UserResponse>::new(ttl))
 }
 
+/// Cree un cache plantes avec le TTL specifie.
 pub fn default_plant_cache(ttl: Duration) -> SharedPlantCache {
-    Arc::new(TimedVecCache::new(ttl))
+    Arc::new(TimedVecCache::<PlantResponse>::new(ttl))
 }

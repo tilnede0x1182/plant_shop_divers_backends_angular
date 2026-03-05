@@ -16,10 +16,16 @@ import org.springframework.web.context.WebApplicationContext;
 public class AuthenticatedUser {
     private User user;
 
+    /** Récupère l'utilisateur authentifié. */
     public User getUser() {
         return user;
     }
 
+    /**
+     * Définit l'utilisateur authentifié.
+     *
+     * @param user User L'utilisateur à définir
+     */
     public void setUser(User user) {
         this.user = user;
     }

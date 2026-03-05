@@ -12,8 +12,15 @@ import util.ServiceLauncher;
         HibernateJpaAutoConfiguration.class
     }
 )
+/**
+ * Application Spring Boot pour le service d'authentification.
+ */
 public class AuthApplication {
 
+    /**
+     * Point d'entrée principal.
+     * @param args Arguments de ligne de commande
+     */
     public static void main(String[] args) {
         ServiceLauncher.launch(AuthApplication.class, "AUTH_SERVICE_PORT", 6101, "AuthService", args);
     }

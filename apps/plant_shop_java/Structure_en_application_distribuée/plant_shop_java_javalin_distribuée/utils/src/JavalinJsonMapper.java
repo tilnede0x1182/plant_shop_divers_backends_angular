@@ -28,7 +28,13 @@ public final class JavalinJsonMapper implements JsonMapper {
     }
 
     @Override
-    public String toJsonString(Object obj, Type type) {
+    /**
+ * Convertit un objet Java en chaîne JSON.
+ * @param obj Objet à convertir
+ * @param type Type de l'objet
+ * @return Chaîne JSON
+ */
+public String toJsonString(Object obj, Type type) {
         Object normalized = wrap(obj);
         if (normalized instanceof JSONObject jsonObject) {
             return jsonObject.toString();
@@ -39,7 +45,12 @@ public final class JavalinJsonMapper implements JsonMapper {
         return String.valueOf(normalized);
     }
 
-    private Object wrap(Object value) {
+    /**
+ * Encapsule récursivement une valeur pour la conversion JSON.
+ * @param value Valeur à encapsuler
+ * @return Objet JSON compatible
+ */
+private Object wrap(Object value) {
         if (value == null) {
             return JSONObject.NULL;
         }

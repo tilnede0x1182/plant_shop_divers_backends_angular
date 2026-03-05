@@ -16,21 +16,39 @@ import util.ApiMapper;
 import util.PasswordUtil;
 import io.micronaut.http.HttpRequest;
 
+/**
+ * Contrôleur d authentification Micronaut.
+ * Gère login, logout, register et me.
+ */
 @Controller("/api/auth")
 public class AuthController {
 
     private final UserRepository userRepo;
     private static final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
+    /**
+     * Constructeur avec injection.
+     * @param db Connection Connexion DB
+     */
     @Inject
     public AuthController(Connection db) {
         this.userRepo = new UserRepository(db);
     }
 
+    /**
+     * Retourne le cache des sessions.
+     * @return Map Sessions actives
+     */
     public static Map<String, Integer> getSessions() {
         return sessions;
     }
 
+    /**
+     * Inscription d un utilisateur.
+     * @param body Map Corps de requête
+     * @return HttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Post("/register")
     public HttpResponse<?> register(@Body Map<String, String> body) throws Exception {
         String name = body.get("name");
@@ -47,6 +65,12 @@ public class AuthController {
         return HttpResponse.created(ApiMapper.toUser(created));
     }
 
+    /**
+     * Connexion d un utilisateur.
+     * @param body Map Corps de requête
+     * @return MutableHttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Post("/login")
     public MutableHttpResponse<?> login(@Body Map<String, String> body) throws Exception {
         User user = userRepo.findByEmailWithPassword(body.get("email"));
@@ -67,6 +91,11 @@ public class AuthController {
             .body(ApiMapper.toUser(user));
     }
 
+    /**
+     * Déconnexion d un utilisateur.
+     * @param sessionId String ID de session
+     * @return HttpResponse Réponse HTTP
+     */
     @Post("/logout")
     public HttpResponse<?> logout(@CookieValue("session_id") String sessionId) {
         if (sessionId != null) {
@@ -76,6 +105,11 @@ public class AuthController {
         return HttpResponse.noContent().cookie(expiredCookie);
     }
 
+    /**
+     * Retourne l utilisateur connecté.
+     * @param request HttpRequest Requête HTTP
+     * @return HttpResponse Réponse HTTP
+     */
     @Get("/me")
     public HttpResponse<?> me(HttpRequest<?> request) {
         User user = request.getAttribute("user", User.class).orElse(null);

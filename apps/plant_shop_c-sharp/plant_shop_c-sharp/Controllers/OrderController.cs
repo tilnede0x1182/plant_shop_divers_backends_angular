@@ -8,10 +8,22 @@ using System.Collections.Generic;
 
 namespace plant_shop_c_sharp.Controllers
 {
+    /// <summary>
+    /// Controleur CRUD pour les commandes.
+    /// </summary>
     public class OrderController : BaseController
     {
+        /// <summary>
+        /// Constructeur avec injection de la source de donnees.
+        /// </summary>
+        /// <param name="dataSource">Source Npgsql.</param>
         public OrderController(NpgsqlDataSource dataSource) : base(dataSource) { }
 
+        /// <summary>
+        /// Gere les requetes HTTP pour les routes orders.
+        /// </summary>
+        /// <param name="context">Contexte HTTP.</param>
+        /// <param name="currentUser">Utilisateur connecte ou null.</param>
         public override async Task HandleRequest(HttpListenerContext context, User? currentUser)
         {
             var request = context.Request;
@@ -66,7 +78,11 @@ namespace plant_shop_c_sharp.Controllers
             }
         }
 
-        // GET /api/orders
+        /// <summary>
+        /// Liste les commandes de l utilisateur connecte.
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="user">Utilisateur connecte.</param>
         private async Task GetUserOrders(HttpListenerResponse response, User user)
         {
             var orders = await OrderRepo.FindByUserIdAsync(user.Id);
@@ -78,7 +94,12 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 200, orders);
         }
 
-        // GET /api/orders/:id
+        /// <summary>
+        /// Recupere une commande par ID.
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="user">Utilisateur connecte.</param>
+        /// <param name="id">ID de la commande.</param>
         private async Task GetOrder(HttpListenerResponse response, User user, int id)
         {
             var order = await OrderRepo.FindByIdAsync(id);
@@ -93,7 +114,12 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 200, order);
         }
 
-        // POST /api/orders
+        /// <summary>
+        /// Cree une nouvelle commande.
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="user">Utilisateur connecte.</param>
         private async Task CreateOrder(HttpListenerRequest request, HttpListenerResponse response, User user)
         {
             var body = ParseBody<OrderRequest>(request);
@@ -164,7 +190,12 @@ namespace plant_shop_c_sharp.Controllers
             }
         }
 
-        // PATCH /api/orders/:id (Admin seulement)
+        /// <summary>
+        /// Met a jour le statut d une commande (admin).
+        /// </summary>
+        /// <param name="request">Requete HTTP.</param>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="id">ID de la commande.</param>
         private async Task UpdateOrderStatus(HttpListenerRequest request, HttpListenerResponse response, int id)
         {
             var order = await OrderRepo.FindByIdAsync(id);
@@ -186,7 +217,11 @@ namespace plant_shop_c_sharp.Controllers
             await SendJsonResponse(response, 200, order);
         }
 
-        // DELETE /api/orders/:id (Admin seulement)
+        /// <summary>
+        /// Supprime une commande (admin).
+        /// </summary>
+        /// <param name="response">Reponse HTTP.</param>
+        /// <param name="id">ID de la commande.</param>
         private async Task DeleteOrder(HttpListenerResponse response, int id)
         {
              // Supposer que la BDD a un CASCADE DELETE sur order_items
@@ -194,6 +229,11 @@ namespace plant_shop_c_sharp.Controllers
             SendEmptyResponse(response, 200);
         }
 
+        /// <summary>
+        /// Charge les items d une commande avec les details des plantes.
+        /// </summary>
+        /// <param name="orderId">ID de la commande.</param>
+        /// <returns>Liste des items enrichis.</returns>
         private async Task<List<OrderItem>> LoadRenderableItems(int orderId)
         {
             var rawItems = await OrderItemRepo.FindByOrderIdAsync(orderId);

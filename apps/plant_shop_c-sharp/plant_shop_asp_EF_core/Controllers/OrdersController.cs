@@ -14,11 +14,19 @@ namespace plant_shop_asp_EF_core.Controllers
     {
         private readonly AppDbContext _context;
 
+        /// <summary>
+        /// Constructeur du controleur des commandes.
+        /// </summary>
+        /// <param name="context">Contexte de base de donnees</param>
         public OrdersController(AppDbContext context)
         {
             _context = context;
         }
 
+        /// <summary>
+        /// Recupere l ID de l utilisateur connecte.
+        /// </summary>
+        /// <returns>ID utilisateur</returns>
         private int GetCurrentUserId()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -29,12 +37,19 @@ namespace plant_shop_asp_EF_core.Controllers
             return int.Parse(userId);
         }
 
+        /// <summary>
+        /// Verifie si l utilisateur connecte est admin.
+        /// </summary>
+        /// <returns>true si admin</returns>
         private bool IsAdmin()
         {
              return User.IsInRole("Admin");
         }
 
-        // GET: api/orders
+        /// <summary>
+        /// Liste les commandes de l utilisateur connecte.
+        /// </summary>
+        /// <returns>Liste des commandes</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
@@ -47,7 +62,11 @@ namespace plant_shop_asp_EF_core.Controllers
                 .ToListAsync();
         }
 
-        // GET: api/orders/5
+        /// <summary>
+        /// Recupere une commande par ID.
+        /// </summary>
+        /// <param name="id">Identifiant de la commande</param>
+        /// <returns>Commande trouvee</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Order>> GetOrder(int id)
         {
@@ -71,7 +90,11 @@ namespace plant_shop_asp_EF_core.Controllers
             return order;
         }
 
-        // POST: api/orders
+        /// <summary>
+        /// Cree une nouvelle commande.
+        /// </summary>
+        /// <param name="orderDto">Donnees de la commande</param>
+        /// <returns>Commande creee</returns>
         [HttpPost]
         public async Task<ActionResult<Order>> PostOrder(OrderRequestDto orderDto)
         {
@@ -138,7 +161,12 @@ namespace plant_shop_asp_EF_core.Controllers
             }
         }
 
-        // PATCH: api/orders/5 (Admin uniquement)
+        /// <summary>
+        /// Met a jour le statut d une commande (admin).
+        /// </summary>
+        /// <param name="id">Identifiant de la commande</param>
+        /// <param name="dto">Nouveau statut</param>
+        /// <returns>Commande mise a jour</returns>
         [HttpPatch("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOrderStatus(int id, [FromBody] OrderStatusUpdateDto dto)
@@ -158,7 +186,11 @@ namespace plant_shop_asp_EF_core.Controllers
             return Ok(order);
         }
 
-        // DELETE: api/orders/5 (Admin uniquement)
+        /// <summary>
+        /// Supprime une commande (admin).
+        /// </summary>
+        /// <param name="id">Identifiant de la commande</param>
+        /// <returns>OK si supprimee</returns>
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteOrder(int id)
@@ -179,16 +211,24 @@ namespace plant_shop_asp_EF_core.Controllers
         }
     }
 
-    // DTOs
+    /// <summary>
+    /// DTO pour un article de commande.
+    /// </summary>
     public class OrderItemRequestDto
     {
         public int PlantId { get; set; }
         public int Quantity { get; set; }
     }
+    /// <summary>
+    /// DTO pour une demande de commande.
+    /// </summary>
     public class OrderRequestDto
     {
         public List<OrderItemRequestDto>? Items { get; set; }
     }
+    /// <summary>
+    /// DTO pour la mise a jour du statut.
+    /// </summary>
     public class OrderStatusUpdateDto
     {
         public string? Status { get; set; }

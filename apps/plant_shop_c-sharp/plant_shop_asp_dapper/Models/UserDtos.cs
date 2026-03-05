@@ -2,6 +2,9 @@ using System.Text.Json.Serialization;
 
 namespace plant_shop_asp_dapper.Models
 {
+    /// <summary>
+    /// DTOs utilisateur.
+    /// </summary>
     public class UserCreateDto
     {
         public string? Name { get; set; }

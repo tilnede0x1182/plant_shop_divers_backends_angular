@@ -10,33 +10,62 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * Routes HTTP pour le service de commandes.
+ */
 final class OrderRoutes implements HttpHandler {
 
     private final OrderController controller;
 
-    public OrderRoutes(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	public OrderRoutes(Connection db) {
         this.controller = new OrderController(db);
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    /**
+	 * Traite une requête HTTP entrante.
+	 * @param exchange L'échange HTTP
+	 */
+	public void handle(HttpExchange exchange) throws IOException {
         controller.handle(exchange);
     }
 }
 
+/**
+ * Contrôleur de base avec méthodes utilitaires.
+ */
 abstract class OrderBaseController {
     protected final Connection db;
 
-    OrderBaseController(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	OrderBaseController(Connection db) {
         this.db = db;
     }
 
-    protected JSONObject parseJson(HttpExchange ex) throws IOException {
+    /**
+	 * Parse le corps JSON de la requête.
+	 * @param ex L'échange HTTP
+	 * @return L'objet JSON parsé
+	 */
+	protected JSONObject parseJson(HttpExchange ex) throws IOException {
         String body = new String(ex.getRequestBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         return body.isBlank() ? new JSONObject() : new JSONObject(body);
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
+    /**
+	 * Envoie une réponse JSON Object.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le corps JSON
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
         byte[] bytes = body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -46,7 +75,13 @@ abstract class OrderBaseController {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONArray body) throws IOException {
+    /**
+	 * Envoie une réponse JSON Array.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le tableau JSON
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONArray body) throws IOException {
         byte[] bytes = body.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -56,7 +91,13 @@ abstract class OrderBaseController {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, String body) throws IOException {
+    /**
+	 * Envoie une réponse JSON en chaîne.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 * @param body Le corps en chaîne
+	 */
+	protected void sendJson(HttpExchange ex, int code, String body) throws IOException {
         byte[] bytes = body.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -66,17 +107,30 @@ abstract class OrderBaseController {
         ex.close();
     }
 
-    protected void sendEmpty(HttpExchange ex, int code) throws IOException {
+    /**
+	 * Envoie une réponse vide.
+	 * @param ex L'échange HTTP
+	 * @param code Le code HTTP
+	 */
+	protected void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
     }
 
-    protected void handleException(HttpExchange ex, Exception e) throws IOException {
+    /**
+	 * Gère une exception et envoie une erreur 500.
+	 * @param ex L'échange HTTP
+	 * @param e L'exception
+	 */
+	protected void handleException(HttpExchange ex, Exception e) throws IOException {
         e.printStackTrace();
         sendJson(ex, 500, new JSONObject().put("error", e.getMessage()));
     }
 }
 
+/**
+ * Contrôleur pour la gestion des commandes.
+ */
 public final class OrderController extends OrderBaseController {
 
     private final OrderRepository orderRepo;
@@ -84,7 +138,11 @@ public final class OrderController extends OrderBaseController {
     private final PlantRepository plantRepo;
     private final OrderItemController itemController;
 
-    public OrderController(Connection db) {
+    /**
+	 * Constructeur avec connexion base de données.
+	 * @param db Connexion à la base de données
+	 */
+	public OrderController(Connection db) {
         super(db);
         this.orderRepo = new OrderRepository(db);
         this.itemRepo = new OrderItemRepository(db);
@@ -92,7 +150,11 @@ public final class OrderController extends OrderBaseController {
         this.itemController = new OrderItemController(plantRepo);
     }
 
-    public void handle(HttpExchange ex) throws IOException {
+    /**
+	 * Route les requêtes vers les bonnes méthodes.
+	 * @param ex L'échange HTTP
+	 */
+	public void handle(HttpExchange ex) throws IOException {
         String path = ex.getRequestURI().getPath();
         String method = ex.getRequestMethod();
         AuthContext ctx = AuthContext.fromHeaders(ex);
@@ -123,7 +185,14 @@ public final class OrderController extends OrderBaseController {
         }
     }
 
-    private void userRoutes(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
+    /**
+	 * Gère les routes utilisateur.
+	 * @param ex L'échange HTTP
+	 * @param method La méthode HTTP
+	 * @param path Le chemin
+	 * @param ctx Le contexte d'authentification
+	 */
+	private void userRoutes(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
         int id = extractId(path);
         if ("GET".equals(method)) {
             if (id == -1) {
@@ -156,7 +225,13 @@ public final class OrderController extends OrderBaseController {
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
-    private void adminRoutes(HttpExchange ex, String method, String path) throws Exception {
+    /**
+	 * Gère les routes administrateur.
+	 * @param ex L'échange HTTP
+	 * @param method La méthode HTTP
+	 * @param path Le chemin
+	 */
+	private void adminRoutes(HttpExchange ex, String method, String path) throws Exception {
         int id = extractId(path);
         if ("PATCH".equals(method)) {
             if (id == -1) {
@@ -181,7 +256,12 @@ public final class OrderController extends OrderBaseController {
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
-    private int extractId(String path) {
+    /**
+	 * Extrait l'identifiant depuis le chemin.
+	 * @param path Le chemin
+	 * @return L'identifiant ou -1
+	 */
+	private int extractId(String path) {
         String[] parts = path.split("/");
         if (parts.length >= 3) {
             try {
@@ -191,7 +271,12 @@ public final class OrderController extends OrderBaseController {
         return -1;
     }
 
-    private void list(HttpExchange ex, AuthContext ctx) throws Exception {
+    /**
+	 * Liste les commandes de l'utilisateur.
+	 * @param ex L'échange HTTP
+	 * @param ctx Le contexte d'authentification
+	 */
+	private void list(HttpExchange ex, AuthContext ctx) throws Exception {
         List<Order> orders = orderRepo.listByUser(ctx.userId());
         orders.sort((a, b) -> b.createdAt.compareTo(a.createdAt));
         JSONArray arr = new JSONArray();
@@ -201,7 +286,13 @@ public final class OrderController extends OrderBaseController {
         sendJson(ex, 200, arr);
     }
 
-    private void show(HttpExchange ex, AuthContext ctx, int id) throws Exception {
+    /**
+	 * Affiche une commande.
+	 * @param ex L'échange HTTP
+	 * @param ctx Le contexte d'authentification
+	 * @param id L'identifiant de la commande
+	 */
+	private void show(HttpExchange ex, AuthContext ctx, int id) throws Exception {
         Order order = orderRepo.find(id);
         if (order == null || order.userId != ctx.userId()) {
             sendJson(ex, 404, "{\"error\":\"Commande introuvable\"}");
@@ -210,7 +301,12 @@ public final class OrderController extends OrderBaseController {
         sendJson(ex, 200, itemController.toJson(order, itemRepo.listByOrder(id)));
     }
 
-    private void showAdmin(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Affiche une commande pour l'admin.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant de la commande
+	 */
+	private void showAdmin(HttpExchange ex, int id) throws Exception {
         Order order = orderRepo.find(id);
         if (order == null) {
             sendJson(ex, 404, "{\"error\":\"Commande introuvable\"}");
@@ -219,7 +315,12 @@ public final class OrderController extends OrderBaseController {
         sendJson(ex, 200, itemController.toJson(order, itemRepo.listByOrder(id)));
     }
 
-    private void create(HttpExchange ex, AuthContext ctx) throws Exception {
+    /**
+	 * Crée une nouvelle commande.
+	 * @param ex L'échange HTTP
+	 * @param ctx Le contexte d'authentification
+	 */
+	private void create(HttpExchange ex, AuthContext ctx) throws Exception {
         JSONObject body = parseJson(ex);
         JSONArray items = body.optJSONArray("items");
         if (items == null || items.isEmpty()) {
@@ -253,7 +354,12 @@ public final class OrderController extends OrderBaseController {
         sendJson(ex, 201, itemController.toJson(created, itemRepo.listByOrder(orderId)));
     }
 
-    private void patch(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Met à jour une commande.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant de la commande
+	 */
+	private void patch(HttpExchange ex, int id) throws Exception {
         Order order = orderRepo.find(id);
         if (order == null) {
             sendJson(ex, 404, "{\"error\":\"Commande introuvable\"}");
@@ -267,7 +373,12 @@ public final class OrderController extends OrderBaseController {
         sendJson(ex, 200, itemController.toJson(updated, itemRepo.listByOrder(id)));
     }
 
-    private void destroy(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Supprime une commande.
+	 * @param ex L'échange HTTP
+	 * @param id L'identifiant de la commande
+	 */
+	private void destroy(HttpExchange ex, int id) throws Exception {
         itemRepo.deleteByOrder(id);
         orderRepo.delete(id);
         sendEmpty(ex, 200);

@@ -4,6 +4,9 @@ import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
 import java.sql.Timestamp;
 
+/**
+ * Modèle représentant un utilisateur.
+ */
 @Introspected
 @Serdeable
 public final class User {
@@ -14,7 +17,15 @@ public final class User {
     public boolean isAdmin;
     public Timestamp createdAt; // null lors de l’insertion
 
-    /* constructeur complet (lecture DB) */
+    /**
+     * Constructeur complet (lecture DB).
+     * @param id int Identifiant
+     * @param name String Nom
+     * @param email String Email
+     * @param passwordHash String Hash du mot de passe
+     * @param isAdmin boolean Si admin
+     * @param createdAt Timestamp Date de création
+     */
     public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -24,15 +35,29 @@ public final class User {
         this.createdAt = createdAt;
     }
 
-    /* constructeur pour insertion (id et createdAt générés par la DB) */
+    /**
+     * Constructeur pour insertion.
+     * @param name String Nom
+     * @param email String Email
+     * @param passwordHash String Hash du mot de passe
+     * @param isAdmin boolean Si admin
+     */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }
 
-    public boolean isAdmin() {
+    /**
+ * Retourne le statut admin.
+ * @return true si admin
+ */
+public boolean isAdmin() {
         return isAdmin;
     }
 
+    /**
+     * Définit le statut admin.
+     * @param admin boolean Nouveau statut
+     */
     public void setAdmin(boolean admin) {
         this.isAdmin = admin;
     }

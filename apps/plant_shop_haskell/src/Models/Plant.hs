@@ -10,6 +10,7 @@ import           Data.Time                        (UTCTime)
 import           GHC.Generics                     (Generic)
 import           Database.PostgreSQL.Simple.FromRow (FromRow (..), field)
 
+-- | Modèle représentant une plante en vente.
 data Plant = Plant
   { plantId          :: Int
   , plantName        :: Text

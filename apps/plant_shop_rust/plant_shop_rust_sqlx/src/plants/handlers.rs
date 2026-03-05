@@ -1,3 +1,9 @@
+//! Handlers de gestion des plantes.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use super::models::{NewPlant, Plant, UpdatePlant};
 use crate::auth::session::AdminGuard;
 use crate::db::updates::PartialUpdate;
@@ -12,7 +18,12 @@ use poem::{
     Response, Result as PoemResult,
 };
 
-/// Création d’une plante (201 Created)
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Creation d’une plante (201 Created)
+/// Cree une nouvelle plante (admin).
 #[handler]
 pub async fn create_plant(
     Data(state): Data<&AppState>,
@@ -36,6 +47,12 @@ pub async fn create_plant(
     Ok((StatusCode::CREATED, Json(PlantResponse::from(plant))))
 }
 
+/// Liste toutes les plantes.
+///
+/// Utilise le cache si disponible.
+///
+/// @param state Etat applicatif (pools DB, cache)
+/// @return Response JSON ou erreur
 #[handler]
 pub async fn list_plants(Data(state): Data<&AppState>) -> Result<Response, AppError> {
     if let Some(cached) = state.plant_cache().get().await {
@@ -56,6 +73,11 @@ pub async fn list_plants(Data(state): Data<&AppState>) -> Result<Response, AppEr
     buffered_json(&response, StatusCode::OK)
 }
 
+/// Recupere une plante par ID.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param plant_id ID de la plante
+/// @return Json<PlantResponse> ou erreur 404
 #[handler]
 pub async fn get_plant(
     Data(state): Data<&AppState>,
@@ -73,6 +95,12 @@ pub async fn get_plant(
     Ok(Json(PlantResponse::from(plant)))
 }
 
+/// Met a jour une plante (admin).
+///
+/// @param state Etat applicatif (pools DB, cache)
+/// @param plant_id ID de la plante a modifier
+/// @param payload Champs a mettre a jour (optionnels)
+/// @return Json<PlantResponse> mis a jour ou erreur
 #[handler]
 pub async fn update_plant(
     Data(state): Data<&AppState>,
@@ -101,6 +129,11 @@ pub async fn update_plant(
     Ok(Json(PlantResponse::from(plant)))
 }
 
+/// Supprime une plante (admin).
+///
+/// @param state Etat applicatif (pools DB, cache)
+/// @param plant_id ID de la plante a supprimer
+/// @return () ou erreur
 #[handler]
 pub async fn delete_plant(
     Data(state): Data<&AppState>,

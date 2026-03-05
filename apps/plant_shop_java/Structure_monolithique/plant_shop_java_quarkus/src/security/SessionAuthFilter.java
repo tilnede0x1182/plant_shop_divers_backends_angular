@@ -32,6 +32,10 @@ public class SessionAuthFilter implements ContainerRequestFilter {
     @Inject
     Instance<UserRepository> userRepoProvider;
 
+    /**
+     * Filtre l'authentification en vérifiant le cookie de session.
+     * @param ctx Contexte de la requête
+     */
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
         authenticatedUser.setUser(null);

@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Controleur REST pour la gestion de l authentification.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -31,6 +34,13 @@ public class AuthController {
     @Autowired
     Guards guards;
 
+    /**
+     * Enregistre un nouvel utilisateur.
+     *
+     * @param body User Donnees de l utilisateur a creer
+     * @return ResponseEntity<Object> Utilisateur cree ou erreur
+     * @throws Exception Exception En cas d erreur base de donnees
+     */
     @PostMapping("/register")
     public ResponseEntity<Object> register(@RequestBody User body) throws Exception {
         if (userRepo.findByEmailWithPassword(body.email) != null) {
@@ -46,6 +56,14 @@ public class AuthController {
                              .body(ApiMapper.toUser(created));
     }
 
+    /**
+     * Connecte un utilisateur et cree une session.
+     *
+     * @param body Map<String, String> Identifiants (email, password)
+     * @param response HttpServletResponse Reponse HTTP pour ajouter le cookie
+     * @return ResponseEntity<Object> Utilisateur connecte ou erreur
+     * @throws Exception Exception En cas d erreur base de donnees
+     */
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody Map<String, String> body, HttpServletResponse response) throws Exception {
         User user = userRepo.findByEmailWithPassword(body.get("email"));
@@ -69,6 +87,13 @@ public class AuthController {
                              .body(ApiMapper.toUser(user));
     }
 
+    /**
+     * Deconnecte l utilisateur et supprime la session.
+     *
+     * @param sessionId String ID de session depuis le cookie
+     * @param response HttpServletResponse Reponse HTTP pour supprimer le cookie
+     * @return ResponseEntity<Void> Reponse vide 204
+     */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@CookieValue(name = "session_id", required = false) String sessionId, HttpServletResponse response) {
         if (sessionId != null) {
@@ -87,6 +112,11 @@ public class AuthController {
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 
+    /**
+     * Retourne les informations de l utilisateur connecte.
+     *
+     * @return ResponseEntity<Object> Utilisateur connecte
+     */
     @GetMapping("/me")
     public ResponseEntity<Object> me() {
         // Le Guard lève une AuthException (401) si l'utilisateur n'est pas trouvé
@@ -94,6 +124,11 @@ public class AuthController {
         return ResponseEntity.ok(ApiMapper.toUser(user));
     }
 
+    /**
+     * Authentifie un utilisateur dans le contexte Spring Security.
+     *
+     * @param user User Utilisateur a authentifier
+     */
     private void authenticateUser(User user) {
         List<SimpleGrantedAuthority> authorities = user.isAdmin
             ? List.of(

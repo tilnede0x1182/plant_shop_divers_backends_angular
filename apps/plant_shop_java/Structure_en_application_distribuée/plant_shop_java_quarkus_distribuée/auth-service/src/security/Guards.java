@@ -17,7 +17,11 @@ public class Guards {
     @Inject
     AuthenticatedUser authenticatedUser;
 
-    public User requireUser() {
+    /**
+ * Exige un utilisateur authentifié.
+ * @return Utilisateur authentifié
+ */
+public User requireUser() {
         // Dans ce service (auth-service), le ForwardedIdentityHolder est lu par
         // le filtre du service, mais AuthController utilise sa propre session locale.
         // Ce Guards doit être utilisé pour /auth/me et les autres services.
@@ -29,7 +33,11 @@ public class Guards {
         return user;
     }
 
-    public User requireAdmin() {
+    /**
+ * Exige un administrateur.
+ * @return Utilisateur admin
+ */
+public User requireAdmin() {
         User user = requireUser();
         if (!user.isAdmin) {
             // Lance une exception JAX-RS qui se traduit par une réponse 403

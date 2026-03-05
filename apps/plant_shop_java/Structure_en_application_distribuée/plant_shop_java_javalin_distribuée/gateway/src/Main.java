@@ -10,17 +10,29 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Runtime de la gateway API.
+ */
 final class GatewayRuntime {
 
     private final GatewayConfig config;
     private final HttpClient http;
 
-    private GatewayRuntime(GatewayConfig config, HttpClient http) {
+    /**
+ * Constructeur privé.
+ * @param config Configuration de la gateway
+ * @param http Client HTTP pour les requêtes
+ */
+private GatewayRuntime(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
-    static GatewayRuntime create() throws Exception {
+    /**
+ * Crée une instance de la gateway.
+ * @return Instance configurée
+ */
+static GatewayRuntime create() throws Exception {
         GatewayConfig config = GatewayConfig.load();
         HttpClient http = HttpClient.newBuilder().build();
         return new GatewayRuntime(config, http);

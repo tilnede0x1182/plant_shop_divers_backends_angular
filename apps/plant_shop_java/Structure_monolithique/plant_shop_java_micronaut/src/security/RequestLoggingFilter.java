@@ -20,6 +20,12 @@ public final class RequestLoggingFilter implements HttpServerFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
+    /**
+     * Filtre chaque requête HTTP pour logger son début et sa fin.
+     * @param request La requête entrante
+     * @param chain La chaîne de filtres à suivre
+     * @return Publisher de la réponse HTTP
+     */
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
         long start = System.currentTimeMillis();

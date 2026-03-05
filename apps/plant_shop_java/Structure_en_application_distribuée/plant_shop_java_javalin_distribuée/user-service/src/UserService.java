@@ -2,9 +2,16 @@ import controller.UserController;
 import util.AuthMiddleware;
 import util.ServiceRuntime;
 
+/**
+ * Service de gestion des utilisateurs Javalin.
+ */
 public final class UserService {
 
-    public static void main(String[] args) throws Exception {
+    /**
+	 * Point d'entrée du service.
+	 * @param args Arguments de ligne de commande
+	 */
+	public static void main(String[] args) throws Exception {
         ServiceRuntime.start(
             ServiceRuntime.descriptor("user-service", "USER_SERVICE_PORT", 6104),
             (app, db) -> {

@@ -3,12 +3,25 @@ package repository;
 import java.sql.*;
 import model.User;
 
+/**
+ * Repository pour les utilisateurs.
+ */
 public final class UserRepository extends BaseRepository<User> {
 
+    /**
+     * Constructeur.
+     * @param db Connection Connexion DB
+     */
     public UserRepository(Connection db) {
         super(db, "users");
     }
 
+    /**
+     * Mappe un ResultSet vers un User (sans mot de passe).
+     * @param rs ResultSet Résultat SQL
+     * @return User Utilisateur créé
+     * @throws SQLException En cas d erreur SQL
+     */
     @Override
     protected User mapFromResultSet(ResultSet rs) throws SQLException {
         // Ce mapping de base exclut le hash du mot de passe pour des raisons de sécurité
@@ -52,8 +65,12 @@ public final class UserRepository extends BaseRepository<User> {
         }
     }
 
-    // Les méthodes `find(id)`, `list()` et `delete(id)` sont maintenant héritées de BaseRepository.
-
+    /**
+     * Crée un utilisateur.
+     * @param u User Utilisateur à créer
+     * @return int ID généré
+     * @throws SQLException En cas d erreur SQL
+     */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -69,6 +86,11 @@ public final class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Met à jour un utilisateur (sans mot de passe).
+     * @param u User Utilisateur à mettre à jour
+     * @throws SQLException En cas d erreur SQL
+     */
     public void update(User u) throws SQLException {
         // Cette mise à jour ne modifie pas le mot de passe.
         String sql = "UPDATE users SET name=?, email=?, is_admin=? WHERE id=?";

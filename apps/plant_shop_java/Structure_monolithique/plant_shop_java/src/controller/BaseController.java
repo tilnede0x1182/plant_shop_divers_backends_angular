@@ -26,6 +26,10 @@ public abstract class BaseController implements HttpHandler {
     protected final Connection db;
     private final UserRepository userRepoForAuth; // Utilisé uniquement pour l'authentification
 
+    /**
+     * Constructeur du contrôleur de base.
+     * @param db Connection Connexion à la base de données
+     */
     public BaseController(Connection db) {
         this.db = db;
         this.userRepoForAuth = new UserRepository(db);
@@ -33,6 +37,9 @@ public abstract class BaseController implements HttpHandler {
 
     /**
      * Lit le corps d'une requête et le retourne en tant que String.
+     *
+     * @param ex HttpExchange L'échange HTTP
+     * @return String Le corps de la requête
      */
     protected String readBody(HttpExchange ex) throws IOException {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(ex.getRequestBody(), "UTF-8"))) {
@@ -43,6 +50,9 @@ public abstract class BaseController implements HttpHandler {
     /**
      * Parse le corps d'une requête en tant qu'objet JSONObject.
      * Gère les corps vides ou invalides.
+     *
+     * @param ex HttpExchange L'échange HTTP
+     * @return JSONObject Le corps parsé en JSON
      */
     protected JSONObject parseJsonBody(HttpExchange ex) throws IOException {
         String body = readBody(ex);
@@ -59,6 +69,10 @@ public abstract class BaseController implements HttpHandler {
 
     /**
      * Envoie une réponse avec un corps JSON.
+     *
+     * @param ex HttpExchange L'échange HTTP
+     * @param code int Code de statut HTTP
+     * @param jsonBody String Corps JSON de la réponse
      */
     protected void sendJsonResponse(HttpExchange ex, int code, String jsonBody) throws IOException {
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
@@ -72,6 +86,9 @@ public abstract class BaseController implements HttpHandler {
 
     /**
      * Envoie une réponse vide (sans corps).
+     *
+     * @param ex HttpExchange L'échange HTTP
+     * @param code int Code de statut HTTP
      */
     protected void sendEmptyResponse(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
@@ -81,6 +98,9 @@ public abstract class BaseController implements HttpHandler {
     /**
      * Récupère l'utilisateur authentifié à partir du cookie de session.
      * Utilise la Map de sessions statique de AuthController.
+     *
+     * @param ex HttpExchange L'échange HTTP
+     * @return User L'utilisateur authentifié ou null
      */
     protected User getAuthenticatedUser(HttpExchange ex) throws SQLException {
         // Accède à la map statique de sessions de AuthController
@@ -90,6 +110,9 @@ public abstract class BaseController implements HttpHandler {
 
     /**
      * Gère les erreurs et envoie une réponse 500.
+     *
+     * @param ex HttpExchange L'échange HTTP
+     * @param e Exception L'exception à gérer
      */
     protected void handleError(HttpExchange ex, Exception e) throws IOException {
         e.printStackTrace(); // Important pour le débogage côté serveur

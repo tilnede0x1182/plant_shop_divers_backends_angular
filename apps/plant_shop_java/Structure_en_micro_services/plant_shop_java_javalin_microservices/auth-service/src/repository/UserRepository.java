@@ -3,14 +3,26 @@ package repository;
 import java.sql.*;
 import model.User;
 
+/**
+ * Repository pour la gestion des utilisateurs en base.
+ */
 public final class UserRepository {
 
     private final Connection db;
 
+    /**
+     * Constructeur avec connexion à la base de données.
+     * @param db Connexion à la base de données
+     */
     public UserRepository(Connection db) {
         this.db = db;
     }
 
+    /**
+     * Trouve un utilisateur par son ID.
+     * @param id Identifiant de l'utilisateur
+     * @return Utilisateur trouvé ou null
+     */
     public User find(int id) throws SQLException {
         String sql = "SELECT * FROM users WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -24,6 +36,11 @@ public final class UserRepository {
         }
     }
 
+    /**
+     * Mappe un ResultSet vers un objet User (sans mot de passe).
+     * @param rs ResultSet positionné sur une ligne
+     * @return Objet User
+     */
     private User mapFromResultSet(ResultSet rs) throws SQLException {
         // Ce mapping de base exclut le hash du mot de passe pour des raisons de sécurité
         // lors de la récupération de listes d'utilisateurs ou d'un utilisateur public.
@@ -66,6 +83,11 @@ public final class UserRepository {
         }
     }
 
+    /**
+     * Crée un nouvel utilisateur en base.
+     * @param u Utilisateur à créer
+     * @return ID généré
+     */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -81,6 +103,10 @@ public final class UserRepository {
         }
     }
 
+    /**
+     * Met à jour un utilisateur existant.
+     * @param u Utilisateur avec les nouvelles données
+     */
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null;
         String sql = updatePassword

@@ -14,11 +14,19 @@ import repository.UserRepository;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+/**
+ * Contrôleur principal de l'application d'authentification.
+ * Gère les routes et les handlers HTTP.
+ */
 public final class ApplicationController {
 
     private final AuthController authController;
     private final UserRepository userRepoForAuth;
 
+    /**
+     * Constructeur avec connexion à la base de données.
+     * @param db Connexion à la base de données
+     */
     public ApplicationController(Connection db) {
         this.authController = new AuthController(db);
         this.userRepoForAuth = new UserRepository(db);
@@ -40,14 +48,30 @@ public final class ApplicationController {
         };
     }
 
+    /**
+     * Wrapper pour exiger une authentification utilisateur.
+     * @param handler Handler à protéger
+     * @return Handler protégé
+     */
     private Handler requireUser(Handler handler) {
         return ctx -> handleWithUser(ctx, handler, false);
     }
 
+    /**
+     * Wrapper pour exiger une authentification admin.
+     * @param handler Handler à protéger
+     * @return Handler protégé
+     */
     private Handler requireAdmin(Handler handler) {
         return ctx -> handleWithUser(ctx, handler, true);
     }
 
+    /**
+     * Gère une requête avec authentification.
+     * @param ctx Contexte de la requête
+     * @param handler Handler à exécuter
+     * @param adminOnly Si true, exige un admin
+     */
     private void handleWithUser(Context ctx, Handler handler, boolean adminOnly) throws Exception {
         User user = authenticate(ctx);
         if (adminOnly && !user.isAdmin) {
@@ -57,6 +81,11 @@ public final class ApplicationController {
         handler.handle(ctx);
     }
 
+    /**
+     * Authentifie l'utilisateur via le cookie de session.
+     * @param ctx Contexte de la requête
+     * @return Utilisateur authentifié
+     */
     private User authenticate(Context ctx) throws Exception {
         String sessionId = ctx.cookie("session_id");
         if (sessionId == null) {

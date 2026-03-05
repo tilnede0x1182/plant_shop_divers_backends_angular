@@ -7,9 +7,21 @@ from models.plant import Plant
 from decimal import Decimal
 
 class OrderRepository(BaseRepository):
+    """
+    	Constructeur du repository des commandes.
+
+    	@param db_connection Connection Connexion psycopg2 à PostgreSQL
+    """
     def __init__(self, db_connection):
         super().__init__(db_connection, "orders")
 
+    """
+    	Mappe une ligne SQL vers un objet Order.
+
+    	@param row tuple Ligne de résultat de la requête
+    	@param columns list Noms des colonnes
+    	@return Order Instance Order avec les données
+    """
     def _map_from_row(self, row, columns):
         col_map = {col: val for col, val in zip(columns, row)}
         return Order(
@@ -20,8 +32,14 @@ class OrderRepository(BaseRepository):
             created_at=col_map.get('created_at')
         )
 
+    """
+    	Récupère toutes les commandes pour un utilisateur donné.
+    	Triées par date décroissante (plus récentes en premier).
+
+    	@param user_id int Identifiant de l utilisateur
+    	@return list Liste d instances Order
+    """
     def find_all_for_user(self, user_id):
-        """Récupère toutes les commandes pour un utilisateur donné, triées par date."""
         with self.db.cursor() as cursor:
             cursor.execute(
                 f"SELECT * FROM {self.table_name} WHERE user_id = %s ORDER BY created_at DESC",
@@ -31,8 +49,16 @@ class OrderRepository(BaseRepository):
             columns = [desc[0] for desc in cursor.description]
             return [self._map_from_row(row, columns) for row in rows]
 
+    """
+    	Crée une commande et ses items de manière transactionnelle.
+    	Vérifie le stock et le décrémente pour chaque item.
+
+    	@param user_id int Identifiant de l utilisateur
+    	@param items list Liste de dict avec plantId et quantity
+    	@return Order Instance Order créée avec total calculé
+    	@raises ValueError Si plante non trouvée ou stock insuffisant
+    """
     def create_with_items(self, user_id, items):
-        """Crée une commande et ses items de manière transactionnelle."""
         order_id = None
         total_price = Decimal('0.0')
 
@@ -86,6 +112,13 @@ class OrderRepository(BaseRepository):
                 self.db.rollback()
             raise e
 
+    """
+    	Met à jour le statut d une commande.
+
+    	@param order_id int Identifiant de la commande
+    	@param status str Nouveau statut (confirmed, pending, shipped, delivered)
+    	@return Order|None Instance Order mise à jour ou None si non trouvée
+    """
     def update_status(self, order_id, status):
         with self.db.cursor() as cursor:
             cursor.execute(

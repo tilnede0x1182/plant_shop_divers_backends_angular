@@ -5,10 +5,22 @@ using System.Threading.Tasks;
 
 namespace plant_shop_c_sharp.Repositories
 {
+    /// <summary>
+    /// Repository CRUD pour les plantes.
+    /// </summary>
     public class PlantRepository : BaseRepository
     {
+        /// <summary>
+        /// Constructeur avec injection de la source de donnees.
+        /// </summary>
+        /// <param name="dataSource">Source Npgsql.</param>
         public PlantRepository(NpgsqlDataSource dataSource) : base(dataSource) { }
 
+        /// <summary>
+        /// Trouve une plante par ID.
+        /// </summary>
+        /// <param name="id">ID a rechercher.</param>
+        /// <returns>Plante ou null.</returns>
         public async Task<Plant?> FindByIdAsync(int id)
         {
             await using var conn = GetConnection();
@@ -23,6 +35,10 @@ namespace plant_shop_c_sharp.Repositories
             return null;
         }
 
+        /// <summary>
+        /// Liste toutes les plantes.
+        /// </summary>
+        /// <returns>Liste des plantes.</returns>
         public async Task<List<Plant>> FindAllAsync()
         {
             var plants = new List<Plant>();
@@ -38,6 +54,11 @@ namespace plant_shop_c_sharp.Repositories
             return plants;
         }
 
+        /// <summary>
+        /// Cree une nouvelle plante.
+        /// </summary>
+        /// <param name="plant">Plante a creer.</param>
+        /// <returns>Plante avec ID genere.</returns>
         public async Task<Plant> CreateAsync(Plant plant)
         {
             await using var conn = GetConnection();
@@ -54,6 +75,10 @@ namespace plant_shop_c_sharp.Repositories
             return plant;
         }
 
+        /// <summary>
+        /// Met a jour une plante.
+        /// </summary>
+        /// <param name="plant">Plante modifiee.</param>
         public async Task UpdateAsync(Plant plant)
         {
             await using var conn = GetConnection();
@@ -69,6 +94,10 @@ namespace plant_shop_c_sharp.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        /// <summary>
+        /// Supprime une plante.
+        /// </summary>
+        /// <param name="id">ID a supprimer.</param>
         public async Task DeleteAsync(int id)
         {
             await using var conn = GetConnection();
@@ -77,6 +106,11 @@ namespace plant_shop_c_sharp.Repositories
             await cmd.ExecuteNonQueryAsync();
         }
 
+        /// <summary>
+        /// Mappe un reader vers une Plant.
+        /// </summary>
+        /// <param name="reader">Reader Npgsql.</param>
+        /// <returns>Entite Plant.</returns>
         private Plant MapPlant(NpgsqlDataReader reader)
         {
             return new Plant

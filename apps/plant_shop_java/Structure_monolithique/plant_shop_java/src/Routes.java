@@ -15,6 +15,10 @@ public final class Routes implements HttpHandler {
 	private final UserController   users;
 	private final OrderController  orders;   // ← ajouté
 
+	/**
+	 * Constructeur du routeur.
+	 * @param db Connection Connexion à la base de données
+	 */
 	public Routes(Connection db) {
 		this.auth   = new AuthController(db);
 		this.plants = new PlantController(db);
@@ -22,6 +26,11 @@ public final class Routes implements HttpHandler {
 		this.orders = new OrderController(db); // ← ajouté
 	}
 
+	/**
+	 * Dispatche les requêtes vers les contrôleurs appropriés.
+	 * @param ex HttpExchange Échange HTTP
+	 * @throws IOException En cas d'erreur I/O
+	 */
 	@Override
 	public void handle(HttpExchange ex) throws IOException {
 		String path   = ex.getRequestURI().getPath().substring("/api".length());
@@ -61,7 +70,13 @@ public final class Routes implements HttpHandler {
 		}
 	}
 
-	/* ---------- Helper JSON ---------- */
+	/**
+	 * Envoie une réponse JSON.
+	 * @param ex HttpExchange Échange HTTP
+	 * @param code int Code HTTP
+	 * @param body String Corps JSON
+	 * @throws IOException En cas d erreur I/O
+	 */
 	private static void sendJson(HttpExchange ex, int code, String body) throws IOException {
 		byte[] bytes = body.getBytes("UTF-8");
 		ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");

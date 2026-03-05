@@ -20,6 +20,9 @@ import util.PasswordUtil;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped
+/**
+ * Contrôleur REST pour les utilisateurs.
+ */
 public class UserController {
 
     @Inject
@@ -30,12 +33,22 @@ public class UserController {
 
     @GET
     @Path("/admin/users")
+    /**
+     * Liste les utilisateurs (admin).
+     * @return Réponse avec liste des utilisateurs
+     * @throws Exception En cas d'erreur
+     */
     public Response listAdmin() throws Exception {
         return listImpl();
     }
 
     @GET
     @Path("/users")
+    /**
+     * Alias pour lister les utilisateurs.
+     * @return Réponse avec liste des utilisateurs
+     * @throws Exception En cas d'erreur
+     */
     public Response listAlias() throws Exception {
         return listImpl();
     }
@@ -43,6 +56,13 @@ public class UserController {
     @PATCH
     @Path("/admin/users/{id}")
     @Transactional
+    /**
+     * Met à jour un utilisateur (admin).
+     * @param id ID de l'utilisateur
+     * @param body Données à mettre à jour
+     * @return Réponse avec l'utilisateur mis à jour
+     * @throws Exception En cas d'erreur
+     */
     public Response updateAdminAlias(@PathParam("id") int id, Map<String, Object> body) throws Exception {
         return updateImpl(id, body);
     }
@@ -50,6 +70,13 @@ public class UserController {
     @PATCH
     @Path("/users/{id}")
     @Transactional
+    /**
+     * Met à jour un utilisateur.
+     * @param id ID de l'utilisateur
+     * @param body Données à mettre à jour
+     * @return Réponse avec l'utilisateur mis à jour
+     * @throws Exception En cas d'erreur
+     */
     public Response updateUser(@PathParam("id") int id, Map<String, Object> body) throws Exception {
         return updateImpl(id, body);
     }
@@ -57,6 +84,12 @@ public class UserController {
     @DELETE
     @Path("/admin/users/{id}")
     @Transactional
+    /**
+     * Supprime un utilisateur (admin).
+     * @param id ID de l'utilisateur
+     * @return Réponse de succès
+     * @throws Exception En cas d'erreur
+     */
     public Response destroyAdminAlias(@PathParam("id") int id) throws Exception {
         return destroyImpl(id);
     }
@@ -64,12 +97,23 @@ public class UserController {
     @DELETE
     @Path("/users/{id}")
     @Transactional
+    /**
+     * Supprime un utilisateur.
+     * @param id ID de l'utilisateur
+     * @return Réponse de succès
+     * @throws Exception En cas d'erreur
+     */
     public Response destroyUser(@PathParam("id") int id) throws Exception {
         return destroyImpl(id);
     }
 
     // --- IMPLÉMENTATION ---
 
+    /**
+     * Implémentation de la liste des utilisateurs.
+     * @return Réponse avec liste des utilisateurs
+     * @throws Exception En cas d'erreur
+     */
     private Response listImpl() throws Exception {
         guards.requireAdmin();
         // Seul un admin peut lister les utilisateurs
@@ -82,6 +126,12 @@ public class UserController {
 
     @GET
     @Path("/users/{id}")
+    /**
+     * Affiche un utilisateur par ID.
+     * @param id ID de l'utilisateur
+     * @return Réponse avec l'utilisateur
+     * @throws Exception En cas d'erreur
+     */
     public Response show(@PathParam("id") int id) throws Exception {
         User currentUser = guards.requireUser();
         // Un utilisateur ne peut voir que son profil, un admin peut voir tout le monde
@@ -99,6 +149,12 @@ public class UserController {
     @POST
     @Path("/users")
     @Transactional
+    /**
+     * Crée un nouvel utilisateur.
+     * @param body Données de l'utilisateur
+     * @return Réponse avec l'utilisateur créé
+     * @throws Exception En cas d'erreur
+     */
     public Response create(Map<String, Object> body) throws Exception {
         guards.requireAdmin();
         // Seul un admin peut créer un utilisateur (selon test)
@@ -125,6 +181,13 @@ public class UserController {
                        .build();
     }
 
+    /**
+     * Implémentation de la mise à jour d'un utilisateur.
+     * @param id ID de l'utilisateur
+     * @param body Données à mettre à jour
+     * @return Réponse avec l'utilisateur mis à jour
+     * @throws Exception En cas d'erreur
+     */
     private Response updateImpl(int id, Map<String, Object> body) throws Exception {
         User currentUser = guards.requireUser();
         // Un utilisateur ne peut modifier que lui-même, un admin peut modifier tout le monde
@@ -164,6 +227,12 @@ public class UserController {
         return Response.ok(ApiMapper.toUser(repo.find(id))).build();
     }
 
+    /**
+     * Implémentation de la suppression d'un utilisateur.
+     * @param id ID de l'utilisateur
+     * @return Réponse de succès
+     * @throws Exception En cas d'erreur
+     */
     private Response destroyImpl(int id) throws Exception {
         guards.requireAdmin();
         // Seul un admin peut supprimer un utilisateur
@@ -172,6 +241,10 @@ public class UserController {
         // 200 OK attendu par le test
     }
 
+    /**
+     * Retourne un comparateur pour trier les utilisateurs.
+     * @return Comparateur d'utilisateurs
+     */
     private Comparator<User> userComparator() {
         return Comparator.comparing((User u) -> !u.isAdmin) // Admins en premier
             .thenComparing(u -> u.name, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));

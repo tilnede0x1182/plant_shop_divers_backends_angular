@@ -12,6 +12,9 @@ import java.util.Set;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE) // Doit s'exécuter avant tous les autres filtres
+/**
+ * Filtre CORS pour autoriser les requêtes cross-origin.
+ */
 public class CorsFilter implements Filter {
 
     // Origines autorisées (idem projet Quarkus)

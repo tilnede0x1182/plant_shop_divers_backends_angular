@@ -3,7 +3,9 @@ using plant_shop_asp_dapper.Repositories;
 
 namespace plant_shop_asp_dapper.Utils
 {
-    // Ce fichier est moins utile dans ASP.NET Core car le framework gère le parsing
+    /// <summary>
+    /// Utilitaire de parsing des requetes.
+    /// </summary>    // Ce fichier est moins utile dans ASP.NET Core car le framework gère le parsing
     // et l'authentification, mais nous le remplissons pour la complétude du squelette.
     public static class RequestUtil
     {

@@ -21,17 +21,35 @@ ADMIN_PWD = "password"
 
 
 # -------- Utilitaires --------
+"""
+	Retourne un timestamp formaté pour unicité des tests.
+	Format: YYYYMMDDHHMMSS.
+
+	@return str Timestamp formaté
+"""
 def ts():
-    """Retourne un timestamp formaté comme en Java."""
     return datetime.now().strftime("%Y%m%d%H%M%S")
 
+"""
+	Génère une chaîne alphanumérique aléatoire.
+
+	@param n int Longueur de la chaîne à générer
+	@return str Chaîne aléatoire de n caractères
+"""
 def rand(n):
-    """Génère une chaîne alphanumérique aléatoire de longueur n."""
     alpha = string.ascii_lowercase + string.digits
     return ''.join(random.choice(alpha) for _ in range(n))
 
+"""
+	Attend que le serveur soit disponible sur un port donné.
+	Tente des connexions toutes les 100ms jusqu au timeout.
+
+	@param host str Adresse du serveur
+	@param port int Port à vérifier
+	@param timeout_ms int Timeout en millisecondes
+	@return bool True si connecté, False si timeout
+"""
 def wait_for_server(host, port, timeout_ms):
-    """Attend que le serveur soit disponible sur un port donné."""
     start_time = time.time() * 1000
     while (time.time() * 1000) - start_time < timeout_ms:
         try:
@@ -45,8 +63,11 @@ def wait_for_server(host, port, timeout_ms):
 
 
 class Test:
+    """
+    	Initialise le test avec un timestamp et des sessions HTTP.
+    	Crée deux sessions: admin et user.
+    """
     def __init__(self):
-        """Initialise le test avec un timestamp et des sessions HTTP."""
         self.timestamp = ts()
         # Utiliser des sessions requests gère automatiquement les cookies pour nous.
         # C'est l'équivalent du Map<String, String> cookie en plus robuste.
@@ -58,8 +79,17 @@ class Test:
         for session in self.sessions.values():
             session.headers.update({"Content-Type": "application/json"})
 
+    """
+    	Effectue un appel API et attend une réponse de type objet JSON.
+
+    	@param m str Méthode HTTP (GET, POST, PATCH, DELETE)
+    	@param p str Chemin de l endpoint (ex: /plants)
+    	@param exp int Code HTTP attendu
+    	@param body dict|None Corps de la requête JSON
+    	@param who str Identifiant de session (admin ou user)
+    	@return dict Réponse JSON ou dict vide
+    """
     def call(self, m, p, exp, body, who):
-        """Effectue un appel API et attend une réponse de type objet JSON."""
         session = self.sessions.get(who)
         if not session:
             raise ValueError(f"Identifiant de session inconnu : '{who}'")
@@ -82,8 +112,17 @@ class Test:
             return response.json() if txt else {}
         return {}
 
+    """
+    	Effectue un appel API et attend une réponse de type tableau JSON.
+
+    	@param m str Méthode HTTP
+    	@param p str Chemin de l endpoint
+    	@param exp int Code HTTP attendu
+    	@param body dict|None Corps de la requête
+    	@param who str Identifiant de session
+    	@return list Réponse JSON array ou liste vide
+    """
     def call_array(self, m, p, exp, body, who):
-        """Effectue un appel API et attend une réponse de type tableau JSON."""
         session = self.sessions.get(who)
         if not session:
             raise ValueError(f"Identifiant de session inconnu : '{who}'")
@@ -107,15 +146,38 @@ class Test:
         return []
 
     # -------- Auth --------
+    """
+    	Connecte un utilisateur via l API /auth/login.
+
+    	@param mail str Email de l utilisateur
+    	@param pw str Mot de passe
+    	@param who str Identifiant de session à utiliser
+    """
     def login(self, mail, pw, who):
         j = {"email": mail, "password": pw}
         self.call("POST", "/auth/login", 201, j, who)
 
+    """
+    	Enregistre un nouvel utilisateur via l API /auth/register.
+
+    	@param name str Nom de l utilisateur
+    	@param mail str Email
+    	@param pw str Mot de passe
+    	@param who str Identifiant de session à utiliser
+    """
     def register(self, name, mail, pw, who):
         j = {"name": name, "email": mail, "password": pw}
         self.call("POST", "/auth/register", 201, j, who)
 
     # -------- Assertions --------
+    """
+    	Vérifie qu une clé d un objet JSON a la valeur attendue.
+
+    	@param o dict Objet JSON à vérifier
+    	@param k str Clé à rechercher
+    	@param e any Valeur attendue
+    	@raises AssertionError Si la clé manque ou la valeur diffère
+    """
     @staticmethod
     def assert_eq(o, k, e):
         if k not in o:
@@ -131,6 +193,13 @@ class Test:
         if not ok:
             raise AssertionError(f"Assertion échouée pour la clé '{k}'")
 
+    """
+    	Vérifie qu une clé contient une valeur numérique.
+
+    	@param o dict Objet JSON à vérifier
+    	@param k str Clé à rechercher
+    	@raises AssertionError Si la clé manque ou n est pas numérique
+    """
     @staticmethod
     def assert_num(o, k):
         val = o.get(k)
@@ -138,6 +207,10 @@ class Test:
             raise AssertionError(f"Clé {k} n'est pas numérique ou absente")
 
     # -------- Modules de Test --------
+    """
+    	Test du module Plants: création, lecture, mise à jour, suppression.
+    	Utilise la session admin.
+    """
     def test_plants(self):
         print("\n📌 TEST MODULE: PLANTS (admin)")
         plant_data = {"name": "Test Plant", "price": 10, "stock": 5}
@@ -153,6 +226,10 @@ class Test:
         print(f"   ↳ name={check['name']}")
         self.call("DELETE", f"/admin/plants/{plant_id}", 200, None, "admin")
 
+    """
+    	Test du module Users: création, mise à jour, lecture, suppression.
+    	Utilise la session admin.
+    """
     def test_users(self):
         print("\n📌 TEST MODULE: USERS (admin)")
         email = f"utilisateur_test_{self.timestamp}@example.com"
@@ -165,6 +242,10 @@ class Test:
         self.assert_eq(get, "name", "Tester Update")
         self.call("DELETE", f"/users/{user_id}", 200, None, "admin")
 
+    """
+    	Test du module Orders: création de commande, mise à jour statut.
+    	Vérifie les items imbriqués et la plante associée.
+    """
     def test_orders(self):
         print("\n📌 TEST MODULE: ORDERS & ORDER ITEMS")
         plant_name = f"Plante_de_test_{self.timestamp}"
@@ -197,6 +278,12 @@ class Test:
         self.call("DELETE", f"/orders/{oid}", 200, None, "admin")
         self.call("DELETE", f"/admin/plants/{pid}", 200, None, "admin")
 
+    """
+    	Test du profil utilisateur: lecture et mise à jour de son propre profil.
+    	Vérifie qu un user ne peut pas se promouvoir admin.
+
+    	@param email str Email de l utilisateur de test
+    """
     def test_user_profile(self, email):
         print("\n📌 TEST MODULE: USER PROFILE (user)")
         users = self.call_array("GET", "/users", 200, None, "admin")
@@ -221,6 +308,9 @@ class Test:
         check = self.call("GET", f"/users/{uid}", 200, None, "admin")
         self.assert_eq(check, "admin", False)  # Vérification que l'utilisateur n'est pas devenu admin
 
+    """
+    	Test des rôles: vérifie que user ne peut pas accéder aux routes admin.
+    """
     def test_auth_roles(self):
         print("\n📌 TEST MODULE: ROLES")
         bad_plant = {"name": "Bad", "price": 1, "stock": 1}
@@ -233,6 +323,9 @@ class Test:
 
         self.call("GET", "/users", 403, None, "user")
 
+    """
+    	Test des routes admin plants: liste, création, modification, suppression.
+    """
     def test_admin_plants(self):
         print("\n📌 TEST MODULE: ADMIN PLANTS")
         plantes = self.call_array("GET", "/admin/plants", 200, None, "admin")
@@ -246,6 +339,9 @@ class Test:
         self.call("PATCH", f"/admin/plants/{p_id}", 200, price_update, "admin")
         self.call("DELETE", f"/admin/plants/{p_id}", 200, None, "admin")
 
+    """
+    	Test des routes admin users: création admin temporaire, modification.
+    """
     def test_admin_users(self):
         print("\n📌 TEST MODULE: ADMIN USERS")
         email = f"admin_temp_{self.timestamp}@example.com"
@@ -270,6 +366,9 @@ class Test:
 
         self.call("DELETE", f"/users/{temp_id}", 200, None, "admin")
 
+    """
+    	Test de la route /auth/me: vérifie les infos de l utilisateur connecté.
+    """
     def test_auth_me(self):
         print("\n📌 TEST MODULE: AUTH /me")
         me = self.call("GET", "/auth/me", 200, None, "user")

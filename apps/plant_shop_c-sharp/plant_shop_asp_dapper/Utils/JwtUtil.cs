@@ -6,7 +6,9 @@ using plant_shop_asp_dapper.Models;
 
 namespace plant_shop_asp_dapper.Utils
 {
-    // (Identique au Projet 2)
+    /// <summary>
+    /// Utilitaire de generation et validation JWT.
+    /// </summary>    // (Identique au Projet 2)
     public class JwtUtil
     {
         private readonly IConfiguration _config;
@@ -16,6 +18,11 @@ namespace plant_shop_asp_dapper.Utils
             _config = config;
         }
 
+        /// <summary>
+        /// Genere un token JWT pour un utilisateur.
+        /// </summary>
+        /// <param name="user">Utilisateur.</param>
+        /// <returns>Token JWT.</returns>
         public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

@@ -1,3 +1,9 @@
+//! Handlers d'authentification.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use super::jwt::generate_jwt;
 use super::models::{LoginPayload, RegisterPayload, UserAuth};
 use super::session::AuthSession;
@@ -6,7 +12,6 @@ use crate::errors::AppError;
 use crate::state::AppState;
 use crate::users::models::User;
 use poem::web::cookie::{Cookie, CookieJar};
-/// Handlers Poem pour auth (login, register, me, logout)
 use poem::{
     handler,
     web::{Data, Json},
@@ -17,6 +22,16 @@ use argon2::password_hash::{rand_core::OsRng, PasswordHash, SaltString};
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
 use poem::http::StatusCode;
 
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Handler de connexion utilisateur.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param payload Credentials (email, password)
+/// @param jar CookieJar pour stocker le token
+/// @return Tuple (StatusCode, Json<UserResponse>) ou erreur
 #[handler]
 pub async fn login(
     Data(state): Data<&AppState>,
@@ -58,6 +73,12 @@ pub async fn login(
     ))
 }
 
+/// Handler d'inscription utilisateur.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param payload Donnees d'inscription (email, name, password)
+/// @param jar CookieJar pour stocker le token
+/// @return Tuple (StatusCode, Json<UserResponse>) ou erreur
 #[handler]
 pub async fn register(
     Data(state): Data<&AppState>,
@@ -123,6 +144,11 @@ pub async fn register(
     ))
 }
 
+/// Handler du profil utilisateur connecte.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param auth Session d'authentification
+/// @return Tuple (StatusCode, Json<UserResponse>) ou erreur
 #[handler]
 pub async fn me(
     Data(state): Data<&AppState>,
@@ -140,6 +166,10 @@ pub async fn me(
     Ok((StatusCode::OK, Json(UserResponse::from(user))))
 }
 
+/// Handler de deconnexion.
+///
+/// @param jar CookieJar pour supprimer le cookie
+/// @return Ok(()) ou erreur
 #[handler]
 pub async fn logout(jar: &CookieJar) -> PoemResult<()> {
     jar.remove("auth_token");

@@ -12,17 +12,30 @@ import java.util.Optional;
 import org.json.JSONObject;
 import util.Request;
 
+/**
+ * Handler HTTP pour la passerelle API.
+ */
 public final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
     private final HttpClient http;
 
+    /**
+     * Constructeur.
+     * @param config Configuration de la gateway
+     * @param http Client HTTP
+     */
     public GatewayHandler(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
     @Override
+    /**
+     * Traite une requête HTTP entrante.
+     * @param ex Échange HTTP
+     * @throws IOException En cas d'erreur I/O
+     */
     public void handle(HttpExchange ex) throws IOException {
         try {
             forward(ex);
@@ -32,6 +45,11 @@ public final class GatewayHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Transfère une requête au service cible.
+     * @param ex Échange HTTP
+     * @throws Exception En cas d'erreur
+     */
     private void forward(HttpExchange ex) throws Exception {
         URI uri = ex.getRequestURI();
         String path = uri.getPath();
@@ -102,6 +120,12 @@ public final class GatewayHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Résout le contexte de session depuis les cookies.
+     * @param ex Échange HTTP
+     * @return Contexte de session
+     * @throws Exception En cas d'erreur
+     */
     private SessionContext resolveSession(HttpExchange ex) throws Exception {
         String sessionId = Request.extractSessionId(ex);
         if (sessionId == null) {
@@ -123,6 +147,13 @@ public final class GatewayHandler implements HttpHandler {
         return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
     }
 
+    /**
+     * Envoie une réponse JSON.
+     * @param ex Échange HTTP
+     * @param status Code HTTP
+     * @param body Corps de la réponse
+     * @throws IOException En cas d'erreur I/O
+     */
     private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");

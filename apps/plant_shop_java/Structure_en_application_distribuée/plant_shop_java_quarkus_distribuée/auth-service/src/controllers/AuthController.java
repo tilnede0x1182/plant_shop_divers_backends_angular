@@ -18,6 +18,9 @@ import util.PasswordUtil;
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+ * Contrôleur des routes d'authentification.
+ */
 @RequestScoped // Par défaut dans Quarkus, mais explicite c'est bien
 public class AuthController {
 
@@ -29,9 +32,12 @@ public class AuthController {
     @Inject
     Guards guards;
 
-    @POST
-    @Path("/register")
-    public Response register(Map<String, String> body) throws Exception {
+    /**
+ * Enregistre un nouvel utilisateur.
+ */
+@POST
+@Path("/register")
+public Response register(Map<String, String> body) throws Exception {
         String name = body.get("name");
         String email = body.get("email");
         String password = body.get("password");
@@ -51,9 +57,12 @@ public class AuthController {
                        .build();
     }
 
-    @POST
-    @Path("/login")
-    public Response login(Map<String, String> body) throws Exception {
+    /**
+ * Connecte un utilisateur.
+ */
+@POST
+@Path("/login")
+public Response login(Map<String, String> body) throws Exception {
         User user = userRepo.findByEmailWithPassword(body.get("email"));
         if (user == null || !PasswordUtil.checkPassword(body.get("password"), user.passwordHash)) {
             return Response.status(Response.Status.UNAUTHORIZED)
@@ -75,9 +84,12 @@ public class AuthController {
                        .build();
     }
 
-    @POST
-    @Path("/logout")
-    public Response logout(@CookieParam("session_id") String sessionId) {
+    /**
+ * Déconnecte l'utilisateur.
+ */
+@POST
+@Path("/logout")
+public Response logout(@CookieParam("session_id") String sessionId) {
         if (sessionId != null) {
             sessionService.getSessions().remove(sessionId);
         }
@@ -93,18 +105,24 @@ public class AuthController {
         return Response.noContent().cookie(expiredCookie).build();
     }
 
-    @GET
-    @Path("/me")
-    public Response me() {
+    /**
+ * Retourne l'utilisateur courant.
+ */
+@GET
+@Path("/me")
+public Response me() {
         // Le Guard lève une 401 si l'utilisateur n'est pas trouvé
         // Le Guards utilise maintenant le ForwardedIdentity pour vérifier l'authentification
         User user = guards.requireUser();
         return Response.ok(ApiMapper.toUser(user)).build();
     }
 
-    @GET
-    @Path("/_session")
-    public Response session(@CookieParam("session_id") String sessionId) throws Exception {
+    /**
+ * Vérifie la session courante.
+ */
+@GET
+@Path("/_session")
+public Response session(@CookieParam("session_id") String sessionId) throws Exception {
         if (sessionId == null) {
             return Response.status(Response.Status.UNAUTHORIZED)
                            .entity(Map.of("error", "Authentification requise"))

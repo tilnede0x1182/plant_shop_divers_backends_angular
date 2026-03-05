@@ -15,6 +15,9 @@ import repository.PlantRepository;
 import security.Guards;
 import util.ApiMapper;
 
+/**
+ * Contrôleur pour les plantes Micronaut.
+ */
 @Controller("/api")
 public class PlantController {
 
@@ -25,11 +28,20 @@ public class PlantController {
         COLLATOR.setStrength(Collator.PRIMARY);
     }
 
+    /**
+     * Constructeur avec injection.
+     * @param db Connection Connexion DB
+     */
     @Inject
     public PlantController(Connection db) {
         this.repo = new PlantRepository(db);
     }
 
+    /**
+     * Liste les plantes (public).
+     * @return List Liste de plantes
+     * @throws Exception En cas d erreur
+     */
     @Get("/plants")
     public List<?> listPublic() throws Exception {
         return repo.list().stream()
@@ -38,6 +50,12 @@ public class PlantController {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Liste les plantes (admin).
+     * @param request HttpRequest Requête HTTP
+     * @return List Liste de plantes
+     * @throws Exception En cas d erreur
+     */
     @Get("/admin/plants")
     public List<?> listAdmin(HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -47,12 +65,25 @@ public class PlantController {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Affiche une plante.
+     * @param id int ID plante
+     * @return HttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Get("/plants/{id}")
     public HttpResponse<?> show(@PathVariable int id) throws Exception {
         Plant plant = repo.find(id);
         return plant != null ? HttpResponse.ok(ApiMapper.toPlant(plant)) : HttpResponse.notFound();
     }
 
+    /**
+     * Crée une plante.
+     * @param plant Plant Données plante
+     * @param request HttpRequest Requête HTTP
+     * @return HttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Post("/admin/plants")
     public HttpResponse<?> create(@Body Plant plant, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -61,6 +92,14 @@ public class PlantController {
         return HttpResponse.created(ApiMapper.toPlant(created));
     }
 
+    /**
+     * Met à jour une plante.
+     * @param id int ID plante
+     * @param updatedData Plant Nouvelles données
+     * @param request HttpRequest Requête HTTP
+     * @return HttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Patch("/admin/plants/{id}")
     public HttpResponse<?> update(@PathVariable int id, @Body Plant updatedData, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -76,6 +115,13 @@ public class PlantController {
         return HttpResponse.ok(ApiMapper.toPlant(repo.find(id)));
     }
 
+    /**
+     * Supprime une plante.
+     * @param id int ID plante
+     * @param request HttpRequest Requête HTTP
+     * @return HttpResponse Réponse HTTP
+     * @throws Exception En cas d erreur
+     */
     @Delete("/admin/plants/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -83,6 +129,12 @@ public class PlantController {
         return HttpResponse.ok();
     }
 
+    /**
+     * Compare deux plantes pour le tri.
+     * @param a Plant Première plante
+     * @param b Plant Deuxième plante
+     * @return int Résultat comparaison
+     */
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }

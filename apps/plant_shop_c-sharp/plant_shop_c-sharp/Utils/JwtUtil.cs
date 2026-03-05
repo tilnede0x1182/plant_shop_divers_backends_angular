@@ -7,6 +7,9 @@ using plant_shop_c_sharp.Models;
 
 namespace plant_shop_c_sharp.Utils
 {
+    /// <summary>
+    /// Utilitaire de generation et validation JWT.
+    /// </summary>
     public static class JwtUtil
     {
         // !! IMPORTANT: Ces clés doivent être chargées depuis la configuration (ex: .env)
@@ -14,6 +17,11 @@ namespace plant_shop_c_sharp.Utils
         private static readonly string Issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "plant-shop-api";
         private static readonly string Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "plant-shop-clients";
 
+        /// <summary>
+        /// Genere un token JWT pour un utilisateur.
+        /// </summary>
+        /// <param name="user">Utilisateur.</param>
+        /// <returns>Token JWT.</returns>
         public static string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -36,6 +44,11 @@ namespace plant_shop_c_sharp.Utils
             return tokenHandler.WriteToken(token);
         }
 
+        /// <summary>
+        /// Valide un token JWT et retourne les claims.
+        /// </summary>
+        /// <param name="token">Token JWT.</param>
+        /// <returns>ClaimsPrincipal ou null si invalide.</returns>
         public static ClaimsPrincipal? ValidateToken(string token)
         {
             try

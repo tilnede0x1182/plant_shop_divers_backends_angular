@@ -2,9 +2,16 @@ import controller.OrderController;
 import util.AuthMiddleware;
 import util.ServiceRuntime;
 
+/**
+ * Service de gestion des commandes Javalin.
+ */
 public final class OrderService {
 
-    public static void main(String[] args) throws Exception {
+    /**
+	 * Point d'entrée du service.
+	 * @param args Arguments de ligne de commande
+	 */
+	public static void main(String[] args) throws Exception {
         ServiceRuntime.start(
             ServiceRuntime.descriptor("order-service", "ORDER_SERVICE_PORT", 6103),
             (app, db) -> {

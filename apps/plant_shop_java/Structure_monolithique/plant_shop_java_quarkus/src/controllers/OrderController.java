@@ -24,6 +24,10 @@ import utils.ApiMapper;
 @Path("/api/orders")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+ * Contrôleur REST pour la gestion des commandes.
+ * Permet de lister, créer, modifier et supprimer des commandes.
+ */
 @RequestScoped
 public class OrderController {
 
@@ -36,6 +40,10 @@ public class OrderController {
     @Inject
     Guards guards;
 
+    /**
+     * Liste les commandes de l'utilisateur connecté.
+     * @return 200 avec la liste des commandes, 401 si non connecté
+     */
     @GET
     public Response list() throws Exception {
         User currentUser = guards.requireUser();
@@ -54,6 +62,11 @@ public class OrderController {
         return Response.ok(payload).build();
     }
 
+    /**
+     * Crée une nouvelle commande.
+     * @param body Contient items avec plantId et quantity
+     * @return 201 avec la commande créée, 400 si données invalides
+     */
     @POST
     @Transactional // Gère la transaction (commit/rollback)
     public Response create(Map<String, List<Map<String, Integer>>> body) throws Exception {
@@ -95,6 +108,12 @@ public class OrderController {
         // Les autres exceptions lèveront une 500 et @Transactional gèrera le rollback
     }
 
+    /**
+     * Modifie le statut d'une commande (admin uniquement).
+     * @param id ID de la commande
+     * @param body Contient status
+     * @return 200 avec la commande modifiée, 404 si non trouvée
+     */
     @PATCH
     @Path("/{id}")
     @Transactional
@@ -115,6 +134,11 @@ public class OrderController {
         return Response.ok(ApiMapper.toOrder(updated, items)).build();
     }
 
+    /**
+     * Supprime une commande (admin uniquement).
+     * @param id ID de la commande
+     * @return 200 OK
+     */
     @DELETE
     @Path("/{id}")
     @Transactional
@@ -129,6 +153,10 @@ public class OrderController {
     /**
      * Logique privée pour créer un item et mettre à jour le stock.
      * Réutilise la logique de Micronaut.
+     *
+     * @param orderId int Identifiant de la commande
+     * @param itemMap Map<String,Integer> Map contenant plantId et quantity
+     * @return BigDecimal Prix total de l'item
      */
     private BigDecimal createOrderItem(int orderId, Map<String, Integer> itemMap) throws Exception {
         int plantId = itemMap.get("plantId");

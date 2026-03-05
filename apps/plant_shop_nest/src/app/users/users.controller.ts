@@ -22,12 +22,22 @@ import { Roles } from '../auth/roles.decorator';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  /**
+   * Liste tous les utilisateurs (admin)
+   * @return Liste des utilisateurs
+   */
   @Roles('admin')
   @Get()
   findAll() {
     return this.usersService.findAll();
   }
 
+  /**
+   * Récupère un utilisateur par id (admin ou propriétaire)
+   * @param id Identifiant de l'utilisateur
+   * @param req Requête contenant l'utilisateur courant
+   * @return Utilisateur trouvé
+   */
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   async findOne(@Param('id') id: string, @Req() req) {
@@ -47,13 +57,24 @@ export class UsersController {
     throw new ForbiddenException('Accès refusé');
   }
 
+  /**
+   * Crée un nouvel utilisateur (admin)
+   * @param data Données de l'utilisateur
+   * @return Utilisateur créé
+   */
   @Roles('admin')
   @Post()
   create(@Body() data: any) {
     return this.usersService.create(data);
   }
 
-  // Admin ou utilisateur propriétaire
+  /**
+   * Met à jour un utilisateur (admin ou propriétaire)
+   * @param id Identifiant de l'utilisateur
+   * @param data Données à mettre à jour
+   * @param req Requête contenant l'utilisateur courant
+   * @return Utilisateur mis à jour
+   */
   @Patch(':id')
   async update(@Param('id') id: string, @Body() data: any, @Req() req) {
     const userId = +id;
@@ -74,6 +95,11 @@ export class UsersController {
     throw new ForbiddenException('Accès refusé');
   }
 
+  /**
+   * Supprime un utilisateur (admin)
+   * @param id Identifiant de l'utilisateur
+   * @return Utilisateur supprimé
+   */
   @Roles('admin')
   @Delete(':id')
   remove(@Param('id') id: string) {

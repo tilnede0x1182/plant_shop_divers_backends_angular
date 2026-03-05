@@ -1,5 +1,8 @@
 namespace plant_shop_c_sharp.Models
 {
+    /// <summary>
+    /// Entite utilisateur.
+    /// </summary>
     public class User
     {
         public int Id { get; set; }

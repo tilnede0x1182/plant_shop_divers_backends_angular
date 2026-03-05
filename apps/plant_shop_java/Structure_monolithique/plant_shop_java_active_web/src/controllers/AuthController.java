@@ -11,8 +11,15 @@ import util.ApiMapper;
 
 import java.util.Map;
 
+/**
+ * Controleur de gestion de l authentification.
+ * Gere login, register, logout et consultation du profil.
+ */
 public final class AuthController extends AppController {
 
+    /**
+     * Authentifie un utilisateur.
+     */
     @POST
     public void login() {
         runAction(() -> {
@@ -46,6 +53,9 @@ public final class AuthController extends AppController {
         });
     }
 
+    /**
+     * Enregistre un nouvel utilisateur.
+     */
     @POST
     public void register() {
         runAction(() -> {
@@ -79,6 +89,9 @@ public final class AuthController extends AppController {
         });
     }
 
+    /**
+     * Deconnecte l utilisateur courant.
+     */
     @POST
     public void logout() {
         runAction(() -> {
@@ -95,6 +108,9 @@ public final class AuthController extends AppController {
         });
     }
 
+    /**
+     * Retourne les informations de l utilisateur courant.
+     */
     @GET
     public void me() {
         runAction(() -> {

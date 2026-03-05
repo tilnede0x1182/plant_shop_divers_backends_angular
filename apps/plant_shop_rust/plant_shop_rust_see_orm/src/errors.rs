@@ -1,8 +1,18 @@
+//! Gestion des erreurs applicatives.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use poem::{error::ResponseError, http::StatusCode};
 use sea_orm::DbErr;
 use thiserror::Error;
 
-/// Gestion des erreurs applicatives et ORM
+// ==============================================================================
+// Enums
+// ==============================================================================
+
+/// Enum des erreurs applicatives.
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("Non autorisé")]
@@ -19,7 +29,14 @@ pub enum AppError {
     DatabaseError(#[from] DbErr),
 }
 
+// ==============================================================================
+// Implementations
+// ==============================================================================
+
 impl ResponseError for AppError {
+    /// Retourne le code HTTP correspondant a l'erreur.
+    ///
+    /// @return StatusCode HTTP (401, 403, 404, 409, 500)
     fn status(&self) -> StatusCode {
         match self {
             AppError::Unauthorized => StatusCode::UNAUTHORIZED,

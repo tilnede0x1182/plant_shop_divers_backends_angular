@@ -14,6 +14,10 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import repository.UserRepository;
 
+/**
+ * Filtre d'authentification par session cookie.
+ * Vérifie le cookie de session et attache l'utilisateur à la requête.
+ */
 @Singleton
 @Filter("/**")
 public class SessionAuthFilter implements HttpServerFilter {
@@ -22,11 +26,22 @@ public class SessionAuthFilter implements HttpServerFilter {
     private final UserRepository userRepo;
     private final CorsConfig cors;
 
+    /**
+     * Constructeur avec injection de dépendances.
+     * @param db Connexion à la base de données
+     * @param cors Configuration CORS
+     */
     public SessionAuthFilter(Connection db, CorsConfig cors) {
         this.userRepo = new UserRepository(db);
         this.cors = cors;
     }
 
+    /**
+     * Filtre principal gérant CORS et authentification.
+     * @param request La requête entrante
+     * @param chain La chaîne de filtres
+     * @return Publisher de la réponse HTTP
+     */
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
         String origin = request.getHeaders().get("Origin");
@@ -38,6 +53,11 @@ public class SessionAuthFilter implements HttpServerFilter {
             .map(response -> cors.apply(response, origin, request));
     }
 
+    /**
+     * Authentifie la requête en vérifiant le cookie de session.
+     * @param request La requête à authentifier
+     * @return Mono contenant la requête (potentiellement avec utilisateur attaché)
+     */
     private Mono<HttpRequest<?>> authenticate(HttpRequest<?> request) {
         return Mono.fromCallable(() -> {
             request.getCookies()
@@ -47,6 +67,11 @@ public class SessionAuthFilter implements HttpServerFilter {
         });
     }
 
+    /**
+     * Attache l'utilisateur à la requête si la session est valide.
+     * @param request La requête HTTP
+     * @param sessionId L'identifiant de session du cookie
+     */
     private void attachUser(HttpRequest<?> request, String sessionId) {
         Map<String, Integer> sessions = AuthController.getSessions();
         Integer userId = sessions.get(sessionId);

@@ -1,6 +1,15 @@
-/// Définition centralisée des erreurs application
+//! Gestion des erreurs applicatives.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use poem::{error::ResponseError, http::StatusCode};
 use thiserror::Error;
+
+// ==============================================================================
+// Enums
+// ==============================================================================
 
 #[derive(Debug, Error)]
 pub enum AppError {
@@ -18,7 +27,14 @@ pub enum AppError {
     DatabaseError(#[from] sqlx::Error),
 }
 
+// ==============================================================================
+// Implementations
+// ==============================================================================
+
 impl ResponseError for AppError {
+    /// Retourne le code HTTP correspondant a l'erreur.
+    ///
+    /// @return StatusCode HTTP (401, 403, 404, 409, 500)
     fn status(&self) -> StatusCode {
         match self {
             AppError::Unauthorized => StatusCode::UNAUTHORIZED,

@@ -1,3 +1,9 @@
+//! Point d'entree du serveur Poem.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use dotenvy::dotenv;
 use poem::{
     get,
@@ -7,6 +13,10 @@ use poem::{
     patch, post, EndpointExt, Route, Server,
 };
 use sea_orm::DatabaseConnection;
+
+// ==============================================================================
+// Modules
+// ==============================================================================
 
 mod auth;
 mod config;
@@ -28,6 +38,15 @@ use crate::{
     users::handlers::{create_user, delete_user, get_user, list_users, update_user},
 };
 
+// ==============================================================================
+// Main
+// ==============================================================================
+
+/// Point d'entree principal du serveur Poem.
+///
+/// Configure la base de donnees, les migrations, CORS et les routes REST.
+///
+/// @return Ok(()) si le serveur s'arrete proprement, Err sinon
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
     // Charger .env et config

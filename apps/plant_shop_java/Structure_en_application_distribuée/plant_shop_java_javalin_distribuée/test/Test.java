@@ -63,7 +63,10 @@ public final class Test {
 	private final Map<String, String> cookie = new HashMap<>();
 	private final String timestamp;
 
-	public Test() {
+	/**
+ * Constructeur du test.
+ */
+public Test() {
 		this.timestamp = ts();
 	}
 
@@ -72,7 +75,12 @@ public final class Test {
 		return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 	}
 
-	private static String rand(int n) {
+	/**
+ * Génère une chaîne aléatoire.
+ * @param n Longueur de la chaîne
+ * @return Chaîne aléatoire
+ */
+private static String rand(int n) {
 		String a = "abcdefghijklmnopqrstuvwxyz0123456789";
 		StringBuilder sb = new StringBuilder();
 		Random r = new Random();
@@ -174,7 +182,13 @@ public final class Test {
 	}
 
 
-	/* -------- Auth -------- */
+	/**
+	 * Effectue une connexion.
+	 *
+	 * @param mail String Email de l'utilisateur
+	 * @param pw String Mot de passe
+	 * @param who String Descriptif de la connexion
+	 */
 	private void login(String mail, String pw, String who) throws Exception {
 		JSONObject j = new JSONObject().put("email", mail).put("password", pw);
 		call("POST", "/auth/login", 201, j, who);
@@ -185,7 +199,13 @@ public final class Test {
 		call("POST", "/auth/register", 201, j, who);
 	}
 
-	/* -------- Assertions -------- */
+	/**
+	 * Vérifie l'égalité d'une valeur dans un JSONObject.
+	 *
+	 * @param o JSONObject Objet JSON à vérifier
+	 * @param k String Clé à vérifier
+	 * @param e Object Valeur attendue
+	 */
 	private static void assert_eq(JSONObject o, String k, Object e) {
 		if (!o.has(k)) {
 			System.out.printf("❌   ↳ Clé '%s' manquante dans l'objet JSON%n", k);

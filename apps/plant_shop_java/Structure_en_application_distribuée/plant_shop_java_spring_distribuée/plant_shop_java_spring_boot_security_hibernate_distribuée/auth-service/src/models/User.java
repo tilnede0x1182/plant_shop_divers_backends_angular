@@ -15,6 +15,9 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "users")
+/**
+ * Entité JPA représentant un utilisateur.
+ */
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +46,15 @@ public class User {
     @Transient
     public String password;
 
+    /**
+     * Constructeur complet.
+     * @param id ID de l'utilisateur
+     * @param name Nom
+     * @param email Email
+     * @param passwordHash Hash du mot de passe
+     * @param isAdmin Statut admin
+     * @param createdAt Date de création
+     */
     public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -51,6 +63,13 @@ public class User {
         this.isAdmin = isAdmin;
         this.createdAt = createdAt;
     }
+    /**
+     * Constructeur pour création.
+     * @param name Nom
+     * @param email Email
+     * @param passwordHash Hash du mot de passe
+     * @param isAdmin Statut admin
+     */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }

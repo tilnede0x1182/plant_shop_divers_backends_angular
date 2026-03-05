@@ -1,3 +1,9 @@
+//! Handlers de gestion des utilisateurs.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use super::models::{NewUser, UpdateUser, User};
 use crate::auth::session::{AdminGuard, AuthSession};
 use crate::db::updates::PartialUpdate;
@@ -8,13 +14,23 @@ use crate::state::AppState;
 use argon2::password_hash::{rand_core::OsRng, SaltString};
 use argon2::{Argon2, PasswordHasher};
 use poem::http::StatusCode;
-/// Handlers Poem pour gestion utilisateurs
-use poem::{
+use poem:{
     handler,
     web::{Data, Json, Path},
     Response, Result as PoemResult,
 };
 
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Liste tous les utilisateurs (admin).
+///
+/// Utilise le cache si disponible.
+///
+/// @param state Etat applicatif (pools DB, cache)
+/// @param admin Guard verifiant les droits admin
+/// @return Response JSON ou erreur
 #[handler]
 pub async fn list_users(
     Data(state): Data<&AppState>,
@@ -42,6 +58,11 @@ pub async fn list_users(
     buffered_json(&responses, StatusCode::OK)
 }
 
+/// Cree un nouvel utilisateur.
+///
+/// @param state Etat applicatif (pools DB, cache)
+/// @param payload Donnees du nouvel utilisateur
+/// @return Tuple (StatusCode, Json<UserResponse>) ou erreur
 #[handler]
 pub async fn create_user(
     Data(state): Data<&AppState>,
@@ -69,6 +90,11 @@ pub async fn create_user(
     Ok((StatusCode::CREATED, Json(UserResponse::from(user))))
 }
 
+/// Recupere un utilisateur par ID.
+///
+/// @param state Etat applicatif (pools DB)
+/// @param user_id ID de l'utilisateur
+/// @return Json<UserResponse> ou erreur 404
 #[handler]
 pub async fn get_user(
     Data(state): Data<&AppState>,
@@ -85,6 +111,13 @@ pub async fn get_user(
     Ok(Json(UserResponse::from(user)))
 }
 
+/// Met a jour un utilisateur.
+///
+/// @param auth Session d'authentification
+/// @param state Etat applicatif (pools DB, cache)
+/// @param user_id ID de l'utilisateur a modifier
+/// @param payload Champs a mettre a jour
+/// @return Json<UserResponse> mis a jour ou erreur
 #[handler]
 pub async fn update_user(
     auth: AuthSession,
@@ -131,6 +164,11 @@ pub async fn update_user(
     Ok(Json(UserResponse::from(user)))
 }
 
+/// Supprime un utilisateur.
+///
+/// @param state Etat applicatif (pools DB, cache)
+/// @param user_id ID de l'utilisateur a supprimer
+/// @return () ou erreur
 #[handler]
 pub async fn delete_user(Data(state): Data<&AppState>, Path(user_id): Path<i32>) -> PoemResult<()> {
     let result = sqlx::query!("DELETE FROM users WHERE id = $1", user_id)

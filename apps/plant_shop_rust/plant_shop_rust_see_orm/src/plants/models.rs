@@ -1,8 +1,19 @@
+//! Modeles DTO pour les plantes.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::entity::plants::Model as PlantModel;
 
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+/// DTO representant une plante en sortie API.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Plant {
     pub id: i32,
@@ -13,7 +24,15 @@ pub struct Plant {
     pub created_at: DateTime<Utc>,
 }
 
+// ==============================================================================
+// Implementations
+// ==============================================================================
+
 impl From<PlantModel> for Plant {
+    /// Convertit un PlantModel en DTO Plant.
+    ///
+    /// @param model Modele SeaORM source
+    /// @return DTO Plant
     fn from(model: PlantModel) -> Self {
         Self {
             id: model.id,
@@ -27,6 +46,10 @@ impl From<PlantModel> for Plant {
 }
 
 impl From<&PlantModel> for Plant {
+    /// Convertit une reference PlantModel en DTO Plant.
+    ///
+    /// @param model Reference au modele SeaORM
+    /// @return DTO Plant
     fn from(model: &PlantModel) -> Self {
         Self {
             id: model.id,
@@ -39,6 +62,7 @@ impl From<&PlantModel> for Plant {
     }
 }
 
+/// DTO pour la creation d'une plante.
 #[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct NewPlant {
@@ -48,6 +72,7 @@ pub struct NewPlant {
     pub stock: i32,
 }
 
+/// DTO pour la mise a jour d'une plante (champs optionnels).
 #[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct UpdatePlant {

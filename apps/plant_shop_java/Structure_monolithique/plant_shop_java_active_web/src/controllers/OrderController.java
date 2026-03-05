@@ -21,8 +21,15 @@ import java.util.List;
 import java.util.Map;
 import util.ApiMapper;
 
+/**
+ * Contrôleur pour les commandes.
+ * Gère les opérations CRUD sur les commandes.
+ */
 public final class OrderController extends AppController {
 
+    /**
+     * Liste les commandes de l utilisateur.
+     */
     @GET
     public void index() {
         runAction(() -> {
@@ -39,6 +46,9 @@ public final class OrderController extends AppController {
         });
     }
 
+    /**
+     * Crée une nouvelle commande.
+     */
     @POST
     public void create() {
         runAction(() -> {
@@ -96,6 +106,9 @@ public final class OrderController extends AppController {
         });
     }
 
+    /**
+     * Met à jour une commande.
+     */
     @PATCH
     public void update() {
         runAction(() -> {
@@ -115,6 +128,9 @@ public final class OrderController extends AppController {
         });
     }
 
+    /**
+     * Supprime une commande.
+     */
     @DELETE
     public void destroy() {
         runAction(() -> {
@@ -130,6 +146,11 @@ public final class OrderController extends AppController {
         });
     }
 
+    /**
+     * Parse un ID depuis une chaîne.
+     * @param value String Valeur à parser
+     * @return Integer ID ou null
+     */
     private Integer parseId(String value) {
         try {
             return value == null ? null : Integer.valueOf(value);
@@ -138,6 +159,11 @@ public final class OrderController extends AppController {
         }
     }
 
+    /**
+     * Sérialise une commande en Map.
+     * @param order Order Commande
+     * @return Map Données sérialisées
+     */
     private Map<String, Object> serializeOrder(Order order) {
         Map<String, Object> orderMap = new LinkedHashMap<>();
         orderMap.put("id", order.getLongId());
@@ -149,6 +175,11 @@ public final class OrderController extends AppController {
         return orderMap;
     }
 
+    /**
+     * Sérialise les items d une commande.
+     * @param order Order Commande
+     * @return List Liste d items sérialisés
+     */
     private List<Map<String, Object>> serializeItems(Order order) {
         LazyList<OrderItem> items = order.getAll(OrderItem.class);
         List<Map<String, Object>> serialized = new ArrayList<>();
@@ -169,6 +200,11 @@ public final class OrderController extends AppController {
         return serialized;
     }
 
+    /**
+     * Sérialise une plante en Map.
+     * @param plant Plant Plante
+     * @return Map Données sérialisées
+     */
     private Map<String, Object> serializePlant(Plant plant) {
         Map<String, Object> plantMap = new LinkedHashMap<>();
         plantMap.put("id", plant.getLongId());
@@ -179,10 +215,20 @@ public final class OrderController extends AppController {
         return plantMap;
     }
 
+    /**
+     * Convertit un BigDecimal en Double.
+     * @param value BigDecimal Valeur
+     * @return Double Valeur convertie
+     */
     private Double toDecimal(BigDecimal value) {
         return value == null ? null : value.doubleValue();
     }
 
+    /**
+     * Convertit un Timestamp en chaîne ISO.
+     * @param timestamp Timestamp Date
+     * @return String Date ISO
+     */
     private String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }

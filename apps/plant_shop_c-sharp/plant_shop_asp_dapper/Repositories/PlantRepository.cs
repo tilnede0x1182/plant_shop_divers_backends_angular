@@ -6,8 +6,15 @@ using System.Threading.Tasks;
 
 namespace plant_shop_asp_dapper.Repositories
 {
+    /// <summary>
+    /// Repository CRUD pour les plantes.
+    /// </summary>
     public class PlantRepository : BaseRepository
     {
+        /// <summary>
+        /// Constructeur avec injection de la factory.
+        /// </summary>
+        /// <param name="factory">Factory de connexions.</param>
         public PlantRepository(DbConnectionFactory factory) : base(factory) { }
 
         private const string SelectSql = @"
@@ -19,6 +26,11 @@ namespace plant_shop_asp_dapper.Repositories
                    created_at AS CreatedAt
             FROM plants";
 
+        /// <summary>
+        /// Trouve une plante par ID.
+        /// </summary>
+        /// <param name="id">ID a rechercher.</param>
+        /// <returns>Plante ou null.</returns>
         public async Task<Plant?> FindByIdAsync(int id)
         {
             using var connection = CreateConnection();
@@ -36,6 +48,11 @@ namespace plant_shop_asp_dapper.Repositories
             return await connection.QueryAsync<Plant>(sql);
         }
 
+        /// <summary>
+        /// Cree une nouvelle plante.
+        /// </summary>
+        /// <param name="plant">Plante a creer.</param>
+        /// <returns>Plante avec ID genere.</returns>
         public async Task<Plant> CreateAsync(Plant plant)
         {
             using var connection = CreateConnection();
@@ -49,6 +66,10 @@ namespace plant_shop_asp_dapper.Repositories
             return plant;
         }
 
+        /// <summary>
+        /// Met a jour une plante.
+        /// </summary>
+        /// <param name="plant">Plante modifiee.</param>
         public async Task UpdateAsync(Plant plant)
         {
             using var connection = CreateConnection();
@@ -71,6 +92,10 @@ namespace plant_shop_asp_dapper.Repositories
         }
 
 
+        /// <summary>
+        /// Supprime une plante.
+        /// </summary>
+        /// <param name="id">ID a supprimer.</param>
         public async Task DeleteAsync(int id)
         {
             using var connection = CreateConnection();

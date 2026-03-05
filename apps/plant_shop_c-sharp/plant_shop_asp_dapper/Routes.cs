@@ -1,6 +1,8 @@
 namespace plant_shop_asp_dapper
 {
-    // Classe statique pour les constantes de route (pour la cohérence)
+    /// <summary>
+    /// Constantes de route pour la coherence entre controleurs.
+    /// </summary>
     public static class Routes
     {
         // Public

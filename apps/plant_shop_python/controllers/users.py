@@ -7,8 +7,13 @@ from repositories.users import UserRepository
 
 users_bp = Blueprint('users', __name__)
 
+"""
+	Retourne un utilisateur sérialisé sans hash ni champs internes.
+
+	@param user User Objet utilisateur depuis la base de données
+	@return dict Dictionnaire avec id, name, email, admin, createdAt
+"""
 def _serialize_user(user):
-    """Retourne un utilisateur sans hash ni champs internes."""
     return {
         "id": user.id,
         "name": user.name,
@@ -17,20 +22,36 @@ def _serialize_user(user):
         "createdAt": user.created_at
     }
 
+"""
+	Initialise le contrôleur des utilisateurs avec la connexion DB.
+	Enregistre les routes CRUD et les routes admin.
+
+	@param db_connection Connection Connexion psycopg2 à PostgreSQL
+	@return Blueprint Blueprint Flask users_bp avec les routes enregistrées
+"""
 def init_users_controller(db_connection):
     repo = UserRepository(db_connection)
 
+    """
+    	Récupère tous les utilisateurs (admin uniquement).
+
+    	@return Response JSON array des utilisateurs (200)
+    """
     @users_bp.route('/users', methods=['GET'])
     @admin_required
     def list_users():
-        """Récupère tous les utilisateurs (admin uniquement)."""
         users = repo.list()
         return json_response([_serialize_user(user) for user in users])
 
+    """
+    	Crée un utilisateur avec contrôle admin.
+    	Hache le mot de passe si fourni.
+
+    	@return Response JSON de l utilisateur créé (201)
+    """
     @users_bp.route('/users', methods=['POST'])
     @admin_required
     def create_user():
-        """Crée un utilisateur avec contrôle admin."""
         data = request.get_json() or {}
         if data.get('password'):
             data = data.copy()
@@ -38,10 +59,16 @@ def init_users_controller(db_connection):
         created = repo.create(data)
         return json_response(_serialize_user(created), 201)
 
+    """
+    	Retourne un utilisateur si l appelant est autorisé.
+    	Un utilisateur peut voir son propre profil, un admin peut voir tous.
+
+    	@param user_id int Identifiant de l utilisateur
+    	@return Response JSON de l utilisateur (200) ou erreur (403/404)
+    """
     @users_bp.route('/users/<int:user_id>', methods=['GET'])
     @auth_required
     def get_user(user_id):
-        """Retourne un utilisateur si autorisé."""
         current_user = g.user
         if not current_user['admin'] and current_user['id'] != user_id:
             return json_response({"error": "Accès interdit"}, 403)
@@ -52,10 +79,16 @@ def init_users_controller(db_connection):
 
         return json_response(_serialize_user(user))
 
+    """
+    	Met à jour un utilisateur si autorisé.
+    	Un non-admin ne peut pas se promouvoir admin.
+
+    	@param user_id int Identifiant de l utilisateur
+    	@return Response JSON de l utilisateur mis à jour (200) ou erreur (403)
+    """
     @users_bp.route('/users/<int:user_id>', methods=['PATCH'])
     @auth_required
     def update_user(user_id):
-        """Met à jour un utilisateur autorisé."""
         current_user = g.user
         if not current_user['admin'] and current_user['id'] != user_id:
             return json_response({"error": "Accès interdit"}, 403)
@@ -68,31 +101,53 @@ def init_users_controller(db_connection):
         updated_user = repo.update(user_id, data)
         return json_response(_serialize_user(updated_user))
 
+    """
+    	Supprime un utilisateur (admin uniquement).
+
+    	@param user_id int Identifiant de l utilisateur à supprimer
+    	@return Response Réponse vide (200)
+    """
     @users_bp.route('/users/<int:user_id>', methods=['DELETE'])
     @admin_required
     def delete_user(user_id):
-        """Supprime un utilisateur (admin uniquement)."""
         repo.delete(user_id)
         return empty_response(200)
 
     # Routes spécifiques à l'administration
+    """
+    	Alias admin pour compatibilité legacy.
+    	Identique à GET /users.
+
+    	@return Response JSON array des utilisateurs (200)
+    """
     @users_bp.route('/admin/users', methods=['GET'])
     @admin_required
     def admin_list_users():
-        """Alias admin pour compatibilité legacy."""
         return json_response([_serialize_user(user) for user in repo.list()])
 
+    """
+    	Alias admin pour suppression legacy.
+    	Identique à DELETE /users/:id.
+
+    	@param user_id int Identifiant de l utilisateur
+    	@return Response Réponse vide (200)
+    """
     @users_bp.route('/admin/users/<int:user_id>', methods=['DELETE'])
     @admin_required
     def admin_delete_user(user_id):
-        """Alias admin pour suppression legacy."""
         repo.delete(user_id)
         return empty_response(200)
 
+    """
+    	Permet aux admins de modifier un utilisateur.
+    	Peut modifier tous les champs y compris le statut admin.
+
+    	@param user_id int Identifiant de l utilisateur
+    	@return Response JSON de l utilisateur mis à jour (200)
+    """
     @users_bp.route('/admin/users/<int:user_id>', methods=['PATCH'])
     @admin_required
     def admin_update_user(user_id):
-        """Permet aux admins de modifier un utilisateur."""
         data = request.get_json() or {}
         updated_user = repo.update(user_id, data)
         return json_response(_serialize_user(updated_user))

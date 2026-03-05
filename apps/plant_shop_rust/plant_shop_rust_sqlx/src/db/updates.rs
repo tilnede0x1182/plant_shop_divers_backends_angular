@@ -1,12 +1,26 @@
+//! Fonctions de mise a jour.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use sqlx::{Postgres, QueryBuilder};
 
-/// Helper pour construire des requêtes UPDATE avec `COALESCE`.
+// ==============================================================================
+// Structures
+// ==============================================================================
+
+// Constructeur de requetes UPDATE partielles (COALESCE).
 pub struct PartialUpdate {
     builder: QueryBuilder<'static, Postgres>,
     has_set: bool,
 }
 
 impl PartialUpdate {
+    /// Cree un nouveau constructeur pour une table donnee.
+    ///
+    /// @param table Nom de la table
+    /// @return PartialUpdate
     pub fn new(table: &'static str) -> Self {
         let mut builder = QueryBuilder::new("UPDATE ");
         builder.push(table);

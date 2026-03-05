@@ -1,6 +1,11 @@
+//! Handlers Poem pour les items de commande.
+
+// ==============================================================================
+// Importations
+// ==============================================================================
+
 use crate::entity::order_items::{Entity as OrderItem, Model as OrderItemModel};
 use crate::errors::AppError;
-/// Handlers Poem pour gestion des éléments de commande (SeaORM)
 use poem::{
     handler,
     web::{Data, Json, Path},
@@ -8,6 +13,15 @@ use poem::{
 };
 use sea_orm::{ActiveModelTrait, DatabaseConnection, EntityTrait, IntoActiveModel, Set};
 
+// ==============================================================================
+// Handlers
+// ==============================================================================
+
+/// Recupere un item de commande par son ID.
+///
+/// @param db Connection a la base de donnees
+/// @param order_item_id ID de l'item
+/// @return Json<OrderItemModel> ou erreur 404
 #[handler]
 pub async fn get_order_item(
     Data(db): Data<&DatabaseConnection>,
@@ -21,6 +35,12 @@ pub async fn get_order_item(
     Ok(Json(item))
 }
 
+/// Met a jour un item de commande.
+///
+/// @param db Connection a la base de donnees
+/// @param order_item_id ID de l'item a modifier
+/// @param payload Nouvelles valeurs
+/// @return Json<OrderItemModel> mis a jour ou erreur
 #[handler]
 pub async fn update_order_item(
     Data(db): Data<&DatabaseConnection>,
@@ -43,6 +63,11 @@ pub async fn update_order_item(
     Ok(Json(updated))
 }
 
+/// Supprime un item de commande.
+///
+/// @param db Connection a la base de donnees
+/// @param order_item_id ID de l'item a supprimer
+/// @return () ou erreur
 #[handler]
 pub async fn delete_order_item(
     Data(db): Data<&DatabaseConnection>,

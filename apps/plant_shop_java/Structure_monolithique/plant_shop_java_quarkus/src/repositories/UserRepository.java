@@ -5,14 +5,24 @@ import jakarta.inject.Inject;
 import java.sql.*;
 import models.User;
 
+/**
+ * Repository pour les utilisateurs.
+ */
 @Dependent
 public class UserRepository extends BaseRepository<User> {
 
+    /**
+     * Constructeur avec injection de la connexion.
+     * @param db Connexion à la base de données
+     */
     @Inject
     public UserRepository(Connection db) {
         super(db, "users");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
@@ -25,6 +35,11 @@ public class UserRepository extends BaseRepository<User> {
         );
     }
 
+    /**
+     * Trouve un utilisateur par email avec le hash du mot de passe.
+     * @param email Email de l'utilisateur
+     * @return L'utilisateur avec passwordHash ou null
+     */
     public User findByEmailWithPassword(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -45,6 +60,11 @@ public class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Crée un nouvel utilisateur.
+     * @param u Utilisateur à créer
+     * @return ID de l'utilisateur créé
+     */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -60,6 +80,10 @@ public class UserRepository extends BaseRepository<User> {
         }
     }
 
+    /**
+     * Met à jour un utilisateur existant.
+     * @param u Utilisateur avec les nouvelles données
+     */
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword

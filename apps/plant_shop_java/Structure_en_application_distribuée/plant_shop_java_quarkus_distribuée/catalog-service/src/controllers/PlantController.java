@@ -19,6 +19,9 @@ import util.ApiMapper;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @RequestScoped
+/**
+ * Contrôleur REST pour les plantes.
+ */
 public class PlantController {
 
     @Inject
@@ -31,12 +34,23 @@ public class PlantController {
         COLLATOR = Collator.getInstance(Locale.ROOT);
         COLLATOR.setStrength(Collator.PRIMARY);
     }
+    /**
+     * Compare deux plantes par nom.
+     * @param a Première plante
+     * @param b Deuxième plante
+     * @return Résultat de comparaison
+     */
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }
 
     @GET
     @Path("/plants")
+    /**
+     * Liste toutes les plantes publiquement.
+     * @return Réponse avec liste des plantes
+     * @throws Exception En cas d'erreur
+     */
     public Response listPublic() throws Exception {
         List<?> payload = repo.list().stream()
             .sorted(this::comparePlants)
@@ -47,6 +61,11 @@ public class PlantController {
 
     @GET
     @Path("/admin/plants")
+    /**
+     * Liste toutes les plantes (admin).
+     * @return Réponse avec liste des plantes
+     * @throws Exception En cas d'erreur
+     */
     public Response listAdmin() throws Exception {
         guards.requireAdmin();
         // Sécurise la route
@@ -56,6 +75,12 @@ public class PlantController {
 
     @GET
     @Path("/plants/{id}")
+    /**
+     * Affiche une plante par ID.
+     * @param id ID de la plante
+     * @return Réponse avec la plante
+     * @throws Exception En cas d'erreur
+     */
     public Response show(@PathParam("id") int id) throws Exception {
         Plant plant = repo.find(id);
         return plant != null
@@ -67,6 +92,12 @@ public class PlantController {
     @POST
     @Path("/admin/plants")
     @Transactional
+    /**
+     * Crée une nouvelle plante.
+     * @param plant Plante à créer
+     * @return Réponse avec la plante créée
+     * @throws Exception En cas d'erreur
+     */
     public Response create(Plant plant) throws Exception {
         guards.requireAdmin();
         int id = repo.create(plant);
@@ -79,6 +110,13 @@ public class PlantController {
     @PATCH
     @Path("/admin/plants/{id}")
     @Transactional
+    /**
+     * Met à jour une plante.
+     * @param id ID de la plante
+     * @param updatedData Données mises à jour
+     * @return Réponse avec la plante mise à jour
+     * @throws Exception En cas d'erreur
+     */
     public Response update(@PathParam("id") int id, Plant updatedData) throws Exception {
         guards.requireAdmin();
         Plant existing = repo.find(id);
@@ -98,6 +136,12 @@ public class PlantController {
     @DELETE
     @Path("/admin/plants/{id}")
     @Transactional
+    /**
+     * Supprime une plante.
+     * @param id ID de la plante
+     * @return Réponse de succès
+     * @throws Exception En cas d'erreur
+     */
     public Response destroy(@PathParam("id") int id) throws Exception {
         guards.requireAdmin();
         repo.delete(id);

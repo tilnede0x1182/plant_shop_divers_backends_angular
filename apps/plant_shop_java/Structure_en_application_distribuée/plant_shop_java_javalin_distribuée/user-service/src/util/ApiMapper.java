@@ -6,9 +6,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import model.User;
 
+/**
+ * Utilitaire de conversion modèles vers format API.
+ */
 public final class ApiMapper {
 
-    private ApiMapper() {
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private ApiMapper() {
         // utilitaire statique
     }
 
@@ -22,7 +28,12 @@ public final class ApiMapper {
         return map;
     }
 
-    private static String toIso(Timestamp timestamp) {
+    /**
+ * Convertit un Timestamp en format ISO 8601.
+ * @param timestamp Timestamp à convertir
+ * @return Chaîne ISO 8601 ou null
+ */
+private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 

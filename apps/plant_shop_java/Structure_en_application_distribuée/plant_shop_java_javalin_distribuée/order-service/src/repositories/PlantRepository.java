@@ -6,14 +6,26 @@ import model.Plant;
 import order.repositories.BaseRepository;
 import java.math.BigDecimal;
 
+/**
+ * Repository des plantes.
+ */
 public final class PlantRepository extends BaseRepository<Plant> {
 
-    public PlantRepository(Connection db) {
+    /**
+ * Constructeur.
+ * @param db Connexion à la base de données
+ */
+public PlantRepository(Connection db) {
         super(db, "plants");
     }
 
-    @Override
-    protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
+    /**
+ * Mappe un ResultSet vers un objet Plant.
+ * @param rs ResultSet à mapper
+ * @return Plant mappé
+ */
+@Override
+protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
             rs.getInt("id"),
             rs.getString("name"),

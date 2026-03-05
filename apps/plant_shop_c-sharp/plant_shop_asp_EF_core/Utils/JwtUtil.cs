@@ -7,15 +7,27 @@ using plant_shop_asp_EF_core.Models;
 
 namespace plant_shop_asp_EF_core.Utils
 {
+    /// <summary>
+    /// Utilitaire de generation de tokens JWT.
+    /// </summary>
     public class JwtUtil
     {
         private readonly IConfiguration _config;
 
+        /// <summary>
+        /// Constructeur de JwtUtil.
+        /// </summary>
+        /// <param name="config">Configuration de l application</param>
         public JwtUtil(IConfiguration config)
         {
             _config = config;
         }
 
+        /// <summary>
+        /// Genere un token JWT pour un utilisateur.
+        /// </summary>
+        /// <param name="user">Utilisateur</param>
+        /// <returns>Token JWT</returns>
         public string GenerateToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

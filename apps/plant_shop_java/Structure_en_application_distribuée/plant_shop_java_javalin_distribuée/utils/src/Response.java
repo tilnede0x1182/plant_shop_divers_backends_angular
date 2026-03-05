@@ -9,9 +9,18 @@ import java.io.OutputStream;
  */
 public final class Response {
 
-    private Response() {}
+    /**
+ * Constructeur privé - classe utilitaire.
+ */
+private Response() {}
 
-    public static void send(HttpExchange ex, int code, String jsonBody) throws IOException {
+    /**
+ * Envoie une réponse JSON.
+ * @param ex Échange HTTP
+ * @param code Code de statut
+ * @param jsonBody Corps JSON
+ */
+public static void send(HttpExchange ex, int code, String jsonBody) throws IOException {
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         byte[] bytes = jsonBody.getBytes("UTF-8");
         ex.sendResponseHeaders(code, bytes.length);

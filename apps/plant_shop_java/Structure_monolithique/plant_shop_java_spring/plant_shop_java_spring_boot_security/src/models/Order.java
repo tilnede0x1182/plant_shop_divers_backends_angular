@@ -38,5 +38,6 @@ public final class Order {
     public Order(int userId, BigDecimal total, String status) {
         this(0, userId, total, status, null);
     }
-    public Order() {} // Nécessaire pour la désérialisation JSON
+    /** Constructeur par défaut pour désérialisation JSON. */
+    public Order() {}
 }

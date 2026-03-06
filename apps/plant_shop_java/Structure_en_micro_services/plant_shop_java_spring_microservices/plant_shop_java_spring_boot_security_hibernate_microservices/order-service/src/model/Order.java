@@ -11,6 +11,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+/**
+ * Entité JPA représentant une commande.
+ */
 @Entity
 @Table(name = "orders")
 public class Order {
@@ -31,6 +34,14 @@ public class Order {
     @Column(name = "created_at", updatable = false)
     public Timestamp createdAt;
 
+    /**
+     * Constructeur complet.
+     * @param id int Identifiant
+     * @param userId int ID utilisateur
+     * @param total BigDecimal Total
+     * @param status String Statut
+     * @param createdAt Timestamp Date de création
+     */
     public Order(int id, int userId, BigDecimal total, String status, Timestamp createdAt) {
         this.id = id;
         this.userId = userId;
@@ -38,8 +49,15 @@ public class Order {
         this.status = status;
         this.createdAt = createdAt;
     }
+    /**
+     * Constructeur pour création.
+     * @param userId int ID utilisateur
+     * @param total BigDecimal Total
+     * @param status String Statut
+     */
     public Order(int userId, BigDecimal total, String status) {
         this(0, userId, total, status, null);
     }
-    public Order() {} // Nécessaire pour la désérialisation JSON
+    /** Constructeur par défaut pour JPA. */
+    public Order() {}
 }

@@ -21,8 +21,10 @@ import util.ServiceLauncher;
         SecurityAutoConfiguration.class
     }
 )
+/** Application Spring Boot pour le service utilisateur */
 public class UserApplication {
 
+    /** Point d'entree du service utilisateur */
     public static void main(String[] args) {
         ServiceLauncher.launch(UserApplication.class, "USER_SERVICE_PORT", 6104, "UserService", args);
     }

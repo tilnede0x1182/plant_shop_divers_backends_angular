@@ -8,15 +8,28 @@ import java.util.List;
 import model.Plant;
 import java.math.BigDecimal;
 
+/**
+ * Repository pour la gestion des plantes en base.
+ */
 @Singleton
 public final class PlantRepository {
 
     private final Connection db;
 
+    /**
+     * Construit le repository avec la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     public PlantRepository(Connection db) {
         this.db = db;
     }
 
+    /**
+     * Recherche une plante par son ID.
+     * @param id Identifiant de la plante
+     * @return Plante trouvée ou null
+     * @throws SQLException En cas d'erreur BDD
+     */
     public Plant find(int id) throws SQLException {
         String sql = "SELECT * FROM plants WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -30,6 +43,11 @@ public final class PlantRepository {
         }
     }
 
+    /**
+     * Liste toutes les plantes.
+     * @return Liste des plantes
+     * @throws SQLException En cas d'erreur BDD
+     */
     public List<Plant> list() throws SQLException {
         String sql = "SELECT * FROM plants ORDER BY id";
         List<Plant> plants = new ArrayList<>();
@@ -42,6 +60,11 @@ public final class PlantRepository {
         return plants;
     }
 
+    /**
+     * Supprime une plante par son ID.
+     * @param id Identifiant de la plante
+     * @throws SQLException En cas d'erreur BDD
+     */
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM plants WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -50,6 +73,12 @@ public final class PlantRepository {
         }
     }
 
+    /**
+     * Convertit un ResultSet en objet Plant.
+     * @param rs ResultSet positionné sur une ligne
+     * @return Objet Plant correspondant
+     * @throws SQLException En cas d'erreur de lecture
+     */
     private Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
             rs.getInt("id"),
@@ -61,6 +90,12 @@ public final class PlantRepository {
         );
     }
 
+    /**
+     * Insère une nouvelle plante en base.
+     * @param p Plante à insérer
+     * @return ID généré de la plante
+     * @throws SQLException En cas d'erreur d'insertion
+     */
     public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -76,6 +111,11 @@ public final class PlantRepository {
         }
     }
 
+    /**
+     * Met à jour une plante existante.
+     * @param p Plante à mettre à jour
+     * @throws SQLException En cas d'erreur BDD
+     */
     public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -88,6 +128,12 @@ public final class PlantRepository {
         }
     }
 
+    /**
+     * Met à jour le stock d'une plante.
+     * @param id Identifiant de la plante
+     * @param newStock Nouveau stock
+     * @throws SQLException En cas d'erreur BDD
+     */
     public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {

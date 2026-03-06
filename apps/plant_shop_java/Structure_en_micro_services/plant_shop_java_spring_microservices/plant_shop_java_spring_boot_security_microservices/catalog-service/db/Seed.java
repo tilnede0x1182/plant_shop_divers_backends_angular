@@ -52,6 +52,10 @@ public final class Seed {
 	/* ---------- Helpers ---------- */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
 
+	/**
+	 * Génère une phrase Lorem Ipsum aléatoire.
+	 * @return Phrase générée avec 10-14 mots
+	 */
 	private static String loremSentence() {
 		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
 				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};

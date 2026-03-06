@@ -10,6 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Gestionnaire de services pm2 pour l'architecture microservices.
+ */
 public final class Pm2Manager {
 
     private static final Map<String, Service> SERVICES = new LinkedHashMap<>();
@@ -22,6 +25,11 @@ public final class Pm2Manager {
         SERVICES.put("gateway", new Service("gateway", "gateway", "Gateway"));
     }
 
+    /**
+     * Point d'entrée du gestionnaire pm2.
+     * @param args Arguments CLI
+     * @throws Exception En cas d'erreur
+     */
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             printUsage();
@@ -50,6 +58,9 @@ public final class Pm2Manager {
         }
     }
 
+    /**
+     * Affiche l'aide d'utilisation.
+     */
     private static void printUsage() {
         System.out.println("""
             Usage: java util.Pm2Manager <commande>
@@ -64,24 +75,42 @@ public final class Pm2Manager {
             """);
     }
 
+    /**
+     * Vérifie le nombre d'arguments requis.
+     * @param args Arguments fournis
+     * @param expected Nombre attendu
+     */
     private static void requireArgs(String[] args, int expected) {
         if (args.length < expected) {
             throw new IllegalArgumentException("Arguments insuffisants.");
         }
     }
 
+    /**
+     * Démarre tous les services.
+     * @throws Exception En cas d'erreur
+     */
     private static void startAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             startOne(name);
         }
     }
 
+    /**
+     * Arrête tous les services.
+     * @throws Exception En cas d'erreur
+     */
     private static void stopAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             stopOne(name);
         }
     }
 
+    /**
+     * Démarre tous les services avec logs dans un dossier.
+     * @param dir Dossier de destination des logs
+     * @throws Exception En cas d'erreur
+     */
     private static void startAllWithLogs(Path dir) throws Exception {
         Path logDir = dir.toAbsolutePath();
         Files.createDirectories(logDir);
@@ -91,6 +120,9 @@ public final class Pm2Manager {
         }
     }
 
+    /**
+     * Arrête tous les services silencieusement.
+     */
     private static void stopAllSilent() {
         for (String name : SERVICES.keySet()) {
             try {
@@ -101,10 +133,21 @@ public final class Pm2Manager {
         }
     }
 
+    /**
+     * Démarre un service par son nom.
+     * @param name Nom du service
+     * @throws Exception En cas d'erreur
+     */
     private static void startOne(String name) throws Exception {
         startOne(name, null);
     }
 
+    /**
+     * Démarre un service avec logs optionnels.
+     * @param name Nom du service
+     * @param logDir Dossier de logs ou null
+     * @throws Exception En cas d'erreur
+     */
     private static void startOne(String name, Path logDir) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
@@ -135,10 +178,21 @@ public final class Pm2Manager {
         }
     }
 
+    /**
+     * Arrête un service par son nom.
+     * @param name Nom du service
+     * @throws Exception En cas d'erreur
+     */
     private static void stopOne(String name) throws Exception {
         stopOne(name, false);
     }
 
+    /**
+     * Arrête un service avec option silencieuse.
+     * @param name Nom du service
+     * @param quiet true pour ignorer les erreurs
+     * @throws Exception En cas d'erreur
+     */
     private static void stopOne(String name, boolean quiet) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
@@ -153,6 +207,11 @@ public final class Pm2Manager {
         runCommand(List.of("pm2", "delete", service.name()));
     }
 
+    /**
+     * Supprime un processus pm2 s'il existe.
+     * @param name Nom du processus
+     * @throws Exception En cas d'erreur
+     */
     private static void deleteIfExists(String name) throws Exception {
         if (!processExists(name)) {
             return;
@@ -160,6 +219,11 @@ public final class Pm2Manager {
         runCommand(List.of("pm2", "delete", name));
     }
 
+    /**
+     * Exécute une commande système.
+     * @param command Liste des arguments de la commande
+     * @throws Exception En cas d'erreur
+     */
     private static void runCommand(List<String> command) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
@@ -170,6 +234,13 @@ public final class Pm2Manager {
         }
     }
 
+    /**
+     * Vérifie si un processus pm2 existe.
+     * @param name Nom du processus
+     * @return true si existant
+     * @throws IOException En cas d'erreur I/O
+     * @throws InterruptedException Si interrompu
+     */
     private static boolean processExists(String name) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder("pm2", "pid", name);
         pb.redirectError(ProcessBuilder.Redirect.DISCARD);
@@ -186,11 +257,25 @@ public final class Pm2Manager {
         return !output.isEmpty() && !"0".equals(output);
     }
 
+    /**
+     * Représente un service microservice.
+     * @param name Nom du service
+     * @param relativeDir Répertoire relatif
+     * @param mainClass Classe principale
+     */
     private record Service(String name, String relativeDir, String mainClass) {
+        /**
+         * Retourne le répertoire absolu du service.
+         * @return Chemin absolu
+         */
         Path directory() {
             return Path.of(relativeDir).toAbsolutePath().normalize();
         }
 
+        /**
+         * Retourne le classpath du service.
+         * @return Classpath
+         */
         String classpath() {
             return "bin:../utils/bin:../lib/*";
         }

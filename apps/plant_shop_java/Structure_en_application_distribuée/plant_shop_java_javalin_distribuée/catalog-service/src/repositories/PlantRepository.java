@@ -72,7 +72,7 @@ public final class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
-    //**
+    /**
 	 * Met à jour le stock d'une plante.
 	 * @param id L'identifiant
 	 * @param newStock Le nouveau stock

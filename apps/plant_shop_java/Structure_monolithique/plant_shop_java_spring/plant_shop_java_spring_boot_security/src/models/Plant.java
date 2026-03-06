@@ -42,5 +42,6 @@ public final class Plant {
     public Plant(String name, String description, BigDecimal price, int stock) {
         this(0, name, description, price, stock, null);
     }
-    public Plant() {} // Nécessaire pour la désérialisation JSON par Spring
+    /** Constructeur par défaut pour désérialisation JSON. */
+    public Plant() {}
 }

@@ -10,16 +10,30 @@ public final class AuthContext {
     private final Integer userId;
     private final boolean admin;
 
-    private AuthContext(Integer userId, boolean admin) {
+    /**
+	 * Constructeur privé.
+	 * @param userId ID utilisateur
+	 * @param admin Est administrateur
+	 */
+	private AuthContext(Integer userId, boolean admin) {
         this.userId = userId;
         this.admin = admin;
     }
 
-    public static AuthContext anonymous() {
+    /**
+	 * Crée un contexte anonyme.
+	 * @return Contexte anonyme
+	 */
+	public static AuthContext anonymous() {
         return new AuthContext(null, false);
     }
 
-    public static AuthContext fromHeaders(HttpExchange ex) {
+    /**
+	 * Crée un contexte depuis les headers HTTP.
+	 * @param ex Échange HTTP
+	 * @return Contexte d'authentification
+	 */
+	public static AuthContext fromHeaders(HttpExchange ex) {
         String idHeader = ex.getRequestHeaders().getFirst("X-User-Id");
         if (idHeader == null || idHeader.isBlank()) {
             return anonymous();
@@ -34,18 +48,30 @@ public final class AuthContext {
         }
     }
 
-    public boolean isAuthenticated() {
+    /**
+	 * Vérifie si l'utilisateur est authentifié.
+	 * @return true si authentifié
+	 */
+	public boolean isAuthenticated() {
         return userId != null;
     }
 
-    public int userId() {
+    /**
+	 * Retourne l'ID utilisateur.
+	 * @return ID utilisateur
+	 */
+	public int userId() {
         if (userId == null) {
             throw new IllegalStateException("Utilisateur non authentifié");
         }
         return userId;
     }
 
-    public boolean isAdmin() {
+    /**
+	 * Vérifie si l'utilisateur est admin.
+	 * @return true si admin
+	 */
+	public boolean isAdmin() {
         return admin;
     }
 }

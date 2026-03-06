@@ -38,6 +38,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
 
   /**
    * Charge l'utilisateur par ID.
+   * @param id Identifiant de l'utilisateur à charger
    */
   private chargerUtilisateur(id: number): void {
     this.api

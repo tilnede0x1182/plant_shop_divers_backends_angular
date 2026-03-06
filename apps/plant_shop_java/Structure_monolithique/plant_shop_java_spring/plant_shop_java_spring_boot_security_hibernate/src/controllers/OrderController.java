@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Contrôleur REST pour les commandes.
+ */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -33,6 +36,11 @@ public class OrderController {
     @Autowired
     Guards guards;
 
+    /**
+     * Liste les commandes de l'utilisateur connecté.
+     * @return ResponseEntity Liste des commandes
+     * @throws Exception En cas d'erreur
+     */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> list() throws Exception {
         User currentUser = guards.requireUser();
@@ -49,6 +57,12 @@ public class OrderController {
         return ResponseEntity.ok(payload);
     }
 
+    /**
+     * Crée une nouvelle commande.
+     * @param body Map<String,List<Map<String,Integer>>> Corps de la requête avec les items
+     * @return ResponseEntity Commande créée ou erreur
+     * @throws Exception En cas d'erreur
+     */
     @PostMapping
     @Transactional
     public ResponseEntity<Object> create(@RequestBody Map<String, List<Map<String, Integer>>> body) throws Exception {
@@ -84,6 +98,13 @@ public class OrderController {
         }
     }
 
+    /**
+     * Met à jour le statut d'une commande (admin).
+     * @param id int Identifiant de la commande
+     * @param body Map<String,String> Corps de la requête
+     * @return ResponseEntity Commande mise à jour
+     * @throws Exception En cas d'erreur
+     */
     @PatchMapping("/{id}")
     public ResponseEntity<Object> patch(@PathVariable("id") int id, @RequestBody Map<String, String> body) throws Exception {
         guards.requireAdmin();
@@ -103,6 +124,12 @@ public class OrderController {
         return ResponseEntity.ok(ApiMapper.toOrder(existing, items));
     }
 
+    /**
+     * Supprime une commande (admin).
+     * @param id int Identifiant de la commande
+     * @return ResponseEntity Réponse vide
+     * @throws Exception En cas d'erreur
+     */
     @DeleteMapping("/{id}")
     @Transactional
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {

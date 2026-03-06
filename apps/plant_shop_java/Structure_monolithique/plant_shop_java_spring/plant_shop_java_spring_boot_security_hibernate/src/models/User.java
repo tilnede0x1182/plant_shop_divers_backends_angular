@@ -73,5 +73,8 @@ public class User {
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }
-    public User() {} // Nécessaire pour la désérialisation JSON
+    /**
+	 * Constructeur par défaut pour JPA/JSON.
+	 */
+    public User() {}
 }

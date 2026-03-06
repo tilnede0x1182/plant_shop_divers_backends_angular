@@ -8,10 +8,18 @@ import util.AuthMiddleware;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+/**
+ * Contrôleur principal orchestrant les routes du service commandes.
+ */
 public final class ApplicationController {
 
     private final OrderController orderController;
 
+    /**
+     * Initialise le contrôleur avec la connexion BDD et l'environnement.
+     * @param db Connexion à la base de données
+     * @param env Variables d'environnement
+     */
     public ApplicationController(Connection db, Map<String, String> env) {
         this.orderController = new OrderController(db, resolveCatalogUrl(env));
     }
@@ -28,6 +36,11 @@ public final class ApplicationController {
         });
     }
 
+    /**
+     * Résout l'URL du service catalog depuis l'environnement.
+     * @param env Variables d'environnement
+     * @return URL du service catalog
+     */
     private static String resolveCatalogUrl(Map<String, String> env) {
         if (env.containsKey("CATALOG_SERVICE_URL")) {
             return env.get("CATALOG_SERVICE_URL");

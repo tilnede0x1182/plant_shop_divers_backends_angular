@@ -20,11 +20,11 @@ import java.util.Objects;
  */
 public final class ServiceRuntime {
 
-    @FunctionalInterface
     /**
- * Interface de configuration des routes.
- */
-public interface RouteRegistrar {
+     * Interface de configuration des routes.
+     */
+    @FunctionalInterface
+    public interface RouteRegistrar {
         /**
          * Configure les routes du service.
          * @param app Javalin Instance Javalin

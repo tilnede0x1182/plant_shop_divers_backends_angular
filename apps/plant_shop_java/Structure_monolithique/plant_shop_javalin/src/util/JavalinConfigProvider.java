@@ -16,6 +16,7 @@ public final class JavalinConfigProvider {
         "http://127.0.0.1:8300"
     );
 
+    /** Constructeur privé pour empêcher l'instanciation. */
     private JavalinConfigProvider() {}
 
     /**

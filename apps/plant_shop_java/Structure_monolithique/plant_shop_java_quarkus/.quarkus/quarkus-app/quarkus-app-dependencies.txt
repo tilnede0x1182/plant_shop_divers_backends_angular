@@ -10,7 +10,6 @@ com.fasterxml.jackson.module:jackson-module-parameter-names::jar:2.17.0
 com.fasterxml:classmate::jar:1.7.0
 com.github.ben-manes.caffeine:caffeine::jar:3.1.5
 com.google.errorprone:error_prone_annotations::jar:2.26.1
-com.mysql:mysql-connector-j::jar:8.3.0
 com.sun.istack:istack-commons-runtime::jar:4.1.2
 io.agroal:agroal-api::jar:2.3
 io.agroal:agroal-narayana::jar:2.3
@@ -50,7 +49,7 @@ io.quarkus:quarkus-fs-util::jar:0.0.10
 io.quarkus:quarkus-hibernate-orm::jar:3.10.0
 io.quarkus:quarkus-hibernate-validator::jar:3.10.0
 io.quarkus:quarkus-jackson::jar:3.10.0
-io.quarkus:quarkus-jdbc-mysql::jar:3.10.0
+io.quarkus:quarkus-jdbc-postgresql::jar:3.10.0
 io.quarkus:quarkus-jsonp::jar:3.10.0
 io.quarkus:quarkus-mutiny::jar:3.10.0
 io.quarkus:quarkus-narayana-jta::jar:3.10.0

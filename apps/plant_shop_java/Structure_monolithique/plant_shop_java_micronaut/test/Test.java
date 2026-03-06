@@ -63,6 +63,9 @@ public final class Test {
 	private final Map<String, String> cookie = new HashMap<>();
 	private final String timestamp;
 
+	/**
+	 * Constructeur initialisant le timestamp.
+	 */
 	public Test() {
 		this.timestamp = ts();
 	}
@@ -72,6 +75,11 @@ public final class Test {
 		return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 	}
 
+	/**
+	 * Génère une chaîne aléatoire.
+	 * @param n int Longueur de la chaîne
+	 * @return String Chaîne aléatoire
+	 */
 	private static String rand(int n) {
 		String a = "abcdefghijklmnopqrstuvwxyz0123456789";
 		StringBuilder sb = new StringBuilder();
@@ -81,6 +89,13 @@ public final class Test {
 		return sb.toString();
 	}
 
+	/**
+	 * Attend que le serveur soit disponible.
+	 * @param host String Hôte
+	 * @param port int Port
+	 * @param timeoutMs int Timeout en millisecondes
+	 * @return boolean true si le serveur répond
+	 */
 	private static boolean waitForServer(String host, int port, int timeoutMs) {
 		long startTime = System.currentTimeMillis();
 		while (System.currentTimeMillis() - startTime < timeoutMs) {
@@ -99,6 +114,16 @@ public final class Test {
 		return false;
 	}
 
+	/**
+	 * Effectue un appel API retournant un objet JSON.
+	 * @param m String Méthode HTTP
+	 * @param p String Chemin de l'API
+	 * @param exp int Code HTTP attendu
+	 * @param body JSONObject Corps de la requête
+	 * @param who String Identifiant de l'utilisateur
+	 * @return JSONObject Réponse JSON
+	 * @throws Exception En cas d'erreur
+	 */
 	private JSONObject call(String m, String p, int exp, JSONObject body, String who) throws Exception {
 		HttpClient client = HttpClient.newBuilder().build();
 		HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -146,6 +171,16 @@ public final class Test {
 		return new JSONObject();
 	}
 
+	/**
+	 * Effectue un appel API retournant un tableau JSON.
+	 * @param m String Méthode HTTP
+	 * @param p String Chemin de l'API
+	 * @param exp int Code HTTP attendu
+	 * @param body JSONObject Corps de la requête
+	 * @param who String Identifiant de l'utilisateur
+	 * @return JSONArray Réponse JSON tableau
+	 * @throws Exception En cas d'erreur
+	 */
 	private JSONArray callArray(String m, String p, int exp, JSONObject body, String who) throws Exception {
 		// Wrapper pour les réponses qui sont des listes JSON
 		HttpClient client = HttpClient.newBuilder().build();
@@ -186,6 +221,14 @@ public final class Test {
 		call("POST", "/auth/login", 201, j, who);
 	}
 
+	/**
+	 * Enregistre un nouvel utilisateur.
+	 * @param name String Nom de l'utilisateur
+	 * @param mail String Email de l'utilisateur
+	 * @param pw String Mot de passe
+	 * @param who String Descriptif de la connexion
+	 * @throws Exception En cas d'erreur
+	 */
 	private void register(String name, String mail, String pw, String who) throws Exception {
 		JSONObject j = new JSONObject().put("name", name).put("email", mail).put("password", pw);
 		call("POST", "/auth/register", 201, j, who);
@@ -222,6 +265,11 @@ public final class Test {
 		}
 	}
 
+	/**
+	 * Vérifie qu'une clé est numérique.
+	 * @param o JSONObject Objet JSON à vérifier
+	 * @param k String Clé à vérifier
+	 */
 	private static void assert_num(JSONObject o, String k) {
 		if (!(o.opt(k) instanceof Number)) {
 			throw new RuntimeException("Clé " + k + " n'est pas numérique ou absente");
@@ -249,6 +297,10 @@ public final class Test {
 		call("DELETE", "/admin/plants/" + id, 200, null, "admin");
 	}
 
+	/**
+	 * Test du module utilisateurs.
+	 * @throws Exception En cas d'erreur
+	 */
 	private void test_users() throws Exception {
 		System.out.println("\n📌 TEST MODULE: USERS (admin)");
 		String email = "utilisateur_test_" + this.timestamp + "@example.com";
@@ -265,6 +317,10 @@ public final class Test {
 		call("DELETE", "/users/" + id, 200, null, "admin");
 	}
 
+	/**
+	 * Test du module commandes.
+	 * @throws Exception En cas d'erreur
+	 */
 	private void test_orders() throws Exception {
 		System.out.println("\n📌 TEST MODULE: ORDERS & ORDER ITEMS");
 		String plantName = "Plante_de_test_" + this.timestamp;
@@ -307,6 +363,11 @@ public final class Test {
 		call("DELETE", "/admin/plants/" + pid, 200, null, "admin");
 	}
 
+	/**
+	 * Test du profil utilisateur.
+	 * @param email String Email de l'utilisateur
+	 * @throws Exception En cas d'erreur
+	 */
 	private void test_user_profile(String email) throws Exception {
 		System.out.println("\n📌 TEST MODULE: USER PROFILE (user)");
 		JSONArray users = callArray("GET", "/users", 200, null, "admin");
@@ -338,6 +399,10 @@ public final class Test {
 		assert_eq(check, "admin", false); // Vérification que l'utilisateur n'est pas devenu admin
 	}
 
+	/**
+	 * Test des rôles d'authentification.
+	 * @throws Exception En cas d'erreur
+	 */
 	private void test_auth_roles() throws Exception {
 		System.out.println("\n📌 TEST MODULE: ROLES");
 		JSONObject bad_plant = new JSONObject().put("name", "Bad").put("price", 1).put("stock", 1);
@@ -351,6 +416,10 @@ public final class Test {
 		call("GET", "/users", 403, null, "user");
 	}
 
+	/**
+	 * Test du module admin plantes.
+	 * @throws Exception En cas d'erreur
+	 */
 	private void test_admin_plants() throws Exception {
 		System.out.println("\n📌 TEST MODULE: ADMIN PLANTS");
 		JSONArray plantes = callArray("GET", "/admin/plants", 200, null, "admin");
@@ -368,6 +437,10 @@ public final class Test {
 		call("DELETE", "/admin/plants/" + id, 200, null, "admin");
 	}
 
+	/**
+	 * Test du module admin utilisateurs.
+	 * @throws Exception En cas d'erreur
+	 */
 	private void test_admin_users() throws Exception {
 		System.out.println("\n📌 TEST MODULE: ADMIN USERS");
 		String email = "admin_temp_" + this.timestamp + "@example.com";
@@ -403,6 +476,10 @@ public final class Test {
 		call("DELETE", "/users/" + id, 200, null, "admin");
 	}
 
+	/**
+	 * Test du endpoint /auth/me.
+	 * @throws Exception En cas d'erreur
+	 */
 	private void test_auth_me() throws Exception {
 		System.out.println("\n📌 TEST MODULE: AUTH /me");
 		JSONObject me = call("GET", "/auth/me", 200, null, "user");

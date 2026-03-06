@@ -17,20 +17,37 @@ import repository.UserRepository;
 import util.ApiMapper;
 import util.PasswordUtil;
 
+/**
+ * Contrôleur REST pour la gestion des utilisateurs.
+ */
 public final class UserController {
 
     private final UserRepository repo;
 
+    /**
+     * Construit le contrôleur avec la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     public UserController(Connection db) {
         this.repo = new UserRepository(db);
     }
 
+    /**
+     * Liste tous les utilisateurs (admin).
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void list(Context ctx) throws Exception {
         List<User> users = repo.list();
         users.sort(userComparator());
         ctx.json(mapUsers(users));
     }
 
+    /**
+     * Affiche un utilisateur par son ID.
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void show(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         AuthContext currentUser = ctx.attribute("auth");
@@ -42,6 +59,11 @@ public final class UserController {
         ctx.json(ApiMapper.toUser(user));
     }
 
+    /**
+     * Crée un nouvel utilisateur (admin).
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void create(Context ctx) throws Exception {
         JSONObject body = new JSONObject(ctx.body());
         if (!body.has("email") || !body.has("name") || !body.has("password")) {
@@ -64,6 +86,11 @@ public final class UserController {
         ctx.status(HttpStatus.CREATED).json(ApiMapper.toUser(created));
     }
 
+    /**
+     * Met à jour un utilisateur.
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void update(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         AuthContext currentUser = ctx.attribute("auth");
@@ -97,12 +124,22 @@ public final class UserController {
         ctx.json(ApiMapper.toUser(repo.find(id)));
     }
 
+    /**
+     * Supprime un utilisateur (admin).
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void destroy(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         repo.delete(id);
         ctx.status(HttpStatus.OK).json(Map.of("deleted", true));
     }
 
+    /**
+     * Convertit une liste d'utilisateurs en liste de Maps JSON.
+     * @param users Liste d'utilisateurs
+     * @return Liste de Maps
+     */
     private List<Map<String, Object>> mapUsers(List<User> users) {
         List<Map<String, Object>> mapped = new ArrayList<>(users.size());
         for (User user : users) {
@@ -111,6 +148,10 @@ public final class UserController {
         return mapped;
     }
 
+    /**
+     * Retourne un comparateur triant les utilisateurs (admins d'abord, puis par nom).
+     * @return Comparateur d'utilisateurs
+     */
     private Comparator<User> userComparator() {
         return (a, b) -> {
             if (a.isAdmin != b.isAdmin) {

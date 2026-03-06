@@ -29,8 +29,18 @@ public final class QuarkusBundleBuilder {
     private static final Path DEP_FILE = PROJECT_ROOT.resolve("config").resolve("dependencies.txt");
     private static final Path POM_FILE = WORKSPACE_DIR.resolve("pom.xml");
 
+    /**
+     * Record représentant une dépendance Maven.
+     * @param groupId String Groupe Maven
+     * @param artifactId String Artefact Maven
+     * @param version String Version
+     */
     private record Dependency(String groupId, String artifactId, String version) {}
 
+    /**
+     * Point d'entrée du builder.
+     * @param args String[] Arguments
+     */
     public static void main(String[] args) {
         try {
             buildBundle();
@@ -41,6 +51,11 @@ public final class QuarkusBundleBuilder {
         }
     }
 
+    /**
+     * Construit le bundle Quarkus.
+     * @throws IOException En cas d'erreur I/O
+     * @throws InterruptedException En cas d'interruption
+     */
     public static void buildBundle() throws IOException, InterruptedException {
         List<Dependency> dependencies = readDependencies();
         prepareWorkspace();
@@ -51,6 +66,11 @@ public final class QuarkusBundleBuilder {
         System.out.println("✅ Bundle Quarkus régénéré dans .quarkus/quarkus-app");
     }
 
+    /**
+     * Lit les dépendances depuis le fichier de configuration.
+     * @return List Liste des dépendances
+     * @throws IOException En cas d'erreur de lecture
+     */
     private static List<Dependency> readDependencies() throws IOException {
         if (!Files.exists(DEP_FILE)) {
             throw new IllegalStateException("config/dependencies.txt introuvable");
@@ -73,12 +93,32 @@ public final class QuarkusBundleBuilder {
         return deps;
     }
 
+    /**
+     * Prépare le workspace Maven.
+     * @throws IOException En cas d'erreur I/O
+     */
+    /**
+     * Prépare le workspace Maven.
+     * @throws IOException En cas d'erreur I/O
+     */
     private static void prepareWorkspace() throws IOException {
         cleanDirectory(WORKSPACE_DIR);
         Files.createDirectories(WORKSPACE_DIR);
         copyDirectory(PROJECT_ROOT.resolve("src"), WORKSPACE_DIR.resolve("src"));
     }
 
+    /**
+     * Copie un répertoire récursivement.
+     * @param source Path Répertoire source
+     * @param target Path Répertoire cible
+     * @throws IOException En cas d'erreur I/O
+     */
+    /**
+     * Copie un répertoire récursivement.
+     * @param source Path Répertoire source
+     * @param target Path Répertoire cible
+     * @throws IOException En cas d'erreur I/O
+     */
     private static void copyDirectory(Path source, Path target) throws IOException {
         if (!Files.exists(source)) {
             return;
@@ -99,6 +139,16 @@ public final class QuarkusBundleBuilder {
         });
     }
 
+    /**
+     * Écrit le fichier pom.xml.
+     * @param deps List Dépendances à inclure
+     * @throws IOException En cas d'erreur I/O
+     */
+    /**
+     * Écrit le fichier pom.xml.
+     * @param deps List Dépendances à inclure
+     * @throws IOException En cas d'erreur I/O
+     */
     private static void writePom(List<Dependency> deps) throws IOException {
         Files.createDirectories(WORKSPACE_DIR);
         try (BufferedWriter writer = Files.newBufferedWriter(POM_FILE,
@@ -117,6 +167,14 @@ public final class QuarkusBundleBuilder {
         }
     }
 
+    /**
+     * Génère l'en-tête du pom.xml.
+     * @return String En-tête XML
+     */
+    /**
+     * Génère l'en-tête du pom.xml.
+     * @return String En-tête XML
+     */
     private static String pomHeader() {
         return """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -149,6 +207,10 @@ public final class QuarkusBundleBuilder {
 """.formatted(QUARKUS_VERSION, QUARKUS_VERSION);
     }
 
+    /**
+     * Génère le pied du pom.xml.
+     * @return String Pied XML
+     */
     private static String pomFooter() {
         return """
     </dependencies>
@@ -182,6 +244,11 @@ public final class QuarkusBundleBuilder {
 """;
     }
 
+    /**
+     * Supprime un répertoire et son contenu.
+     * @param dir Path Répertoire à supprimer
+     * @throws IOException En cas d'erreur I/O
+     */
     private static void cleanDirectory(Path dir) throws IOException {
         if (!Files.exists(dir)) {
             return;
@@ -198,6 +265,11 @@ public final class QuarkusBundleBuilder {
         }
     }
 
+    /**
+     * Lance le build Maven.
+     * @throws IOException En cas d'erreur I/O
+     * @throws InterruptedException En cas d'interruption
+     */
     private static void runMavenBuild() throws IOException, InterruptedException {
         String outputDir = QUARKUS_APP_DIR.toAbsolutePath().toString();
         ProcessBuilder pb = new ProcessBuilder(
@@ -228,6 +300,9 @@ public final class QuarkusBundleBuilder {
         }
     }
 
+    /**
+     * Vérifie que le bundle a été généré.
+     */
     private static void verifyBundle() {
         Path runner = QUARKUS_APP_DIR.resolve("quarkus-run.jar");
         if (!Files.exists(runner)) {

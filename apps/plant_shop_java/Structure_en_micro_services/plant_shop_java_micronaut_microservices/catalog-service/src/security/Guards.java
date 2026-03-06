@@ -10,8 +10,16 @@ import io.micronaut.http.exceptions.HttpStatusException;
  */
 public final class Guards {
 
+    /**
+     * Constructeur privé pour classe utilitaire.
+     */
     private Guards() {}
 
+    /**
+     * Exige un administrateur authentifié via les headers.
+     * @param request Requête HTTP
+     * @throws HttpStatusException Si non admin ou non authentifié
+     */
     public static void requireAdmin(HttpRequest<?> request) {
         String userIdHeader = request.getHeaders().get("X-User-Id");
         String adminHeader = request.getHeaders().get("X-User-Admin");

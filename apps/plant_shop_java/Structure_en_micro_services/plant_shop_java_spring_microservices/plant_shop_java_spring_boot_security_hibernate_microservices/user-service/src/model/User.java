@@ -13,6 +13,10 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
 
+/**
+ * Entité utilisateur JPA.
+ * Représente un utilisateur du système.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -43,6 +47,15 @@ public class User {
     @Transient
     public String password;
 
+    /**
+     * Constructeur complet.
+     * @param id int Identifiant
+     * @param name String Nom
+     * @param email String Email
+     * @param passwordHash String Hash du mot de passe
+     * @param isAdmin boolean Est administrateur
+     * @param createdAt Timestamp Date de création
+     */
     public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -51,8 +64,16 @@ public class User {
         this.isAdmin = isAdmin;
         this.createdAt = createdAt;
     }
+    /**
+     * Constructeur simplifié.
+     * @param name String Nom
+     * @param email String Email
+     * @param passwordHash String Hash du mot de passe
+     * @param isAdmin boolean Est administrateur
+     */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }
-    public User() {} // Nécessaire pour la désérialisation JSON
+    /** Constructeur par défaut pour JPA. */
+    public User() {}
 }

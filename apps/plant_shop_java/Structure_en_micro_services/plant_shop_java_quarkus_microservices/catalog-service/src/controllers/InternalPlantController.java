@@ -28,6 +28,15 @@ public class InternalPlantController {
     @Inject
     PlantRepository repo;
 
+    /**
+     * Met à jour le stock d'une plante.
+     * Endpoint interne appelé par le service de commandes.
+     *
+     * @param id ID de la plante
+     * @param payload Map contenant la clé "stock" avec la nouvelle valeur
+     * @return Réponse HTTP avec la plante mise à jour
+     * @throws Exception En cas d'erreur lors de la mise à jour
+     */
     @PATCH
     @Path("/{id}/stock")
     @Transactional

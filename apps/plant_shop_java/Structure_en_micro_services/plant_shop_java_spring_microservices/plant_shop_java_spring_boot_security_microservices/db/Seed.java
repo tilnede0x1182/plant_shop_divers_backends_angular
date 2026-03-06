@@ -65,10 +65,14 @@ public final class Seed {
 
 	/* ---------- Helpers ---------- */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/** Selectionne un element aleatoire dans un tableau */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+	/** Genere un mot de passe aleatoire */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+	/** Hache un mot de passe avec BCrypt */
 	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
 
+	/** Genere une phrase lorem ipsum aleatoire */
 	private static String loremSentence() {
 		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
 				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};
@@ -149,6 +153,7 @@ public final class Seed {
 			Statement.RETURN_GENERATED_KEYS);
 
 		System.out.println("🌱 Création des plantes…");
+		/** Classe interne pour stocker les infos d'une plante */
 		class PlantInfo{ int id,price,stock; PlantInfo(int id,int p,int s){this.id=id;price=p;stock=s;} }
 		List<PlantInfo> plants = new ArrayList<>();
 

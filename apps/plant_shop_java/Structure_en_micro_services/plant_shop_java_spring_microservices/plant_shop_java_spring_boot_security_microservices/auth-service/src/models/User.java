@@ -3,6 +3,10 @@ import java.sql.Timestamp;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Modèle représentant un utilisateur du système.
+ * Contient les informations d'identification et le rôle administrateur.
+ */
 public final class User {
     public int id;
     public String name;
@@ -19,6 +23,15 @@ public final class User {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     public String password;
 
+    /**
+     * Constructeur complet pour un utilisateur existant.
+     * @param id Identifiant unique
+     * @param name Nom de l'utilisateur
+     * @param email Adresse email
+     * @param passwordHash Hash du mot de passe
+     * @param isAdmin Statut administrateur
+     * @param createdAt Date de création
+     */
     public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -27,8 +40,18 @@ public final class User {
         this.isAdmin = isAdmin;
         this.createdAt = createdAt;
     }
+    /**
+     * Constructeur pour la création d'un nouvel utilisateur.
+     * @param name Nom de l'utilisateur
+     * @param email Adresse email
+     * @param passwordHash Hash du mot de passe
+     * @param isAdmin Statut administrateur
+     */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }
-    public User() {} // Nécessaire pour la désérialisation JSON
+    /**
+     * Constructeur par défaut pour la désérialisation JSON.
+     */
+    public User() {}
 }

@@ -10,6 +10,9 @@ import java.io.OutputStream;
  */
 public final class Response {
 
+    /**
+     * Constructeur privé pour classe utilitaire.
+     */
     private Response() {} // Empêche l'instanciation
 
     /**

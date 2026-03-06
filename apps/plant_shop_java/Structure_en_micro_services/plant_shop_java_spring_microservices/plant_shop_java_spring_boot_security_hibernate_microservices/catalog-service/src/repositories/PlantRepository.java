@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository JPA pour les plantes.
+ */
 @Repository
 public interface PlantRepository extends JpaRepository<Plant, Integer> {
     List<Plant> findAllByOrderByNameAsc();

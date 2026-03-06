@@ -7,15 +7,28 @@ import java.util.ArrayList;
 import java.util.List;
 import model.User;
 
+/**
+ * Repository pour la gestion des utilisateurs en base.
+ */
 @Singleton
 public final class UserRepository {
 
     private final Connection db;
 
+    /**
+     * Construit le repository avec la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     public UserRepository(Connection db) {
         this.db = db;
     }
 
+    /**
+     * Recherche un utilisateur par son ID.
+     * @param id Identifiant de l'utilisateur
+     * @return Utilisateur trouvé ou null
+     * @throws SQLException En cas d'erreur BDD
+     */
     public User find(int id) throws SQLException {
         String sql = "SELECT * FROM users WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -29,6 +42,11 @@ public final class UserRepository {
         }
     }
 
+    /**
+     * Liste tous les utilisateurs.
+     * @return Liste des utilisateurs
+     * @throws SQLException En cas d'erreur BDD
+     */
     public List<User> list() throws SQLException {
         String sql = "SELECT * FROM users ORDER BY id";
         List<User> users = new ArrayList<>();
@@ -41,6 +59,11 @@ public final class UserRepository {
         return users;
     }
 
+    /**
+     * Supprime un utilisateur par son ID.
+     * @param id Identifiant de l'utilisateur
+     * @throws SQLException En cas d'erreur BDD
+     */
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM users WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -49,6 +72,12 @@ public final class UserRepository {
         }
     }
 
+    /**
+     * Convertit un ResultSet en objet User.
+     * @param rs ResultSet positionné sur une ligne
+     * @return Objet User correspondant
+     * @throws SQLException En cas d'erreur de lecture
+     */
     private User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),
@@ -60,6 +89,12 @@ public final class UserRepository {
         );
     }
 
+    /**
+     * Recherche un utilisateur par email avec son hash de mot de passe.
+     * @param email Email de l'utilisateur
+     * @return Utilisateur avec passwordHash ou null
+     * @throws SQLException En cas d'erreur BDD
+     */
     public User findByEmailWithPassword(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -80,6 +115,12 @@ public final class UserRepository {
         }
     }
 
+    /**
+     * Insère un nouvel utilisateur en base.
+     * @param u Utilisateur à insérer
+     * @return ID généré de l'utilisateur
+     * @throws SQLException En cas d'erreur d'insertion
+     */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -95,6 +136,11 @@ public final class UserRepository {
         }
     }
 
+    /**
+     * Met à jour un utilisateur existant.
+     * @param u Utilisateur à mettre à jour
+     * @throws SQLException En cas d'erreur BDD
+     */
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword

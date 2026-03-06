@@ -8,14 +8,30 @@ import java.util.ArrayList;
 import java.util.List;
 import models.Order;
 
+/**
+ * Repository pour les commandes.
+ * Gere les operations CRUD sur la table orders.
+ */
 @Dependent
 public class OrderRepository extends BaseRepository<Order> {
 
+    /**
+     * Constructeur avec injection de la connexion.
+     *
+     * @param db Connexion a la base de donnees
+     */
     @Inject
     public OrderRepository(Connection db) {
         super(db, "orders");
     }
 
+    /**
+     * Mappe un ResultSet vers un objet Order.
+     *
+     * @param rs ResultSet positionne sur une ligne
+     * @return Objet Order
+     * @throws SQLException En cas d'erreur de lecture
+     */
     @Override
     protected Order mapFromResultSet(ResultSet rs) throws SQLException {
         return new Order(
@@ -27,6 +43,13 @@ public class OrderRepository extends BaseRepository<Order> {
         );
     }
 
+    /**
+     * Cree une nouvelle commande.
+     *
+     * @param o Commande a creer
+     * @return ID de la commande creee
+     * @throws SQLException En cas d'erreur d'insertion
+     */
     public int create(Order o) throws SQLException {
         String sql = "INSERT INTO orders(user_id, total, status) VALUES (?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -41,6 +64,13 @@ public class OrderRepository extends BaseRepository<Order> {
         }
     }
 
+    /**
+     * Met a jour le total d'une commande.
+     *
+     * @param id ID de la commande
+     * @param total Nouveau montant total
+     * @throws SQLException En cas d'erreur de mise a jour
+     */
     public void updateTotal(int id, BigDecimal total) throws SQLException {
         String sql = "UPDATE orders SET total=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -50,6 +80,13 @@ public class OrderRepository extends BaseRepository<Order> {
         }
     }
 
+    /**
+     * Met a jour le statut d'une commande.
+     *
+     * @param id ID de la commande
+     * @param status Nouveau statut
+     * @throws SQLException En cas d'erreur de mise a jour
+     */
     public void updateStatus(int id, String status) throws SQLException {
         String sql = "UPDATE orders SET status=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -59,6 +96,13 @@ public class OrderRepository extends BaseRepository<Order> {
         }
     }
 
+    /**
+     * Liste les commandes d'un utilisateur.
+     *
+     * @param userId ID de l'utilisateur
+     * @return Liste des commandes
+     * @throws SQLException En cas d'erreur de lecture
+     */
     public List<Order> listByUser(int userId) throws SQLException {
         List<Order> results = new ArrayList<>();
         String sql = "SELECT * FROM orders WHERE user_id=?";

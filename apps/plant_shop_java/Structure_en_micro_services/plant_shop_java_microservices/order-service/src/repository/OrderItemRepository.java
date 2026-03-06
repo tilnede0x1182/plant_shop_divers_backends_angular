@@ -10,15 +10,28 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository pour les items de commande.
+ */
 public final class OrderItemRepository {
 
     private final Connection db;
 
-    public OrderItemRepository(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public OrderItemRepository(Connection db) {
         this.db = db;
     }
 
-    OrderItem map(ResultSet rs) throws SQLException {
+    /**
+	 * Mappe un ResultSet vers un OrderItem.
+	 * @param rs ResultSet
+	 * @return OrderItem
+	 * @throws SQLException En cas d'erreur SQL
+	 */
+	OrderItem map(ResultSet rs) throws SQLException {
         return new OrderItem(
             rs.getInt("id"),
             rs.getInt("order_id"),
@@ -28,7 +41,13 @@ public final class OrderItemRepository {
         );
     }
 
-    public int create(OrderItem item) throws SQLException {
+    /**
+	 * Crée un item de commande.
+	 * @param item Item à créer
+	 * @return ID généré
+	 * @throws SQLException En cas d'erreur SQL
+	 */
+	public int create(OrderItem item) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement(
             "INSERT INTO order_items(order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)",
             PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -44,7 +63,13 @@ public final class OrderItemRepository {
         }
     }
 
-    public List<OrderItem> findByOrder(int orderId) throws SQLException {
+    /**
+	 * Trouve les items d'une commande.
+	 * @param orderId ID de la commande
+	 * @return Liste des items
+	 * @throws SQLException En cas d'erreur SQL
+	 */
+	public List<OrderItem> findByOrder(int orderId) throws SQLException {
         List<OrderItem> out = new ArrayList<>();
         try (PreparedStatement ps = db.prepareStatement("SELECT * FROM order_items WHERE order_id=?")) {
             ps.setInt(1, orderId);
@@ -57,7 +82,12 @@ public final class OrderItemRepository {
         return out;
     }
 
-    public void deleteByOrder(int orderId) throws SQLException {
+    /**
+	 * Supprime les items d'une commande.
+	 * @param orderId ID de la commande
+	 * @throws SQLException En cas d'erreur SQL
+	 */
+	public void deleteByOrder(int orderId) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("DELETE FROM order_items WHERE order_id=?")) {
             ps.setInt(1, orderId);
             ps.executeUpdate();

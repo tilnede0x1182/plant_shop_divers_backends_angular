@@ -17,8 +17,15 @@ import models.User;
  */
 public final class ApiMapper {
 
+    /** Constructeur prive pour empecher l'instanciation. */
     private ApiMapper() {}
 
+    /**
+     * Convertit un User en Map pour serialisation JSON.
+     *
+     * @param user Utilisateur a convertir
+     * @return Map representant l'utilisateur
+     */
     public static Map<String, Object> toUser(User user) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", user.id);
@@ -29,6 +36,12 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit une Plant en Map pour serialisation JSON.
+     *
+     * @param plant Plante a convertir
+     * @return Map representant la plante
+     */
     public static Map<String, Object> toPlant(Plant plant) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", plant.id);
@@ -40,6 +53,13 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit une Order en Map pour serialisation JSON.
+     *
+     * @param order Commande a convertir
+     * @param items Liste des articles deja convertis
+     * @return Map representant la commande
+     */
     public static Map<String, Object> toOrder(Order order, List<Map<String, Object>> items) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", order.id);
@@ -52,6 +72,13 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit un OrderItem en Map pour serialisation JSON.
+     *
+     * @param item Article a convertir
+     * @param plant Plante associee
+     * @return Map representant l'article
+     */
     public static Map<String, Object> toOrderItem(OrderItem item, Plant plant) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", item.id);
@@ -65,6 +92,14 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit une liste d'OrderItem en liste de Maps.
+     *
+     * @param items Liste des articles
+     * @param lookup Service de recherche de plantes
+     * @return Liste de Maps representant les articles
+     * @throws Exception En cas d'erreur de recherche
+     */
     public static List<Map<String, Object>> toOrderItems(List<OrderItem> items, PlantLookup lookup) throws Exception {
         List<Map<String, Object>> mapped = new ArrayList<>(items.size());
         for (OrderItem item : items) {
@@ -77,11 +112,23 @@ public final class ApiMapper {
         return mapped;
     }
 
+    /**
+     * Convertit un BigDecimal en Double.
+     *
+     * @param value Valeur a convertir
+     * @return Double ou null
+     */
     private static Double toDecimal(BigDecimal value) {
         return value == null ?
         null : value.doubleValue();
     }
 
+    /**
+     * Convertit un Timestamp en format ISO 8601.
+     *
+     * @param timestamp Timestamp a convertir
+     * @return Chaine ISO ou null
+     */
     private static String toIso(Timestamp timestamp) {
         return timestamp == null ?
         null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();

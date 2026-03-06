@@ -42,8 +42,11 @@ public final class Seed {
 
 	/* ---------- Helpers ---------- */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/** Selectionne un element aleatoire dans un tableau */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+	/** Genere un mot de passe aleatoire */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+	/** Hache un mot de passe avec BCrypt */
 	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
 
 	/* ---------- Main ---------- */

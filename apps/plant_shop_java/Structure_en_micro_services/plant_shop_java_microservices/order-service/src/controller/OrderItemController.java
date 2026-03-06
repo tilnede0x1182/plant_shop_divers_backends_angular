@@ -10,15 +10,29 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * Contrôleur pour la sérialisation des items de commande.
+ */
 final class OrderItemController {
 
     private final PlantRepository plantRepo;
 
-    OrderItemController(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	OrderItemController(Connection db) {
         this.plantRepo = new PlantRepository(db);
     }
 
-    JSONObject toJson(Order order, List<OrderItem> items) throws SQLException {
+    /**
+	 * Convertit une commande et ses items en JSON.
+	 * @param order Commande
+	 * @param items Liste des items
+	 * @return Objet JSON
+	 * @throws SQLException En cas d'erreur SQL
+	 */
+	JSONObject toJson(Order order, List<OrderItem> items) throws SQLException {
         JSONArray itemsJson = new JSONArray();
         for (OrderItem item : items) {
             JSONObject obj = new JSONObject()

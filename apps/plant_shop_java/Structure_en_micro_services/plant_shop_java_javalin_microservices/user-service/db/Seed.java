@@ -41,9 +41,29 @@ public final class Seed {
 	private static final Random RNG = new Random();
 
 	/* ---------- Helpers ---------- */
+	/**
+	 * Génère un entier aléatoire entre min et max (inclus).
+	 * @param min Valeur minimale
+	 * @param max Valeur maximale
+	 * @return Entier aléatoire
+	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/**
+	 * Sélectionne un élément aléatoire dans un tableau.
+	 * @param arr Tableau source
+	 * @return Élément aléatoire
+	 */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+	/**
+	 * Génère un mot de passe aléatoire.
+	 * @return Mot de passe au format pw + 9 chiffres
+	 */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+	/**
+	 * Hash un mot de passe en clair.
+	 * @param p Mot de passe en clair
+	 * @return Hash du mot de passe
+	 */
 	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
 
 	/* ---------- Main ---------- */

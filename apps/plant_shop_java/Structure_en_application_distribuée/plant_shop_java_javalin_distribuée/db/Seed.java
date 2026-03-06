@@ -71,6 +71,11 @@ public final class Seed {
 	 * @return Entier aléatoire
 	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/**
+	 * Sélectionne un élément aléatoire dans un tableau.
+	 * @param arr T[] Tableau source
+	 * @return Élément aléatoire
+	 */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
 	/** Génère un mot de passe aléatoire. */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
@@ -166,6 +171,7 @@ public final class Seed {
 			Statement.RETURN_GENERATED_KEYS);
 
 		System.out.println("🌱 Création des plantes…");
+		/** Classe interne pour stocker les infos d'une plante. */
 		class PlantInfo{ int id,price,stock; PlantInfo(int id,int p,int s){this.id=id;price=p;stock=s;} }
 		List<PlantInfo> plants = new ArrayList<>();
 

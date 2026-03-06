@@ -26,6 +26,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
+/**
+ * Contrôleur REST pour la gestion des commandes.
+ */
 public final class OrderController {
 
     private final OrderRepository repo;
@@ -35,6 +38,11 @@ public final class OrderController {
     private final HttpClient httpClient;
     private final String catalogServiceUrl;
 
+    /**
+     * Construit le contrôleur avec la connexion BDD et l'URL du catalog.
+     * @param db Connexion à la base de données
+     * @param catalogUrl URL du service catalog
+     */
     public OrderController(Connection db, String catalogUrl) {
         this.db = db;
         this.repo = new OrderRepository(db);
@@ -46,6 +54,11 @@ public final class OrderController {
                 .build();
     }
 
+    /**
+     * Liste les commandes de l'utilisateur authentifié.
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void list(Context ctx) throws Exception {
         AuthContext currentUser = ctx.attribute("auth");
         if (currentUser == null || !currentUser.isAuthenticated()) {
@@ -63,6 +76,11 @@ public final class OrderController {
         ctx.json(payload);
     }
 
+    /**
+     * Crée une nouvelle commande pour l'utilisateur authentifié.
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void create(Context ctx) throws Exception {
         AuthContext currentUser = ctx.attribute("auth");
         if (currentUser == null || !currentUser.isAuthenticated()) {
@@ -107,6 +125,11 @@ public final class OrderController {
         }
     }
 
+    /**
+     * Met à jour le statut d'une commande (admin).
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void patch(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         Order order = repo.find(id);
@@ -121,6 +144,11 @@ public final class OrderController {
         ctx.json(toOrderJson(updated, itemRepo.listByOrder(id)));
     }
 
+    /**
+     * Supprime une commande par son ID (admin).
+     * @param ctx Contexte de la requête Javalin
+     * @throws Exception En cas d'erreur BDD
+     */
     public void destroy(Context ctx) throws Exception {
         int id = Integer.parseInt(ctx.pathParam("id"));
         itemRepo.deleteByOrder(id);
@@ -128,6 +156,13 @@ public final class OrderController {
         ctx.status(HttpStatus.OK).json(Map.of("deleted", true));
     }
 
+    /**
+     * Crée un item de commande et met à jour le stock.
+     * @param orderId ID de la commande parente
+     * @param itemJson Données JSON de l'item
+     * @return Montant total de l'item
+     * @throws Exception En cas d'erreur BDD ou stock insuffisant
+     */
     private BigDecimal createOrderItem(int orderId, JSONObject itemJson) throws Exception {
         if (!itemJson.has("plantId") || !itemJson.has("quantity")) {
             throw new IllegalArgumentException("Chaque item doit contenir plantId et quantity");
@@ -157,6 +192,12 @@ public final class OrderController {
         return plant.price.multiply(BigDecimal.valueOf(quantity));
     }
 
+    /**
+     * Met à jour le stock d'une plante via le service catalog.
+     * @param plantId ID de la plante
+     * @param newStock Nouveau stock
+     * @return true si succès, false sinon
+     */
     private boolean updateCatalogStock(int plantId, int newStock) {
         try {
             JSONObject body = new JSONObject().put("stock", newStock);
@@ -178,6 +219,13 @@ public final class OrderController {
         }
     }
 
+    /**
+     * Convertit une commande et ses items en Map JSON.
+     * @param order Commande à convertir
+     * @param items Items de la commande
+     * @return Map représentant le JSON
+     * @throws Exception En cas d'erreur
+     */
     private Map<String, Object> toOrderJson(Order order, List<OrderItem> items) throws Exception {
         List<Map<String, Object>> itemsJson = new ArrayList<>(items.size());
         for (OrderItem item : items) {
@@ -211,6 +259,10 @@ public final class OrderController {
         return orderMap;
     }
 
+    /**
+     * Retourne un comparateur triant les commandes par date décroissante.
+     * @return Comparateur de commandes
+     */
     private Comparator<Order> orderComparator() {
         return (left, right) -> {
             if (left.createdAt == null || right.createdAt == null) {

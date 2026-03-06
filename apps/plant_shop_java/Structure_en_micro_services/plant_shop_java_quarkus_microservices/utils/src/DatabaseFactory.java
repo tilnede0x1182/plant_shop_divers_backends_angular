@@ -25,6 +25,12 @@ public final class DatabaseFactory {
     private static final Path ENV_FILE = Path.of("config", ".env");
     private static Map<String, String> envCache;
 
+    /**
+     * Charge les variables d'environnement depuis le fichier .env.
+     *
+     * @return Map des variables d'environnement
+     * @throws IOException En cas d'erreur de lecture
+     */
     private synchronized Map<String, String> loadEnv() throws IOException {
         if (envCache == null) {
             // Tentative de charger depuis la config du service courant (config/.env)
@@ -43,6 +49,12 @@ public final class DatabaseFactory {
         return envCache;
     }
 
+    /**
+     * Charge les variables depuis un fichier specifique.
+     *
+     * @param file Chemin du fichier .env
+     * @throws IOException En cas d'erreur de lecture
+     */
     private void loadEnvFromFile(Path file) throws IOException {
         Map<String, String> values = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {
@@ -57,6 +69,13 @@ public final class DatabaseFactory {
         envCache = values;
     }
 
+    /**
+     * Produit une connexion JDBC pour la requete courante.
+     *
+     * @return Connexion a la base de donnees
+     * @throws SQLException En cas d'erreur de connexion
+     * @throws IOException En cas d'erreur de lecture de la config
+     */
     @Produces
     @RequestScoped
     public Connection connection() throws SQLException, IOException {
@@ -70,6 +89,11 @@ public final class DatabaseFactory {
         return DriverManager.getConnection(url, user, pass);
     }
 
+    /**
+     * Ferme une connexion en fin de requete.
+     *
+     * @param connection Connexion a fermer
+     */
     public void closeConnection(@Disposes Connection connection) {
         if (connection != null) {
             try {

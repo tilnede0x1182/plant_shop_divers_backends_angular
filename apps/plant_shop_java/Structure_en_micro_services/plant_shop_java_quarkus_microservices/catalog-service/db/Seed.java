@@ -52,6 +52,11 @@ public final class Seed {
 	/* ---------- Helpers ---------- */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
 
+	/**
+	 * Genere une phrase aleatoire de type Lorem Ipsum.
+	 *
+	 * @return Une phrase aleatoire
+	 */
 	private static String loremSentence() {
 		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
 				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};

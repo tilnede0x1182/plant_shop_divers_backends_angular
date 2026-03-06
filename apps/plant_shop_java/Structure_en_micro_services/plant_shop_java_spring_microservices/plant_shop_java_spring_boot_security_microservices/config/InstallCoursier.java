@@ -24,6 +24,7 @@ public class InstallCoursier {
     private static final String LIB_DIR = "lib";
     private static final String CS_URL = "https://git.io/coursier-cli";
 
+    /** Point d'entree du script d'installation des dependances */
     public static void main(String[] args) {
         try {
             // System.out.println("📦 Installation des dépendances via Coursier...");

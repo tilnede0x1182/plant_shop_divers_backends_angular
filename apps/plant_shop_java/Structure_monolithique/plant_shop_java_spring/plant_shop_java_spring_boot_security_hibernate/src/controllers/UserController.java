@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Contrôleur REST pour la gestion des utilisateurs.
+ */
 @RestController
 @RequestMapping("/api")
 public class UserController {
@@ -24,7 +27,11 @@ public class UserController {
     @Autowired
     Guards guards;
 
-    // Spring gère plusieurs routes vers la même méthode
+    /**
+     * Liste tous les utilisateurs (admin).
+     * @return ResponseEntity Liste des utilisateurs
+     * @throws Exception En cas d'erreur
+     */
     @GetMapping({"/admin/users", "/users"})
     public ResponseEntity<List<?>> listUsers() throws Exception {
         guards.requireAdmin(); // Seul un admin peut lister
@@ -36,6 +43,13 @@ public class UserController {
         return ResponseEntity.ok(payload);
     }
 
+    /**
+     * Met à jour un utilisateur.
+     * @param id int Identifiant de l'utilisateur
+     * @param body Map<String,Object> Données de mise à jour
+     * @return ResponseEntity Utilisateur mis à jour
+     * @throws Exception En cas d'erreur
+     */
     @PatchMapping({"/admin/users/{id}", "/users/{id}"})
     public ResponseEntity<Object> updateUser(@PathVariable("id") int id, @RequestBody Map<String, Object> body) throws Exception {
         User currentUser = guards.requireUser();
@@ -80,6 +94,12 @@ public class UserController {
         return ResponseEntity.ok(ApiMapper.toUser(existing));
     }
 
+    /**
+     * Supprime un utilisateur (admin).
+     * @param id int Identifiant de l'utilisateur
+     * @return ResponseEntity Réponse vide
+     * @throws Exception En cas d'erreur
+     */
     @DeleteMapping({"/admin/users/{id}", "/users/{id}"})
     public ResponseEntity<Void> destroyUser(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin(); // Seul un admin peut supprimer
@@ -89,6 +109,12 @@ public class UserController {
 
     // --- IMPLÉMENTATION SPÉCIFIQUE ---
 
+    /**
+     * Affiche un utilisateur.
+     * @param id int Identifiant de l'utilisateur
+     * @return ResponseEntity Utilisateur ou 404
+     * @throws Exception En cas d'erreur
+     */
     @GetMapping("/users/{id}")
     public ResponseEntity<Object> show(@PathVariable("id") int id) throws Exception {
         User currentUser = guards.requireUser();
@@ -104,6 +130,12 @@ public class UserController {
             : ResponseEntity.notFound().build();
     }
 
+    /**
+     * Crée un nouvel utilisateur (admin).
+     * @param body Map<String,Object> Données de l'utilisateur
+     * @return ResponseEntity Utilisateur créé
+     * @throws Exception En cas d'erreur
+     */
     @PostMapping("/users")
     public ResponseEntity<Object> create(@RequestBody Map<String, Object> body) throws Exception {
         guards.requireAdmin(); // Seul un admin peut créer (selon test E2E)
@@ -130,7 +162,10 @@ public class UserController {
                              .body(ApiMapper.toUser(created));
     }
 
-    // Helper de tri
+    /**
+     * Crée un comparateur pour trier les utilisateurs.
+     * @return Comparator<User> Comparateur (admins en premier, puis par nom)
+     */
     private Comparator<User> userComparator() {
         return Comparator.comparing((User u) -> !u.isAdmin) // Admins en premier
             .thenComparing(u -> u.name, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));

@@ -14,6 +14,9 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import repository.UserRepository;
 
+/**
+ * Filtre d'authentification par session.
+ */
 @Singleton
 @Filter("/**")
 public class SessionAuthFilter implements HttpServerFilter {
@@ -22,11 +25,22 @@ public class SessionAuthFilter implements HttpServerFilter {
     private final UserRepository userRepo;
     private final CorsConfig cors;
 
+    /**
+     * Construit le filtre avec la connexion BDD et la config CORS.
+     * @param db Connexion à la base de données
+     * @param cors Configuration CORS
+     */
     public SessionAuthFilter(Connection db, CorsConfig cors) {
         this.userRepo = new UserRepository(db);
         this.cors = cors;
     }
 
+    /**
+     * Filtre les requêtes pour authentification.
+     * @param request Requête HTTP
+     * @param chain Chaîne de filtres
+     * @return Publisher de la réponse
+     */
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
         String origin = request.getHeaders().get("Origin");
@@ -38,6 +52,11 @@ public class SessionAuthFilter implements HttpServerFilter {
             .map(response -> cors.apply(response, origin, request));
     }
 
+    /**
+     * Authentifie une requête via le cookie de session.
+     * @param request Requête HTTP
+     * @return Mono de la requête
+     */
     private Mono<HttpRequest<?>> authenticate(HttpRequest<?> request) {
         return Mono.fromCallable(() -> {
             request.getCookies()
@@ -47,6 +66,11 @@ public class SessionAuthFilter implements HttpServerFilter {
         });
     }
 
+    /**
+     * Attache l'utilisateur à la requête si la session est valide.
+     * @param request Requête HTTP
+     * @param sessionId ID de session
+     */
     private void attachUser(HttpRequest<?> request, String sessionId) {
         Map<String, Integer> sessions = AuthController.getSessions();
         Integer userId = sessions.get(sessionId);

@@ -13,6 +13,9 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Classe principale de l'application Spring Boot.
+ */
 @SpringBootApplication(scanBasePackages = {"controllers", "repositories", "security", "utils", "models"})
 @EnableJpaRepositories(basePackages = "repositories")
 @EntityScan(basePackages = "models")
@@ -20,6 +23,11 @@ public class Main {
 
     private static final Path ENV_FILE = Path.of("config", ".env");
 
+    /**
+     * Point d'entrée de l'application Spring Boot.
+     * @param args String[] Arguments de ligne de commande
+     * @throws Exception En cas d'erreur au démarrage
+     */
     public static void main(String[] args) throws Exception {
         Map<String, String> env = loadEnv();
         int port = parsePort(env.getOrDefault("SERVER_ADDRESS",
@@ -41,12 +49,22 @@ public class Main {
         app.run(args);
     }
 
+    /**
+     * Applique les surcharges de configuration de la base de données.
+     * @param env Map<String,String> Variables d'environnement
+     */
     private static void applyDataSourceOverrides(Map<String, String> env) {
         setIfPresent(env, "DATABASE_URL", "spring.datasource.url");
         setIfPresent(env, "DATABASE_USER", "spring.datasource.username");
         setIfPresent(env, "DATABASE_PASS", "spring.datasource.password");
     }
 
+    /**
+     * Définit une propriété système si la clé existe dans l'environnement.
+     * @param env Map<String,String> Variables d'environnement
+     * @param envKey String Clé dans l'environnement
+     * @param propertyKey String Clé de propriété système
+     */
     private static void setIfPresent(Map<String, String> env, String envKey, String propertyKey) {
         String value = env.get(envKey);
         if (value != null && !value.isBlank()) {
@@ -54,6 +72,10 @@ public class Main {
         }
     }
 
+    /**
+     * Charge les variables d'environnement depuis config/.env.
+     * @return Map<String,String> Variables chargées
+     */
     private static Map<String, String> loadEnv() {
         if (!Files.exists(ENV_FILE)) {
             return Map.of();
@@ -77,6 +99,11 @@ public class Main {
         return values;
     }
 
+    /**
+     * Parse le port depuis une chaîne.
+     * @param rawPort String Valeur brute du port
+     * @return int Port parsé (4100 par défaut)
+     */
     private static int parsePort(String rawPort) {
         if (rawPort == null || rawPort.isBlank()) {
             return 4100;
@@ -90,6 +117,11 @@ public class Main {
         }
     }
 
+    /**
+     * Vérifie si un port est disponible.
+     * @param port int Port à vérifier
+     * @return boolean true si disponible
+     */
     private static boolean isPortAvailable(int port) {
         try (ServerSocket socket = new ServerSocket(port)) {
             socket.setReuseAddress(true);

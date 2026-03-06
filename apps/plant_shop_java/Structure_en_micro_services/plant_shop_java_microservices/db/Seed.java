@@ -10,7 +10,11 @@ import util.PasswordUtil;
     décrémentation du stock, génération users.txt                                     */
 public final class Seed {
 
-	/* ---------- Lecture .env ---------- */
+	/**
+	 * Charge les variables d'environnement depuis le fichier .env.
+	 * @return Map des variables d'environnement
+	 * @throws IOException En cas d'erreur de lecture
+	 */
 	private static Map<String,String> env() throws IOException {
 		Map<String,String> out = new HashMap<>();
 		try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
@@ -66,10 +70,28 @@ public final class Seed {
 	 * @return int Entier aléatoire
 	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/**
+	 * Sélectionne un élément aléatoire dans un tableau.
+	 * @param arr T[] Tableau source
+	 * @return Élément aléatoire
+	 */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+	/**
+	 * Génère un mot de passe aléatoire.
+	 * @return Mot de passe généré
+	 */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+	/**
+	 * Hash un mot de passe.
+	 * @param p String Mot de passe en clair
+	 * @return Hash du mot de passe
+	 */
 	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
 
+	/**
+	 * Génère une phrase lorem ipsum.
+	 * @return Phrase générée
+	 */
 	private static String loremSentence() {
 		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
 				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};
@@ -153,6 +175,7 @@ public final class Seed {
 			Statement.RETURN_GENERATED_KEYS);
 
 		System.out.println("🌱 Création des plantes…");
+		/** Classe interne pour stocker les infos d'une plante. */
 		class PlantInfo{ int id,price,stock; PlantInfo(int id,int p,int s){this.id=id;price=p;stock=s;} }
 		List<PlantInfo> plants = new ArrayList<>();
 

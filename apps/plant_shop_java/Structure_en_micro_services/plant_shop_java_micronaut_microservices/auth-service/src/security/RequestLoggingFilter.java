@@ -20,6 +20,12 @@ public final class RequestLoggingFilter implements HttpServerFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
+    /**
+     * Filtre les requêtes pour ajouter des logs.
+     * @param request Requête HTTP
+     * @param chain Chaîne de filtres
+     * @return Publisher de la réponse
+     */
     @Override
     public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
         long start = System.currentTimeMillis();

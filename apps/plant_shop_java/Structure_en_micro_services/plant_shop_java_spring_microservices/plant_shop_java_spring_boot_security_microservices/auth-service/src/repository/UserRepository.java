@@ -6,17 +6,31 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.context.annotation.RequestScope;
 import java.sql.*;
 
+/**
+ * Repository pour la gestion des utilisateurs en base de données.
+ * Fournit les opérations CRUD sur la table users.
+ */
 @Repository
 @RequestScope
 public class UserRepository {
 
     private final Connection db;
 
+    /**
+     * Constructeur avec injection de la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     @Autowired
     public UserRepository(Connection db) {
         this.db = db;
     }
 
+    /**
+     * Recherche un utilisateur par son identifiant.
+     * @param id Identifiant de l'utilisateur
+     * @return L'utilisateur trouvé ou null
+     * @throws SQLException En cas d'erreur SQL
+     */
     public User find(int id) throws SQLException {
         String sql = "SELECT * FROM users WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -30,6 +44,12 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Mappe un ResultSet vers un objet User.
+     * @param rs ResultSet positionné sur une ligne
+     * @return L'utilisateur mappé
+     * @throws SQLException En cas d'erreur SQL
+     */
     private User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),
@@ -41,6 +61,12 @@ public class UserRepository {
         );
     }
 
+    /**
+     * Recherche un utilisateur par email avec son hash de mot de passe.
+     * @param email Adresse email de l'utilisateur
+     * @return L'utilisateur avec passwordHash ou null
+     * @throws SQLException En cas d'erreur SQL
+     */
     public User findByEmailWithPassword(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -61,6 +87,12 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Crée un nouvel utilisateur en base de données.
+     * @param u Utilisateur à créer
+     * @return L'identifiant généré
+     * @throws SQLException En cas d'erreur SQL
+     */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -76,6 +108,11 @@ public class UserRepository {
         }
     }
 
+    /**
+     * Met à jour un utilisateur existant.
+     * @param u Utilisateur avec les nouvelles valeurs
+     * @throws SQLException En cas d'erreur SQL
+     */
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword

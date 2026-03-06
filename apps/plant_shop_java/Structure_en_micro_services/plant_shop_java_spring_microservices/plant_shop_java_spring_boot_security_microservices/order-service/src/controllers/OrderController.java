@@ -24,6 +24,10 @@ import java.util.List;
 import java.util.Map;
 import util.EnvLoader;
 
+/**
+ * Contrôleur REST pour la gestion des commandes.
+ * Expose les endpoints de création, consultation et modification des commandes.
+ */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -40,6 +44,9 @@ public class OrderController {
     private final HttpClient httpClient;
     private final String catalogServiceUrl;
 
+    /**
+     * Constructeur initialisant le client HTTP et l'URL du service catalogue.
+     */
     public OrderController() {
         Map<String, String> env = EnvLoader.load();
         String host = env.getOrDefault("SERVICE_HOST", "http://localhost");
@@ -50,6 +57,11 @@ public class OrderController {
             .build();
     }
 
+    /**
+     * Liste les commandes de l'utilisateur courant.
+     * @return Liste des commandes triées par date décroissante
+     * @throws Exception En cas d'erreur SQL
+     */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> list() throws Exception {
         User currentUser = guards.requireUser();
@@ -64,6 +76,12 @@ public class OrderController {
         return ResponseEntity.ok(payload);
     }
 
+    /**
+     * Crée une nouvelle commande avec les items spécifiés.
+     * @param body Map contenant la liste des items (plantId, quantity)
+     * @return La commande créée ou une erreur
+     * @throws Exception En cas d'erreur SQL
+     */
     @PostMapping
     public ResponseEntity<Object> create(@RequestBody Map<String, List<Map<String, Integer>>> body) throws Exception {
         User currentUser = guards.requireUser();
@@ -98,6 +116,13 @@ public class OrderController {
         }
     }
 
+    /**
+     * Met à jour le statut d'une commande (admin requis).
+     * @param id Identifiant de la commande
+     * @param body Map contenant le nouveau statut
+     * @return La commande mise à jour ou 404
+     * @throws Exception En cas d'erreur SQL
+     */
     @PatchMapping("/{id}")
     public ResponseEntity<Object> patch(@PathVariable("id") int id, @RequestBody Map<String, String> body) throws Exception {
         guards.requireAdmin();
@@ -112,6 +137,12 @@ public class OrderController {
         return ResponseEntity.ok(toOrderJson(updated, itemRepo.listByOrder(id)));
     }
 
+    /**
+     * Supprime une commande et ses items (admin requis).
+     * @param id Identifiant de la commande à supprimer
+     * @return 200 OK si supprimée
+     * @throws Exception En cas d'erreur SQL
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin();
@@ -144,6 +175,12 @@ public class OrderController {
         return plant.price.multiply(BigDecimal.valueOf(quantity));
     }
 
+    /**
+     * Appelle le service catalogue pour mettre à jour le stock.
+     * @param plantId Identifiant de la plante
+     * @param newStock Nouvelle quantité en stock
+     * @return true si la mise à jour a réussi
+     */
     private boolean updateCatalogStock(int plantId, int newStock) {
         try {
             String json = String.format("{\"stock\":%d}", newStock);
@@ -165,6 +202,13 @@ public class OrderController {
         }
     }
 
+    /**
+     * Convertit une commande et ses items en Map JSON.
+     * @param order Commande à convertir
+     * @param items Liste des items de la commande
+     * @return Map représentant la commande complète
+     * @throws Exception En cas d'erreur SQL
+     */
     private Map<String, Object> toOrderJson(Order order, List<OrderItem> items) throws Exception {
         List<Map<String, Object>> itemsJson = new ArrayList<>(items.size());
         for (OrderItem item : items) {

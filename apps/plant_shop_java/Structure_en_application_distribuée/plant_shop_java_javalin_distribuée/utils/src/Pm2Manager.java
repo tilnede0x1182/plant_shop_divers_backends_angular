@@ -248,12 +248,21 @@ private static void printUsage() {
         return !output.isEmpty() && !"0".equals(output);
     }
 
+    /** Record représentant un service PM2. */
     private record Service(String name, String relativeDir, String mainClass) {
-        Path directory() {
+        /**
+		 * Retourne le répertoire absolu du service.
+		 * @return Path du répertoire
+		 */
+		Path directory() {
             return Path.of(relativeDir).toAbsolutePath().normalize();
         }
 
-        String classpath() {
+        /**
+		 * Retourne le classpath du service.
+		 * @return Classpath
+		 */
+		String classpath() {
             return "bin:../utils/bin:../lib/*";
         }
     }

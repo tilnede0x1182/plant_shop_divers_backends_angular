@@ -40,7 +40,12 @@ public final class Seed {
      * @return Nombre aléatoire
      */
     private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
-    private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+    /**
+	 * Sélectionne un élément aléatoire dans un tableau.
+	 * @param arr T[] Tableau source
+	 * @return Élément aléatoire
+	 */
+	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
 
     /**
      * Génère une phrase lorem ipsum.
@@ -59,7 +64,12 @@ public final class Seed {
         return sb.toString();
     }
 
-    private static Map<String,String> env() throws IOException {
+    /**
+	 * Charge les variables d'environnement depuis le fichier .env.
+	 * @return Map des variables d'environnement
+	 * @throws IOException En cas d'erreur de lecture
+	 */
+	private static Map<String,String> env() throws IOException {
         Map<String,String> out = new HashMap<>();
         Path envPath = Path.of("../config/.env");
         if (!Files.exists(envPath)) {

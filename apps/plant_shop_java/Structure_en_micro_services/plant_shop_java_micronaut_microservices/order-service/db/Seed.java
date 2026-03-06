@@ -29,6 +29,12 @@ public final class Seed {
 	private static final Random RNG = new Random();
 
 	/* ---------- Helpers ---------- */
+	/**
+	 * Génère un entier aléatoire entre min et max (inclus).
+	 * @param min Valeur minimale
+	 * @param max Valeur maximale
+	 * @return Entier aléatoire
+	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
 
 	/* ---------- Main ---------- */

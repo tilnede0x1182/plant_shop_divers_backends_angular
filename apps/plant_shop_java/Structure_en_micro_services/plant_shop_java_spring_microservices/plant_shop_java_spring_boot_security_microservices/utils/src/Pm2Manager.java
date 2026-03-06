@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** Gestionnaire de services via PM2 */
 public final class Pm2Manager {
 
     private static final Map<String, Service> SERVICES = new LinkedHashMap<>();
@@ -22,6 +23,7 @@ public final class Pm2Manager {
         SERVICES.put("gateway", new Service("gateway", "gateway", "Gateway"));
     }
 
+    /** Point d'entree du gestionnaire PM2 */
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             printUsage();
@@ -50,6 +52,7 @@ public final class Pm2Manager {
         }
     }
 
+    /** Affiche l'aide d'utilisation */
     private static void printUsage() {
         System.out.println("""
             Usage: java util.Pm2Manager <commande>
@@ -64,24 +67,28 @@ public final class Pm2Manager {
             """);
     }
 
+    /** Verifie le nombre d'arguments requis */
     private static void requireArgs(String[] args, int expected) {
         if (args.length < expected) {
             throw new IllegalArgumentException("Arguments insuffisants.");
         }
     }
 
+    /** Demarre tous les services */
     private static void startAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             startOne(name);
         }
     }
 
+    /** Arrete tous les services */
     private static void stopAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             stopOne(name);
         }
     }
 
+    /** Demarre tous les services avec logs */
     private static void startAllWithLogs(Path dir) throws Exception {
         Path logDir = dir.toAbsolutePath();
         Files.createDirectories(logDir);
@@ -91,6 +98,7 @@ public final class Pm2Manager {
         }
     }
 
+    /** Arrete tous les services silencieusement */
     private static void stopAllSilent() {
         for (String name : SERVICES.keySet()) {
             try {
@@ -101,10 +109,12 @@ public final class Pm2Manager {
         }
     }
 
+    /** Demarre un service par son nom */
     private static void startOne(String name) throws Exception {
         startOne(name, null);
     }
 
+    /** Demarre un service avec option de logs */
     private static void startOne(String name, Path logDir) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
@@ -135,10 +145,12 @@ public final class Pm2Manager {
         }
     }
 
+    /** Arrete un service par son nom */
     private static void stopOne(String name) throws Exception {
         stopOne(name, false);
     }
 
+    /** Arrete un service avec option silencieuse */
     private static void stopOne(String name, boolean quiet) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
@@ -153,6 +165,7 @@ public final class Pm2Manager {
         runCommand(List.of("pm2", "delete", service.name()));
     }
 
+    /** Supprime un processus PM2 s'il existe */
     private static void deleteIfExists(String name) throws Exception {
         if (!processExists(name)) {
             return;
@@ -160,6 +173,7 @@ public final class Pm2Manager {
         runCommand(List.of("pm2", "delete", name));
     }
 
+    /** Execute une commande systeme */
     private static void runCommand(List<String> command) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
@@ -170,6 +184,7 @@ public final class Pm2Manager {
         }
     }
 
+    /** Verifie si un processus PM2 existe */
     private static boolean processExists(String name) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder("pm2", "pid", name);
         pb.redirectError(ProcessBuilder.Redirect.DISCARD);
@@ -189,11 +204,14 @@ public final class Pm2Manager {
         return !output.isEmpty() && !"0".equals(output);
     }
 
+    /** Record definissant un service */
     private record Service(String name, String relativeDir, String mainClass) {
+        /** Retourne le chemin absolu du service */
         Path directory() {
             return Path.of(relativeDir).toAbsolutePath().normalize();
         }
 
+        /** Retourne le classpath du service */
         String classpath() {
             return "bin:../utils/bin:../lib/*";
         }

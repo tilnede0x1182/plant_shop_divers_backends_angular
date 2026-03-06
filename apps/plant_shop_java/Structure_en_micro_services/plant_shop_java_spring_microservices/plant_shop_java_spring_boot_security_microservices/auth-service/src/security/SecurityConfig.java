@@ -14,17 +14,31 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
+/**
+ * Configuration de la sécurité Spring Security.
+ * Configure les filtres, CORS, CSRF et la chaîne de sécurité.
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final SessionAuthFilter sessionAuthFilter;
 
+    /**
+     * Constructeur avec injection du filtre de session.
+     * @param sessionAuthFilter Filtre d'authentification par session
+     */
     @Autowired
     public SecurityConfig(SessionAuthFilter sessionAuthFilter) {
         this.sessionAuthFilter = sessionAuthFilter;
     }
 
+    /**
+     * Configure la chaîne de filtres de sécurité.
+     * @param http Configuration HTTP Security
+     * @return La chaîne de filtres configurée
+     * @throws Exception En cas d'erreur de configuration
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -40,11 +54,19 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Fournit l'encodeur de mots de passe BCrypt.
+     * @return L'encodeur BCrypt
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Fournit un UserDetailsService vide (authentification gérée par session).
+     * @return Un InMemoryUserDetailsManager vide
+     */
     @Bean
     public UserDetailsService userDetailsService() {
         return new InMemoryUserDetailsManager();

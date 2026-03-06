@@ -8,10 +8,13 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Map;
 
+/** Lanceur de services Spring Boot avec detection automatique du port */
 public final class ServiceLauncher {
 
+    /** Constructeur prive (classe utilitaire) */
     private ServiceLauncher() {}
 
+    /** Lance un service Spring Boot sur le port configure */
     public static void launch(Class<?> source,
                               String envPortKey,
                               int defaultPort,
@@ -36,6 +39,7 @@ public final class ServiceLauncher {
         app.run(args);
     }
 
+    /** Parse le port depuis une chaine avec fallback */
     private static int parsePort(String raw, int fallback) {
         if (raw == null || raw.isBlank()) {
             return fallback;
@@ -49,6 +53,7 @@ public final class ServiceLauncher {
         }
     }
 
+    /** Verifie si un port est disponible */
     private static boolean isPortAvailable(int port) {
         try (ServerSocket socket = new ServerSocket(port)) {
             socket.setReuseAddress(true);

@@ -1,4 +1,16 @@
+/**
+ * Record representant la cible d'une route (service et chemin).
+ *
+ * @param service Nom du microservice cible
+ * @param path Chemin de la requete
+ */
 public record RouteTarget(String service, String path) {
+    /**
+     * Resout le service cible a partir du chemin de la requete.
+     *
+     * @param path Chemin de la requete
+     * @return RouteTarget ou null si route inconnue
+     */
     public static RouteTarget resolve(String path) {
         if (path.startsWith("/api/auth")) {
             return new RouteTarget("auth", path);

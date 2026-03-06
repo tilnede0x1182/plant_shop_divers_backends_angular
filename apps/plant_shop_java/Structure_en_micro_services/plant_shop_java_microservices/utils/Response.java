@@ -9,9 +9,19 @@ import java.io.OutputStream;
  */
 public final class Response {
 
-    private Response() {}
+    /**
+	 * Constructeur privé.
+	 */
+	private Response() {}
 
-    public static void send(HttpExchange ex, int code, String jsonBody) throws IOException {
+    /**
+	 * Envoie une réponse JSON.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @param jsonBody Corps JSON
+	 * @throws IOException En cas d'erreur
+	 */
+	public static void send(HttpExchange ex, int code, String jsonBody) throws IOException {
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         byte[] bytes = jsonBody.getBytes("UTF-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -21,7 +31,13 @@ public final class Response {
         ex.close();
     }
 
-    public static void sendEmpty(HttpExchange ex, int code) throws IOException {
+    /**
+	 * Envoie une réponse vide.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @throws IOException En cas d'erreur
+	 */
+	public static void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
     }

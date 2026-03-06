@@ -16,16 +16,30 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+/**
+ * Handler principal de la gateway.
+ */
 final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
     private final HttpClient http;
     private final CorsSupport cors = new CorsSupport();
+
+    /**
+     * Construit le handler avec la config et le client HTTP.
+     * @param config Configuration de la gateway
+     * @param http Client HTTP
+     */
     GatewayHandler(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
+    /**
+     * Gère une requête HTTP entrante.
+     * @param ex Échange HTTP
+     * @throws IOException En cas d'erreur
+     */
     @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
@@ -39,6 +53,11 @@ final class GatewayHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Transmet une requête au service backend approprié.
+     * @param ex Échange HTTP
+     * @throws Exception En cas d'erreur
+     */
     private void forward(HttpExchange ex) throws Exception {
         URI uri = ex.getRequestURI();
         String path = uri.getPath();
@@ -115,6 +134,12 @@ final class GatewayHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Résout la session depuis les cookies.
+     * @param ex Échange HTTP
+     * @return Contexte de session
+     * @throws Exception En cas d'erreur
+     */
     private SessionContext resolveSession(HttpExchange ex) throws Exception {
         String sessionId = extractSessionId(ex);
         if (sessionId == null) {
@@ -136,6 +161,11 @@ final class GatewayHandler implements HttpHandler {
         return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
     }
 
+    /**
+     * Extrait l'ID de session des cookies.
+     * @param ex Échange HTTP
+     * @return ID de session ou null
+     */
     private static String extractSessionId(HttpExchange ex) {
         String cookieHeader = ex.getRequestHeaders().getFirst("Cookie");
         if (cookieHeader == null) {
@@ -150,6 +180,13 @@ final class GatewayHandler implements HttpHandler {
             .orElse(null);
     }
 
+    /**
+     * Envoie une réponse JSON.
+     * @param ex Échange HTTP
+     * @param status Code de statut
+     * @param body Corps JSON
+     * @throws IOException En cas d'erreur
+     */
     private void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
@@ -162,7 +199,17 @@ final class GatewayHandler implements HttpHandler {
     }
 }
 
+/**
+ * Cible de routage vers un service.
+ * @param service Nom du service
+ * @param path Chemin de la route
+ */
 record RouteTarget(String service, String path) {
+    /**
+     * Résout le service cible depuis le chemin.
+     * @param path Chemin de la requête
+     * @return Cible de routage ou null
+     */
     static RouteTarget resolve(String path) {
         if (path.startsWith("/auth")) {
             return new RouteTarget("auth", path);
@@ -180,18 +227,37 @@ record RouteTarget(String service, String path) {
     }
 }
 
+/**
+ * Contexte de session utilisateur.
+ * @param authenticated true si authentifié
+ * @param userId ID de l'utilisateur
+ * @param admin true si admin
+ */
 record SessionContext(boolean authenticated, int userId, boolean admin) {
+    /**
+     * Retourne un contexte anonyme.
+     * @return Contexte anonyme
+     */
     static SessionContext anonymous() {
         return new SessionContext(false, -1, false);
     }
 }
 
+/**
+ * Support CORS pour la gateway.
+ */
 final class CorsSupport {
     private static final Set<String> ALLOWED = Set.of(
         "http://localhost:8300",
         "http://127.0.0.1:8300"
     );
 
+    /**
+     * Gère les requêtes preflight CORS.
+     * @param ex Échange HTTP
+     * @return true si preflight géré
+     * @throws IOException En cas d'erreur
+     */
     boolean handlePreflight(HttpExchange ex) throws IOException {
         if (!"OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
             return false;
@@ -209,6 +275,10 @@ final class CorsSupport {
         return true;
     }
 
+    /**
+     * Applique les headers CORS à la réponse.
+     * @param ex Échange HTTP
+     */
     void apply(HttpExchange ex) {
         String origin = origin(ex);
         if (!isAllowed(origin)) {
@@ -217,16 +287,31 @@ final class CorsSupport {
         applyCommon(ex, origin);
     }
 
+    /**
+     * Applique les headers CORS communs.
+     * @param ex Échange HTTP
+     * @param origin Origine de la requête
+     */
     private void applyCommon(HttpExchange ex, String origin) {
         ex.getResponseHeaders().set("Access-Control-Allow-Origin", origin);
         ex.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
         ex.getResponseHeaders().add("Vary", "Origin");
     }
 
+    /**
+     * Extrait l'origine de la requête.
+     * @param ex Échange HTTP
+     * @return Origine ou null
+     */
     private String origin(HttpExchange ex) {
         return ex.getRequestHeaders().getFirst("Origin");
     }
 
+    /**
+     * Vérifie si l'origine est autorisée.
+     * @param origin Origine à vérifier
+     * @return true si autorisée
+     */
     private boolean isAllowed(String origin) {
         return origin != null && ALLOWED.contains(origin);
     }

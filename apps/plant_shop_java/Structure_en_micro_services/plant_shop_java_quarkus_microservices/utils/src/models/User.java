@@ -2,6 +2,9 @@ package models;
 
 import java.sql.Timestamp;
 
+/**
+ * Modele representant un utilisateur.
+ */
 public final class User {
     public int id;
     public String name;
@@ -25,12 +28,25 @@ public final class User {
         this(0, name, email, passwordHash, isAdmin, null);
     }
 
+    /**
+     * Constructeur par defaut.
+     */
     public User() {}
 
+    /**
+     * Verifie si l'utilisateur est administrateur.
+     *
+     * @return true si admin
+     */
     public boolean isAdmin() {
         return isAdmin;
     }
 
+    /**
+     * Definit le statut administrateur.
+     *
+     * @param admin Statut admin
+     */
     public void setAdmin(boolean admin) {
         this.isAdmin = admin;
     }

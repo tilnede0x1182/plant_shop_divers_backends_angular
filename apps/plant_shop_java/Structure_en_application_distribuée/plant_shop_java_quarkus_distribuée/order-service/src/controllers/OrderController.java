@@ -24,10 +24,10 @@ import util.ApiMapper;
 @Path("/api/orders")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RequestScoped
 /**
  * Contrôleur REST pour les commandes.
  */
+@RequestScoped
 public class OrderController {
 
     @Inject
@@ -39,12 +39,12 @@ public class OrderController {
     @Inject
     Guards guards;
 
-    @GET
     /**
      * Liste les commandes de l'utilisateur.
      * @return Réponse avec liste des commandes
      * @throws Exception En cas d'erreur
      */
+    @GET
     public Response list() throws Exception {
         User currentUser = guards.requireUser();
         List<Order> orders = repo.listByUser(currentUser.id);
@@ -62,14 +62,14 @@ public class OrderController {
         return Response.ok(payload).build();
     }
 
-    @POST
-    @Transactional // Gère la transaction (commit/rollback)
     /**
      * Crée une nouvelle commande.
      * @param body Données de la commande
      * @return Réponse avec la commande créée
      * @throws Exception En cas d'erreur
      */
+    @POST
+    @Transactional // Gère la transaction (commit/rollback)
     public Response create(Map<String, List<Map<String, Integer>>> body) throws Exception {
         User currentUser = guards.requireUser();
         List<Map<String, Integer>> itemsJson = body.get("items");
@@ -107,9 +107,6 @@ public class OrderController {
         // Les autres exceptions lèveront une 500 et @Transactional gèrera le rollback
     }
 
-    @PATCH
-    @Path("/{id}")
-    @Transactional
     /**
      * Met à jour une commande.
      * @param id ID de la commande
@@ -117,6 +114,9 @@ public class OrderController {
      * @return Réponse avec la commande mise à jour
      * @throws Exception En cas d'erreur
      */
+    @PATCH
+    @Path("/{id}")
+    @Transactional
     public Response patch(@PathParam("id") int id, Map<String, String> body) throws Exception {
         guards.requireAdmin();
         if (repo.find(id) == null) {
@@ -134,15 +134,15 @@ public class OrderController {
         return Response.ok(ApiMapper.toOrder(updated, items)).build();
     }
 
-    @DELETE
-    @Path("/{id}")
-    @Transactional
     /**
      * Supprime une commande.
      * @param id ID de la commande
      * @return Réponse de succès
      * @throws Exception En cas d'erreur
      */
+    @DELETE
+    @Path("/{id}")
+    @Transactional
     public Response destroy(@PathParam("id") int id) throws Exception {
         guards.requireAdmin();
         // Doit supprimer les items avant la commande à cause de la clé étrangère

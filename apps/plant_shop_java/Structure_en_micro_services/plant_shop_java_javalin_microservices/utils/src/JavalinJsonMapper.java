@@ -15,6 +15,12 @@ import java.util.Map;
  */
 public final class JavalinJsonMapper implements JsonMapper {
 
+    /**
+     * Désérialise une chaîne JSON vers un objet.
+     * @param json Chaîne JSON
+     * @param targetType Type cible
+     * @return Objet désérialisé
+     */
     @Override
     public <T> T fromJsonString(String json, Type targetType) {
         // La désérialisation est gérée directement dans les contrôleurs avec ctx.bodyAsClass()
@@ -27,6 +33,12 @@ public final class JavalinJsonMapper implements JsonMapper {
         );
     }
 
+    /**
+     * Sérialise un objet en chaîne JSON.
+     * @param obj Objet à sérialiser
+     * @param type Type de l'objet
+     * @return Chaîne JSON
+     */
     @Override
     public String toJsonString(Object obj, Type type) {
         Object normalized = wrap(obj);
@@ -39,6 +51,11 @@ public final class JavalinJsonMapper implements JsonMapper {
         return String.valueOf(normalized);
     }
 
+    /**
+     * Enveloppe une valeur Java en structure JSON.
+     * @param value Valeur à envelopper
+     * @return Structure JSON correspondante
+     */
     private Object wrap(Object value) {
         if (value == null) {
             return JSONObject.NULL;

@@ -18,12 +18,19 @@ import java.util.List;
  *    vers ./lib (skip si déjà présent) et affiche une ligne quand la copie
  *    est terminée.
  */
+/**
+ * Installe les dépendances via Coursier.
+ */
 public class InstallCoursier {
 
     private static final String DEP_FILE = "config/dependencies.txt";
     private static final String LIB_DIR = "lib";
     private static final String CS_URL = "https://git.io/coursier-cli";
 
+    /**
+     * Point d'entrée du script d'installation.
+     * @param args Arguments CLI (non utilisés)
+     */
     public static void main(String[] args) {
         try {
             // System.out.println("📦 Installation des dépendances via Coursier...");

@@ -25,12 +25,12 @@ final class OrderRoutes implements HttpHandler {
         this.controller = new OrderController(db);
     }
 
-    @Override
     /**
-	 * Traite une requête HTTP entrante.
-	 * @param exchange L'échange HTTP
-	 */
-	public void handle(HttpExchange exchange) throws IOException {
+     * Traite une requête HTTP entrante.
+     * @param exchange L'échange HTTP
+     */
+    @Override
+    public void handle(HttpExchange exchange) throws IOException {
         controller.handle(exchange);
     }
 }

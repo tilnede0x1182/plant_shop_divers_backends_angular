@@ -8,6 +8,11 @@ public final class UserDTO {
     public final int id;
     public final boolean isAdmin;
 
+    /**
+     * Constructeur du DTO utilisateur.
+     * @param id Identifiant de l'utilisateur
+     * @param isAdmin true si admin
+     */
     public UserDTO(int id, boolean isAdmin) {
         this.id = id;
         this.isAdmin = isAdmin;

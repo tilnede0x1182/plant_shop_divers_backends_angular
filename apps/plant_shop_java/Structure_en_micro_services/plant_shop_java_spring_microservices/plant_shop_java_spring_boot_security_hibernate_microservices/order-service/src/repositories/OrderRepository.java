@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository JPA pour les commandes.
+ */
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Integer> {
     List<Order> findByUserIdOrderByCreatedAtDesc(int userId);

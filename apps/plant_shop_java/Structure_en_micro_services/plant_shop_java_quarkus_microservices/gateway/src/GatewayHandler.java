@@ -12,16 +12,32 @@ import java.util.Optional;
 import org.json.JSONObject;
 import util.Request;
 
+/**
+ * Handler HTTP pour le routage des requetes vers les microservices.
+ * Gere l'authentification et la propagation des headers.
+ */
 public final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
     private final HttpClient http;
 
+    /**
+     * Constructeur du handler.
+     *
+     * @param config Configuration de la Gateway
+     * @param http Client HTTP pour les appels aux services
+     */
     public GatewayHandler(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
+    /**
+     * Traite une requete HTTP entrante.
+     *
+     * @param ex Echange HTTP
+     * @throws IOException En cas d'erreur d'entree/sortie
+     */
     @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
@@ -32,6 +48,12 @@ public final class GatewayHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Transmet la requete au microservice cible.
+     *
+     * @param ex Echange HTTP
+     * @throws Exception En cas d'erreur lors du routage
+     */
     private void forward(HttpExchange ex) throws Exception {
         URI uri = ex.getRequestURI();
         String path = uri.getPath();
@@ -102,6 +124,13 @@ public final class GatewayHandler implements HttpHandler {
         }
     }
 
+    /**
+     * Resout la session utilisateur via le service d'authentification.
+     *
+     * @param ex Echange HTTP contenant le cookie de session
+     * @return Contexte de session (authentifie ou anonyme)
+     * @throws Exception En cas d'erreur lors de la resolution
+     */
     private SessionContext resolveSession(HttpExchange ex) throws Exception {
         String sessionId = Request.extractSessionId(ex);
         if (sessionId == null) {
@@ -123,6 +152,14 @@ public final class GatewayHandler implements HttpHandler {
         return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
     }
 
+    /**
+     * Envoie une reponse JSON.
+     *
+     * @param ex Echange HTTP
+     * @param status Code de statut HTTP
+     * @param body Corps de la reponse JSON
+     * @throws IOException En cas d'erreur d'envoi
+     */
     private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");

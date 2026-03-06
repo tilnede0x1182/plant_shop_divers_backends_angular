@@ -5,6 +5,10 @@ import * as express from 'express';
 import { join } from 'path';
 import * as cookieParser from 'cookie-parser';
 
+/**
+ * Fonction de démarrage de l'application NestJS.
+ * Configure les middlewares, le préfixe API, le SSR conditionnel et CORS.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 	app.use(cookieParser());

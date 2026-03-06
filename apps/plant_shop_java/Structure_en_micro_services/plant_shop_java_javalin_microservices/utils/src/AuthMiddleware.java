@@ -10,30 +10,66 @@ import io.javalin.http.UnauthorizedResponse;
  */
 public final class AuthMiddleware {
 
+    /**
+     * Constructeur privé pour classe utilitaire.
+     */
     private AuthMiddleware() {
     }
 
+    /**
+     * Interface fonctionnelle pour résoudre un utilisateur.
+     */
     @FunctionalInterface
     public interface UserResolver {
         Object resolve(AuthContext auth) throws Exception;
     }
 
+    /**
+     * Crée un handler exigeant un utilisateur authentifié.
+     * @param next Handler suivant
+     * @return Handler avec vérification
+     */
     public static Handler requireUser(Handler next) {
         return requireUser(null, next);
     }
 
+    /**
+     * Crée un handler exigeant un utilisateur avec résolveur.
+     * @param resolver Résolveur d'utilisateur
+     * @param next Handler suivant
+     * @return Handler avec vérification
+     */
     public static Handler requireUser(UserResolver resolver, Handler next) {
         return ctx -> handle(ctx, resolver, next, false);
     }
 
+    /**
+     * Crée un handler exigeant un admin.
+     * @param next Handler suivant
+     * @return Handler avec vérification
+     */
     public static Handler requireAdmin(Handler next) {
         return requireAdmin(null, next);
     }
 
+    /**
+     * Crée un handler exigeant un admin avec résolveur.
+     * @param resolver Résolveur d'utilisateur
+     * @param next Handler suivant
+     * @return Handler avec vérification
+     */
     public static Handler requireAdmin(UserResolver resolver, Handler next) {
         return ctx -> handle(ctx, resolver, next, true);
     }
 
+    /**
+     * Gère la vérification d'authentification.
+     * @param ctx Contexte Javalin
+     * @param resolver Résolveur d'utilisateur
+     * @param next Handler suivant
+     * @param adminOnly true si admin requis
+     * @throws Exception En cas d'erreur
+     */
     private static void handle(Context ctx, UserResolver resolver, Handler next, boolean adminOnly) throws Exception {
         AuthContext auth = AuthContext.fromHeaders(ctx);
         if (!auth.isAuthenticated()) {

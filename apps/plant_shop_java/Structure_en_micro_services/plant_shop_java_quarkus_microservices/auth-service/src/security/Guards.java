@@ -17,6 +17,12 @@ public class Guards {
     @Inject
     AuthenticatedUser authenticatedUser;
 
+    /**
+     * Exige qu'un utilisateur soit authentifié.
+     *
+     * @return L'utilisateur authentifié
+     * @throws WebApplicationException 401 si non authentifié
+     */
     public User requireUser() {
         // Dans ce service (auth-service), le ForwardedIdentityHolder est lu par
         // le filtre du service, mais AuthController utilise sa propre session locale.
@@ -29,6 +35,12 @@ public class Guards {
         return user;
     }
 
+    /**
+     * Exige qu'un utilisateur soit authentifié et administrateur.
+     *
+     * @return L'utilisateur administrateur authentifié
+     * @throws WebApplicationException 401 si non authentifié, 403 si non admin
+     */
     public User requireAdmin() {
         User user = requireUser();
         if (!user.isAdmin) {

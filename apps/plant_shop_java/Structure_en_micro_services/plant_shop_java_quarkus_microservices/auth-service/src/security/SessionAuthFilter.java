@@ -20,6 +20,12 @@ public class SessionAuthFilter {
     private User user;
     private boolean loaded = false;
 
+    /**
+     * Récupère l'utilisateur authentifié depuis la base de données.
+     * Charge l'utilisateur une seule fois par requête (lazy loading).
+     *
+     * @return L'utilisateur authentifié ou null si non authentifié
+     */
     public User getUser() {
         if (!loaded) {
             loaded = true;
@@ -35,6 +41,11 @@ public class SessionAuthFilter {
         return user;
     }
 
+    /**
+     * Vérifie si l'utilisateur authentifié est administrateur.
+     *
+     * @return true si l'utilisateur est admin, false sinon
+     */
     public boolean isAdmin() {
         return ForwardedIdentityHolder.get().admin();
     }

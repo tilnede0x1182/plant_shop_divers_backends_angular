@@ -7,28 +7,28 @@ import models.User;
 import util.DatabaseFactory; // Import pour la connexion
 import util.ForwardedIdentityHolder; // Ajout si besoin
 
-@Dependent
 /**
  * Repository pour les opérations sur les utilisateurs.
  */
+@Dependent
 public class UserRepository extends BaseRepository<User> {
 
-    @Inject
     /**
      * Constructeur avec injection de connexion.
      * @param db Connexion à la base de données
      */
+    @Inject
     public UserRepository(Connection db) {
         super(db, "users");
     }
 
-    @Override
     /**
      * Mappe un ResultSet vers un User.
      * @param rs ResultSet à mapper
      * @return User créé
      * @throws SQLException En cas d'erreur SQL
      */
+    @Override
     protected User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),

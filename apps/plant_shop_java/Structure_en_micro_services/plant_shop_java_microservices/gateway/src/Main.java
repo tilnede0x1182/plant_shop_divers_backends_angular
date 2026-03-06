@@ -11,22 +11,39 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Classe principale du Gateway.
+ */
 public final class Main {
 
     private final GatewayConfig config;
     private final HttpClient http;
-    private Main(GatewayConfig config, HttpClient http) {
+    /**
+	 * Constructeur privé.
+	 * @param config Configuration du gateway
+	 * @param http Client HTTP
+	 */
+	private Main(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
-    public static Main create() throws Exception {
+    /**
+	 * Crée une instance du Gateway.
+	 * @return Instance configurée
+	 * @throws Exception En cas d'erreur de configuration
+	 */
+	public static Main create() throws Exception {
         GatewayConfig config = GatewayConfig.load();
         HttpClient http = HttpClient.newBuilder().build();
         return new Main(config, http);
     }
 
-    public void start() throws Exception {
+    /**
+	 * Démarre le serveur Gateway.
+	 * @throws Exception En cas d'erreur au démarrage
+	 */
+	public void start() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port()), 0);
         server.createContext("/api", new GatewayHandler(config, http));
         server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(16));
@@ -35,24 +52,45 @@ public final class Main {
     }
 }
 
+/**
+ * Configuration du Gateway.
+ */
 final class GatewayConfig {
     private final Map<String, String> values;
-    private GatewayConfig(Map<String, String> values) {
+    /**
+	 * Constructeur privé.
+	 * @param values Map des valeurs de configuration
+	 */
+	private GatewayConfig(Map<String, String> values) {
         this.values = values;
     }
 
-    public static GatewayConfig load() throws IOException {
+    /**
+	 * Charge la configuration depuis les fichiers .env.
+	 * @return Configuration chargée
+	 * @throws IOException En cas d'erreur de lecture
+	 */
+	public static GatewayConfig load() throws IOException {
         Map<String, String> values = new HashMap<>();
         readEnv(Path.of("../config/.env"), values);
         readEnv(Path.of(".env"), values);
         return new GatewayConfig(values);
     }
 
-    public int port() {
+    /**
+	 * Retourne le port du serveur.
+	 * @return Port configuré
+	 */
+	public int port() {
         return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS", "4100"));
     }
 
-    public String serviceUrl(String service) {
+    /**
+	 * Retourne l'URL d'un service.
+	 * @param service Nom du service
+	 * @return URL complète du service
+	 */
+	public String serviceUrl(String service) {
         String host = values.getOrDefault("SERVICE_HOST", "http://localhost");
         return switch (service) {
             case "auth" -> host + ":" + values.getOrDefault("AUTH_SERVICE_PORT", "6101");
@@ -63,7 +101,14 @@ final class GatewayConfig {
         };
     }
 
-    public boolean requiresAuth(String service, String method, String path) {
+    /**
+	 * Vérifie si une route nécessite une authentification.
+	 * @param service Nom du service
+	 * @param method Méthode HTTP
+	 * @param path Chemin de la route
+	 * @return true si authentification requise
+	 */
+	public boolean requiresAuth(String service, String method, String path) {
         if ("auth".equals(service)) {
             return false;
         }
@@ -74,7 +119,13 @@ final class GatewayConfig {
         return true;
     }
 
-    private static void readEnv(Path path, Map<String, String> values) throws IOException {
+    /**
+	 * Lit un fichier .env et remplit la map de valeurs.
+	 * @param path Chemin du fichier
+	 * @param values Map à remplir
+	 * @throws IOException En cas d'erreur de lecture
+	 */
+	private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
         }

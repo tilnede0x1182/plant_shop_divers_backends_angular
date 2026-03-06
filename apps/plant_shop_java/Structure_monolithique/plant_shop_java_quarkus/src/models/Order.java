@@ -41,6 +41,6 @@ public final class Order {
         this(0, userId, total, status, null);
     }
 
-    // Constructeur par défaut nécessaire pour la désérialisation JSON
+    /** Constructeur par défaut nécessaire pour la désérialisation JSON. */
     public Order() {}
 }

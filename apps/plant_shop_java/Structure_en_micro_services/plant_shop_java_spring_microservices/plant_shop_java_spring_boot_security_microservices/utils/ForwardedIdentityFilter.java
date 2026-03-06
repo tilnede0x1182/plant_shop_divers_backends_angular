@@ -13,8 +13,10 @@ import java.io.IOException;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
+/** Filtre Spring extrayant l'identite des headers X-User-* */
 public class ForwardedIdentityFilter extends OncePerRequestFilter {
 
+    /** Extrait l'identite et la stocke dans le ThreadLocal */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -27,6 +29,7 @@ public class ForwardedIdentityFilter extends OncePerRequestFilter {
         }
     }
 
+    /** Extrait l'identite depuis les headers HTTP */
     private ForwardedIdentity extractIdentity(HttpServletRequest request) {
         String idHeader = request.getHeader("X-User-Id");
         if (idHeader == null || idHeader.isBlank()) {

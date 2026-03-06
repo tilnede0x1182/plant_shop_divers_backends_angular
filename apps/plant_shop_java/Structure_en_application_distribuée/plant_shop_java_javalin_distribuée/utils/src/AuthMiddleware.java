@@ -17,11 +17,11 @@ public final class AuthMiddleware {
 private AuthMiddleware() {
     }
 
-    @FunctionalInterface
     /**
- * Interface de résolution d'utilisateur.
- */
-public interface UserResolver {
+     * Interface de résolution d'utilisateur.
+     */
+    @FunctionalInterface
+    public interface UserResolver {
         /**
          * Résout l'utilisateur depuis le contexte d'auth.
          * @param auth AuthContext Contexte d'authentification

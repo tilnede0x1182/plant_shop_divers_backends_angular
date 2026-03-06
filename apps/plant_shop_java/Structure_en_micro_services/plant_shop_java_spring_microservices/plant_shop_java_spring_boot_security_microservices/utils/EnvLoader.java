@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/** Chargeur de variables d'environnement depuis fichiers .env */
 public final class EnvLoader {
 
     private static final Path[] CANDIDATES = new Path[] {
@@ -20,8 +21,10 @@ public final class EnvLoader {
 
     private static volatile Map<String, String> cache;
 
+    /** Constructeur prive (classe utilitaire) */
     private EnvLoader() {}
 
+    /** Charge les variables d'environnement (avec cache) */
     public static Map<String, String> load() {
         Map<String, String> local = cache;
         if (local != null) {
@@ -35,6 +38,7 @@ public final class EnvLoader {
         return cache;
     }
 
+    /** Recherche et lit le fichier .env */
     private static Map<String, String> readEnv() {
         for (Path candidate : CANDIDATES) {
             if (Files.exists(candidate)) {
@@ -44,6 +48,7 @@ public final class EnvLoader {
         return Map.of();
     }
 
+    /** Parse un fichier .env en Map cle/valeur */
     private static Map<String, String> parse(Path file) {
         Map<String, String> values = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {

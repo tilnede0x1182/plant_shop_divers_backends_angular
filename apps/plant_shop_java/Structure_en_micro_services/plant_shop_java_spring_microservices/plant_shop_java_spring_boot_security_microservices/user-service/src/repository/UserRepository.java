@@ -10,15 +10,18 @@ import java.util.List;
 
 @Repository
 @RequestScope
+/** Repository pour les operations CRUD sur les utilisateurs */
 public class UserRepository {
 
     private final Connection db;
 
     @Autowired
+    /** Constructeur avec injection de la connexion DB */
     public UserRepository(Connection db) {
         this.db = db;
     }
 
+    /** Recherche un utilisateur par son ID */
     public User find(int id) throws SQLException {
         String sql = "SELECT * FROM users WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -32,6 +35,7 @@ public class UserRepository {
         }
     }
 
+    /** Mappe un ResultSet vers un objet User */
     private User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),
@@ -43,6 +47,7 @@ public class UserRepository {
         );
     }
 
+    /** Recherche un utilisateur par email avec son hash de mot de passe */
     public User findByEmailWithPassword(String email) throws SQLException {
         String sql = "SELECT * FROM users WHERE email=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -63,6 +68,7 @@ public class UserRepository {
         }
     }
 
+    /** Cree un nouvel utilisateur et retourne son ID */
     public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -78,6 +84,7 @@ public class UserRepository {
         }
     }
 
+    /** Recupere tous les utilisateurs */
     public List<User> findAll() throws SQLException {
         String sql = "SELECT * FROM users ORDER BY id";
         List<User> users = new ArrayList<>();
@@ -90,6 +97,7 @@ public class UserRepository {
         return users;
     }
 
+    /** Supprime un utilisateur par son ID */
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM users WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -98,6 +106,7 @@ public class UserRepository {
         }
     }
 
+    /** Met a jour un utilisateur */
     public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword

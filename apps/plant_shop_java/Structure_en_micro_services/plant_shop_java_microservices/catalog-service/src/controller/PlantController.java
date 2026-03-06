@@ -104,12 +104,12 @@ public final class PlantController extends BaseController {
         this.repo = new PlantRepository(db);
     }
 
-    @Override
     /**
      * Traite une requête HTTP.
      * @param ex Échange HTTP
      * @throws IOException En cas d'erreur I/O
      */
+    @Override
     public void handle(HttpExchange ex) throws IOException {
         String path = ex.getRequestURI().getPath();
         String method = ex.getRequestMethod();

@@ -14,6 +14,11 @@ public final class Request {
     /**
      * Extrait la valeur du cookie `session_id` si présent.
      */
+    /**
+	 * Extrait la valeur du cookie session_id si présent.
+	 * @param ex HttpExchange Échange HTTP contenant les en-têtes
+	 * @return String Valeur du cookie session_id ou null si absent
+	 */
     public static String extractSessionId(HttpExchange ex) {
         String cookieHeader = ex.getRequestHeaders().getFirst("Cookie");
         if (cookieHeader == null) {

@@ -20,11 +20,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-@Component
-@Order(Ordered.HIGHEST_PRECEDENCE + 1) // S'exécute juste après CorsFilter
 /**
  * Filtre d'authentification par session cookie.
  */
+@Component
+@Order(Ordered.HIGHEST_PRECEDENCE + 1) // S'exécute juste après CorsFilter
 public class SessionAuthFilter extends OncePerRequestFilter {
 
     private static final String SESSION_COOKIE = "session_id";
@@ -38,14 +38,14 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     @Autowired
     UserRepository userRepo;
 
-    @Override
     /**
-	 * Traite chaque requête pour extraire et valider la session.
-	 * @param request La requête HTTP
-	 * @param response La réponse HTTP
-	 * @param filterChain La chaîne de filtres
-	 */
-	protected void doFilterInternal(HttpServletRequest request,
+     * Traite chaque requête pour extraire et valider la session.
+     * @param request La requête HTTP
+     * @param response La réponse HTTP
+     * @param filterChain La chaîne de filtres
+     */
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 

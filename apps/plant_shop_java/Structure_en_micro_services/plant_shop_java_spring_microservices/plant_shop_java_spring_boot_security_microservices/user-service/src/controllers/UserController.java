@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
+/** Controleur REST pour la gestion des utilisateurs */
 public class UserController {
 
     @Autowired
@@ -27,6 +28,7 @@ public class UserController {
 
     // Spring gère plusieurs routes vers la même méthode
     @GetMapping({"/admin/users", "/users"})
+    /** Liste tous les utilisateurs (admin uniquement) */
     public ResponseEntity<List<?>> listUsers() throws Exception {
         guards.requireAdmin(); // Seul un admin peut lister
 
@@ -38,6 +40,7 @@ public class UserController {
     }
 
     @PatchMapping({"/admin/users/{id}", "/users/{id}"})
+    /** Met a jour un utilisateur */
     public ResponseEntity<Object> updateUser(@PathVariable("id") int id, @RequestBody Map<String, Object> body) throws Exception {
         User currentUser = guards.requireUser();
 
@@ -81,6 +84,7 @@ public class UserController {
     }
 
     @DeleteMapping({"/admin/users/{id}", "/users/{id}"})
+    /** Supprime un utilisateur (admin uniquement) */
     public ResponseEntity<Void> destroyUser(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin(); // Seul un admin peut supprimer
         repo.delete(id);
@@ -90,6 +94,7 @@ public class UserController {
     // --- IMPLÉMENTATION SPÉCIFIQUE ---
 
     @GetMapping("/users/{id}")
+    /** Affiche le profil d'un utilisateur */
     public ResponseEntity<Object> show(@PathVariable("id") int id) throws Exception {
         User currentUser = guards.requireUser();
 
@@ -105,6 +110,7 @@ public class UserController {
     }
 
     @PostMapping("/users")
+    /** Cree un nouvel utilisateur (admin uniquement) */
     public ResponseEntity<Object> create(@RequestBody Map<String, Object> body) throws Exception {
         guards.requireAdmin(); // Seul un admin peut créer (selon test E2E)
 
@@ -131,6 +137,7 @@ public class UserController {
     }
 
     // Helper de tri
+    /** Comparateur pour trier les utilisateurs (admins en premier, puis par nom) */
     private Comparator<User> userComparator() {
         return Comparator.comparing((User u) -> !u.isAdmin) // Admins en premier
             .thenComparing(u -> u.name, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));

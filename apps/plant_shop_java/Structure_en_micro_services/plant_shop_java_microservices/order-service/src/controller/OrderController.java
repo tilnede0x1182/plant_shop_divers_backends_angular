@@ -25,19 +25,39 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
+/**
+ * Contrôleur de base avec utilitaires communs.
+ */
 abstract class BaseController implements HttpHandler {
     protected final Connection db;
 
-    BaseController(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	BaseController(Connection db) {
         this.db = db;
     }
 
-    protected JSONObject parseJson(HttpExchange ex) throws IOException {
+    /**
+	 * Parse le corps JSON d'une requête.
+	 * @param ex Échange HTTP
+	 * @return Objet JSON parsé
+	 * @throws IOException En cas d'erreur de lecture
+	 */
+	protected JSONObject parseJson(HttpExchange ex) throws IOException {
         String body = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         return body.isBlank() ? new JSONObject() : new JSONObject(body);
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
+    /**
+	 * Envoie une réponse JSON.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @param body Corps JSON
+	 * @throws IOException En cas d'erreur I/O
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
         byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -47,7 +67,14 @@ abstract class BaseController implements HttpHandler {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, String jsonBody) throws IOException {
+    /**
+	 * Envoie une réponse JSON en string.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @param jsonBody Corps JSON en string
+	 * @throws IOException En cas d'erreur I/O
+	 */
+	protected void sendJson(HttpExchange ex, int code, String jsonBody) throws IOException {
         byte[] bytes = jsonBody.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -57,7 +84,13 @@ abstract class BaseController implements HttpHandler {
         ex.close();
     }
 
-    protected void sendEmpty(HttpExchange ex, int code) throws IOException {
+    /**
+	 * Envoie une réponse vide.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @throws IOException En cas d'erreur I/O
+	 */
+	protected void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
     }
@@ -66,14 +99,27 @@ abstract class BaseController implements HttpHandler {
     public abstract void handle(HttpExchange exchange) throws IOException;
 }
 
+/**
+ * Repository pour accéder aux plantes.
+ */
 final class PlantRepository {
     private final Connection db;
 
-    public PlantRepository(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public PlantRepository(Connection db) {
         this.db = db;
     }
 
-    public PlantStock find(int id) throws SQLException {
+    /**
+	 * Trouve une plante par son ID.
+	 * @param id ID de la plante
+	 * @return PlantStock ou null
+	 * @throws SQLException En cas d'erreur SQL
+	 */
+	public PlantStock find(int id) throws SQLException {
         try (PreparedStatement ps = db.prepareStatement("SELECT * FROM plants WHERE id=?")) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
@@ -91,6 +137,9 @@ final class PlantRepository {
     }
 }
 
+/**
+ * Contrôleur des commandes.
+ */
 public final class OrderController extends BaseController {
 
     private final OrderRepository orderRepo;
@@ -101,7 +150,12 @@ public final class OrderController extends BaseController {
     private final HttpClient httpClient;
     private final String catalogServiceUrl;
 
-    public OrderController(Connection db, String catalogUrl) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 * @param catalogUrl URL du service catalogue
+	 */
+	public OrderController(Connection db, String catalogUrl) {
         super(db);
         this.orderRepo = new OrderRepository(db);
         this.itemRepo = new OrderItemRepository(db);
@@ -114,7 +168,12 @@ public final class OrderController extends BaseController {
                 .build();
     }
 
-    @Override
+    /**
+	 * Gère les requêtes HTTP.
+	 * @param ex Échange HTTP
+	 * @throws IOException En cas d'erreur I/O
+	 */
+	@Override
     public void handle(HttpExchange ex) throws IOException {
         String path = ex.getRequestURI().getPath();
         String method = ex.getRequestMethod();
@@ -154,7 +213,13 @@ public final class OrderController extends BaseController {
         }
     }
 
-    private boolean updateCatalogStock(int plantId, int newStock) {
+    /**
+	 * Met à jour le stock d'une plante via le service catalogue.
+	 * @param plantId ID de la plante
+	 * @param newStock Nouveau stock
+	 * @return true si succès
+	 */
+	private boolean updateCatalogStock(int plantId, int newStock) {
         try {
             JSONObject body = new JSONObject().put("stock", newStock);
             String uri = String.format("%s/internal/plants/%d/stock", this.catalogServiceUrl, plantId);
@@ -175,7 +240,13 @@ public final class OrderController extends BaseController {
         }
     }
 
-    private void create(HttpExchange ex, AuthContext ctx) throws Exception {
+    /**
+	 * Crée une nouvelle commande.
+	 * @param ex Échange HTTP
+	 * @param ctx Contexte d'authentification
+	 * @throws Exception En cas d'erreur
+	 */
+	private void create(HttpExchange ex, AuthContext ctx) throws Exception {
         JSONObject body = parseJson(ex);
         JSONArray items = body.getJSONArray("items");
 
@@ -222,7 +293,13 @@ public final class OrderController extends BaseController {
         sendJson(ex, 201, itemController.toJson(finalOrder, itemRepo.findByOrder(orderId)));
     }
 
-    private void getAll(HttpExchange ex, AuthContext ctx) throws Exception {
+    /**
+	 * Récupère toutes les commandes de l'utilisateur.
+	 * @param ex Échange HTTP
+	 * @param ctx Contexte d'authentification
+	 * @throws Exception En cas d'erreur
+	 */
+	private void getAll(HttpExchange ex, AuthContext ctx) throws Exception {
         var orders = orderRepo.findByUser(ctx.userId());
         String json = orders.stream()
             .map(order -> {
@@ -236,7 +313,12 @@ public final class OrderController extends BaseController {
         sendJson(ex, 200, json);
     }
 
-    private Integer resolveOrderId(String path) {
+    /**
+	 * Extrait l'ID de commande depuis le chemin.
+	 * @param path Chemin de la requête
+	 * @return ID de commande ou null
+	 */
+	private Integer resolveOrderId(String path) {
         String[] parts = path.split("/");
         if (parts.length < 3) {
             return null;
@@ -248,7 +330,14 @@ public final class OrderController extends BaseController {
         }
     }
 
-    private void updateStatus(HttpExchange ex, AuthContext ctx, int orderId) throws Exception {
+    /**
+	 * Met à jour le statut d'une commande.
+	 * @param ex Échange HTTP
+	 * @param ctx Contexte d'authentification
+	 * @param orderId ID de la commande
+	 * @throws Exception En cas d'erreur
+	 */
+	private void updateStatus(HttpExchange ex, AuthContext ctx, int orderId) throws Exception {
         if (!ctx.isAdmin()) {
             sendJson(ex, 403, "{\"error\":\"Accès administrateur requis\"}");
             return;
@@ -269,7 +358,14 @@ public final class OrderController extends BaseController {
         sendJson(ex, 200, json);
     }
 
-    private void deleteOrder(HttpExchange ex, AuthContext ctx, int orderId) throws Exception {
+    /**
+	 * Supprime une commande.
+	 * @param ex Échange HTTP
+	 * @param ctx Contexte d'authentification
+	 * @param orderId ID de la commande
+	 * @throws Exception En cas d'erreur
+	 */
+	private void deleteOrder(HttpExchange ex, AuthContext ctx, int orderId) throws Exception {
         if (!ctx.isAdmin()) {
             sendJson(ex, 403, "{\"error\":\"Accès administrateur requis\"}");
             return;

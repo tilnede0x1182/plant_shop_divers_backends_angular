@@ -28,6 +28,12 @@ public class UserController {
     @Inject
     Guards guards;
 
+    /**
+     * Liste tous les utilisateurs (endpoint admin).
+     *
+     * @return Reponse HTTP avec la liste des utilisateurs
+     * @throws Exception En cas d'erreur
+     */
     @GET
     @Path("/admin/users")
     public Response listAdmin() throws Exception {
@@ -70,6 +76,12 @@ public class UserController {
 
     // --- IMPLÉMENTATION ---
 
+    /**
+     * Implementation de la liste des utilisateurs.
+     *
+     * @return Reponse HTTP avec la liste
+     * @throws Exception En cas d'erreur
+     */
     private Response listImpl() throws Exception {
         guards.requireAdmin();
         // Seul un admin peut lister les utilisateurs
@@ -80,6 +92,13 @@ public class UserController {
         return Response.ok(payload).build();
     }
 
+    /**
+     * Recupere un utilisateur par son ID.
+     *
+     * @param id ID de l'utilisateur
+     * @return Reponse HTTP avec l'utilisateur ou 404
+     * @throws Exception En cas d'erreur
+     */
     @GET
     @Path("/users/{id}")
     public Response show(@PathParam("id") int id) throws Exception {
@@ -96,6 +115,14 @@ public class UserController {
             : Response.status(Response.Status.NOT_FOUND).build();
     }
 
+    /**
+     * Cree un nouvel utilisateur.
+     * Requiert un utilisateur administrateur.
+     *
+     * @param body Corps de la requete contenant les donnees
+     * @return Reponse HTTP 201 avec l'utilisateur cree
+     * @throws Exception En cas d'erreur
+     */
     @POST
     @Path("/users")
     @Transactional
@@ -125,6 +152,14 @@ public class UserController {
                        .build();
     }
 
+    /**
+     * Implementation de la mise a jour d'un utilisateur.
+     *
+     * @param id ID de l'utilisateur
+     * @param body Corps de la requete
+     * @return Reponse HTTP avec l'utilisateur mis a jour
+     * @throws Exception En cas d'erreur
+     */
     private Response updateImpl(int id, Map<String, Object> body) throws Exception {
         User currentUser = guards.requireUser();
         // Un utilisateur ne peut modifier que lui-même, un admin peut modifier tout le monde
@@ -164,6 +199,13 @@ public class UserController {
         return Response.ok(ApiMapper.toUser(repo.find(id))).build();
     }
 
+    /**
+     * Implementation de la suppression d'un utilisateur.
+     *
+     * @param id ID de l'utilisateur
+     * @return Reponse HTTP 200
+     * @throws Exception En cas d'erreur
+     */
     private Response destroyImpl(int id) throws Exception {
         guards.requireAdmin();
         // Seul un admin peut supprimer un utilisateur
@@ -172,6 +214,11 @@ public class UserController {
         // 200 OK attendu par le test
     }
 
+    /**
+     * Retourne un comparateur pour trier les utilisateurs (admins en premier, puis par nom).
+     *
+     * @return Comparateur d'utilisateurs
+     */
     private Comparator<User> userComparator() {
         return Comparator.comparing((User u) -> !u.isAdmin) // Admins en premier
             .thenComparing(u -> u.name, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));

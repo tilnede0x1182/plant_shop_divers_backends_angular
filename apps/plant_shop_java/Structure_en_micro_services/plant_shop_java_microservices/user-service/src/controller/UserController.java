@@ -16,6 +16,9 @@ import java.util.List;
 import java.nio.charset.StandardCharsets;
 
 // Définition locale de BaseController pour résoudre les dépendances du classpath lors de la compilation
+/**
+ * Contrôleur de base pour les utilisateurs.
+ */
 abstract class UserBaseController implements HttpHandler {
     protected final Connection db;
 
@@ -23,12 +26,25 @@ abstract class UserBaseController implements HttpHandler {
         this.db = db;
     }
 
-    protected JSONObject parseJson(HttpExchange ex) throws IOException {
+    /**
+	 * Parse le corps JSON.
+	 * @param ex Échange HTTP
+	 * @return Objet JSON
+	 * @throws IOException En cas d'erreur
+	 */
+	protected JSONObject parseJson(HttpExchange ex) throws IOException {
         String body = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         return body.isBlank() ? new JSONObject() : new JSONObject(body);
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
+    /**
+	 * Envoie une réponse JSON.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @param body Corps JSON
+	 * @throws IOException En cas d'erreur
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONObject body) throws IOException {
         byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -38,7 +54,14 @@ abstract class UserBaseController implements HttpHandler {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, JSONArray body) throws IOException {
+    /**
+	 * Envoie une réponse JSON array.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @param body Tableau JSON
+	 * @throws IOException En cas d'erreur
+	 */
+	protected void sendJson(HttpExchange ex, int code, JSONArray body) throws IOException {
         byte[] bytes = body.toString().getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -48,7 +71,14 @@ abstract class UserBaseController implements HttpHandler {
         ex.close();
     }
 
-    protected void sendJson(HttpExchange ex, int code, String raw) throws IOException {
+    /**
+	 * Envoie une réponse JSON brute.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @param raw JSON brut
+	 * @throws IOException En cas d'erreur
+	 */
+	protected void sendJson(HttpExchange ex, int code, String raw) throws IOException {
         byte[] bytes = raw.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(code, bytes.length);
@@ -58,12 +88,24 @@ abstract class UserBaseController implements HttpHandler {
         ex.close();
     }
 
-    protected void sendEmpty(HttpExchange ex, int code) throws IOException {
+    /**
+	 * Envoie une réponse vide.
+	 * @param ex Échange HTTP
+	 * @param code Code HTTP
+	 * @throws IOException En cas d'erreur
+	 */
+	protected void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
     }
 
-    protected void handleException(HttpExchange ex, Exception e) throws IOException {
+    /**
+	 * Gère les exceptions.
+	 * @param ex Échange HTTP
+	 * @param e Exception
+	 * @throws IOException En cas d'erreur
+	 */
+	protected void handleException(HttpExchange ex, Exception e) throws IOException {
         e.printStackTrace();
         sendJson(ex, 500, new JSONObject().put("error", e.getMessage()));
     }
@@ -72,15 +114,27 @@ abstract class UserBaseController implements HttpHandler {
     public abstract void handle(HttpExchange exchange) throws IOException;
 }
 
+/**
+ * Contrôleur des utilisateurs.
+ */
 public final class UserController extends UserBaseController {
 
     private final UserRepository userRepo;
-    public UserController(Connection db) {
+    /**
+	 * Constructeur.
+	 * @param db Connexion à la base de données
+	 */
+	public UserController(Connection db) {
         super(db);
         this.userRepo = new UserRepository(db);
     }
 
-    @Override
+    /**
+	 * Gère les requêtes HTTP.
+	 * @param ex Échange HTTP
+	 * @throws IOException En cas d'erreur
+	 */
+	@Override
     public void handle(HttpExchange ex) throws IOException {
         String path = ex.getRequestURI().getPath();
         String method = ex.getRequestMethod();
@@ -112,7 +166,14 @@ public final class UserController extends UserBaseController {
         }
     }
 
-    private void adminRoutes(HttpExchange ex, String method, String path) throws Exception {
+    /**
+	 * Routes admin.
+	 * @param ex Échange HTTP
+	 * @param method Méthode HTTP
+	 * @param path Chemin
+	 * @throws Exception En cas d'erreur
+	 */
+	private void adminRoutes(HttpExchange ex, String method, String path) throws Exception {
         int id = extractId(path);
         if ("GET".equals(method) && id == -1) {
             list(ex);
@@ -137,7 +198,15 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
-    private void userRoutes(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
+    /**
+	 * Routes utilisateur.
+	 * @param ex Échange HTTP
+	 * @param method Méthode HTTP
+	 * @param path Chemin
+	 * @param ctx Contexte d'authentification
+	 * @throws Exception En cas d'erreur
+	 */
+	private void userRoutes(HttpExchange ex, String method, String path, AuthContext ctx) throws Exception {
         int id = extractId(path);
         if (id == -1) {
             if ("GET".equals(method)) {
@@ -191,7 +260,12 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 405, "{\"error\":\"Méthode non autorisée\"}");
     }
 
-    private int extractId(String path) {
+    /**
+	 * Extrait l'ID depuis le chemin.
+	 * @param path Chemin de la requête
+	 * @return ID ou -1
+	 */
+	private int extractId(String path) {
         String[] parts = path.split("/");
         if (parts.length >= 3) {
             try {
@@ -201,7 +275,12 @@ public final class UserController extends UserBaseController {
         return -1;
     }
 
-    private void list(HttpExchange ex) throws Exception {
+    /**
+	 * Liste les utilisateurs.
+	 * @param ex Échange HTTP
+	 * @throws Exception En cas d'erreur
+	 */
+	private void list(HttpExchange ex) throws Exception {
         List<User> users = userRepo.list();
         users.sort(Comparator.comparing((User u) -> !u.isAdmin()).thenComparing(u -> u.name().toLowerCase()));
         JSONArray arr = new JSONArray();
@@ -211,7 +290,13 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 200, arr);
     }
 
-    private void show(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Affiche un utilisateur.
+	 * @param ex Échange HTTP
+	 * @param id ID de l'utilisateur
+	 * @throws Exception En cas d'erreur
+	 */
+	private void show(HttpExchange ex, int id) throws Exception {
         User user = userRepo.find(id);
         if (user == null) {
             sendJson(ex, 404, "{\"error\":\"Utilisateur introuvable\"}");
@@ -220,7 +305,12 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 200, user.toJson());
     }
 
-    private void create(HttpExchange ex) throws Exception {
+    /**
+	 * Crée un utilisateur.
+	 * @param ex Échange HTTP
+	 * @throws Exception En cas d'erreur
+	 */
+	private void create(HttpExchange ex) throws Exception {
         JSONObject body = parseJson(ex);
         String name = body.optString("name", null);
         String email = body.optString("email", null);
@@ -240,7 +330,14 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 201, userRepo.find(id).toJson());
     }
 
-    private void update(HttpExchange ex, int id, boolean allowAdminField) throws Exception {
+    /**
+	 * Met à jour un utilisateur.
+	 * @param ex Échange HTTP
+	 * @param id ID de l'utilisateur
+	 * @param allowAdminField Autoriser le champ admin
+	 * @throws Exception En cas d'erreur
+	 */
+	private void update(HttpExchange ex, int id, boolean allowAdminField) throws Exception {
         User user = userRepo.find(id);
         if (user == null) {
             sendJson(ex, 404, "{\"error\":\"Utilisateur introuvable\"}");
@@ -263,7 +360,13 @@ public final class UserController extends UserBaseController {
         sendJson(ex, 200, userRepo.find(id).toJson());
     }
 
-    private void destroy(HttpExchange ex, int id) throws Exception {
+    /**
+	 * Supprime un utilisateur.
+	 * @param ex Échange HTTP
+	 * @param id ID de l'utilisateur
+	 * @throws Exception En cas d'erreur
+	 */
+	private void destroy(HttpExchange ex, int id) throws Exception {
         userRepo.delete(id);
         sendEmpty(ex, 200);
     }

@@ -6,28 +6,28 @@ import java.sql.*;
 import java.util.*;
 import models.OrderItem;
 
-@Dependent
 /**
  * Repository pour les opérations sur les items de commande.
  */
+@Dependent
 public class OrderItemRepository extends BaseRepository<OrderItem> {
 
-    @Inject
     /**
      * Constructeur avec injection de connexion.
      * @param db Connexion à la base de données
      */
+    @Inject
     public OrderItemRepository(Connection db) {
         super(db, "order_items");
     }
 
-    @Override
     /**
      * Mappe un ResultSet vers un OrderItem.
      * @param rs ResultSet à mapper
      * @return OrderItem créé
      * @throws SQLException En cas d'erreur SQL
      */
+    @Override
     protected OrderItem mapFromResultSet(ResultSet rs) throws SQLException {
         return new OrderItem(
             rs.getInt("id"),

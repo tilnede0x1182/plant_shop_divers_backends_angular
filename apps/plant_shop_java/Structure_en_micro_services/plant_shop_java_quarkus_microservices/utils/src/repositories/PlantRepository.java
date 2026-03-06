@@ -5,14 +5,30 @@ import jakarta.inject.Inject;
 import java.sql.*;
 import models.Plant;
 
+/**
+ * Repository pour les plantes.
+ * Gere les operations CRUD sur la table plants.
+ */
 @Dependent
 public class PlantRepository extends BaseRepository<Plant> {
 
+    /**
+     * Constructeur avec injection de la connexion.
+     *
+     * @param db Connexion a la base de donnees
+     */
     @Inject
     public PlantRepository(Connection db) {
         super(db, "plants");
     }
 
+    /**
+     * Mappe un ResultSet vers un objet Plant.
+     *
+     * @param rs ResultSet positionne sur une ligne
+     * @return Objet Plant
+     * @throws SQLException En cas d'erreur de lecture
+     */
     @Override
     protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         return new Plant(
@@ -25,6 +41,13 @@ public class PlantRepository extends BaseRepository<Plant> {
         );
     }
 
+    /**
+     * Cree une nouvelle plante.
+     *
+     * @param p Plante a creer
+     * @return ID de la plante creee
+     * @throws SQLException En cas d'erreur d'insertion
+     */
     public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -40,6 +63,12 @@ public class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
+    /**
+     * Met a jour une plante.
+     *
+     * @param p Plante a mettre a jour
+     * @throws SQLException En cas d'erreur de mise a jour
+     */
     public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -52,6 +81,13 @@ public class PlantRepository extends BaseRepository<Plant> {
         }
     }
 
+    /**
+     * Met a jour le stock d'une plante.
+     *
+     * @param id ID de la plante
+     * @param newStock Nouvelle valeur du stock
+     * @throws SQLException En cas d'erreur de mise a jour
+     */
     public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {

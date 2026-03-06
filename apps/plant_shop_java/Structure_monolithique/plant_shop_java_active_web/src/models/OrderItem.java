@@ -10,4 +10,7 @@ import org.javalite.activejdbc.annotations.Table;
 	@BelongsTo(parent = Order.class, foreignKeyName = "order_id"),
 	@BelongsTo(parent = Plant.class, foreignKeyName = "plant_id")
 })
+/**
+ * Modèle ActiveJDBC pour les items de commande.
+ */
 public class OrderItem extends Model {}

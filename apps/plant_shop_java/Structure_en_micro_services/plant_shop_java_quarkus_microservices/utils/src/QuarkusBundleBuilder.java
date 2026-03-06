@@ -36,8 +36,20 @@ public final class QuarkusBundleBuilder {
         "gateway"
     );
 
+    /**
+     * Record representant une dependance Maven.
+     *
+     * @param groupId Groupe Maven
+     * @param artifactId Artifact Maven
+     * @param version Version
+     */
     private record Dependency(String groupId, String artifactId, String version) {}
 
+    /**
+     * Point d'entree principal. Construit les bundles Quarkus.
+     *
+     * @param args Noms des services a construire (tous par defaut)
+     */
     public static void main(String[] args) {
         List<String> services = args.length == 0
             ? DEFAULT_SERVICES
@@ -56,6 +68,14 @@ public final class QuarkusBundleBuilder {
         }
     }
 
+    /**
+     * Construit le bundle Quarkus pour un service.
+     *
+     * @param service Nom du service
+     * @param deps Liste des dependances
+     * @throws IOException En cas d'erreur I/O
+     * @throws InterruptedException Si interrompu
+     */
     private static void buildBundle(String service, List<Dependency> deps) throws IOException, InterruptedException {
         Path serviceRoot = PROJECT_ROOT.resolve(service);
         if (!Files.isDirectory(serviceRoot)) {
@@ -80,6 +100,12 @@ public final class QuarkusBundleBuilder {
         System.out.printf("   ↳ %s → %s%n", service, quarkusAppDir);
     }
 
+    /**
+     * Lit les dependances depuis config/dependencies.txt.
+     *
+     * @return Liste des dependances
+     * @throws IOException En cas d'erreur de lecture
+     */
     private static List<Dependency> readDependencies() throws IOException {
         if (!Files.exists(DEP_FILE)) {
             throw new IllegalStateException("config/dependencies.txt introuvable");
@@ -102,6 +128,13 @@ public final class QuarkusBundleBuilder {
         return deps;
     }
 
+    /**
+     * Ecrit le fichier pom.xml.
+     *
+     * @param pomFile Chemin du fichier
+     * @param deps Liste des dependances
+     * @throws IOException En cas d'erreur d'ecriture
+     */
     private static void writePom(Path pomFile, List<Dependency> deps) throws IOException {
         Files.createDirectories(pomFile.getParent());
         try (BufferedWriter writer = Files.newBufferedWriter(pomFile,
@@ -120,6 +153,11 @@ public final class QuarkusBundleBuilder {
         }
     }
 
+    /**
+     * Retourne l'en-tete du pom.xml.
+     *
+     * @return En-tete XML
+     */
     private static String pomHeader() {
         return """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -152,6 +190,11 @@ public final class QuarkusBundleBuilder {
 """.formatted(QUARKUS_VERSION, QUARKUS_VERSION);
     }
 
+    /**
+     * Retourne le pied du pom.xml.
+     *
+     * @return Pied XML
+     */
     private static String pomFooter() {
         return """
     </dependencies>
@@ -185,6 +228,14 @@ public final class QuarkusBundleBuilder {
 """;
     }
 
+    /**
+     * Execute le build Maven.
+     *
+     * @param workspaceDir Dossier de travail
+     * @param outputDir Dossier de sortie
+     * @throws IOException En cas d'erreur I/O
+     * @throws InterruptedException Si interrompu
+     */
     private static void runMavenBuild(Path workspaceDir, Path outputDir) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(
             "mvn",
@@ -214,6 +265,11 @@ public final class QuarkusBundleBuilder {
         }
     }
 
+    /**
+     * Verifie que le bundle a ete genere.
+     *
+     * @param quarkusAppDir Dossier du bundle
+     */
     private static void verifyBundle(Path quarkusAppDir) {
         Path runner = quarkusAppDir.resolve("quarkus-run.jar");
         if (!Files.exists(runner)) {
@@ -221,6 +277,13 @@ public final class QuarkusBundleBuilder {
         }
     }
 
+    /**
+     * Copie un dossier recursivement.
+     *
+     * @param source Dossier source
+     * @param target Dossier cible
+     * @throws IOException En cas d'erreur
+     */
     private static void copyDirectory(Path source, Path target) throws IOException {
         if (!Files.exists(source)) {
             return;
@@ -241,6 +304,12 @@ public final class QuarkusBundleBuilder {
         });
     }
 
+    /**
+     * Supprime un dossier et son contenu.
+     *
+     * @param dir Dossier a supprimer
+     * @throws IOException En cas d'erreur
+     */
     private static void cleanDirectory(Path dir) throws IOException {
         if (!Files.exists(dir)) {
             return;

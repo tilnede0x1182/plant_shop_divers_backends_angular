@@ -12,6 +12,9 @@ import repository.PlantRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Contrôleur REST pour les plantes.
+ */
 @RestController
 @RequestMapping("/api")
 public class PlantController {
@@ -24,6 +27,11 @@ public class PlantController {
     // --- Endpoints Publics ---
 
     @GetMapping("/plants")
+    /**
+     * Liste les plantes (public).
+     * @return ResponseEntity Liste des plantes
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<List<?>> listPublic() throws Exception {
         List<?> payload = repo.findAllByOrderByNameAsc().stream()
             .map(ApiMapper::toPlant)
@@ -32,6 +40,12 @@ public class PlantController {
     }
 
     @GetMapping("/plants/{id}")
+    /**
+     * Affiche une plante par ID.
+     * @param id int ID de la plante
+     * @return ResponseEntity Plante ou 404
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<Object> show(@PathVariable("id") int id) throws Exception {
         Plant plant = repo.findById(id).orElse(null);
         if (plant == null) {
@@ -43,12 +57,23 @@ public class PlantController {
     // --- Endpoints Admin (/admin/plants) ---
 
     @GetMapping("/admin/plants")
+    /**
+     * Liste les plantes (admin).
+     * @return ResponseEntity Liste des plantes
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<List<?>> listAdmin() throws Exception {
         guards.requireAdmin(); // Sécurise la route
         return listPublic();   // Réutilise la logique publique
     }
 
     @PostMapping("/admin/plants")
+    /**
+     * Crée une plante (admin).
+     * @param plant Plant Données de la plante
+     * @return ResponseEntity Plante créée
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<Object> create(@RequestBody Plant plant) throws Exception {
         guards.requireAdmin();
         if (plant.description == null) {
@@ -60,6 +85,13 @@ public class PlantController {
     }
 
     @PatchMapping("/admin/plants/{id}")
+    /**
+     * Met à jour une plante (admin).
+     * @param id int ID de la plante
+     * @param updatedData Plant Données à modifier
+     * @return ResponseEntity Plante modifiée
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<Object> update(@PathVariable("id") int id, @RequestBody Plant updatedData) throws Exception {
         guards.requireAdmin();
         Plant existing = repo.findById(id).orElse(null);
@@ -76,6 +108,12 @@ public class PlantController {
     }
 
     @DeleteMapping("/admin/plants/{id}")
+    /**
+     * Supprime une plante (admin).
+     * @param id int ID de la plante
+     * @return ResponseEntity Vide si OK
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin();
         repo.deleteById(id);
@@ -83,6 +121,13 @@ public class PlantController {
     }
 
     @PatchMapping("/internal/plants/{id}/stock")
+    /**
+     * Met à jour le stock (interne).
+     * @param id int ID de la plante
+     * @param body Map Nouveau stock
+     * @return ResponseEntity Résultat
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<Object> updateStock(@PathVariable("id") int id, @RequestBody java.util.Map<String, Integer> body) throws Exception {
         Plant plant = repo.findById(id).orElse(null);
         if (plant == null) {

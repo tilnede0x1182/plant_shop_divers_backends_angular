@@ -31,7 +31,10 @@ public final class AuthController extends BaseController {
         this.userRepo = new UserRepository(db);
     }
 
-    // AJOUTÉ: Getter pour que BaseController puisse accéder aux sessions
+    /**
+     * Retourne la map des sessions actives.
+     * @return Map associant sessionId à userId
+     */
     public static Map<String, Integer> getSessions() {
         return sessions;
     }

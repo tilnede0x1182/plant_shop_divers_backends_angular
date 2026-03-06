@@ -24,6 +24,10 @@ import util.ApiMapper;
 @Path("/api/orders")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+ * Controleur REST pour la gestion des commandes.
+ * Expose les endpoints CRUD pour les commandes utilisateur.
+ */
 @RequestScoped
 public class OrderController {
 
@@ -36,6 +40,12 @@ public class OrderController {
     @Inject
     Guards guards;
 
+    /**
+     * Liste les commandes de l'utilisateur connecte.
+     *
+     * @return Reponse HTTP avec la liste des commandes
+     * @throws Exception En cas d'erreur lors de la recuperation
+     */
     @GET
     public Response list() throws Exception {
         User currentUser = guards.requireUser();
@@ -54,6 +64,13 @@ public class OrderController {
         return Response.ok(payload).build();
     }
 
+    /**
+     * Cree une nouvelle commande.
+     *
+     * @param body Corps de la requete contenant les items
+     * @return Reponse HTTP 201 avec la commande creee
+     * @throws Exception En cas d'erreur lors de la creation
+     */
     @POST
     @Transactional // Gère la transaction (commit/rollback)
     public Response create(Map<String, List<Map<String, Integer>>> body) throws Exception {
@@ -93,6 +110,15 @@ public class OrderController {
         // Les autres exceptions lèveront une 500 et @Transactional gèrera le rollback
     }
 
+    /**
+     * Met a jour le statut d'une commande.
+     * Requiert un utilisateur administrateur.
+     *
+     * @param id ID de la commande
+     * @param body Corps contenant le nouveau statut
+     * @return Reponse HTTP avec la commande mise a jour
+     * @throws Exception En cas d'erreur lors de la mise a jour
+     */
     @PATCH
     @Path("/{id}")
     @Transactional
@@ -113,6 +139,14 @@ public class OrderController {
         return Response.ok(ApiMapper.toOrder(updated, items)).build();
     }
 
+    /**
+     * Supprime une commande.
+     * Requiert un utilisateur administrateur.
+     *
+     * @param id ID de la commande a supprimer
+     * @return Reponse HTTP 200
+     * @throws Exception En cas d'erreur lors de la suppression
+     */
     @DELETE
     @Path("/{id}")
     @Transactional

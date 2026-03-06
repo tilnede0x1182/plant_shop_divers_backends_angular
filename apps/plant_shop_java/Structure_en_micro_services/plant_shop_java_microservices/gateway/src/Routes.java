@@ -15,16 +15,29 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Handler HTTP pour le routage des requêtes.
+ */
 final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
     private final HttpClient http;
-    GatewayHandler(GatewayConfig config, HttpClient http) {
+    /**
+	 * Constructeur.
+	 * @param config Configuration du gateway
+	 * @param http Client HTTP
+	 */
+	GatewayHandler(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
-    @Override
+    /**
+	 * Traite une requête HTTP entrante.
+	 * @param ex Échange HTTP
+	 * @throws IOException En cas d'erreur I/O
+	 */
+	@Override
     public void handle(HttpExchange ex) throws IOException {
         try {
             forward(ex);
@@ -34,7 +47,12 @@ final class GatewayHandler implements HttpHandler {
         }
     }
 
-    private void forward(HttpExchange ex) throws Exception {
+    /**
+	 * Transmet une requête vers le service cible.
+	 * @param ex Échange HTTP
+	 * @throws Exception En cas d'erreur
+	 */
+	private void forward(HttpExchange ex) throws Exception {
         URI uri = ex.getRequestURI();
         String path = uri.getPath();
         if (!path.startsWith("/api")) {
@@ -109,7 +127,13 @@ final class GatewayHandler implements HttpHandler {
         }
     }
 
-    private SessionContext resolveSession(HttpExchange ex) throws Exception {
+    /**
+	 * Résout le contexte de session depuis les cookies.
+	 * @param ex Échange HTTP
+	 * @return Contexte de session
+	 * @throws Exception En cas d'erreur
+	 */
+	private SessionContext resolveSession(HttpExchange ex) throws Exception {
         String sessionId = Request.extractSessionId(ex);
         if (sessionId == null) {
             return SessionContext.anonymous();
@@ -130,7 +154,14 @@ final class GatewayHandler implements HttpHandler {
         return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
     }
 
-    private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
+    /**
+	 * Envoie une réponse JSON.
+	 * @param ex Échange HTTP
+	 * @param status Code HTTP
+	 * @param body Corps de la réponse
+	 * @throws IOException En cas d'erreur I/O
+	 */
+	private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(status, bytes.length);
@@ -141,8 +172,18 @@ final class GatewayHandler implements HttpHandler {
     }
 }
 
+/**
+ * Record représentant la cible d'une route.
+ * @param service Nom du service cible
+ * @param path Chemin de la route
+ */
 record RouteTarget(String service, String path) {
-    static RouteTarget resolve(String path) {
+    /**
+	 * Résout la cible d'une route depuis un chemin.
+	 * @param path Chemin de la requête
+	 * @return RouteTarget ou null si non trouvé
+	 */
+	static RouteTarget resolve(String path) {
         if (path.startsWith("/auth")) {
             return new RouteTarget("auth", path);
         }
@@ -159,8 +200,18 @@ record RouteTarget(String service, String path) {
     }
 }
 
+/**
+ * Record représentant le contexte de session.
+ * @param authenticated true si authentifié
+ * @param userId ID de l'utilisateur
+ * @param admin true si administrateur
+ */
 record SessionContext(boolean authenticated, int userId, boolean admin) {
-    static SessionContext anonymous() {
+    /**
+	 * Crée un contexte de session anonyme.
+	 * @return Contexte anonyme
+	 */
+	static SessionContext anonymous() {
         return new SessionContext(false, -1, false);
     }
 }

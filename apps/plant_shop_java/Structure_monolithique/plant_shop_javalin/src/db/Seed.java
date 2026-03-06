@@ -180,6 +180,7 @@ public final class Seed {
 			Statement.RETURN_GENERATED_KEYS);
 
 		System.out.println("🌱 Création des plantes…");
+		/** Classe interne pour stocker les infos de plante. */
 		class PlantInfo{ int id,price,stock; PlantInfo(int id,int p,int s){this.id=id;price=p;stock=s;} }
 		List<PlantInfo> plants = new ArrayList<>();
 

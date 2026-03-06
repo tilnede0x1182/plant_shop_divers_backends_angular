@@ -8,6 +8,7 @@ import java.util.stream.Stream;
  */
 public final class Request {
 
+    /** Constructeur prive pour empecher l'instanciation. */
     private Request() {}
 
     /**

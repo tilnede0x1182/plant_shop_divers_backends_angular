@@ -45,7 +45,7 @@ export class AdminUsersListComponent implements OnInit {
 
   /**
    * Supprime un utilisateur (avec confirmation)
-   * @id identifiant de l’utilisateur
+   * @param id Identifiant de l'utilisateur à supprimer
    */
   supprimerUtilisateur(id: number): void {
     if (!confirm('Supprimer cet utilisateur ?')) return;

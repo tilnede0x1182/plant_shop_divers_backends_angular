@@ -9,6 +9,9 @@ import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 
+/**
+ * Entité JPA représentant un item de commande.
+ */
 @Entity
 @Table(name = "order_items")
 public class OrderItem {
@@ -28,6 +31,14 @@ public class OrderItem {
     @Column(nullable = false)
     public BigDecimal price;
 
+    /**
+     * Constructeur complet.
+     * @param id int Identifiant
+     * @param orderId int ID commande
+     * @param plantId int ID plante
+     * @param quantity int Quantité
+     * @param price BigDecimal Prix
+     */
     public OrderItem(int id, int orderId, int plantId, int quantity, BigDecimal price) {
         this.id = id;
         this.orderId = orderId;
@@ -35,8 +46,16 @@ public class OrderItem {
         this.quantity = quantity;
         this.price = price;
     }
+    /**
+     * Constructeur pour création.
+     * @param orderId int ID commande
+     * @param plantId int ID plante
+     * @param quantity int Quantité
+     * @param price BigDecimal Prix
+     */
     public OrderItem(int orderId, int plantId, int quantity, BigDecimal price) {
         this(0, orderId, plantId, quantity, price);
     }
-    public OrderItem() {} // Nécessaire pour la désérialisation JSON
+    /** Constructeur par défaut pour JPA. */
+    public OrderItem() {}
 }

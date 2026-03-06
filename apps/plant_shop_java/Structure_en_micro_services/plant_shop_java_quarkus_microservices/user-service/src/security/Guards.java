@@ -7,9 +7,19 @@ import models.User;
 import util.ForwardedIdentity;
 import util.ForwardedIdentityHolder;
 
+/**
+ * Bean singleton pour la validation de l'authentification et des roles.
+ * Utilise l'identite propagee par la Gateway.
+ */
 @ApplicationScoped
 public class Guards {
 
+    /**
+     * Exige qu'un utilisateur soit authentifie.
+     *
+     * @return L'utilisateur authentifie
+     * @throws WebApplicationException 401 si non authentifie
+     */
     public User requireUser() {
         ForwardedIdentity identity = ForwardedIdentityHolder.get();
         if (!identity.authenticated()) {
@@ -18,6 +28,12 @@ public class Guards {
         return toUser(identity);
     }
 
+    /**
+     * Exige qu'un utilisateur soit authentifie et administrateur.
+     *
+     * @return L'utilisateur administrateur authentifie
+     * @throws WebApplicationException 401 si non authentifie, 403 si non admin
+     */
     public User requireAdmin() {
         User user = requireUser();
         if (!user.isAdmin) {
@@ -26,6 +42,12 @@ public class Guards {
         return user;
     }
 
+    /**
+     * Convertit une identite propagee en objet User.
+     *
+     * @param identity Identite propagee par la Gateway
+     * @return Objet User avec l'ID et le statut admin
+     */
     private User toUser(ForwardedIdentity identity) {
         User user = new User();
         user.id = identity.userId();

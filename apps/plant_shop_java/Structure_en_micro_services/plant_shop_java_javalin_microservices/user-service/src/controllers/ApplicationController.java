@@ -7,10 +7,17 @@ import util.AuthMiddleware;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
 
+/**
+ * Contrôleur principal orchestrant les routes du user-service.
+ */
 public final class ApplicationController {
 
     private final UserController userController;
 
+    /**
+     * Initialise le contrôleur avec la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     public ApplicationController(Connection db) {
         this.userController = new UserController(db);
     }

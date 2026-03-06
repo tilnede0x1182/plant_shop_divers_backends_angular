@@ -18,6 +18,10 @@ import util.PasswordUtil;
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+ * Contrôleur REST pour l'authentification.
+ * Gère l'inscription, la connexion, la déconnexion et la récupération du profil.
+ */
 @RequestScoped // Par défaut dans Quarkus, mais explicite c'est bien
 public class AuthController {
 
@@ -29,6 +33,13 @@ public class AuthController {
     @Inject
     Guards guards;
 
+    /**
+     * Inscrit un nouvel utilisateur.
+     *
+     * @param body Corps de la requête contenant name, email et password
+     * @return Réponse HTTP avec l'utilisateur créé ou une erreur
+     * @throws Exception En cas d'erreur lors de la création
+     */
     @POST
     @Path("/register")
     public Response register(Map<String, String> body) throws Exception {
@@ -51,6 +62,13 @@ public class AuthController {
                        .build();
     }
 
+    /**
+     * Authentifie un utilisateur et crée une session.
+     *
+     * @param body Corps de la requête contenant email et password
+     * @return Réponse HTTP avec l'utilisateur et un cookie de session
+     * @throws Exception En cas d'erreur lors de l'authentification
+     */
     @POST
     @Path("/login")
     public Response login(Map<String, String> body) throws Exception {
@@ -75,6 +93,12 @@ public class AuthController {
                        .build();
     }
 
+    /**
+     * Déconnecte l'utilisateur en supprimant sa session.
+     *
+     * @param sessionId Identifiant de session depuis le cookie
+     * @return Réponse HTTP 204 No Content
+     */
     @POST
     @Path("/logout")
     public Response logout(@CookieParam("session_id") String sessionId) {
@@ -93,6 +117,11 @@ public class AuthController {
         return Response.noContent().cookie(expiredCookie).build();
     }
 
+    /**
+     * Récupère le profil de l'utilisateur authentifié.
+     *
+     * @return Réponse HTTP avec les informations de l'utilisateur
+     */
     @GET
     @Path("/me")
     public Response me() {
@@ -102,6 +131,14 @@ public class AuthController {
         return Response.ok(ApiMapper.toUser(user)).build();
     }
 
+    /**
+     * Endpoint interne pour valider une session et récupérer l'identité.
+     * Utilisé par la Gateway pour propager l'authentification.
+     *
+     * @param sessionId Identifiant de session depuis le cookie
+     * @return Réponse HTTP avec l'ID et le statut admin de l'utilisateur
+     * @throws Exception En cas d'erreur lors de la récupération
+     */
     @GET
     @Path("/_session")
     public Response session(@CookieParam("session_id") String sessionId) throws Exception {

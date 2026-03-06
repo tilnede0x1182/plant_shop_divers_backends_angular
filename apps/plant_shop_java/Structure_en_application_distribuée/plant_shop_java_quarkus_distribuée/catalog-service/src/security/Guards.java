@@ -7,10 +7,10 @@ import models.User;
 import util.ForwardedIdentity;
 import util.ForwardedIdentityHolder;
 
-@ApplicationScoped
 /**
  * Garde de sécurité pour vérifier les autorisations.
  */
+@ApplicationScoped
 public class Guards {
 
     /**

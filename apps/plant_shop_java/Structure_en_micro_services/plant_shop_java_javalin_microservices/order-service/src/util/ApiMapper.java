@@ -14,10 +14,19 @@ import model.PlantStock;
  */
 public final class ApiMapper {
 
+    /**
+     * Constructeur privé pour classe utilitaire.
+     */
     private ApiMapper() {
         // utilitaire statique
     }
 
+    /**
+     * Convertit une commande en Map JSON.
+     * @param order Commande à convertir
+     * @param items Liste des items convertis
+     * @return Map représentant le JSON
+     */
     public static Map<String, Object> toOrder(Order order, java.util.List<Map<String, Object>> items) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", order.id);
@@ -29,6 +38,12 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit un item de commande en Map JSON.
+     * @param item Item à convertir
+     * @param plant Plante associée
+     * @return Map représentant le JSON
+     */
     public static Map<String, Object> toOrderItem(OrderItem item, PlantStock plant) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("id", item.id);
@@ -47,10 +62,20 @@ public final class ApiMapper {
         return map;
     }
 
+    /**
+     * Convertit un BigDecimal en Double.
+     * @param value Valeur à convertir
+     * @return Double ou null
+     */
     private static Double toDecimal(BigDecimal value) {
         return value == null ? null : value.doubleValue();
     }
 
+    /**
+     * Convertit un Timestamp en chaîne ISO.
+     * @param timestamp Timestamp à convertir
+     * @return Chaîne ISO ou null
+     */
     private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }

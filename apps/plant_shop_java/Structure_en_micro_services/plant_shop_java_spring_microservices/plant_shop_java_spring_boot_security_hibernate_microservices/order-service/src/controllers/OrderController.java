@@ -24,6 +24,9 @@ import java.util.Map;
 import org.springframework.transaction.annotation.Transactional;
 import util.EnvLoader;
 
+/**
+ * Contrôleur REST pour les commandes.
+ */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -40,6 +43,7 @@ public class OrderController {
     private final HttpClient httpClient;
     private final String catalogServiceUrl;
 
+    /** Constructeur initialisant le client HTTP. */
     public OrderController() {
         Map<String, String> env = EnvLoader.load();
         String host = env.getOrDefault("SERVICE_HOST", "http://localhost");
@@ -51,6 +55,11 @@ public class OrderController {
     }
 
     @GetMapping
+    /**
+     * Liste les commandes de l'utilisateur.
+     * @return ResponseEntity Liste des commandes
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<List<Map<String, Object>>> list() throws Exception {
         User currentUser = guards.requireUser();
         List<Order> orders = repo.findByUserIdOrderByCreatedAtDesc(currentUser.id);
@@ -64,6 +73,12 @@ public class OrderController {
 
     @PostMapping
     @Transactional
+    /**
+     * Crée une commande.
+     * @param body Map Corps de la requête
+     * @return ResponseEntity Commande créée
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<Object> create(@RequestBody Map<String, List<Map<String, Integer>>> body) throws Exception {
         User currentUser = guards.requireUser();
         List<Map<String, Integer>> itemsJson = body.get("items");
@@ -93,6 +108,13 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}")
+    /**
+     * Met à jour une commande.
+     * @param id int ID de la commande
+     * @param body Map Données à modifier
+     * @return ResponseEntity Commande modifiée
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<Object> patch(@PathVariable("id") int id, @RequestBody Map<String, String> body) throws Exception {
         guards.requireAdmin();
         Order existing = repo.findById(id).orElse(null);
@@ -109,6 +131,12 @@ public class OrderController {
 
     @DeleteMapping("/{id}")
     @Transactional
+    /**
+     * Supprime une commande.
+     * @param id int ID de la commande
+     * @return ResponseEntity Vide si OK
+     * @throws Exception En cas d'erreur
+     */
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin();
         // Doit supprimer les items avant la commande à cause de la clé étrangère
@@ -140,6 +168,12 @@ public class OrderController {
         return plant.price.multiply(BigDecimal.valueOf(quantity));
     }
 
+    /**
+     * Met à jour le stock via le service Catalog.
+     * @param plantId int ID de la plante
+     * @param newStock int Nouveau stock
+     * @return boolean true si succès
+     */
     private boolean updateCatalogStock(int plantId, int newStock) {
         try {
             String json = String.format("{\"stock\":%d}", newStock);
@@ -161,6 +195,13 @@ public class OrderController {
         }
     }
 
+    /**
+     * Convertit une commande en JSON.
+     * @param order Order Commande
+     * @param items List Items de la commande
+     * @return Map Représentation JSON
+     * @throws Exception En cas d'erreur
+     */
     private Map<String, Object> toOrderJson(Order order, List<OrderItem> items) throws Exception {
         List<Map<String, Object>> itemsJson = new ArrayList<>(items.size());
         for (OrderItem item : items) {

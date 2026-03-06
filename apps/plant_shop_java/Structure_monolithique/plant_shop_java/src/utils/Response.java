@@ -10,7 +10,8 @@ import java.io.OutputStream;
  */
 public final class Response {
 
-    private Response() {} // Empêche l'instanciation
+    /** Constructeur privé pour empêcher l'instanciation. */
+    private Response() {}
 
     /**
      * Envoie une réponse avec un corps JSON.

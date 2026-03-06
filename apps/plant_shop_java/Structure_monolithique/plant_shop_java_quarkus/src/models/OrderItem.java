@@ -41,6 +41,6 @@ public final class OrderItem {
         this(0, orderId, plantId, quantity, price);
     }
 
-    // Constructeur par défaut nécessaire pour la désérialisation JSON
+    /** Constructeur par défaut nécessaire pour la désérialisation JSON. */
     public OrderItem() {}
 }

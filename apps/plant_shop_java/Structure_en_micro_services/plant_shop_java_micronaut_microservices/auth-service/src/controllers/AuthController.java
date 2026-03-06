@@ -108,6 +108,11 @@ public class AuthController {
         return HttpResponse.noContent().cookie(expiredCookie);
     }
 
+    /**
+     * Retourne les informations de l'utilisateur connecté.
+     * @param request Requête HTTP
+     * @return Réponse HTTP avec les données utilisateur
+     */
     @Get("/me")
     public HttpResponse<?> me(HttpRequest<?> request) {
         User user = request.getAttribute("user", User.class).orElse(null);
@@ -117,6 +122,12 @@ public class AuthController {
         return HttpResponse.ok(ApiMapper.toUser(user));
     }
 
+    /**
+     * Vérifie et retourne les informations de session.
+     * @param sessionId ID de session
+     * @return Réponse HTTP avec les données de session
+     * @throws Exception En cas d'erreur
+     */
     @Get("/_session")
     public HttpResponse<?> session(@CookieValue("session_id") String sessionId) throws Exception {
         if (sessionId == null) {

@@ -15,6 +15,9 @@ import repository.PlantRepository;
 import security.Guards;
 import util.ApiMapper;
 
+/**
+ * Contrôleur REST pour la gestion des plantes.
+ */
 @Controller("/")
 public class PlantController {
 
@@ -25,11 +28,20 @@ public class PlantController {
         COLLATOR.setStrength(Collator.PRIMARY);
     }
 
+    /**
+     * Construit le contrôleur avec la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     @Inject
     public PlantController(Connection db) {
         this.repo = new PlantRepository(db);
     }
 
+    /**
+     * Liste toutes les plantes (endpoint public).
+     * @return Liste des plantes
+     * @throws Exception En cas d'erreur BDD
+     */
     @Get("/plants")
     public List<?> listPublic() throws Exception {
         return repo.list().stream()
@@ -38,6 +50,12 @@ public class PlantController {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Liste toutes les plantes (admin).
+     * @param request Requête HTTP
+     * @return Liste des plantes
+     * @throws Exception En cas d'erreur BDD
+     */
     @Get("/admin/plants")
     public List<?> listAdmin(HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -47,12 +65,25 @@ public class PlantController {
             .collect(Collectors.toList());
     }
 
+    /**
+     * Affiche une plante par son ID.
+     * @param id Identifiant de la plante
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Get("/plants/{id}")
     public HttpResponse<?> show(@PathVariable int id) throws Exception {
         Plant plant = repo.find(id);
         return plant != null ? HttpResponse.ok(ApiMapper.toPlant(plant)) : HttpResponse.notFound();
     }
 
+    /**
+     * Crée une nouvelle plante (admin).
+     * @param plant Données de la plante
+     * @param request Requête HTTP
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Post("/admin/plants")
     public HttpResponse<?> create(@Body Plant plant, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -61,6 +92,14 @@ public class PlantController {
         return HttpResponse.created(ApiMapper.toPlant(created));
     }
 
+    /**
+     * Met à jour une plante (admin).
+     * @param id Identifiant de la plante
+     * @param updatedData Données mises à jour
+     * @param request Requête HTTP
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Patch("/admin/plants/{id}")
     public HttpResponse<?> update(@PathVariable int id, @Body Plant updatedData, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -76,6 +115,13 @@ public class PlantController {
         return HttpResponse.ok(ApiMapper.toPlant(repo.find(id)));
     }
 
+    /**
+     * Supprime une plante (admin).
+     * @param id Identifiant de la plante
+     * @param request Requête HTTP
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Delete("/admin/plants/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -83,6 +129,13 @@ public class PlantController {
         return HttpResponse.ok();
     }
 
+    /**
+     * Met à jour le stock d'une plante (interne).
+     * @param id Identifiant de la plante
+     * @param body Corps contenant le nouveau stock
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Patch("/internal/plants/{id}/stock")
     public HttpResponse<?> updateStock(@PathVariable int id, @Body java.util.Map<String, Integer> body) throws Exception {
         Plant plant = repo.find(id);
@@ -95,6 +148,12 @@ public class PlantController {
         return HttpResponse.ok(java.util.Map.of("success", true, "stock", newStock));
     }
 
+    /**
+     * Compare deux plantes par leur nom.
+     * @param a Première plante
+     * @param b Deuxième plante
+     * @return Résultat de la comparaison
+     */
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }

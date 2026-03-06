@@ -20,6 +20,10 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+/**
+ * Controleur REST pour l'authentification.
+ * Gere l'inscription, la connexion, la deconnexion et le profil.
+ */
 public class AuthController {
 
     private static final int SESSION_TTL_SECONDS = 3600;
@@ -31,6 +35,13 @@ public class AuthController {
     @Autowired
     Guards guards;
 
+    /**
+     * Inscrit un nouvel utilisateur.
+     *
+     * @param body Donnees de l'utilisateur
+     * @return Reponse HTTP avec l'utilisateur cree
+     * @throws Exception En cas d'erreur
+     */
     @PostMapping("/register")
     public ResponseEntity<Object> register(@RequestBody User body) throws Exception {
         if (userRepo.existsByEmail(body.email)) {
@@ -45,6 +56,14 @@ public class AuthController {
                              .body(ApiMapper.toUser(created));
     }
 
+    /**
+     * Authentifie un utilisateur.
+     *
+     * @param body Credentials (email, password)
+     * @param response Reponse HTTP pour le cookie
+     * @return Reponse HTTP avec l'utilisateur
+     * @throws Exception En cas d'erreur
+     */
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody Map<String, String> body, HttpServletResponse response) throws Exception {
         User user = userRepo.findByEmail(body.get("email")).orElse(null);
@@ -74,6 +93,11 @@ public class AuthController {
         return ResponseEntity.noContent().build(); // 204 No Content
     }
 
+    /**
+     * Recupere le profil de l'utilisateur connecte.
+     *
+     * @return Reponse HTTP avec le profil
+     */
     @GetMapping("/me")
     public ResponseEntity<Object> me() {
         // Le Guard lève une AuthException (401) si l'utilisateur n'est pas trouvé
@@ -94,6 +118,11 @@ public class AuthController {
         ));
     }
 
+    /**
+     * Configure l'authentification Spring Security.
+     *
+     * @param user Utilisateur a authentifier
+     */
     private void authenticateUser(User user) {
         List<SimpleGrantedAuthority> authorities = user.isAdmin
             ? List.of(
@@ -108,6 +137,12 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
+    /**
+     * Resout un utilisateur depuis un ID de session.
+     *
+     * @param sessionId ID de session
+     * @return Utilisateur ou null
+     */
     private User resolveUserFromSession(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             return null;
@@ -115,6 +150,13 @@ public class AuthController {
         return sessionService.getSession(sessionId);
     }
 
+    /**
+     * Definit le cookie de session.
+     *
+     * @param response Reponse HTTP
+     * @param value Valeur du cookie
+     * @param maxAgeSeconds Duree de vie en secondes
+     */
     private void setSessionCookie(HttpServletResponse response, String value, int maxAgeSeconds) {
         String cookieValue = String.format(
             "session_id=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Lax",

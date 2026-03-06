@@ -13,6 +13,11 @@ public class SessionService {
 
     private final Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
+    /**
+     * Récupère la map des sessions actives.
+     *
+     * @return Map associant les IDs de session aux IDs utilisateur
+     */
     public Map<String, Integer> getSessions() {
         return sessions;
     }

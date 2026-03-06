@@ -74,6 +74,11 @@ public final class Seed {
 	 * @return int Entier aléatoire
 	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/**
+	 * Sélectionne un élément aléatoire dans un tableau.
+	 * @param arr T[] Tableau source
+	 * @return T Élément sélectionné
+	 */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
 	/** Génère un mot de passe aléatoire. */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }

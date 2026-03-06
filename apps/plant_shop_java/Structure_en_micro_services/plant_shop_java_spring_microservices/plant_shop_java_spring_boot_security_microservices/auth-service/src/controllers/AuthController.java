@@ -20,6 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Contrôleur REST pour l'authentification.
+ * Gère les endpoints de register, login, logout et récupération de l'utilisateur courant.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -31,6 +35,12 @@ public class AuthController {
     @Autowired
     Guards guards;
 
+    /**
+     * Inscrit un nouvel utilisateur.
+     * @param body Données de l'utilisateur à créer
+     * @return L'utilisateur créé ou une erreur si l'email existe déjà
+     * @throws Exception En cas d'erreur SQL
+     */
     @PostMapping("/register")
     public ResponseEntity<Object> register(@RequestBody User body) throws Exception {
         if (userRepo.findByEmailWithPassword(body.email) != null) {
@@ -46,6 +56,13 @@ public class AuthController {
                              .body(ApiMapper.toUser(created));
     }
 
+    /**
+     * Authentifie un utilisateur et crée une session.
+     * @param body Map contenant email et password
+     * @param response Réponse HTTP pour définir le cookie de session
+     * @return L'utilisateur authentifié ou une erreur
+     * @throws Exception En cas d'erreur SQL
+     */
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody Map<String, String> body, HttpServletResponse response) throws Exception {
         User user = userRepo.findByEmailWithPassword(body.get("email"));
@@ -112,6 +129,10 @@ public class AuthController {
         ));
     }
 
+    /**
+     * Configure l'authentification Spring Security pour l'utilisateur.
+     * @param user Utilisateur à authentifier dans le contexte de sécurité
+     */
     private void authenticateUser(User user) {
         List<SimpleGrantedAuthority> authorities = user.isAdmin
             ? List.of(
@@ -126,6 +147,12 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
+    /**
+     * Résout un utilisateur à partir de son identifiant de session.
+     * @param sessionId Identifiant de session
+     * @return L'utilisateur correspondant ou null si la session est invalide
+     * @throws Exception En cas d'erreur SQL
+     */
     private User resolveUserFromSession(String sessionId) throws Exception {
         if (sessionId == null || sessionId.isBlank()) {
             return null;

@@ -9,6 +9,7 @@ import java.util.stream.Stream;
  */
 public final class Request {
 
+    /** Constructeur prive (classe utilitaire) */
     private Request() {}
 
     /**

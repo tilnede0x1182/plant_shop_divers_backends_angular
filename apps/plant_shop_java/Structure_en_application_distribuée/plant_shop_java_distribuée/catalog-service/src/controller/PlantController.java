@@ -26,12 +26,12 @@ final class CatalogRoutes implements HttpHandler {
         this.controller = new PlantController(db);
     }
 
-    @Override
     /**
-	 * Traite une requête HTTP entrante.
-	 * @param ex L'échange HTTP
-	 */
-	public void handle(HttpExchange ex) throws IOException {
+     * Traite une requête HTTP entrante.
+     * @param ex L'échange HTTP
+     */
+    @Override
+    public void handle(HttpExchange ex) throws IOException {
         controller.handle(ex);
     }
 }

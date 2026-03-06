@@ -12,12 +12,14 @@ import java.sql.SQLException;
 import java.util.Map;
 
 @Configuration
+/** Factory de configuration de la base de donnees */
 public class DatabaseFactory {
 
     private static final int DEFAULT_POOL_MIN = 1;
     private static final int DEFAULT_POOL_MAX = 6;
 
     @Bean(destroyMethod = "close")
+    /** Cree et configure le pool de connexions HikariCP */
     public DataSource dataSource() {
         Map<String, String> env = EnvLoader.load();
         String url = env.get("DATABASE_URL");
@@ -52,10 +54,12 @@ public class DatabaseFactory {
 
     @Bean(destroyMethod = "close")
     @RequestScope
+    /** Fournit une connexion DB pour la requete courante */
     public Connection connection(DataSource dataSource) throws SQLException {
         return dataSource.getConnection();
     }
 
+    /** Parse un entier avec valeur par defaut */
     private static int parseInt(String raw, int fallback) {
         if (raw == null || raw.isBlank()) {
             return fallback;

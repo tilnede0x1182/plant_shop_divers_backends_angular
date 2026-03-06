@@ -11,6 +11,13 @@ public final class Response {
 
     private Response() {}
 
+    /**
+	 * Envoie une réponse HTTP JSON.
+	 * @param ex HttpExchange Échange HTTP
+	 * @param code int Code de statut HTTP
+	 * @param jsonBody String Corps de la réponse en JSON
+	 * @throws IOException En cas d'erreur d'écriture
+	 */
     public static void send(HttpExchange ex, int code, String jsonBody) throws IOException {
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         byte[] bytes = jsonBody.getBytes("UTF-8");
@@ -21,6 +28,12 @@ public final class Response {
         ex.close();
     }
 
+    /**
+	 * Envoie une réponse HTTP vide.
+	 * @param ex HttpExchange Échange HTTP
+	 * @param code int Code de statut HTTP
+	 * @throws IOException En cas d'erreur d'écriture
+	 */
     public static void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();

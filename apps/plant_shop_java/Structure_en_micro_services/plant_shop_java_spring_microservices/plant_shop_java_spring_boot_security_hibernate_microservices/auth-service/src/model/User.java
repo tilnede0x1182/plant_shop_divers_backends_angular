@@ -15,6 +15,9 @@ import java.sql.Timestamp;
 
 @Entity
 @Table(name = "users")
+/**
+ * Entite representant un utilisateur.
+ */
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +46,9 @@ public class User {
     @Transient
     public String password;
 
+    /**
+     * Constructeur complet.
+     */
     public User(int id, String name, String email, String passwordHash, boolean isAdmin, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -51,8 +57,14 @@ public class User {
         this.isAdmin = isAdmin;
         this.createdAt = createdAt;
     }
+    /**
+     * Constructeur simplifie pour la creation.
+     */
     public User(String name, String email, String passwordHash, boolean isAdmin) {
         this(0, name, email, passwordHash, isAdmin, null);
     }
+    /**
+     * Constructeur par defaut pour la deserialisation JSON.
+     */
     public User() {} // Nécessaire pour la désérialisation JSON
 }

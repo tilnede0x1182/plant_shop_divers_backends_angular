@@ -14,12 +14,19 @@ import java.io.IOException;
 import java.util.Collections;
 import model.User;
 
+/**
+ * Filtre d'authentification par session.
+ * Lit le cookie session_id et configure le contexte Spring Security.
+ */
 @Component
 public class SessionAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private SessionService sessionService;
 
+    /**
+     * Filtre chaque requete pour extraire la session.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                   HttpServletResponse response,
@@ -38,6 +45,12 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Extrait l'ID de session depuis les cookies.
+     *
+     * @param request Requete HTTP
+     * @return ID de session ou null
+     */
     private String extractSessionId(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {

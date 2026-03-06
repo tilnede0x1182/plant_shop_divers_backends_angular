@@ -28,12 +28,24 @@ public final class JsonMapper {
         MAPPER.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
+    /** Constructeur prive pour empecher l'instanciation. */
     private JsonMapper() {}
 
+    /**
+     * Retourne l'instance partagee d'ObjectMapper.
+     *
+     * @return ObjectMapper configure
+     */
     public static ObjectMapper get() {
         return MAPPER;
     }
 
+    /**
+     * Serialise un objet en JSON.
+     *
+     * @param data Objet a serialiser
+     * @return Chaine JSON
+     */
     public static String stringify(Object data) {
         try {
             return MAPPER.writeValueAsString(data);
@@ -42,6 +54,14 @@ public final class JsonMapper {
         }
     }
 
+    /**
+     * Deserialise un flux en objet.
+     *
+     * @param is Flux d'entree
+     * @param clazz Classe cible
+     * @param <T> Type cible
+     * @return Objet deserialise
+     */
     public static <T> T read(InputStream is, Class<T> clazz) {
         try {
             return MAPPER.readValue(is, clazz);
@@ -50,6 +70,14 @@ public final class JsonMapper {
         }
     }
 
+    /**
+     * Deserialise une chaine JSON en objet.
+     *
+     * @param json Chaine JSON
+     * @param clazz Classe cible
+     * @param <T> Type cible
+     * @return Objet deserialise
+     */
     public static <T> T read(String json, Class<T> clazz) {
         try {
             return MAPPER.readValue(json, clazz);

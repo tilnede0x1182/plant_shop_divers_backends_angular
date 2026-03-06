@@ -7,10 +7,19 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+/**
+ * Configuration de sécurité pour les identités transférées entre microservices.
+ */
 @Configuration
 @ConditionalOnMissingBean(SecurityFilterChain.class)
 public class ForwardedSecurityConfig {
 
+    /**
+	 * Configure la chaîne de filtres de sécurité HTTP.
+	 * @param http HttpSecurity Instance de configuration de sécurité
+	 * @return SecurityFilterChain Chaîne de filtres configurée
+	 * @throws Exception En cas d'erreur de configuration
+	 */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http

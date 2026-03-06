@@ -18,7 +18,12 @@ private ApiMapper() {
         // utilitaire statique
     }
 
-    public static Map<String, Object> toUser(User user) {
+    /**
+	 * Convertit un utilisateur en Map pour l'API.
+	 * @param user User Utilisateur à convertir
+	 * @return Map représentant l'utilisateur
+	 */
+	public static Map<String, Object> toUser(User user) {
         Map<String, Object> map = base();
         map.put("id", user.id);
         map.put("name", user.name);
@@ -37,7 +42,11 @@ private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 
-    private static Map<String, Object> base() {
+    /**
+	 * Crée une Map de base ordonnée.
+	 * @return LinkedHashMap vide
+	 */
+	private static Map<String, Object> base() {
         return new LinkedHashMap<>();
     }
 }

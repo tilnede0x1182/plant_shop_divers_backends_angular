@@ -13,10 +13,13 @@ import java.util.EnumSet;
  */
 public final class CorsUtil {
 
-    private CorsUtil() {
-        // Utilitaire, pas d’instanciation
-    }
+    /** Constructeur privé pour empêcher l'instanciation. */
+    private CorsUtil() {}
 
+    /**
+     * Active CORS pour le contexte servlet.
+     * @param context ServletContextHandler Contexte à configurer
+     */
     public static void enable(ServletContextHandler context) {
         FilterHolder cors = context.addFilter(CrossOriginFilter.class, "/*",
                 EnumSet.of(DispatcherType.REQUEST, DispatcherType.ASYNC));

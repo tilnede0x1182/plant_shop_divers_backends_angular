@@ -10,8 +10,15 @@ import java.security.NoSuchAlgorithmException;
  */
 public final class PasswordUtil {
 
+    /** Constructeur prive pour empecher l'instanciation. */
     private PasswordUtil() {}
 
+    /**
+     * Hashe un mot de passe en clair.
+     *
+     * @param plainTextPassword Mot de passe en clair
+     * @return Hash SHA-256 du mot de passe
+     */
     public static String hashPassword(String plainTextPassword) {
         if (plainTextPassword == null) {
             throw new IllegalArgumentException("plainTextPassword ne doit pas être null");
@@ -19,6 +26,13 @@ public final class PasswordUtil {
         return sha256(plainTextPassword);
     }
 
+    /**
+     * Verifie si un mot de passe correspond a un hash.
+     *
+     * @param plainTextPassword Mot de passe en clair
+     * @param hashedPassword Hash a comparer
+     * @return true si correspondance
+     */
     public static boolean checkPassword(String plainTextPassword, String hashedPassword) {
         if (plainTextPassword == null || hashedPassword == null) {
             return false;
@@ -26,6 +40,12 @@ public final class PasswordUtil {
         return sha256(plainTextPassword).equals(hashedPassword);
     }
 
+    /**
+     * Calcule le hash SHA-256 d'une chaine.
+     *
+     * @param input Chaine a hasher
+     * @return Hash en hexadecimal
+     */
     private static String sha256(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -36,6 +56,12 @@ public final class PasswordUtil {
         }
     }
 
+    /**
+     * Convertit un tableau d'octets en chaine hexadecimale.
+     *
+     * @param data Tableau d'octets
+     * @return Chaine hexadecimale
+     */
     private static String toHex(byte[] data) {
         StringBuilder sb = new StringBuilder(data.length * 2);
         for (byte b : data) {

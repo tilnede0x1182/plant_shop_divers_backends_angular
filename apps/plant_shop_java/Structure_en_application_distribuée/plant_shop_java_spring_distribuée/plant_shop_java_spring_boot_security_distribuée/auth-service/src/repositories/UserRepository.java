@@ -7,29 +7,29 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.context.annotation.RequestScope;
 import java.sql.*;
 
-@Repository
-@RequestScope
 /**
  * Repository pour les opérations sur les utilisateurs.
  */
+@Repository
+@RequestScope
 public class UserRepository extends BaseRepository<User> {
 
-    @Autowired
     /**
      * Constructeur avec injection de connexion.
      * @param db Connexion à la base de données
      */
+    @Autowired
     public UserRepository(Connection db) {
         super(db, "users");
     }
 
-    @Override
     /**
      * Mappe un ResultSet vers un User.
      * @param rs ResultSet à mapper
      * @return User créé
      * @throws SQLException En cas d'erreur SQL
      */
+    @Override
     protected User mapFromResultSet(ResultSet rs) throws SQLException {
         return new User(
             rs.getInt("id"),

@@ -11,6 +11,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+/**
+ * Entité JPA représentant une plante.
+ */
 @Entity
 @Table(name = "plants")
 public class Plant {
@@ -32,6 +35,15 @@ public class Plant {
     @Column(name = "created_at", updatable = false)
     public Timestamp createdAt;
 
+    /**
+     * Constructeur complet.
+     * @param id int Identifiant
+     * @param name String Nom
+     * @param description String Description
+     * @param price BigDecimal Prix
+     * @param stock int Stock
+     * @param createdAt Timestamp Date de création
+     */
     public Plant(int id, String name, String description, BigDecimal price, int stock, Timestamp createdAt) {
         this.id = id;
         this.name = name;
@@ -40,8 +52,16 @@ public class Plant {
         this.stock = stock;
         this.createdAt = createdAt;
     }
+    /**
+     * Constructeur pour création.
+     * @param name String Nom
+     * @param description String Description
+     * @param price BigDecimal Prix
+     * @param stock int Stock
+     */
     public Plant(String name, String description, BigDecimal price, int stock) {
         this(0, name, description, price, stock, null);
     }
-    public Plant() {} // Nécessaire pour la désérialisation JSON par Spring
+    /** Constructeur par défaut pour JPA. */
+    public Plant() {}
 }

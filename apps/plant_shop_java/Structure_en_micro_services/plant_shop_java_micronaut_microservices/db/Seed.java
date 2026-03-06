@@ -66,10 +66,28 @@ public final class Seed {
 	 * @return int Entier aléatoire
 	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/**
+	 * Sélectionne un élément aléatoire dans un tableau.
+	 * @param arr Tableau source
+	 * @return Élément aléatoire
+	 */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+	/**
+	 * Génère un mot de passe aléatoire.
+	 * @return Mot de passe au format pw + 9 chiffres
+	 */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+	/**
+	 * Hash un mot de passe en clair.
+	 * @param p Mot de passe en clair
+	 * @return Hash du mot de passe
+	 */
 	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
 
+	/**
+	 * Génère une phrase lorem ipsum aléatoire.
+	 * @return Phrase de 10 à 14 mots
+	 */
 	private static String loremSentence() {
 		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
 				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};
@@ -153,6 +171,7 @@ public final class Seed {
 			Statement.RETURN_GENERATED_KEYS);
 
 		System.out.println("🌱 Création des plantes…");
+		/** Structure locale pour stocker les infos d'une plante. */
 		class PlantInfo{ int id,price,stock; PlantInfo(int id,int p,int s){this.id=id;price=p;stock=s;} }
 		List<PlantInfo> plants = new ArrayList<>();
 

@@ -38,5 +38,6 @@ public final class OrderItem {
     public OrderItem(int orderId, int plantId, int quantity, BigDecimal price) {
         this(0, orderId, plantId, quantity, price);
     }
-    public OrderItem() {} // Nécessaire pour la désérialisation JSON
+    /** Constructeur par défaut pour désérialisation JSON. */
+    public OrderItem() {}
 }

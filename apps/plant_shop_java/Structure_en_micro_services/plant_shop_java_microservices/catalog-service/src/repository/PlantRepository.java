@@ -43,8 +43,12 @@ abstract class CatalogBaseRepository<T> {
         return null;
     }
 
-    // Rendu public pour accès direct par le Controller
-    public List<T> findAll() throws SQLException {
+    /**
+	 * Trouve toutes les entités.
+	 * @return Liste de toutes les entités
+	 * @throws SQLException En cas d'erreur SQL
+	 */
+	public List<T> findAll() throws SQLException {
         return findAllOrderedBy(null);
     }
 
@@ -96,13 +100,13 @@ public final class PlantRepository extends CatalogBaseRepository<Plant> {
         super(db, "plants");
     }
 
-    @Override
     /**
      * Mappe un ResultSet vers une Plant.
      * @param rs ResultSet à mapper
      * @return Plante créée
      * @throws SQLException En cas d'erreur SQL
      */
+    @Override
     Plant map(ResultSet rs) throws SQLException {
         return new Plant(
             rs.getInt("id"),

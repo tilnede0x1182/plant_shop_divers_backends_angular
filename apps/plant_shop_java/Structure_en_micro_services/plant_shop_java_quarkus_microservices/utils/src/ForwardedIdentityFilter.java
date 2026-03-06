@@ -14,6 +14,12 @@ import java.io.IOException;
 @Priority(1) // Haute priorité pour s'assurer qu'il s'exécute avant les Guards
 public class ForwardedIdentityFilter implements ContainerRequestFilter {
 
+    /**
+     * Filtre chaque requete pour extraire l'identite des headers.
+     *
+     * @param requestContext Contexte de la requete
+     * @throws IOException En cas d'erreur
+     */
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         ForwardedIdentity identity = extractIdentity(requestContext);
@@ -21,6 +27,12 @@ public class ForwardedIdentityFilter implements ContainerRequestFilter {
         // La libération du ThreadLocal sera gérée par le contexte de requête CDI/Quarkus
     }
 
+    /**
+     * Extrait l'identite depuis les headers X-User-Id et X-User-Admin.
+     *
+     * @param requestContext Contexte de la requete
+     * @return Identite extraite ou anonyme
+     */
     private ForwardedIdentity extractIdentity(ContainerRequestContext requestContext) {
         String idHeader = requestContext.getHeaderString("X-User-Id");
         if (idHeader == null || idHeader.isBlank()) {

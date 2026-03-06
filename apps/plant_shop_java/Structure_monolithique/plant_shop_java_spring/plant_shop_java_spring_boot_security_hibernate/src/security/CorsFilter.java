@@ -23,10 +23,23 @@ public class CorsFilter implements Filter {
         "http://127.0.0.1:8300"
     );
 
+    /**
+	 * Vérifie si l'origine est autorisée.
+	 * @param origin String Origine de la requête
+	 * @return boolean true si autorisée
+	 */
     private boolean isAllowed(String origin) {
         return origin != null && ALLOWED.contains(origin);
     }
 
+    /**
+	 * Filtre les requêtes pour ajouter les en-têtes CORS.
+	 * @param req ServletRequest Requête entrante
+	 * @param res ServletResponse Réponse sortante
+	 * @param chain FilterChain Chaîne de filtres
+	 * @throws IOException En cas d'erreur I/O
+	 * @throws ServletException En cas d'erreur servlet
+	 */
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {

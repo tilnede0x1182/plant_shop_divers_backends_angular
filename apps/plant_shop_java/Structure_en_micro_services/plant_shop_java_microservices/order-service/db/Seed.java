@@ -7,14 +7,28 @@ import java.util.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+/**
+ * Script de seed pour les commandes.
+ */
 public final class Seed {
 
     private static final int MAX_ORDERS_PER_USER = 7;
     private static final Random RNG = new Random();
 
-    private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+    /**
+	 * Génère un entier aléatoire entre min et max.
+	 * @param min Valeur minimale
+	 * @param max Valeur maximale
+	 * @return Entier aléatoire
+	 */
+	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
 
-    private static Map<String,String> env() throws IOException {
+    /**
+	 * Charge les variables d'environnement depuis le fichier .env.
+	 * @return Map des variables d'environnement
+	 * @throws IOException En cas d'erreur de lecture
+	 */
+	private static Map<String,String> env() throws IOException {
         Map<String,String> out = new HashMap<>();
         Path envPath = Path.of("../config/.env");
         if (!Files.exists(envPath)) {
@@ -33,7 +47,12 @@ public final class Seed {
         return out;
     }
 
-    public static void main(String[] args) throws Exception {
+    /**
+	 * Point d'entrée principal.
+	 * @param args Arguments de ligne de commande
+	 * @throws Exception En cas d'erreur
+	 */
+	public static void main(String[] args) throws Exception {
         Map<String,String> cfg = env();
         Connection db = DriverManager.getConnection(
             cfg.get("DATABASE_URL"), cfg.get("DATABASE_USER"), cfg.get("DATABASE_PASS")
@@ -58,7 +77,7 @@ public final class Seed {
             return;
         }
 
-        // 2. Récupérer les plantes
+        /** Classe interne pour stocker les infos d'une plante. */
         class PlantInfo{ int id,price,stock; PlantInfo(int id,int p,int s){this.id=id;price=p;stock=s;} }
         List<PlantInfo> plants = new ArrayList<>();
         try (Statement st = db.createStatement();

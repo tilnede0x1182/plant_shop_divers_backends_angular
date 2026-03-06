@@ -8,28 +8,28 @@ import java.util.ArrayList;
 import java.util.List;
 import models.Order;
 
-@Dependent
 /**
  * Repository pour les opérations sur les commandes.
  */
+@Dependent
 public class OrderRepository extends BaseRepository<Order> {
 
-    @Inject
     /**
      * Constructeur avec injection de connexion.
      * @param db Connexion à la base de données
      */
+    @Inject
     public OrderRepository(Connection db) {
         super(db, "orders");
     }
 
-    @Override
     /**
      * Mappe un ResultSet vers un Order.
      * @param rs ResultSet à mapper
      * @return Order créé
      * @throws SQLException En cas d'erreur SQL
      */
+    @Override
     protected Order mapFromResultSet(ResultSet rs) throws SQLException {
         return new Order(
             rs.getInt("id"),

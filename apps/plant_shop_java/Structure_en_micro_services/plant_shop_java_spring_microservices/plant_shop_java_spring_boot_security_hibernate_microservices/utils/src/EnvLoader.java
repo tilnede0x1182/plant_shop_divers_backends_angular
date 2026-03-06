@@ -23,8 +23,13 @@ public final class EnvLoader {
 
     private static volatile Map<String, String> cache;
 
+    /** Constructeur privé (classe utilitaire). */
     private EnvLoader() {}
 
+    /**
+     * Charge les variables d'environnement depuis .env.
+     * @return Map<String, String> Variables chargées
+     */
     public static Map<String, String> load() {
         Map<String, String> local = cache;
         if (local != null) {
@@ -38,6 +43,10 @@ public final class EnvLoader {
         return cache;
     }
 
+    /**
+     * Lit le fichier .env depuis les emplacements candidats.
+     * @return Map<String, String> Variables lues
+     */
     private static Map<String, String> readEnv() {
         for (Path candidate : CANDIDATES) {
             if (Files.exists(candidate)) {
@@ -47,6 +56,11 @@ public final class EnvLoader {
         return Map.of();
     }
 
+    /**
+     * Parse un fichier .env.
+     * @param file Path Chemin du fichier
+     * @return Map<String, String> Variables parsées
+     */
     private static Map<String, String> parse(Path file) {
         Map<String, String> values = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(file.toFile()))) {

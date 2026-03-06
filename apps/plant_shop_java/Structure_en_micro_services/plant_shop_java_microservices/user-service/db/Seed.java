@@ -7,6 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import util.PasswordUtil;
 
+/**
+ * Script de seed pour le service utilisateur.
+ */
 public final class Seed {
 
     private static final int NB_ADMINS = 3;
@@ -21,12 +24,38 @@ public final class Seed {
     private static final String[] EMAIL_DOMAINS = {"gmail.com","yahoo.com","hotmail.com"};
     private static final Random RNG = new Random();
 
-    private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
-    private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
-    private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
-    private static String hash(String p){ return PasswordUtil.hashPassword(p); }
+    /**
+	 * Génère un entier aléatoire.
+	 * @param min Valeur minimale
+	 * @param max Valeur maximale
+	 * @return Entier aléatoire
+	 */
+	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+    /**
+	 * Sélectionne un élément aléatoire.
+	 * @param arr Tableau source
+	 * @param <T> Type des éléments
+	 * @return Élément aléatoire
+	 */
+	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+    /**
+	 * Génère un mot de passe aléatoire.
+	 * @return Mot de passe
+	 */
+	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+    /**
+	 * Hash un mot de passe.
+	 * @param p Mot de passe
+	 * @return Hash
+	 */
+	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
 
-    private static Map<String,String> env() throws IOException {
+    /**
+	 * Charge les variables d'environnement.
+	 * @return Map des variables
+	 * @throws IOException En cas d'erreur de lecture
+	 */
+	private static Map<String,String> env() throws IOException {
         Map<String,String> out = new HashMap<>();
         Path envPath = Path.of("../config/.env");
         if (!Files.exists(envPath)) {
@@ -45,7 +74,12 @@ public final class Seed {
         return out;
     }
 
-    public static void main(String[] args) throws Exception {
+    /**
+	 * Point d'entrée du seed.
+	 * @param args Arguments CLI
+	 * @throws Exception En cas d'erreur
+	 */
+	public static void main(String[] args) throws Exception {
         Map<String,String> cfg = env();
         Connection db = DriverManager.getConnection(
             cfg.get("DATABASE_URL"), cfg.get("DATABASE_USER"), cfg.get("DATABASE_PASS")

@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
+/** Handler HTTP pour router les requetes vers les microservices */
 final class GatewayHandler implements HttpHandler {
 
     private final GatewayConfig config;
@@ -24,6 +25,7 @@ final class GatewayHandler implements HttpHandler {
         this.http = http;
     }
 
+    /** Gere une requete HTTP entrante */
     @Override
     public void handle(HttpExchange ex) throws IOException {
         try {
@@ -34,6 +36,7 @@ final class GatewayHandler implements HttpHandler {
         }
     }
 
+    /** Forward une requete vers le microservice approprie */
     private void forward(HttpExchange ex) throws Exception {
         URI uri = ex.getRequestURI();
         String path = uri.getPath();
@@ -110,6 +113,7 @@ final class GatewayHandler implements HttpHandler {
         }
     }
 
+    /** Resout la session utilisateur via le service auth */
     private SessionContext resolveSession(HttpExchange ex) throws Exception {
         String sessionId = Request.extractSessionId(ex);
         if (sessionId == null) {
@@ -131,6 +135,7 @@ final class GatewayHandler implements HttpHandler {
         return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
     }
 
+    /** Envoie une reponse JSON */
     private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
@@ -142,7 +147,9 @@ final class GatewayHandler implements HttpHandler {
     }
 }
 
+/** Cible de routage (service + chemin) */
 record RouteTarget(String service, String path) {
+    /** Resout le service cible en fonction du chemin */
     static RouteTarget resolve(String path) {
         if (path.startsWith("/auth")) {
             return new RouteTarget("auth", path);
@@ -160,7 +167,9 @@ record RouteTarget(String service, String path) {
     }
 }
 
+/** Contexte de session utilisateur */
 record SessionContext(boolean authenticated, int userId, boolean admin) {
+    /** Cree un contexte anonyme (non authentifie) */
     static SessionContext anonymous() {
         return new SessionContext(false, -1, false);
     }

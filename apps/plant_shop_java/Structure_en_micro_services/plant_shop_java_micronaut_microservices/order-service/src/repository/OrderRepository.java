@@ -8,15 +8,28 @@ import java.util.ArrayList;
 import java.util.List;
 import model.Order;
 
+/**
+ * Repository pour la gestion des commandes.
+ */
 @Singleton
 public final class OrderRepository {
 
     private final Connection db;
 
+    /**
+     * Construit le repository avec la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     public OrderRepository(Connection db) {
         this.db = db;
     }
 
+    /**
+     * Recherche une commande par son ID.
+     * @param id Identifiant de la commande
+     * @return Commande trouvée ou null
+     * @throws SQLException En cas d'erreur BDD
+     */
     public Order find(int id) throws SQLException {
         String sql = "SELECT * FROM orders WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -30,6 +43,11 @@ public final class OrderRepository {
         }
     }
 
+    /**
+     * Liste toutes les commandes.
+     * @return Liste des commandes
+     * @throws SQLException En cas d'erreur BDD
+     */
     public List<Order> list() throws SQLException {
         String sql = "SELECT * FROM orders ORDER BY id";
         List<Order> orders = new ArrayList<>();
@@ -42,6 +60,11 @@ public final class OrderRepository {
         return orders;
     }
 
+    /**
+     * Supprime une commande par son ID.
+     * @param id Identifiant de la commande
+     * @throws SQLException En cas d'erreur BDD
+     */
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM orders WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -50,6 +73,12 @@ public final class OrderRepository {
         }
     }
 
+    /**
+     * Convertit un ResultSet en objet Order.
+     * @param rs ResultSet positionné sur une ligne
+     * @return Objet Order correspondant
+     * @throws SQLException En cas d'erreur de lecture
+     */
     private Order mapFromResultSet(ResultSet rs) throws SQLException {
         return new Order(
             rs.getInt("id"),
@@ -60,6 +89,12 @@ public final class OrderRepository {
         );
     }
 
+    /**
+     * Insère une nouvelle commande en base.
+     * @param o Commande à insérer
+     * @return ID généré de la commande
+     * @throws SQLException En cas d'erreur d'insertion
+     */
     public int create(Order o) throws SQLException {
         String sql = "INSERT INTO orders(user_id, total, status) VALUES (?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -74,6 +109,12 @@ public final class OrderRepository {
         }
     }
 
+    /**
+     * Met à jour le montant total d'une commande.
+     * @param id Identifiant de la commande
+     * @param total Nouveau montant total
+     * @throws SQLException En cas d'erreur BDD
+     */
     public void updateTotal(int id, BigDecimal total) throws SQLException {
         String sql = "UPDATE orders SET total=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -83,6 +124,12 @@ public final class OrderRepository {
         }
     }
 
+    /**
+     * Met à jour le statut d'une commande.
+     * @param id Identifiant de la commande
+     * @param status Nouveau statut
+     * @throws SQLException En cas d'erreur BDD
+     */
     public void updateStatus(int id, String status) throws SQLException {
         String sql = "UPDATE orders SET status=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
@@ -92,6 +139,12 @@ public final class OrderRepository {
         }
     }
 
+    /**
+     * Liste les commandes d'un utilisateur.
+     * @param userId Identifiant de l'utilisateur
+     * @return Liste des commandes
+     * @throws SQLException En cas d'erreur BDD
+     */
     public List<Order> listByUser(int userId) throws SQLException {
         List<Order> results = new ArrayList<>();
         String sql = "SELECT * FROM orders WHERE user_id=?";

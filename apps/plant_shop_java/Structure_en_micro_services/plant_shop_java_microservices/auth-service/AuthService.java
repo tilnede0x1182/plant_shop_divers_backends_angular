@@ -67,7 +67,12 @@ public final class AuthService {
         }));
     }
 
-    private static Map<String, String> loadEnv() throws IOException {
+    /**
+	 * Charge les variables d'environnement depuis les fichiers .env.
+	 * @return Map des variables d'environnement
+	 * @throws IOException En cas d'erreur de lecture
+	 */
+	private static Map<String, String> loadEnv() throws IOException {
         Map<String, String> values = new HashMap<>();
         readEnv(Path.of("../config/.env"), values);
         readEnv(Path.of(".env"), values);
@@ -110,12 +115,12 @@ final class AuthRoutes implements HttpHandler {
         this.auth = new AuthController(db);
     }
 
-    @Override
     /**
      * Traite une requête HTTP.
      * @param exchange Échange HTTP
      * @throws IOException En cas d'erreur I/O
      */
+    @Override
     public void handle(HttpExchange exchange) throws IOException {
         auth.handle(exchange);
     }

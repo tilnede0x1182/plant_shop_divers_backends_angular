@@ -10,12 +10,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Lanceur de services Quarkus.
+ * Localise le fast-jar et demarre le service sur le port configure.
+ */
 public final class ServiceLauncher {
 
     private static final String ENV_FILE = "config/.env";
 
+    /** Constructeur prive pour empecher l'instanciation. */
     private ServiceLauncher() {}
 
+    /**
+     * Lance un service Quarkus.
+     *
+     * @param serviceName Nom du service
+     * @param envPortKey Cle de la variable d'environnement pour le port
+     * @param defaultPort Port par defaut
+     * @param args Arguments de ligne de commande
+     */
     public static void run(String serviceName, String envPortKey, int defaultPort, String[] args) {
         Path projectRoot = locateProjectRoot();
         Map<String, String> env = loadEnv(projectRoot.resolve(ENV_FILE));
@@ -50,6 +63,11 @@ public final class ServiceLauncher {
         }
     }
 
+    /**
+     * Localise la racine du projet.
+     *
+     * @return Chemin de la racine
+     */
     private static Path locateProjectRoot() {
         Path current = Path.of("").toAbsolutePath();
         while (current != null) {
@@ -61,6 +79,12 @@ public final class ServiceLauncher {
         throw new IllegalStateException("Impossible de localiser le projet (Makefile/.quarkus).");
     }
 
+    /**
+     * Charge les variables d'environnement depuis un fichier.
+     *
+     * @param path Chemin du fichier .env
+     * @return Map des variables
+     */
     private static Map<String, String> loadEnv(Path path) {
         Map<String, String> values = new HashMap<>();
         if (!Files.exists(path)) {

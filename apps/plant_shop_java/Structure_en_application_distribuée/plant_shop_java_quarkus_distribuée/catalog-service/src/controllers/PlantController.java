@@ -18,10 +18,10 @@ import util.ApiMapper;
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RequestScoped
 /**
  * Contrôleur REST pour les plantes.
  */
+@RequestScoped
 public class PlantController {
 
     @Inject
@@ -44,13 +44,13 @@ public class PlantController {
         return COLLATOR.compare(a.name, b.name);
     }
 
-    @GET
-    @Path("/plants")
     /**
      * Liste toutes les plantes publiquement.
      * @return Réponse avec liste des plantes
      * @throws Exception En cas d'erreur
      */
+    @GET
+    @Path("/plants")
     public Response listPublic() throws Exception {
         List<?> payload = repo.list().stream()
             .sorted(this::comparePlants)
@@ -59,13 +59,13 @@ public class PlantController {
         return Response.ok(payload).build();
     }
 
-    @GET
-    @Path("/admin/plants")
     /**
      * Liste toutes les plantes (admin).
      * @return Réponse avec liste des plantes
      * @throws Exception En cas d'erreur
      */
+    @GET
+    @Path("/admin/plants")
     public Response listAdmin() throws Exception {
         guards.requireAdmin();
         // Sécurise la route
@@ -73,14 +73,14 @@ public class PlantController {
         // Réutilise la logique publique
     }
 
-    @GET
-    @Path("/plants/{id}")
     /**
      * Affiche une plante par ID.
      * @param id ID de la plante
      * @return Réponse avec la plante
      * @throws Exception En cas d'erreur
      */
+    @GET
+    @Path("/plants/{id}")
     public Response show(@PathParam("id") int id) throws Exception {
         Plant plant = repo.find(id);
         return plant != null
@@ -89,15 +89,15 @@ public class PlantController {
             : Response.status(Response.Status.NOT_FOUND).build();
     }
 
-    @POST
-    @Path("/admin/plants")
-    @Transactional
     /**
      * Crée une nouvelle plante.
      * @param plant Plante à créer
      * @return Réponse avec la plante créée
      * @throws Exception En cas d'erreur
      */
+    @POST
+    @Path("/admin/plants")
+    @Transactional
     public Response create(Plant plant) throws Exception {
         guards.requireAdmin();
         int id = repo.create(plant);
@@ -107,9 +107,6 @@ public class PlantController {
                        .build();
     }
 
-    @PATCH
-    @Path("/admin/plants/{id}")
-    @Transactional
     /**
      * Met à jour une plante.
      * @param id ID de la plante
@@ -117,6 +114,9 @@ public class PlantController {
      * @return Réponse avec la plante mise à jour
      * @throws Exception En cas d'erreur
      */
+    @PATCH
+    @Path("/admin/plants/{id}")
+    @Transactional
     public Response update(@PathParam("id") int id, Plant updatedData) throws Exception {
         guards.requireAdmin();
         Plant existing = repo.find(id);
@@ -133,15 +133,15 @@ public class PlantController {
         return Response.ok(ApiMapper.toPlant(repo.find(id))).build();
     }
 
-    @DELETE
-    @Path("/admin/plants/{id}")
-    @Transactional
     /**
      * Supprime une plante.
      * @param id ID de la plante
      * @return Réponse de succès
      * @throws Exception En cas d'erreur
      */
+    @DELETE
+    @Path("/admin/plants/{id}")
+    @Transactional
     public Response destroy(@PathParam("id") int id) throws Exception {
         guards.requireAdmin();
         repo.delete(id);

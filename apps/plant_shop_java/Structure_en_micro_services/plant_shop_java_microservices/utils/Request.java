@@ -9,7 +9,10 @@ import java.util.stream.Stream;
  */
 public final class Request {
 
-    private Request() {}
+    /**
+	 * Constructeur privé.
+	 */
+	private Request() {}
 
     /**
 	 * Extrait la valeur du cookie session_id si présent.

@@ -25,6 +25,9 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Map;
 
+/**
+ * Contrôleur REST pour la gestion des commandes.
+ */
 @Controller("/orders")
 public class OrderController {
 
@@ -35,6 +38,10 @@ public class OrderController {
     private final HttpClient httpClient;
     private final String catalogServiceUrl;
 
+    /**
+     * Construit le contrôleur avec la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     @Inject
     public OrderController(Connection db) {
         this.db = db;
@@ -50,6 +57,12 @@ public class OrderController {
                 .build();
     }
 
+    /**
+     * Liste les commandes de l'utilisateur authentifié.
+     * @param request Requête HTTP
+     * @return Liste des commandes
+     * @throws Exception En cas d'erreur BDD
+     */
     @Get
     public List<?> list(HttpRequest<?> request) throws Exception {
         UserDTO currentUser = Guards.requireUser(request);
@@ -63,12 +76,25 @@ public class OrderController {
         return payload;
     }
 
+    /**
+     * Liste toutes les commandes (admin).
+     * @param request Requête HTTP
+     * @return Liste des commandes
+     * @throws Exception En cas d'erreur BDD
+     */
     @Get("/admin/orders")
     public List<?> listAdmin(HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
         return list(request);
     }
 
+    /**
+     * Crée une nouvelle commande.
+     * @param body Corps de la requête
+     * @param request Requête HTTP
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Post
     public HttpResponse<?> create(@Body Map<String, List<Map<String, Integer>>> body, HttpRequest<?> request) throws Exception {
         UserDTO currentUser = Guards.requireUser(request);
@@ -102,6 +128,14 @@ public class OrderController {
         }
     }
 
+    /**
+     * Met à jour le statut d'une commande (admin).
+     * @param id Identifiant de la commande
+     * @param body Corps de la requête
+     * @param request Requête HTTP
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Patch("/{id}")
     public HttpResponse<?> patch(@PathVariable int id, @Body Map<String, String> body, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -113,11 +147,26 @@ public class OrderController {
         return HttpResponse.ok(toOrderJson(updated, itemRepo.listByOrder(id)));
     }
 
+    /**
+     * Met à jour une commande via route admin.
+     * @param id Identifiant de la commande
+     * @param body Corps de la requête
+     * @param request Requête HTTP
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Patch("/admin/orders/{id}")
     public HttpResponse<?> patchAdmin(@PathVariable int id, @Body Map<String, String> body, HttpRequest<?> request) throws Exception {
         return patch(id, body, request);
     }
 
+    /**
+     * Supprime une commande (admin).
+     * @param id Identifiant de la commande
+     * @param request Requête HTTP
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Delete("/{id}")
     public HttpResponse<?> destroy(@PathVariable int id, HttpRequest<?> request) throws Exception {
         Guards.requireAdmin(request);
@@ -126,11 +175,25 @@ public class OrderController {
         return HttpResponse.ok();
     }
 
+    /**
+     * Supprime une commande via route admin.
+     * @param id Identifiant de la commande
+     * @param request Requête HTTP
+     * @return Réponse HTTP
+     * @throws Exception En cas d'erreur BDD
+     */
     @Delete("/admin/orders/{id}")
     public HttpResponse<?> destroyAdmin(@PathVariable int id, HttpRequest<?> request) throws Exception {
         return destroy(id, request);
     }
 
+    /**
+     * Crée un item de commande et met à jour le stock.
+     * @param orderId ID de la commande parente
+     * @param itemMap Données de l'item
+     * @return Montant total de l'item
+     * @throws Exception En cas d'erreur
+     */
     private BigDecimal createOrderItem(int orderId, Map<String, Integer> itemMap) throws Exception {
         int plantId = itemMap.get("plantId");
         int quantity = itemMap.get("quantity");
@@ -149,6 +212,12 @@ public class OrderController {
         return plant.price.multiply(BigDecimal.valueOf(quantity));
     }
 
+    /**
+     * Met à jour le stock via le service catalog.
+     * @param plantId ID de la plante
+     * @param newStock Nouveau stock
+     * @return true si succès
+     */
     private boolean updateCatalogStock(int plantId, int newStock) {
         try {
             String json = String.format("{\"stock\":%d}", newStock);
@@ -170,6 +239,13 @@ public class OrderController {
         }
     }
 
+    /**
+     * Convertit une commande en Map JSON.
+     * @param order Commande à convertir
+     * @param items Items de la commande
+     * @return Map représentant le JSON
+     * @throws Exception En cas d'erreur
+     */
     private Map<String, Object> toOrderJson(Order order, List<OrderItem> items) throws Exception {
         List<Map<String, Object>> itemsJson = new ArrayList<>(items.size());
         for (OrderItem item : items) {

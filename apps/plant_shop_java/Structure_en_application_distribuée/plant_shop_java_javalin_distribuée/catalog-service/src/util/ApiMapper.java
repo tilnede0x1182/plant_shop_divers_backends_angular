@@ -19,7 +19,12 @@ private ApiMapper() {
         // utilitaire statique
     }
 
-    public static Map<String, Object> toPlant(Plant plant) {
+    /**
+	 * Convertit une plante en Map pour l'API.
+	 * @param plant Plant Plante à convertir
+	 * @return Map représentant la plante
+	 */
+	public static Map<String, Object> toPlant(Plant plant) {
         Map<String, Object> map = base();
         map.put("id", plant.id);
         map.put("name", plant.name);
@@ -48,7 +53,11 @@ private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 
-    private static Map<String, Object> base() {
+    /**
+	 * Crée une Map de base ordonnée.
+	 * @return LinkedHashMap vide
+	 */
+	private static Map<String, Object> base() {
         return new LinkedHashMap<>();
     }
 }

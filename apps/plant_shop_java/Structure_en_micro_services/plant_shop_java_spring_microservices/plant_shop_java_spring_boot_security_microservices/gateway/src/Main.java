@@ -13,21 +13,25 @@ import java.util.Map;
 
 import util.EnvLoader;
 
+/** Classe principale de la Gateway */
 public final class Main {
 
     private final GatewayConfig config;
     private final HttpClient http;
+    /** Constructeur prive */
     private Main(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
+    /** Factory pour creer une instance de la gateway */
     public static Main create() throws Exception {
         GatewayConfig config = GatewayConfig.load();
         HttpClient http = HttpClient.newBuilder().build();
         return new Main(config, http);
     }
 
+    /** Demarre le serveur HTTP de la gateway */
     public void start() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port()), 0);
         server.createContext("/api", new GatewayHandler(config, http));
@@ -37,23 +41,28 @@ public final class Main {
     }
 }
 
+/** Configuration de la gateway */
 final class GatewayConfig {
     private final Map<String, String> values;
+    /** Constructeur prive */
     private GatewayConfig(Map<String, String> values) {
         this.values = values;
     }
 
+    /** Charge la configuration depuis les fichiers .env */
     public static GatewayConfig load() throws IOException {
         Map<String, String> values = new HashMap<>(EnvLoader.load());
         readEnv(Path.of(".env"), values);
         return new GatewayConfig(values);
     }
 
+    /** Retourne le port d'ecoute de la gateway */
     public int port() {
         return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS",
             values.getOrDefault("SERVER_ADRRESS", "4100")));
     }
 
+    /** Retourne l'URL d'un service backend */
     public String serviceUrl(String service) {
         String host = values.getOrDefault("SERVICE_HOST", "http://localhost");
         return switch (service) {
@@ -65,6 +74,7 @@ final class GatewayConfig {
         };
     }
 
+    /** Determine si une route necessite une authentification */
     public boolean requiresAuth(String service, String method, String path) {
         if ("auth".equals(service)) {
             return false;
@@ -76,6 +86,7 @@ final class GatewayConfig {
         return true;
     }
 
+    /** Lit un fichier .env et ajoute les valeurs a la map */
     private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;

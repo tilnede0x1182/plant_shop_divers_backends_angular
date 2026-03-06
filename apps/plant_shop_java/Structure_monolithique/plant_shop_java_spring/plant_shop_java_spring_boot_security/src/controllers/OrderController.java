@@ -20,6 +20,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Contrôleur REST pour les commandes.
+ */
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
@@ -33,6 +36,11 @@ public class OrderController {
     @Autowired
     Guards guards;
 
+    /**
+     * Liste les commandes de l'utilisateur connecté.
+     * @return ResponseEntity Liste des commandes
+     * @throws Exception En cas d'erreur
+     */
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> list() throws Exception {
         User currentUser = guards.requireUser();
@@ -51,6 +59,12 @@ public class OrderController {
         return ResponseEntity.ok(payload);
     }
 
+    /**
+     * Crée une nouvelle commande.
+     * @param body Map Corps de la requête
+     * @return ResponseEntity Commande créée
+     * @throws Exception En cas d'erreur
+     */
     @PostMapping
     public ResponseEntity<Object> create(@RequestBody Map<String, List<Map<String, Integer>>> body) throws Exception {
         User currentUser = guards.requireUser();
@@ -89,6 +103,13 @@ public class OrderController {
         }
     }
 
+    /**
+     * Met à jour le statut d'une commande.
+     * @param id int ID de la commande
+     * @param body Map Corps de la requête
+     * @return ResponseEntity Commande mise à jour
+     * @throws Exception En cas d'erreur
+     */
     @PatchMapping("/{id}")
     public ResponseEntity<Object> patch(@PathVariable("id") int id, @RequestBody Map<String, String> body) throws Exception {
         guards.requireAdmin();
@@ -107,6 +128,12 @@ public class OrderController {
         return ResponseEntity.ok(ApiMapper.toOrder(updated, items));
     }
 
+    /**
+     * Supprime une commande.
+     * @param id int ID de la commande
+     * @return ResponseEntity Réponse vide
+     * @throws Exception En cas d'erreur
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> destroy(@PathVariable("id") int id) throws Exception {
         guards.requireAdmin();

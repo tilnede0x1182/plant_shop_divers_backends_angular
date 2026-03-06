@@ -31,6 +31,11 @@ class Pm2Controller {
     };
   }
 
+  /**
+   * Exécute une commande pm2.
+   * @param {Array} args Arguments de la commande pm2
+   * @param {Object} options Options (allowFailure)
+   */
   runPm2(args, { allowFailure = false } = {}) {
     const result = spawnSync(this.pm2Bin, args, {
       cwd: this.rootDir,
@@ -47,6 +52,11 @@ class Pm2Controller {
     }
   }
 
+  /**
+   * Exécute une commande pm2 via npx.
+   * @param {Array} args Arguments de la commande
+   * @param {boolean} allowFailure Si true, ne lance pas d'erreur en cas d'échec
+   */
   runWithNpx(args, allowFailure) {
     const result = spawnSync('npx', ['pm2', ...args], {
       cwd: this.rootDir,
@@ -57,6 +67,10 @@ class Pm2Controller {
     }
   }
 
+  /**
+   * Démarre les services spécifiés.
+   * @param {string} target Service à démarrer (server, proxy ou all)
+   */
   start(target = 'all') {
     const services = this.resolveTargets(target);
     services.forEach((service) => {
@@ -81,6 +95,10 @@ class Pm2Controller {
     });
   }
 
+  /**
+   * Arrête les services spécifiés.
+   * @param {string} target Service à arrêter (server, proxy ou all)
+   */
   stop(target = 'all') {
     const services = this.resolveTargets(target);
     services.forEach((service) => {
@@ -88,6 +106,11 @@ class Pm2Controller {
     });
   }
 
+  /**
+   * Résout les cibles de service.
+   * @param {string} target Nom du service ou 'all'
+   * @return {Array} Tableau des services correspondants
+   */
   resolveTargets(target) {
     if (target === 'all') {
       return Object.values(this.services);
@@ -102,6 +125,10 @@ class Pm2Controller {
   }
 }
 
+/**
+ * Point d'entrée du script pm2.
+ * Parse les arguments et exécute l'action demandée.
+ */
 function main() {
   const [, , action, target = 'all'] = process.argv;
   if (!['start', 'stop'].includes(action)) {

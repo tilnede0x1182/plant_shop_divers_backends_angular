@@ -4,14 +4,27 @@ import java.sql.*;
 import java.util.*;
 import model.OrderItem;
 
+/**
+ * Repository pour la gestion des items de commande en base.
+ */
 public final class OrderItemRepository {
 
     private final Connection db;
 
+    /**
+     * Construit le repository avec la connexion BDD.
+     * @param db Connexion à la base de données
+     */
     public OrderItemRepository(Connection db) {
         this.db = db;
     }
 
+    /**
+     * Convertit un ResultSet en objet OrderItem.
+     * @param rs ResultSet positionné sur une ligne
+     * @return Objet OrderItem correspondant
+     * @throws SQLException En cas d'erreur de lecture
+     */
     private OrderItem mapFromResultSet(ResultSet rs) throws SQLException {
         return new OrderItem(
             rs.getInt("id"),
@@ -21,6 +34,13 @@ public final class OrderItemRepository {
             rs.getBigDecimal("price")
         );
     }
+
+    /**
+     * Insère un nouvel item de commande en base.
+     * @param it Item à insérer
+     * @return ID généré de l'item
+     * @throws SQLException En cas d'erreur d'insertion
+     */
     public int create(OrderItem it) throws SQLException {
         String sql = "INSERT INTO order_items(order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {

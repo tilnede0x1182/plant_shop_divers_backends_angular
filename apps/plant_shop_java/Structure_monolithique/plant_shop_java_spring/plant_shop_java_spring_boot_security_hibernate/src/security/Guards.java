@@ -6,11 +6,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 import org.springframework.http.HttpStatus;
 
-@Component
-@RequestScope
 /**
  * Classe de garde pour vérifier les autorisations d'accès.
  */
+@Component
+@RequestScope
 public class Guards {
 
     @Autowired

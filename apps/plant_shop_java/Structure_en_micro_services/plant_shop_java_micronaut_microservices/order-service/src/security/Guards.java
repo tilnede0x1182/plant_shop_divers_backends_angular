@@ -11,8 +11,17 @@ import model.UserDTO;
  */
 public final class Guards {
 
+    /**
+     * Constructeur privé pour classe utilitaire.
+     */
     private Guards() {}
 
+    /**
+     * Exige un utilisateur authentifié via les headers.
+     * @param request Requête HTTP
+     * @return DTO utilisateur
+     * @throws HttpStatusException Si non authentifié
+     */
     public static UserDTO requireUser(HttpRequest<?> request) {
         String userIdHeader = request.getHeaders().get("X-User-Id");
         String adminHeader = request.getHeaders().get("X-User-Admin");
@@ -30,6 +39,12 @@ public final class Guards {
         }
     }
 
+    /**
+     * Exige un administrateur authentifié via les headers.
+     * @param request Requête HTTP
+     * @return DTO utilisateur admin
+     * @throws HttpStatusException Si non admin
+     */
     public static UserDTO requireAdmin(HttpRequest<?> request) {
         UserDTO user = requireUser(request);
         if (!user.isAdmin) {

@@ -18,6 +18,10 @@ import util.ApiMapper;
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+/**
+ * Contrôleur REST pour la gestion des plantes.
+ * Expose les endpoints publics et administrateur.
+ */
 @RequestScoped
 public class PlantController {
 
@@ -31,10 +35,23 @@ public class PlantController {
         COLLATOR = Collator.getInstance(Locale.ROOT);
         COLLATOR.setStrength(Collator.PRIMARY);
     }
+    /**
+     * Compare deux plantes par leur nom (insensible à la casse).
+     *
+     * @param a Première plante
+     * @param b Deuxième plante
+     * @return Résultat de la comparaison
+     */
     private int comparePlants(Plant a, Plant b) {
         return COLLATOR.compare(a.name, b.name);
     }
 
+    /**
+     * Liste toutes les plantes (endpoint public).
+     *
+     * @return Réponse HTTP avec la liste des plantes triées par nom
+     * @throws Exception En cas d'erreur lors de la récupération
+     */
     @GET
     @Path("/plants")
     public Response listPublic() throws Exception {
@@ -45,6 +62,13 @@ public class PlantController {
         return Response.ok(payload).build();
     }
 
+    /**
+     * Liste toutes les plantes (endpoint admin).
+     * Requiert un utilisateur administrateur.
+     *
+     * @return Réponse HTTP avec la liste des plantes
+     * @throws Exception En cas d'erreur lors de la récupération
+     */
     @GET
     @Path("/admin/plants")
     public Response listAdmin() throws Exception {
@@ -54,6 +78,13 @@ public class PlantController {
         // Réutilise la logique publique
     }
 
+    /**
+     * Récupère une plante par son ID.
+     *
+     * @param id ID de la plante
+     * @return Réponse HTTP avec la plante ou 404
+     * @throws Exception En cas d'erreur lors de la récupération
+     */
     @GET
     @Path("/plants/{id}")
     public Response show(@PathParam("id") int id) throws Exception {
@@ -64,6 +95,14 @@ public class PlantController {
             : Response.status(Response.Status.NOT_FOUND).build();
     }
 
+    /**
+     * Crée une nouvelle plante.
+     * Requiert un utilisateur administrateur.
+     *
+     * @param plant Données de la plante à créer
+     * @return Réponse HTTP 201 avec la plante créée
+     * @throws Exception En cas d'erreur lors de la création
+     */
     @POST
     @Path("/admin/plants")
     @Transactional
@@ -76,6 +115,15 @@ public class PlantController {
                        .build();
     }
 
+    /**
+     * Met à jour une plante existante.
+     * Requiert un utilisateur administrateur.
+     *
+     * @param id ID de la plante à modifier
+     * @param updatedData Nouvelles données de la plante
+     * @return Réponse HTTP avec la plante mise à jour ou 404
+     * @throws Exception En cas d'erreur lors de la mise à jour
+     */
     @PATCH
     @Path("/admin/plants/{id}")
     @Transactional
@@ -95,6 +143,14 @@ public class PlantController {
         return Response.ok(ApiMapper.toPlant(repo.find(id))).build();
     }
 
+    /**
+     * Supprime une plante.
+     * Requiert un utilisateur administrateur.
+     *
+     * @param id ID de la plante à supprimer
+     * @return Réponse HTTP 200
+     * @throws Exception En cas d'erreur lors de la suppression
+     */
     @DELETE
     @Path("/admin/plants/{id}")
     @Transactional

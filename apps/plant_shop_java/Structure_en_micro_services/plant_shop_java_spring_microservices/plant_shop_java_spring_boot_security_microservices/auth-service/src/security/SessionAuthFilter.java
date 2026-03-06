@@ -15,6 +15,10 @@ import java.util.Collections;
 import model.User;
 import repository.UserRepository;
 
+/**
+ * Filtre d'authentification basé sur les sessions.
+ * Extrait le cookie session_id et charge l'utilisateur dans le contexte de sécurité.
+ */
 @Component
 public class SessionAuthFilter extends OncePerRequestFilter {
 
@@ -23,6 +27,14 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Traite chaque requête pour extraire et valider la session.
+     * @param request Requête HTTP entrante
+     * @param response Réponse HTTP
+     * @param filterChain Chaîne de filtres
+     * @throws ServletException En cas d'erreur de servlet
+     * @throws IOException En cas d'erreur I/O
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                   HttpServletResponse response,
@@ -43,6 +55,11 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Extrait l'identifiant de session depuis les cookies.
+     * @param request Requête HTTP
+     * @return L'identifiant de session ou null
+     */
     private String extractSessionId(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -55,6 +72,11 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
+    /**
+     * Résout l'utilisateur à partir d'un identifiant de session.
+     * @param sessionId Identifiant de session
+     * @return L'utilisateur ou null si la session est invalide
+     */
     private User resolveUser(String sessionId) {
         try {
             Integer userId = sessionService.getSession(sessionId);

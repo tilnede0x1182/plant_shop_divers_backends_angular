@@ -6,6 +6,10 @@ const password = 'password';
 const hash = bcrypt.hashSync(password, 10);
 console.log('Hash à insérer manuellement dans la base :', hash);
 
+/**
+ * Fonction principale de test.
+ * Teste le login et l'accès au endpoint /me.
+ */
 async function main() {
   // Test login Manifest standard
   const loginRes = await fetch(`${API}/auth/users/login`, {

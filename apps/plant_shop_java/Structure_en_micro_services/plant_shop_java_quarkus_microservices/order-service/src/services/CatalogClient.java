@@ -25,10 +25,18 @@ public class CatalogClient {
     private final HttpClient httpClient;
     private final String baseUrl;
 
+    /**
+     * Constructeur par defaut. Charge la configuration depuis l'environnement.
+     */
     public CatalogClient() {
         this(EnvLoader.load());
     }
 
+    /**
+     * Constructeur avec configuration explicite.
+     *
+     * @param env Map des variables d'environnement
+     */
     CatalogClient(Map<String, String> env) {
         this.baseUrl = normalize(resolveBaseUrl(env));
         this.httpClient = HttpClient.newBuilder()
@@ -36,6 +44,13 @@ public class CatalogClient {
             .build();
     }
 
+    /**
+     * Recupere une plante depuis le service de catalogue.
+     *
+     * @param plantId ID de la plante
+     * @return Objet Plant ou null si non trouvee
+     * @throws Exception En cas d'erreur HTTP
+     */
     public Plant fetchPlant(int plantId) throws Exception {
         HttpRequest request = request("/api/plants/" + plantId)
             .GET()
@@ -52,6 +67,13 @@ public class CatalogClient {
         throw new IllegalStateException("Catalog service a renvoyé " + response.statusCode() + " sur GET /api/plants/" + plantId);
     }
 
+    /**
+     * Met a jour le stock d'une plante via le service de catalogue.
+     *
+     * @param plantId ID de la plante
+     * @param newStock Nouvelle valeur du stock
+     * @throws Exception En cas d'erreur HTTP
+     */
     public void updateStock(int plantId, int newStock) throws Exception {
         Map<String, Integer> payload = Map.of("stock", newStock);
         HttpRequest request = request("/internal/plants/" + plantId + "/stock")
@@ -65,6 +87,13 @@ public class CatalogClient {
         }
     }
 
+    /**
+     * Envoie une requete HTTP.
+     *
+     * @param request Requete a envoyer
+     * @return Reponse HTTP
+     * @throws Exception En cas d'erreur
+     */
     private HttpResponse<String> send(HttpRequest request) throws Exception {
         try {
             return httpClient.send(request, BodyHandlers.ofString());
@@ -88,6 +117,12 @@ public class CatalogClient {
         return builder;
     }
 
+    /**
+     * Resout l'URL de base du service de catalogue.
+     *
+     * @param env Map des variables d'environnement
+     * @return URL de base
+     */
     private static String resolveBaseUrl(Map<String, String> env) {
         String explicit = env.get("CATALOG_SERVICE_URL");
         if (explicit != null && !explicit.isBlank()) {
@@ -99,6 +134,12 @@ public class CatalogClient {
         return scheme + "://" + host + ":" + port;
     }
 
+    /**
+     * Normalise une URL en supprimant le slash final.
+     *
+     * @param url URL a normaliser
+     * @return URL normalisee
+     */
     private static String normalize(String url) {
         return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }

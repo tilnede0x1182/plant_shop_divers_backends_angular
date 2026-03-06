@@ -43,18 +43,30 @@ const PLANT_NAMES = [
 const randomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const randomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+/**
+ * Génère une fausse adresse email.
+ * @return Adresse email générée aléatoirement
+ */
 const fakeEmail = () => {
   const names = ['john', 'jane', 'bob', 'alice', 'charlie', 'david', 'emma', 'frank'];
   const domains = ['example.com', 'test.com', 'mail.com', 'demo.com'];
   return `${randomElement(names)}${randomInt(1, 999)}@${randomElement(domains)}`;
 };
 
+/**
+ * Génère un faux nom complet.
+ * @return Nom complet généré aléatoirement
+ */
 const fakeName = () => {
   const firstNames = ['Jean', 'Marie', 'Pierre', 'Sophie', 'Luc', 'Anne', 'Paul', 'Claire'];
   const lastNames = ['Dupont', 'Martin', 'Bernard', 'Dubois', 'Thomas', 'Robert', 'Petit', 'Richard'];
   return `${randomElement(firstNames)} ${randomElement(lastNames)}`;
 };
 
+/**
+ * Génère un faux mot de passe.
+ * @return Mot de passe aléatoire de 12 caractères
+ */
 const fakePassword = () => {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let pwd = '';
@@ -62,6 +74,10 @@ const fakePassword = () => {
   return pwd;
 };
 
+/**
+ * Génère une fausse phrase de description.
+ * @return Phrase générée aléatoirement
+ */
 const fakeSentence = () => {
   const words = ['Une', 'belle', 'plante', 'verte', 'pour', 'votre', 'jardin', 'intérieur', 'parfaite', 'magnifique'];
   const length = randomInt(8, 12);
@@ -78,14 +94,23 @@ class SeedService {
     });
   }
 
+  /**
+   * Établit la connexion à la base de données.
+   */
   async connect() {
     await this.client.connect();
   }
 
+  /**
+   * Ferme la connexion à la base de données.
+   */
   async disconnect() {
     await this.client.end();
   }
 
+  /**
+   * Vide toutes les tables de la base de données.
+   */
   async reset() {
     console.log('🗑️  Nettoyage des tables...');
     await this.client.query('DELETE FROM "order_item"');
@@ -95,6 +120,10 @@ class SeedService {
     await this.client.query('DELETE FROM "admin"');
   }
 
+  /**
+   * Crée les comptes administrateurs.
+   * @return Tableau des admins créés avec email et mot de passe
+   */
   async createAdmins() {
     console.log(`👨‍💼 Création de ${NB_ADMINS} admins...`);
     const admins = [];
@@ -121,6 +150,10 @@ class SeedService {
     return admins;
   }
 
+  /**
+   * Crée les comptes utilisateurs normaux.
+   * @return Tableau des utilisateurs créés avec email et mot de passe
+   */
   async createUsers() {
     console.log(`👤 Création de ${NB_USERS} utilisateurs...`);
     const users = [];
@@ -139,6 +172,10 @@ class SeedService {
     return users;
   }
 
+  /**
+   * Crée les plantes dans la base de données.
+   * @return Tableau des plantes créées avec id, prix et stock
+   */
   async createPlants() {
     console.log(`🌱 Création de ${NB_PLANTS} plantes...`);
     const plants = [];
@@ -160,6 +197,10 @@ class SeedService {
     return plants;
   }
 
+  /**
+   * Crée les commandes pour tous les utilisateurs.
+   * @param {Array} plants Tableau des plantes disponibles
+   */
   async createOrders(plants) {
     console.log(`📦 Création des commandes...`);
     const usersResult = await this.client.query('SELECT id FROM "user"');
@@ -173,6 +214,11 @@ class SeedService {
     }
   }
 
+  /**
+   * Crée une commande pour un utilisateur.
+   * @param {number} userId Identifiant de l'utilisateur
+   * @param {Array} plants Tableau des plantes disponibles
+   */
   async createOrderForUser(userId, plants) {
     const status = randomElement(['confirmed', 'pending', 'shipped', 'delivered']);
     const orderResult = await this.client.query(
@@ -192,6 +238,12 @@ class SeedService {
     );
   }
 
+  /**
+   * Ajoute un article à une commande.
+   * @param {number} orderId Identifiant de la commande
+   * @param {Array} plants Tableau des plantes disponibles
+   * @return {number} Prix total de l'article ajouté
+   */
   async addItem(orderId, plants) {
     const plant = randomElement(plants);
     if (!plant.stock) return 0;
@@ -213,6 +265,11 @@ class SeedService {
     return plant.price * qty;
   }
 
+  /**
+   * Écrit le fichier users.txt avec les identifiants.
+   * @param {Array} admins Tableau des administrateurs
+   * @param {Array} users Tableau des utilisateurs
+   */
   writeUsersFile(admins, users) {
     const path = join(__dirname, 'users.txt');
     let txt = 'Administrateurs :\n\n';
@@ -223,6 +280,9 @@ class SeedService {
     console.log(`📄 Fichier users.txt créé: ${path}`);
   }
 
+  /**
+   * Exécute le processus complet de seed.
+   */
   async run() {
     try {
       await this.connect();

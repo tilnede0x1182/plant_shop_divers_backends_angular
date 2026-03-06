@@ -9,10 +9,26 @@ import java.net.ServerSocket;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Utilitaire de lancement de microservices Spring Boot.
+ * Configure automatiquement le port et la datasource.
+ */
 public final class ServiceLauncher {
 
+    /**
+     * Constructeur privé pour empêcher l'instanciation.
+     */
     private ServiceLauncher() {}
 
+    /**
+     * Lance un microservice Spring Boot.
+     * @param source Class<?> La classe principale Spring Boot
+     * @param envPortKey String La clé d'environnement pour le port
+     * @param defaultPort int Le port par défaut
+     * @param serviceName String Le nom du service
+     * @param defaultDbName String Le nom de la base de données par défaut
+     * @param args String[] Les arguments CLI
+     */
     public static void launch(Class<?> source,
                               String envPortKey,
                               int defaultPort,

@@ -15,6 +15,13 @@ public class PlantLookup implements ApiMapper.PlantLookup {
     @Inject
     CatalogClient catalogClient;
 
+    /**
+     * Recherche une plante par son ID via le service de catalogue.
+     *
+     * @param id ID de la plante
+     * @return Objet Plant ou null si non trouvee
+     * @throws Exception En cas d'erreur HTTP
+     */
     @Override
     public Plant find(int id) throws Exception {
         return catalogClient.fetchPlant(id);

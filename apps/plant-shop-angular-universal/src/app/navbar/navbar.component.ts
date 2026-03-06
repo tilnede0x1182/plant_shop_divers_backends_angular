@@ -25,6 +25,9 @@ export class NavbarComponent implements OnInit {
   userId: number | null = null;
   estAdmin = false;
 
+  /**
+   * Initialise le composant : compteur panier, utilisateur courant, écoute des changements.
+   */
   ngOnInit(): void {
     // compteur panier (inchangé)
     this.cartService.cartCount$.subscribe(
@@ -44,6 +47,9 @@ export class NavbarComponent implements OnInit {
     });
   }
 
+  /**
+   * Déconnecte l'utilisateur et redirige vers l'accueil.
+   */
   logout(): void {
     this.auth.logout().subscribe({
       next: () => {
@@ -55,6 +61,11 @@ export class NavbarComponent implements OnInit {
     });
   }
 
+  /**
+   * Met en majuscule la première lettre de chaque mot du nom.
+   * @param name Nom à formater
+   * @return Nom formaté avec majuscules
+   */
   private capitalizeName(name: string): string {
     return name
       .split(' ')
@@ -63,6 +74,10 @@ export class NavbarComponent implements OnInit {
       .join(' ');
   }
 
+  /**
+   * Indique si l'utilisateur est connecté.
+   * @return true si connecté, false sinon
+   */
   get estConnecte(): boolean {
     return this.userId !== null;
   }

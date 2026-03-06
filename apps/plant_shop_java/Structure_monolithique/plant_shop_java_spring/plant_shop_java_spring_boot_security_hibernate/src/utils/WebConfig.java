@@ -12,10 +12,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
-@Configuration
 /**
  * Configuration Spring MVC pour la sérialisation JSON.
  */
+@Configuration
 public class WebConfig implements WebMvcConfigurer {
 
     /**
@@ -38,12 +38,12 @@ public class WebConfig implements WebMvcConfigurer {
         converters.add(jacksonConverter);
     }
 
-    @Bean
     /**
-	 * Crée le listener pour le contexte de requête.
-	 * @return Le RequestContextListener
-	 */
-	public RequestContextListener requestContextListener() {
+     * Crée le listener pour le contexte de requête.
+     * @return Le RequestContextListener
+     */
+    @Bean
+    public RequestContextListener requestContextListener() {
         return new RequestContextListener();
     }
 }

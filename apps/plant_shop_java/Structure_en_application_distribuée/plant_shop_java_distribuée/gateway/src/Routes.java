@@ -31,12 +31,12 @@ final class GatewayHandler implements HttpHandler {
         this.http = http;
     }
 
-    @Override
     /**
-	 * Traite une requête HTTP entrante.
-	 * @param ex L'échange HTTP
-	 */
-	public void handle(HttpExchange ex) throws IOException {
+     * Traite une requête HTTP entrante.
+     * @param ex L'échange HTTP
+     */
+    @Override
+    public void handle(HttpExchange ex) throws IOException {
         try {
             forward(ex);
         } catch (Exception e) {

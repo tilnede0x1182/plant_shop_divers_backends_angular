@@ -50,8 +50,18 @@ public final class Seed {
 	private static final Random RNG = new Random();
 
 	/* ---------- Helpers ---------- */
+	/**
+	 * Génère un entier aléatoire entre min et max (inclus).
+	 * @param min Valeur minimale
+	 * @param max Valeur maximale
+	 * @return Entier aléatoire
+	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
 
+	/**
+	 * Génère une phrase lorem ipsum aléatoire.
+	 * @return Phrase de 10 à 14 mots
+	 */
 	private static String loremSentence() {
 		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
 				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};

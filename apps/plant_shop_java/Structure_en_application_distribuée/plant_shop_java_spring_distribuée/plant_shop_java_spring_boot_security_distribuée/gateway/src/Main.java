@@ -12,23 +12,38 @@ import java.util.Map;
 
 import util.EnvLoader;
 
+/**
+ * Runtime de la gateway API.
+ */
 final class GatewayRuntime {
 
     private final GatewayConfig config;
     private final HttpClient http;
 
-    private GatewayRuntime(GatewayConfig config, HttpClient http) {
+    /**
+	 * Constructeur privé.
+	 * @param config Configuration de la gateway
+	 * @param http Client HTTP
+	 */
+	private GatewayRuntime(GatewayConfig config, HttpClient http) {
         this.config = config;
         this.http = http;
     }
 
-    static GatewayRuntime create() throws Exception {
+    /**
+	 * Crée une instance de la gateway.
+	 * @return Instance configurée
+	 */
+	static GatewayRuntime create() throws Exception {
         GatewayConfig config = GatewayConfig.load();
         HttpClient http = HttpClient.newBuilder().build();
         return new GatewayRuntime(config, http);
     }
 
-    void start() throws Exception {
+    /**
+	 * Démarre le serveur gateway.
+	 */
+	void start() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port()), 0);
         server.createContext("/api", new GatewayHandler(config, http));
         server.setExecutor(java.util.concurrent.Executors.newFixedThreadPool(16));
@@ -37,25 +52,45 @@ final class GatewayRuntime {
     }
 }
 
+/**
+ * Configuration de la gateway.
+ */
 final class GatewayConfig {
     private final Map<String, String> values;
 
-    private GatewayConfig(Map<String, String> values) {
+    /**
+	 * Constructeur privé.
+	 * @param values Map de configuration
+	 */
+	private GatewayConfig(Map<String, String> values) {
         this.values = values;
     }
 
-    static GatewayConfig load() throws IOException {
+    /**
+	 * Charge la configuration.
+	 * @return Configuration chargée
+	 */
+	static GatewayConfig load() throws IOException {
         Map<String, String> values = new HashMap<>(EnvLoader.load());
         readEnv(Path.of(".env"), values); // overrides locaux éventuels
         return new GatewayConfig(values);
     }
 
-    int port() {
+    /**
+	 * Retourne le port d'écoute.
+	 * @return Port configuré
+	 */
+	int port() {
         return Integer.parseInt(values.getOrDefault("SERVER_ADDRESS",
             values.getOrDefault("SERVER_ADRRESS", "4100")));
     }
 
-    String serviceUrl(String service) {
+    /**
+	 * Retourne l'URL d'un service.
+	 * @param service Nom du service
+	 * @return URL du service
+	 */
+	String serviceUrl(String service) {
         String host = values.getOrDefault("SERVICE_HOST", "http://localhost");
         return switch (service) {
             case "auth" -> host + ":" + values.getOrDefault("AUTH_SERVICE_PORT", "6101");
@@ -66,7 +101,14 @@ final class GatewayConfig {
         };
     }
 
-    boolean requiresAuth(String service, String method, String path) {
+    /**
+	 * Vérifie si une route requiert authentification.
+	 * @param service Nom du service
+	 * @param method Méthode HTTP
+	 * @param path Chemin de la requête
+	 * @return true si authentification requise
+	 */
+	boolean requiresAuth(String service, String method, String path) {
         if ("auth".equals(service)) {
             return false;
         }
@@ -77,7 +119,12 @@ final class GatewayConfig {
         return true;
     }
 
-    private static void readEnv(Path path, Map<String, String> values) throws IOException {
+    /**
+	 * Lit un fichier .env.
+	 * @param path Chemin du fichier
+	 * @param values Map où stocker les valeurs
+	 */
+	private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
         }

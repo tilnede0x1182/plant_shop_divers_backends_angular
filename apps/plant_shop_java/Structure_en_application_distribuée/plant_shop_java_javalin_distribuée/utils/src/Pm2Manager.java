@@ -74,25 +74,40 @@ private static void printUsage() {
             """);
     }
 
-    private static void requireArgs(String[] args, int expected) {
+    /**
+	 * Vérifie le nombre d'arguments.
+	 * @param args Arguments reçus
+	 * @param expected Nombre attendu
+	 */
+	private static void requireArgs(String[] args, int expected) {
         if (args.length < expected) {
             throw new IllegalArgumentException("Arguments insuffisants.");
         }
     }
 
-    private static void startAll() throws Exception {
+    /**
+	 * Démarre tous les services.
+	 */
+	private static void startAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             startOne(name);
         }
     }
 
-    private static void stopAll() throws Exception {
+    /**
+	 * Arrête tous les services.
+	 */
+	private static void stopAll() throws Exception {
         for (String name : SERVICES.keySet()) {
             stopOne(name);
         }
     }
 
-    private static void startAllWithLogs(Path dir) throws Exception {
+    /**
+	 * Démarre tous les services avec logs.
+	 * @param dir Répertoire des logs
+	 */
+	private static void startAllWithLogs(Path dir) throws Exception {
         Path logDir = dir.toAbsolutePath();
         Files.createDirectories(logDir);
         System.out.printf("🗂️  Logs dans %s%n", logDir);
@@ -101,7 +116,10 @@ private static void printUsage() {
         }
     }
 
-    private static void stopAllSilent() {
+    /**
+	 * Arrête tous les services silencieusement.
+	 */
+	private static void stopAllSilent() {
         for (String name : SERVICES.keySet()) {
             try {
                 stopOne(name, true);
@@ -111,11 +129,20 @@ private static void printUsage() {
         }
     }
 
-    private static void startOne(String name) throws Exception {
+    /**
+	 * Démarre un service par nom.
+	 * @param name Nom du service
+	 */
+	private static void startOne(String name) throws Exception {
         startOne(name, null);
     }
 
-    private static void startOne(String name, Path logDir) throws Exception {
+    /**
+	 * Démarre un service avec logs optionnels.
+	 * @param name Nom du service
+	 * @param logDir Répertoire des logs ou null
+	 */
+	private static void startOne(String name, Path logDir) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
@@ -145,11 +172,20 @@ private static void printUsage() {
         }
     }
 
-    private static void stopOne(String name) throws Exception {
+    /**
+	 * Arrête un service par nom.
+	 * @param name Nom du service
+	 */
+	private static void stopOne(String name) throws Exception {
         stopOne(name, false);
     }
 
-    private static void stopOne(String name, boolean quiet) throws Exception {
+    /**
+	 * Arrête un service avec option silence.
+	 * @param name Nom du service
+	 * @param quiet true pour ignorer les erreurs
+	 */
+	private static void stopOne(String name, boolean quiet) throws Exception {
         Service service = SERVICES.get(name);
         if (service == null) {
             throw new IllegalArgumentException("Service inconnu: " + name);
@@ -163,14 +199,22 @@ private static void printUsage() {
         runCommand(List.of("pm2", "delete", service.name()));
     }
 
-    private static void deleteIfExists(String name) throws Exception {
+    /**
+	 * Supprime un service PM2 s'il existe.
+	 * @param name Nom du service
+	 */
+	private static void deleteIfExists(String name) throws Exception {
         if (!processExists(name)) {
             return;
         }
         runCommand(List.of("pm2", "delete", name));
     }
 
-    private static void runCommand(List<String> command) throws Exception {
+    /**
+	 * Exécute une commande système.
+	 * @param command Commande à exécuter
+	 */
+	private static void runCommand(List<String> command) throws Exception {
         ProcessBuilder pb = new ProcessBuilder(command);
         pb.inheritIO();
         Process p = pb.start();
@@ -180,7 +224,12 @@ private static void printUsage() {
         }
     }
 
-    private static boolean processExists(String name) throws IOException, InterruptedException {
+    /**
+	 * Vérifie si un processus PM2 existe.
+	 * @param name Nom du service
+	 * @return true si le processus existe
+	 */
+	private static boolean processExists(String name) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder("pm2", "pid", name);
         pb.redirectError(ProcessBuilder.Redirect.DISCARD);
         Process p = pb.start();

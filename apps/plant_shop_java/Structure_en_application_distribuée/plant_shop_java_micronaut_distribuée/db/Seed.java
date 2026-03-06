@@ -60,10 +60,29 @@ public final class Seed {
 	 * @return int Entier aléatoire
 	 */
 	private static int rnd(int min,int max){ return min + RNG.nextInt(max - min + 1); }
+	/**
+	 * Sélectionne un élément aléatoire.
+	 * @param arr Tableau source
+	 * @return Élément sélectionné
+	 */
 	private static <T> T pick(T[] arr){ return arr[rnd(0,arr.length-1)]; }
+	/**
+	 * Génère un mot de passe aléatoire.
+	 * @return Mot de passe généré
+	 */
 	private static String randPwd(){ return "pw" + rnd(100000000,999999999); }
+
+	/**
+	 * Hash un mot de passe avec BCrypt.
+	 * @param p Mot de passe en clair
+	 * @return Hash BCrypt
+	 */
 	private static String hash(String p){ return PasswordUtil.hashPassword(p); }
 
+	/**
+	 * Génère une phrase lorem ipsum.
+	 * @return Phrase générée
+	 */
 	private static String loremSentence() {
 		String[] words = {"lorem","ipsum","dolor","sit","amet","consectetur","adipiscing","elit",
 				"sed","do","eiusmod","tempor","incididunt","ut","labore","et","dolore","magna","aliqua"};

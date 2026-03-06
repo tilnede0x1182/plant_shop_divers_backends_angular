@@ -29,7 +29,10 @@ import org.json.JSONObject;
  */
 public final class Test {
 
-	/* -------- .env -------- */
+	/**
+	 * Charge les variables d'environnement.
+	 * @return Map des variables
+	 */
 	private static Map<String, String> env() throws IOException {
 		Map<String, String> m = new HashMap<>();
 		try (BufferedReader br = new BufferedReader(new FileReader("config/.env"))) {
@@ -70,7 +73,10 @@ public Test() {
 		this.timestamp = ts();
 	}
 
-	/* -------- Utilitaires -------- */
+	/**
+	 * Génère un timestamp.
+	 * @return Timestamp formaté
+	 */
 	private static String ts() {
 		return new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
 	}
@@ -89,6 +95,13 @@ private static String rand(int n) {
 		return sb.toString();
 	}
 
+	/**
+	 * Attend que le serveur soit disponible.
+	 * @param host Hôte à contacter
+	 * @param port Port à tester
+	 * @param timeoutMs Timeout en ms
+	 * @return true si serveur répond
+	 */
 	private static boolean waitForServer(String host, int port, int timeoutMs) {
 		long startTime = System.currentTimeMillis();
 		while (System.currentTimeMillis() - startTime < timeoutMs) {
@@ -107,6 +120,15 @@ private static String rand(int n) {
 		return false;
 	}
 
+	/**
+	 * Effectue un appel HTTP et retourne un JSONObject.
+	 * @param m Méthode HTTP
+	 * @param p Chemin de l'API
+	 * @param exp Code HTTP attendu
+	 * @param body Corps de la requête
+	 * @param who Identifiant de session
+	 * @return Réponse JSON
+	 */
 	private JSONObject call(String m, String p, int exp, JSONObject body, String who) throws Exception {
 		HttpClient client = HttpClient.newBuilder().build();
 		HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -154,6 +176,15 @@ private static String rand(int n) {
 		return new JSONObject();
 	}
 
+	/**
+	 * Effectue un appel HTTP et retourne un JSONArray.
+	 * @param m Méthode HTTP
+	 * @param p Chemin de l'API
+	 * @param exp Code HTTP attendu
+	 * @param body Corps de la requête
+	 * @param who Identifiant de session
+	 * @return Réponse JSON array
+	 */
 	private JSONArray callArray(String m, String p, int exp, JSONObject body, String who) throws Exception {
 		// Wrapper pour les réponses qui sont des listes JSON
 		HttpClient client = HttpClient.newBuilder().build();
@@ -194,6 +225,13 @@ private static String rand(int n) {
 		call("POST", "/auth/login", 201, j, who);
 	}
 
+	/**
+	 * Inscrit un nouvel utilisateur.
+	 * @param name Nom de l'utilisateur
+	 * @param mail Email
+	 * @param pw Mot de passe
+	 * @param who Identifiant de session
+	 */
 	private void register(String name, String mail, String pw, String who) throws Exception {
 		JSONObject j = new JSONObject().put("name", name).put("email", mail).put("password", pw);
 		call("POST", "/auth/register", 201, j, who);
@@ -230,14 +268,20 @@ private static String rand(int n) {
 		}
 	}
 
+	/**
+	 * Vérifie qu'une clé contient un nombre.
+	 * @param o Objet à vérifier
+	 * @param k Clé à vérifier
+	 */
 	private static void assert_num(JSONObject o, String k) {
 		if (!(o.opt(k) instanceof Number)) {
 			throw new RuntimeException("Clé " + k + " n'est pas numérique ou absente");
 		}
 	}
 
-	/* -------- Modules de Test -------- */
-
+	/**
+	 * Test du module plants (CRUD admin).
+	 */
 	private void test_plants() throws Exception {
 		System.out.println("\n📌 TEST MODULE: PLANTS (admin)");
 		JSONObject plant_data = new JSONObject()
@@ -257,6 +301,9 @@ private static String rand(int n) {
 		call("DELETE", "/admin/plants/" + id, 200, null, "admin");
 	}
 
+	/**
+	 * Test du module users (CRUD admin).
+	 */
 	private void test_users() throws Exception {
 		System.out.println("\n📌 TEST MODULE: USERS (admin)");
 		String email = "utilisateur_test_" + this.timestamp + "@example.com";
@@ -273,6 +320,9 @@ private static String rand(int n) {
 		call("DELETE", "/users/" + id, 200, null, "admin");
 	}
 
+	/**
+	 * Test du module orders et order items.
+	 */
 	private void test_orders() throws Exception {
 		System.out.println("\n📌 TEST MODULE: ORDERS & ORDER ITEMS");
 		String plantName = "Plante_de_test_" + this.timestamp;
@@ -315,6 +365,10 @@ private static String rand(int n) {
 		call("DELETE", "/admin/plants/" + pid, 200, null, "admin");
 	}
 
+	/**
+	 * Test du profil utilisateur.
+	 * @param email Email de l'utilisateur à tester
+	 */
 	private void test_user_profile(String email) throws Exception {
 		System.out.println("\n📌 TEST MODULE: USER PROFILE (user)");
 		JSONArray users = callArray("GET", "/users", 200, null, "admin");
@@ -346,6 +400,9 @@ private static String rand(int n) {
 		assert_eq(check, "admin", false); // Vérification que l'utilisateur n'est pas devenu admin
 	}
 
+	/**
+	 * Test des rôles et permissions.
+	 */
 	private void test_auth_roles() throws Exception {
 		System.out.println("\n📌 TEST MODULE: ROLES");
 		JSONObject bad_plant = new JSONObject().put("name", "Bad").put("price", 1).put("stock", 1);
@@ -359,6 +416,9 @@ private static String rand(int n) {
 		call("GET", "/users", 403, null, "user");
 	}
 
+	/**
+	 * Test des opérations admin sur les plantes.
+	 */
 	private void test_admin_plants() throws Exception {
 		System.out.println("\n📌 TEST MODULE: ADMIN PLANTS");
 		JSONArray plantes = callArray("GET", "/admin/plants", 200, null, "admin");
@@ -376,6 +436,9 @@ private static String rand(int n) {
 		call("DELETE", "/admin/plants/" + id, 200, null, "admin");
 	}
 
+	/**
+	 * Test des opérations admin sur les utilisateurs.
+	 */
 	private void test_admin_users() throws Exception {
 		System.out.println("\n📌 TEST MODULE: ADMIN USERS");
 		String email = "admin_temp_" + this.timestamp + "@example.com";
@@ -411,6 +474,9 @@ private static String rand(int n) {
 		call("DELETE", "/users/" + id, 200, null, "admin");
 	}
 
+	/**
+	 * Test de l'endpoint /auth/me.
+	 */
 	private void test_auth_me() throws Exception {
 		System.out.println("\n📌 TEST MODULE: AUTH /me");
 		JSONObject me = call("GET", "/auth/me", 200, null, "user");

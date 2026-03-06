@@ -36,7 +36,12 @@ protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         );
     }
 
-    public int create(Plant p) throws SQLException {
+    /**
+	 * Crée une plante.
+	 * @param p Plante à créer
+	 * @return Identifiant généré
+	 */
+	public int create(Plant p) throws SQLException {
         String sql = "INSERT INTO plants(name, description, price, stock) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, p.name);
@@ -51,7 +56,11 @@ protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         }
     }
 
-    public void update(Plant p) throws SQLException {
+    /**
+	 * Met à jour une plante.
+	 * @param p Plante à mettre à jour
+	 */
+	public void update(Plant p) throws SQLException {
         String sql = "UPDATE plants SET name=?, description=?, price=?, stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setString(1, p.name);
@@ -63,8 +72,12 @@ protected Plant mapFromResultSet(ResultSet rs) throws SQLException {
         }
     }
 
-    // AJOUTÉ : Méthode pour mettre à jour uniquement le stock
-    public void updateStock(int id, int newStock) throws SQLException {
+    /**
+	 * Met à jour le stock d'une plante.
+	 * @param id Identifiant de la plante
+	 * @param newStock Nouveau stock
+	 */
+	public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setInt(1, newStock);

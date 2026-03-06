@@ -5,7 +5,11 @@ import { RouterModule } from '@angular/router';
 import { ApiService, Commande } from '../../services/api.service';
 
 // # Fonctions utilitaires
-/** Formate la date ISO en locale */
+/**
+ * Formate la date ISO en locale
+ * @param dateIso Date au format ISO à formater
+ * @return Date formatée en chaîne lisible
+ */
 function formaterDate(dateIso: string): string {
   return new Date(dateIso).toLocaleString();
 }
@@ -29,6 +33,11 @@ export class OrderListComponent implements OnInit {
     });
   }
 
+  /**
+   * Formate une date pour affichage
+   * @param dateIso Date au format ISO
+   * @return Date formatée
+   */
   protected formater(dateIso: string) {
     return formaterDate(dateIso);
   }

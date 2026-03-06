@@ -15,6 +15,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     '/favicon.ico',
   ];
 
+  /**
+   * Vérifie si la route est accessible (publique ou authentifiée)
+   * @param context Contexte d exécution NestJS
+   * @return true si accès autorisé
+   */
   canActivate(context: ExecutionContext) {
     const req = context.switchToHttp().getRequest();
     const path: string = req.path;
@@ -37,6 +42,14 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
+  /**
+   * Gère la requête après validation JWT
+   * @param err Erreur éventuelle
+   * @param user Utilisateur décodé du token
+   * @param info Infos supplémentaires
+   * @param context Contexte d exécution
+   * @return Utilisateur ou redirection
+   */
   handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse<Response>();

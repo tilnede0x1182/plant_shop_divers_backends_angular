@@ -21,6 +21,7 @@ export class AdminUsersListComponent implements OnInit {
   protected utilisateurs: any[] = [];
   protected message = '';
 
+  /** Initialise le composant et charge la liste */
   ngOnInit(): void {
     this.chargerUtilisateurs();
   }

@@ -6,6 +6,10 @@ import { map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 // # Guard Auth
+/**
+ * Guard vérifiant que l utilisateur est connecté
+ * @return true si connecté, sinon redirige vers login
+ */
 export const AuthGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

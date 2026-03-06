@@ -32,7 +32,13 @@ public class SessionAuthFilter extends OncePerRequestFilter {
     @Autowired
     UserRepository userRepo; // Le repo est @RequestScope, Spring injecte le bon proxy
 
-    @Override
+    /**
+	 * Filtre les requêtes et extrait la session.
+	 * @param request Requête HTTP
+	 * @param response Réponse HTTP
+	 * @param filterChain Chaîne de filtres
+	 */
+	@Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
@@ -48,7 +54,12 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private Cookie extractSessionCookie(HttpServletRequest request) {
+    /**
+	 * Extrait le cookie de session.
+	 * @param request Requête HTTP
+	 * @return Cookie de session ou null
+	 */
+	private Cookie extractSessionCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             return null;
@@ -61,7 +72,11 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private void handleSession(String sessionId) {
+    /**
+	 * Gère l'authentification depuis la session.
+	 * @param sessionId ID de session
+	 */
+	private void handleSession(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
             return;
         }
@@ -90,7 +105,12 @@ public class SessionAuthFilter extends OncePerRequestFilter {
         }
     }
 
-    private List<SimpleGrantedAuthority> buildAuthorities(boolean isAdmin) {
+    /**
+	 * Construit les autorités Spring Security.
+	 * @param isAdmin true si admin
+	 * @return Liste des autorités
+	 */
+	private List<SimpleGrantedAuthority> buildAuthorities(boolean isAdmin) {
         if (isAdmin) {
             return List.of(
                 new SimpleGrantedAuthority("ROLE_ADMIN"),

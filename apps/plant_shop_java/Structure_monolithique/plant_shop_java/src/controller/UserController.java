@@ -18,6 +18,10 @@ public final class UserController extends BaseController {
 
     private final UserRepository repo;
 
+    /**
+     * Constructeur du contrôleur d utilisateurs.
+     * @param db Connection Connexion à la base de données
+     */
     public UserController(Connection db) {
         super(db);
         this.repo = new UserRepository(db);

@@ -22,10 +22,12 @@ export class CartComponent {
   private lineTotals: Record<number, number> = {};
   private lineTimers: Record<number, any> = {};
 
+  /** Initialise le composant et charge le panier */
   ngOnInit(): void {
     this.refresh(true);
   }
 
+  /** Programme la mise à jour du total après délai */
   private scheduleTotalUpdate() {
     clearTimeout(this.totalTimer);
     this.totalTimer = setTimeout(() => {
@@ -36,11 +38,19 @@ export class CartComponent {
     }, 300);
   }
 
+  /**
+   * Récupère le total d une ligne
+   * @param id Identifiant de la plante
+   */
   getLineTotal(id: number): number {
     const val = this.lineTotals[id] ?? 0;
     return Math.round(val * 100) / 100;
   }
 
+  /**
+   * Programme la mise à jour du total ligne après délai
+   * @param item Article du panier
+   */
   private scheduleLineTotalUpdate(item: CartItem) {
     clearTimeout(this.lineTimers[item.id]);
     this.lineTimers[item.id] = setTimeout(() => {
@@ -48,6 +58,10 @@ export class CartComponent {
     }, 300);
   }
 
+  /**
+   * Rafraîchit l affichage du panier
+   * @param initial true si premier chargement
+   */
   refresh(initial: boolean = false) {
     this.items = this.cart.getAll();
 
@@ -69,11 +83,19 @@ export class CartComponent {
     }
   }
 
+  /**
+   * Incrémente la quantité d un article
+   * @param item Article du panier
+   */
   increment(item: CartItem) {
     this.cart.update(item.id, item.quantity + 1);
     this.refresh();
   }
 
+  /**
+   * Décrémente la quantité d un article
+   * @param item Article du panier
+   */
   decrement(item: CartItem) {
     if (item.quantity > 1) {
       this.cart.update(item.id, item.quantity - 1);
@@ -81,6 +103,11 @@ export class CartComponent {
     }
   }
 
+  /**
+   * Met à jour la quantité après délai
+   * @param id Identifiant de la plante
+   * @param value Nouvelle quantité
+   */
   delayedUpdate(id: number, value: any) {
     clearTimeout(this.timers[id]);
     const num = Number(value);
@@ -95,16 +122,22 @@ export class CartComponent {
     }, 300);
   }
 
+  /**
+   * Supprime un article du panier
+   * @param id Identifiant de la plante
+   */
   remove(id: number) {
     this.cart.remove(id);
     this.refresh();
   }
 
+  /** Vide le panier */
   clear() {
     this.cart.clear();
     this.refresh();
   }
 
+  /** Calcule le total du panier */
   total(): number {
     return Math.round(this.totalValue * 100) / 100;
   }

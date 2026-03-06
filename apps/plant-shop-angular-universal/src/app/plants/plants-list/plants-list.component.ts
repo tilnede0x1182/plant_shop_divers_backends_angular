@@ -39,7 +39,7 @@ export class PlantsListComponent implements OnInit {
 
   /**
    * Ajouter au panier
-   * @plante élément sélectionné
+   * @param plante Plante à ajouter
    */
   addToCart(plante: Plante): void {
     this.cartService.add(plante.id, plante.name, plante.price, plante.stock);

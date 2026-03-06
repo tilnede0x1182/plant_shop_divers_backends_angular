@@ -253,6 +253,11 @@ async function findUserUuidByTrueId(trueId) {
   return rows[0]?.id || null;
 }
 
+/**
+ * Recherche un utilisateur complet par true_id (avec dates)
+ * @param {number} trueId Identifiant true_id de l'utilisateur
+ * @return {Object|null} Utilisateur trouvé ou null
+ */
 async function findUserByTrueId(trueId) {
   const { rows } = await pool.query(
     'SELECT id, true_id, email, name, admin, "createdAt", "updatedAt" FROM "user" WHERE true_id = $1 LIMIT 1',

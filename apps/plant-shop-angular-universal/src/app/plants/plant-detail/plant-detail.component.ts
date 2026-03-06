@@ -12,7 +12,11 @@ type Cart = {
 };
 
 // # Fonctions utilitaires
-/** Décoder un JWT (payload uniquement, sans vérification) */
+/**
+ * Décoder un JWT (payload uniquement, sans vérification)
+ * @param token Token JWT à décoder
+ * @return Payload décodé ou null
+ */
 function decodeJwt(token: string | null): any | null {
   try {
     if (!token) return null;

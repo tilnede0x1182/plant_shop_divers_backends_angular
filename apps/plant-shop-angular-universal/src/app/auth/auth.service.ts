@@ -11,7 +11,13 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  /** Enregistrer un utilisateur */
+  /**
+   * Enregistrer un utilisateur
+   * @param email Email de l utilisateur
+   * @param password Mot de passe
+   * @param name Nom optionnel
+   * @return Observable de la réponse
+   */
   register(email: string, password: string, name?: string): Observable<any> {
     return this.http.post<any>(
       `${this.apiUrl}/register`,
@@ -20,7 +26,12 @@ export class AuthService {
     );
   }
 
-  /** Login utilisateur */
+  /**
+   * Login utilisateur
+   * @param email Email de l utilisateur
+   * @param password Mot de passe
+   * @return Observable de la réponse
+   */
   login(email: string, password: string): Observable<any> {
     return this.http
       .post<any>(

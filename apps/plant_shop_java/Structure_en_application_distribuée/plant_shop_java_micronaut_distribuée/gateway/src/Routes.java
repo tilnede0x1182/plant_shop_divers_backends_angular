@@ -131,7 +131,12 @@ private void forward(HttpExchange ex) throws Exception {
         }
     }
 
-    private SessionContext resolveSession(String sessionId) throws Exception {
+    /**
+	 * Résout la session depuis l'ID.
+	 * @param sessionId ID de session
+	 * @return Contexte de session
+	 */
+	private SessionContext resolveSession(String sessionId) throws Exception {
         if (sessionId == null) {
             return SessionContext.anonymous();
         }
@@ -157,7 +162,12 @@ private void forward(HttpExchange ex) throws Exception {
         return context;
     }
 
-    private void mirrorResponseHeaders(HttpExchange ex, HttpResponse<byte[]> response) {
+    /**
+	 * Copie les headers de réponse vers l'échange.
+	 * @param ex Échange HTTP
+	 * @param response Réponse du service
+	 */
+	private void mirrorResponseHeaders(HttpExchange ex, HttpResponse<byte[]> response) {
         ex.getResponseHeaders().set("Content-Type",
             response.headers().firstValue("Content-Type").orElse("application/json"));
         response.headers().map().forEach((key, values) -> {
@@ -169,7 +179,14 @@ private void forward(HttpExchange ex) throws Exception {
         });
     }
 
-    private void handleSessionSideEffects(HttpExchange ex, RouteTarget target, HttpResponse<byte[]> response, byte[] body) {
+    /**
+	 * Gère les effets de bord sur la session.
+	 * @param ex Échange HTTP
+	 * @param target Cible de routage
+	 * @param response Réponse du service
+	 * @param body Corps de la réponse
+	 */
+	private void handleSessionSideEffects(HttpExchange ex, RouteTarget target, HttpResponse<byte[]> response, byte[] body) {
         if (!"auth".equals(target.service())) {
             return;
         }
@@ -182,7 +199,12 @@ private void forward(HttpExchange ex) throws Exception {
         }
     }
 
-    private void registerSessionFromLogin(HttpResponse<byte[]> response, byte[] body) {
+    /**
+	 * Enregistre la session après login.
+	 * @param response Réponse du service auth
+	 * @param body Corps de la réponse
+	 */
+	private void registerSessionFromLogin(HttpResponse<byte[]> response, byte[] body) {
         String sessionId = extractSessionId(response.headers().allValues("set-cookie"));
         if (sessionId == null) {
             return;
@@ -195,7 +217,12 @@ private void forward(HttpExchange ex) throws Exception {
         }
     }
 
-    private String extractSessionId(List<String> setCookies) {
+    /**
+	 * Extrait l'ID de session des cookies Set-Cookie.
+	 * @param setCookies Liste des headers Set-Cookie
+	 * @return ID de session ou null
+	 */
+	private String extractSessionId(List<String> setCookies) {
         for (String header : setCookies) {
             String trimmed = header.trim();
             if (trimmed.startsWith("session_id=")) {
@@ -206,7 +233,13 @@ private void forward(HttpExchange ex) throws Exception {
         return null;
     }
 
-    private void sendJson(HttpExchange ex, int status, String body) throws IOException {
+    /**
+	 * Envoie une réponse JSON.
+	 * @param ex Échange HTTP
+	 * @param status Code de statut
+	 * @param body Corps JSON
+	 */
+	private void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         cors.apply(ex);
@@ -218,8 +251,18 @@ private void forward(HttpExchange ex) throws Exception {
     }
 }
 
+/**
+ * Cible de routage (service et chemin).
+ * @param service Nom du service cible
+ * @param path Chemin vers le service
+ */
 record RouteTarget(String service, String path) {
-    static RouteTarget resolve(String path) {
+    /**
+	 * Résout la cible depuis un chemin.
+	 * @param path Chemin de la requête
+	 * @return Cible de routage ou null
+	 */
+	static RouteTarget resolve(String path) {
         if (path.startsWith("/auth")) {
             return new RouteTarget("auth", path);
         }
@@ -236,39 +279,80 @@ record RouteTarget(String service, String path) {
     }
 }
 
+/**
+ * Contexte de session utilisateur.
+ * @param authenticated true si authentifié
+ * @param userId ID de l'utilisateur
+ * @param admin true si administrateur
+ */
 record SessionContext(boolean authenticated, int userId, boolean admin) {
-    static SessionContext anonymous() {
+    /**
+	 * Crée un contexte anonyme.
+	 * @return Contexte anonyme
+	 */
+	static SessionContext anonymous() {
         return new SessionContext(false, -1, false);
     }
 
-    static SessionContext authenticated(int userId, boolean admin) {
+    /**
+	 * Crée un contexte authentifié.
+	 * @param userId ID de l'utilisateur
+	 * @param admin true si admin
+	 * @return Contexte authentifié
+	 */
+	static SessionContext authenticated(int userId, boolean admin) {
         return new SessionContext(true, userId, admin);
     }
 }
 
+/**
+ * Registre des sessions actives.
+ */
 final class SessionRegistry {
     private final Map<String, SessionContext> sessions = new ConcurrentHashMap<>();
 
-    SessionContext get(String sessionId) {
+    /**
+	 * Récupère une session.
+	 * @param sessionId ID de session
+	 * @return Contexte ou null
+	 */
+	SessionContext get(String sessionId) {
         return sessions.get(sessionId);
     }
 
-    void put(String sessionId, SessionContext context) {
+    /**
+	 * Enregistre une session.
+	 * @param sessionId ID de session
+	 * @param context Contexte à enregistrer
+	 */
+	void put(String sessionId, SessionContext context) {
         sessions.put(sessionId, context);
     }
 
-    void remove(String sessionId) {
+    /**
+	 * Supprime une session.
+	 * @param sessionId ID de session
+	 */
+	void remove(String sessionId) {
         sessions.remove(sessionId);
     }
 }
 
+/**
+ * Support CORS pour la gateway.
+ */
 final class CorsSupport {
     private static final Set<String> ALLOWED = Set.of(
         "http://localhost:8300",
         "http://127.0.0.1:8300"
     );
 
-    boolean handlePreflight(HttpExchange ex) throws IOException {
+    /**
+	 * Gère les requêtes preflight OPTIONS.
+	 * @param ex Échange HTTP
+	 * @return true si preflight traité
+	 */
+	boolean handlePreflight(HttpExchange ex) throws IOException {
         if (!"OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
             return false;
         }
@@ -285,7 +369,11 @@ final class CorsSupport {
         return true;
     }
 
-    void apply(HttpExchange ex) {
+    /**
+	 * Applique les headers CORS à la réponse.
+	 * @param ex Échange HTTP
+	 */
+	void apply(HttpExchange ex) {
         String origin = origin(ex);
         if (!isAllowed(origin)) {
             return;
@@ -293,17 +381,32 @@ final class CorsSupport {
         applyCommon(ex, origin);
     }
 
-    private void applyCommon(HttpExchange ex, String origin) {
+    /**
+	 * Applique les headers CORS communs.
+	 * @param ex Échange HTTP
+	 * @param origin Origine de la requête
+	 */
+	private void applyCommon(HttpExchange ex, String origin) {
         ex.getResponseHeaders().set("Access-Control-Allow-Origin", origin);
         ex.getResponseHeaders().set("Access-Control-Allow-Credentials", "true");
         ex.getResponseHeaders().add("Vary", "Origin");
     }
 
-    private String origin(HttpExchange ex) {
+    /**
+	 * Extrait l'origine de la requête.
+	 * @param ex Échange HTTP
+	 * @return Valeur du header Origin
+	 */
+	private String origin(HttpExchange ex) {
         return ex.getRequestHeaders().getFirst("Origin");
     }
 
-    private boolean isAllowed(String origin) {
+    /**
+	 * Vérifie si l'origine est autorisée.
+	 * @param origin Origine à vérifier
+	 * @return true si autorisée
+	 */
+	private boolean isAllowed(String origin) {
         return origin != null && ALLOWED.contains(origin);
     }
 }

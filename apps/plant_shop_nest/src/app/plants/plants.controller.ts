@@ -19,7 +19,7 @@ import { Roles } from '../auth/roles.decorator';
 export class PlantsController {
   constructor(private readonly plantsService: PlantsService) {}
 
-  //**
+  /**
    * Retourne toutes les plantes disponibles
    * @return Liste des plantes
    */

@@ -23,7 +23,13 @@ private ApiMapper() {
         // utilitaire statique
     }
 
-    public static Map<String, Object> toOrder(Order order, List<Map<String, Object>> items) {
+    /**
+	 * Convertit une commande en Map API.
+	 * @param order Commande à convertir
+	 * @param items Liste des items
+	 * @return Map pour API
+	 */
+	public static Map<String, Object> toOrder(Order order, List<Map<String, Object>> items) {
         Map<String, Object> map = base();
         map.put("id", order.id);
         map.put("userId", order.userId);
@@ -34,7 +40,13 @@ private ApiMapper() {
         return map;
     }
 
-    public static Map<String, Object> toOrderItem(OrderItem item, Plant plant) {
+    /**
+	 * Convertit un élément de commande en Map API.
+	 * @param item Élément à convertir
+	 * @param plant Plante associée
+	 * @return Map pour API
+	 */
+	public static Map<String, Object> toOrderItem(OrderItem item, Plant plant) {
         Map<String, Object> map = base();
         map.put("id", item.id);
         map.put("orderId", item.orderId);
@@ -54,7 +66,13 @@ private ApiMapper() {
         return map;
     }
 
-    public static List<Map<String, Object>> toOrderItems(List<OrderItem> items, PlantLookup lookup) throws Exception {
+    /**
+	 * Convertit une liste d'éléments de commande.
+	 * @param items Éléments à convertir
+	 * @param lookup Fonction de recherche de plante
+	 * @return Liste de Maps pour API
+	 */
+	public static List<Map<String, Object>> toOrderItems(List<OrderItem> items, PlantLookup lookup) throws Exception {
         List<Map<String, Object>> mapped = new ArrayList<>(items.size());
         for (OrderItem item : items) {
             Plant plant = lookup.find(item.plantId);
@@ -75,16 +93,33 @@ private static Double toDecimal(BigDecimal value) {
         return value == null ? null : value.doubleValue();
     }
 
-    private static String toIso(Timestamp timestamp) {
+    /**
+	 * Convertit un timestamp en chaîne ISO.
+	 * @param timestamp Timestamp à convertir
+	 * @return Chaîne ISO ou null
+	 */
+	private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 
-    private static Map<String, Object> base() {
+    /**
+	 * Crée une Map de base ordonnée.
+	 * @return LinkedHashMap vide
+	 */
+	private static Map<String, Object> base() {
         return new LinkedHashMap<>();
     }
 
-    @FunctionalInterface
+    /**
+	 * Interface fonctionnelle pour rechercher une plante.
+	 */
+	@FunctionalInterface
     public interface PlantLookup {
-        Plant find(int id) throws Exception;
+        /**
+		 * Trouve une plante par ID.
+		 * @param id Identifiant de la plante
+		 * @return Plante trouvée
+		 */
+		Plant find(int id) throws Exception;
     }
 }

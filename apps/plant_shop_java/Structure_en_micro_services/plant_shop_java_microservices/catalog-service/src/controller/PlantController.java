@@ -175,9 +175,11 @@ public final class PlantController extends BaseController {
     }
 
     /**
-     * Gère la mise à jour du stock pour les appels internes.
-     * Route : PATCH /internal/plants/:id/stock
-     */
+	 * Gère la mise à jour du stock pour les appels internes.
+	 * Route : PATCH /internal/plants/:id/stock
+	 * @param ex HttpExchange L'échange HTTP
+	 * @param path String Le chemin de la requête
+	 */
     private void handleInternalStockUpdate(HttpExchange ex, String path) throws Exception {
         String[] parts = path.split("/");
         int id = -1;

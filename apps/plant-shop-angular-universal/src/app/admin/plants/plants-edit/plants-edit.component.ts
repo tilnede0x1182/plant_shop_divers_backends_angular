@@ -22,6 +22,7 @@ export class PlantsEditComponent implements OnInit {
     private router: Router
   ) {}
 
+  /** Charge la plante à éditer */
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id) {
@@ -34,6 +35,7 @@ export class PlantsEditComponent implements OnInit {
     });
   }
 
+  /** Soumet les modifications de la plante */
   onSubmit() {
     this.api.majPlanteAdmin(this.plante.id, this.plante).subscribe({
       next: () => this.router.navigate(['/admin/plants']),

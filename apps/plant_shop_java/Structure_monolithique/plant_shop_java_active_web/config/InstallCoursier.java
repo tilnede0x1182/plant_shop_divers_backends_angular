@@ -24,6 +24,10 @@ public class InstallCoursier {
     private static final String LIB_DIR = "lib";
     private static final String CS_URL = "https://git.io/coursier-cli";
 
+	/**
+	 * Point d entrée du script d installation des dépendances.
+	 * @param args String[] Arguments CLI (non utilisés)
+	 */
     public static void main(String[] args) {
         try {
             // System.out.println("📦 Installation des dépendances via Coursier...");
@@ -86,9 +90,9 @@ public class InstallCoursier {
 		}
 
     /**
-     * Copie immédiatement le jar depuis le cache vers ./lib si absent.
-     * Affiche une ligne une fois la copie réalisée ou si le fichier est ignoré.
-     */
+	 * Copie immédiatement le jar depuis le cache vers ./lib si absent.
+	 * @param jarPath String Chemin vers le fichier JAR
+	 */
     private static void copyJarImmediate(String jarPath) {
         try {
             Path src = Paths.get(jarPath);
@@ -128,9 +132,12 @@ public class InstallCoursier {
     }
 
 		/**
-		 * Supprime les .jar obsolètes dans ./lib qui ne sont plus référencés
-		 * par les dépendances actives ni leurs dépendances transitives.
-		 */
+	 * Supprime les .jar obsolètes dans ./lib qui ne sont plus référencés
+	 * par les dépendances actives ni leurs dépendances transitives.
+	 * @param deps List<String> Liste des dépendances actives
+	 * @throws IOException En cas d erreur I/O
+	 * @throws InterruptedException Si le processus est interrompu
+	 */
 		private static void cleanObsoleteJars(List<String> deps) throws IOException, InterruptedException {
 				boolean didDelete = false;
 

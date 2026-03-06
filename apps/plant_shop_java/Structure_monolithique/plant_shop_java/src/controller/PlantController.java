@@ -19,6 +19,10 @@ public final class PlantController extends BaseController {
 
     private final PlantRepository repo;
 
+    /**
+     * Constructeur du contrôleur de plantes.
+     * @param db Connection Connexion à la base de données
+     */
     public PlantController(Connection db) {
         super(db);
         this.repo = new PlantRepository(db);

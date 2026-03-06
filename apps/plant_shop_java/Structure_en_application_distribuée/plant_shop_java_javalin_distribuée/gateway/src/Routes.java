@@ -123,7 +123,12 @@ private void forward(HttpExchange ex) throws Exception {
         }
     }
 
-    private SessionContext resolveSession(HttpExchange ex) throws Exception {
+    /**
+	 * Résout la session utilisateur depuis les cookies.
+	 * @param ex Échange HTTP
+	 * @return Contexte de session
+	 */
+	private SessionContext resolveSession(HttpExchange ex) throws Exception {
         String sessionId = Request.extractSessionId(ex);
         if (sessionId == null) {
             return SessionContext.anonymous();
@@ -144,7 +149,13 @@ private void forward(HttpExchange ex) throws Exception {
         return new SessionContext(true, json.getInt("id"), json.optBoolean("admin", false));
     }
 
-    private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
+    /**
+	 * Envoie une réponse JSON.
+	 * @param ex Échange HTTP
+	 * @param status Code HTTP
+	 * @param body Corps JSON
+	 */
+	private static void sendJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         ex.getResponseHeaders().set("Content-Type", "application/json; charset=utf-8");
         ex.sendResponseHeaders(status, bytes.length);
@@ -154,7 +165,13 @@ private void forward(HttpExchange ex) throws Exception {
         ex.close();
     }
 
-    private <T> HttpResponse<T> sendWithRetry(HttpRequest request, HttpResponse.BodyHandler<T> handler) throws Exception {
+    /**
+	 * Envoie une requête HTTP avec retry automatique.
+	 * @param request Requête à envoyer
+	 * @param handler Handler de réponse
+	 * @return Réponse HTTP
+	 */
+	private <T> HttpResponse<T> sendWithRetry(HttpRequest request, HttpResponse.BodyHandler<T> handler) throws Exception {
         IOException lastError = null;
         for (int attempt = 0; attempt < 5; attempt++) {
             try {
@@ -174,8 +191,18 @@ private void forward(HttpExchange ex) throws Exception {
     }
 }
 
+/**
+ * Cible de routage (service et chemin).
+ * @param service Nom du service cible
+ * @param path Chemin vers le service
+ */
 record RouteTarget(String service, String path) {
-    static RouteTarget resolve(String path) {
+    /**
+	 * Résout le service cible depuis un chemin.
+	 * @param path Chemin de la requête
+	 * @return Cible de routage ou null
+	 */
+	static RouteTarget resolve(String path) {
         if (path.startsWith("/auth")) {
             return new RouteTarget("auth", path);
         }
@@ -192,8 +219,18 @@ record RouteTarget(String service, String path) {
     }
 }
 
+/**
+ * Contexte de session utilisateur.
+ * @param authenticated true si authentifié
+ * @param userId ID de l'utilisateur
+ * @param admin true si administrateur
+ */
 record SessionContext(boolean authenticated, int userId, boolean admin) {
-    static SessionContext anonymous() {
+    /**
+	 * Crée un contexte anonyme.
+	 * @return Contexte anonyme
+	 */
+	static SessionContext anonymous() {
         return new SessionContext(false, -1, false);
     }
 }

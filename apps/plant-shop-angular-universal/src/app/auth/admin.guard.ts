@@ -6,6 +6,10 @@ import { map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 // # Guard Admin
+/**
+ * Guard vérifiant que l utilisateur est admin
+ * @return true si admin, sinon redirige vers login
+ */
 export const AdminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);

@@ -22,7 +22,7 @@ import { Request } from 'express';
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
-  //**
+  /**
    * Liste les commandes de l'utilisateur courant
    * @param req Requête contenant l'utilisateur courant
    * @return Liste des commandes
@@ -33,7 +33,7 @@ export class OrdersController {
     return this.ordersService.findAll(userId);
   }
 
-  //**
+  /**
    * Crée une nouvelle commande pour l'utilisateur courant
    * @param data Données de la commande (items)
    * @param req Requête contenant l'utilisateur courant

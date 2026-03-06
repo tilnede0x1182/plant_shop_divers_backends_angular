@@ -103,11 +103,22 @@ private Handler requireUser(Handler handler) {
         return ctx -> handleWithUser(ctx, handler, false);
     }
 
-    private Handler requireAdmin(Handler handler) {
+    /**
+	 * Wrapper exigeant les droits administrateur.
+	 * @param handler Handler à protéger
+	 * @return Handler avec vérification admin
+	 */
+	private Handler requireAdmin(Handler handler) {
         return ctx -> handleWithUser(ctx, handler, true);
     }
 
-    private void handleWithUser(Context ctx, Handler handler, boolean adminOnly) throws Exception {
+    /**
+	 * Gère une requête avec vérification d'authentification.
+	 * @param ctx Contexte Javalin
+	 * @param handler Handler à exécuter
+	 * @param adminOnly true si droits admin requis
+	 */
+	private void handleWithUser(Context ctx, Handler handler, boolean adminOnly) throws Exception {
         User user = authenticate(ctx);
         if (adminOnly && !user.isAdmin) {
             throw new ForbiddenResponse("Accès refusé");
@@ -116,7 +127,12 @@ private Handler requireUser(Handler handler) {
         handler.handle(ctx);
     }
 
-    private User authenticate(Context ctx) throws Exception {
+    /**
+	 * Authentifie l'utilisateur depuis la session.
+	 * @param ctx Contexte Javalin
+	 * @return Utilisateur authentifié
+	 */
+	private User authenticate(Context ctx) throws Exception {
         String sessionId = ctx.cookie("session_id");
         if (sessionId == null) {
             throw new UnauthorizedResponse("Non authentifié");

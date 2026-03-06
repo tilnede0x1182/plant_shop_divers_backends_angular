@@ -67,7 +67,12 @@ protected User mapFromResultSet(ResultSet rs) throws SQLException {
 
     // Les méthodes `find(id)`, `list()` et `delete(id)` sont maintenant héritées de BaseRepository.
 
-    public int create(User u) throws SQLException {
+    /**
+	 * Crée un utilisateur.
+	 * @param u Utilisateur à créer
+	 * @return Identifiant généré
+	 */
+	public int create(User u) throws SQLException {
         String sql = "INSERT INTO users(name, email, password_hash, is_admin) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, u.name);
@@ -82,7 +87,11 @@ protected User mapFromResultSet(ResultSet rs) throws SQLException {
         }
     }
 
-    public void update(User u) throws SQLException {
+    /**
+	 * Met à jour un utilisateur.
+	 * @param u Utilisateur à mettre à jour
+	 */
+	public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null;
         String sql = updatePassword
             ? "UPDATE users SET name=?, email=?, is_admin=?, password_hash=? WHERE id=?"

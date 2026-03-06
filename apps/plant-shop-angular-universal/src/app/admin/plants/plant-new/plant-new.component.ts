@@ -22,6 +22,7 @@ export class PlantNewComponent {
 
   /**
    * Soumission du formulaire de création
+   * @param event Événement de soumission
    */
   onSubmit(event: Event) {
     event.preventDefault();

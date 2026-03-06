@@ -22,6 +22,7 @@ export class OrderNewComponent {
   protected message = '';
   protected total = 0;
 
+  /** Initialise le composant et calcule le total */
   ngOnInit() {
     // calcul total dès l’affichage
     const items = this.cart.getAll();
@@ -29,6 +30,7 @@ export class OrderNewComponent {
     this.total = Number((Math.round(rawTotal * 100) / 100).toFixed(2));
   }
 
+  /** Passe la commande et redirige vers la liste */
   passerCommande() {
     const items = this.cart.toOrderPayload();
 

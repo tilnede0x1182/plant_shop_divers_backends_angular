@@ -21,7 +21,13 @@ public static String hashPassword(String plainTextPassword) {
         return BCrypt.hashpw(plainTextPassword, BCrypt.gensalt());
     }
 
-    public static boolean checkPassword(String plainTextPassword, String hashedPassword) {
+    /**
+	 * Vérifie un mot de passe contre son hash BCrypt.
+	 * @param plainTextPassword Mot de passe en clair
+	 * @param hashedPassword Hash BCrypt à comparer
+	 * @return true si correspondance
+	 */
+	public static boolean checkPassword(String plainTextPassword, String hashedPassword) {
         if (plainTextPassword == null || hashedPassword == null) {
             return false;
         }

@@ -34,8 +34,12 @@ protected OrderItem mapFromResultSet(ResultSet rs) throws SQLException {
         );
     }
 
-    // La méthode `create` remplace `addItem` pour la cohérence
-    public int create(OrderItem it) throws SQLException {
+    /**
+	 * Crée un élément de commande.
+	 * @param it Élément à créer
+	 * @return Identifiant généré
+	 */
+	public int create(OrderItem it) throws SQLException {
         String sql = "INSERT INTO order_items(order_id, plant_id, quantity, price) VALUES (?, ?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, it.orderId);

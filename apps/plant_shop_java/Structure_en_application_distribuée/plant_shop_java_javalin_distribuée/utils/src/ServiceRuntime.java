@@ -42,14 +42,29 @@ public interface RouteRegistrar {
     public record ServiceDescriptor(String serviceName, String portKey, int defaultPort) {
     }
 
-    private ServiceRuntime() {
+    /**
+	 * Constructeur privé - classe utilitaire.
+	 */
+	private ServiceRuntime() {
     }
 
-    public static ServiceDescriptor descriptor(String serviceName, String portKey, int defaultPort) {
+    /**
+	 * Crée un descripteur de service.
+	 * @param serviceName Nom du service
+	 * @param portKey Clé du port
+	 * @param defaultPort Port par défaut
+	 * @return Descripteur créé
+	 */
+	public static ServiceDescriptor descriptor(String serviceName, String portKey, int defaultPort) {
         return new ServiceDescriptor(serviceName, portKey, defaultPort);
     }
 
-    public static void start(ServiceDescriptor descriptor, RouteRegistrar registrar) throws Exception {
+    /**
+	 * Démarre un service.
+	 * @param descriptor Descripteur du service
+	 * @param registrar Fonction de configuration des routes
+	 */
+	public static void start(ServiceDescriptor descriptor, RouteRegistrar registrar) throws Exception {
         Map<String, String> env = loadEnv(descriptor.serviceName());
         Connection connection = connect(env);
 
@@ -81,7 +96,11 @@ public interface RouteRegistrar {
         }
     }
 
-    private static void configureJavalin(JavalinConfig config) {
+    /**
+	 * Configure Javalin avec CORS et JSON.
+	 * @param config Configuration Javalin
+	 */
+	private static void configureJavalin(JavalinConfig config) {
         config.jsonMapper(new JavalinJsonMapper());
         config.bundledPlugins.enableCors(cors -> cors.addRule(rule -> {
             rule.allowCredentials = true;
@@ -91,7 +110,12 @@ public interface RouteRegistrar {
         }));
     }
 
-    private static Map<String, String> loadEnv(String serviceName) throws IOException {
+    /**
+	 * Charge les variables d'environnement.
+	 * @param serviceName Nom du service
+	 * @return Map des variables
+	 */
+	private static Map<String, String> loadEnv(String serviceName) throws IOException {
         Map<String, String> values = new HashMap<>(System.getenv());
         Path cwd = Path.of("").toAbsolutePath();
         readEnv(cwd.resolve("../config/.env"), values);
@@ -99,7 +123,12 @@ public interface RouteRegistrar {
         return values;
     }
 
-    private static void readEnv(Path path, Map<String, String> values) throws IOException {
+    /**
+	 * Lit un fichier .env.
+	 * @param path Chemin du fichier
+	 * @param values Map où stocker
+	 */
+	private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
         }
@@ -123,14 +152,25 @@ public interface RouteRegistrar {
         }
     }
 
-    private static Connection connect(Map<String, String> env) throws SQLException {
+    /**
+	 * Établit la connexion à la base de données.
+	 * @param env Variables d'environnement
+	 * @return Connexion établie
+	 */
+	private static Connection connect(Map<String, String> env) throws SQLException {
         String url = Objects.requireNonNull(env.get("DATABASE_URL"), "DATABASE_URL manquant");
         String user = env.getOrDefault("DATABASE_USER", "");
         String pass = env.getOrDefault("DATABASE_PASS", "");
         return DriverManager.getConnection(url, user, pass);
     }
 
-    private static int resolvePort(ServiceDescriptor descriptor, Map<String, String> env) {
+    /**
+	 * Résout le port du service.
+	 * @param descriptor Descripteur du service
+	 * @param env Variables d'environnement
+	 * @return Port résolu
+	 */
+	private static int resolvePort(ServiceDescriptor descriptor, Map<String, String> env) {
         String raw = env.get(descriptor.portKey());
         if (raw == null) {
             raw = env.get("SERVER_ADDRESS");
@@ -141,7 +181,13 @@ public interface RouteRegistrar {
         return parsePort(raw, descriptor.defaultPort());
     }
 
-    private static int parsePort(String raw, int fallback) {
+    /**
+	 * Parse un port depuis une chaîne.
+	 * @param raw Valeur brute
+	 * @param fallback Port par défaut
+	 * @return Port parsé
+	 */
+	private static int parsePort(String raw, int fallback) {
         try {
             if (raw.contains(":")) {
                 String[] parts = raw.split(":");
@@ -153,7 +199,11 @@ public interface RouteRegistrar {
         }
     }
 
-    private static void safeClose(Connection connection) {
+    /**
+	 * Ferme une connexion sans exception.
+	 * @param connection Connexion à fermer
+	 */
+	private static void safeClose(Connection connection) {
         if (connection == null) {
             return;
         }

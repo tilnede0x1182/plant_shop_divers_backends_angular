@@ -63,6 +63,9 @@ public final class Test {
 	private final Map<String, String> cookie = new HashMap<>();
 	private final String timestamp;
 
+	/**
+	 * Constructeur initialisant le timestamp.
+	 */
 	public Test() {
 		this.timestamp = ts();
 	}

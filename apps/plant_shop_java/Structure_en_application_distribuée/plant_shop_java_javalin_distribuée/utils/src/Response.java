@@ -30,7 +30,12 @@ public static void send(HttpExchange ex, int code, String jsonBody) throws IOExc
         ex.close();
     }
 
-    public static void sendEmpty(HttpExchange ex, int code) throws IOException {
+    /**
+	 * Envoie une réponse vide.
+	 * @param ex Échange HTTP
+	 * @param code Code de statut
+	 */
+	public static void sendEmpty(HttpExchange ex, int code) throws IOException {
         ex.sendResponseHeaders(code, -1);
         ex.close();
     }

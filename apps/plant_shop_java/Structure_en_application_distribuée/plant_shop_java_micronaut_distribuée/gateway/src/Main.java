@@ -123,7 +123,12 @@ boolean requiresAuth(String service, String method, String path) {
         return true;
     }
 
-    private static void readEnv(Path path, Map<String, String> values) throws IOException {
+    /**
+	 * Lit un fichier .env et ajoute les valeurs à la map.
+	 * @param path Chemin du fichier
+	 * @param values Map où stocker les valeurs
+	 */
+	private static void readEnv(Path path, Map<String, String> values) throws IOException {
         if (!Files.exists(path)) {
             return;
         }

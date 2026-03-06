@@ -38,7 +38,12 @@ protected Order mapFromResultSet(ResultSet rs) throws SQLException {
 
     // Les méthodes `find(id)`, `list()` et `delete(id)` sont maintenant héritées de BaseRepository.
 
-    public int create(Order o) throws SQLException {
+    /**
+	 * Crée une commande.
+	 * @param o Commande à créer
+	 * @return Identifiant généré
+	 */
+	public int create(Order o) throws SQLException {
         String sql = "INSERT INTO orders(user_id, total, status) VALUES (?, ?, ?)";
         try (PreparedStatement ps = db.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, o.userId);
@@ -52,7 +57,12 @@ protected Order mapFromResultSet(ResultSet rs) throws SQLException {
         }
     }
 
-    public void updateTotal(int id, BigDecimal total) throws SQLException {
+    /**
+	 * Met à jour le total d'une commande.
+	 * @param id Identifiant de la commande
+	 * @param total Nouveau total
+	 */
+	public void updateTotal(int id, BigDecimal total) throws SQLException {
         String sql = "UPDATE orders SET total=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setBigDecimal(1, total);
@@ -76,7 +86,12 @@ protected Order mapFromResultSet(ResultSet rs) throws SQLException {
         }
     }
 
-    public List<Order> listByUser(int userId) throws SQLException {
+    /**
+	 * Liste les commandes d'un utilisateur.
+	 * @param userId Identifiant de l'utilisateur
+	 * @return Liste des commandes
+	 */
+	public List<Order> listByUser(int userId) throws SQLException {
         List<Order> results = new ArrayList<>();
         String sql = "SELECT * FROM orders WHERE user_id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {

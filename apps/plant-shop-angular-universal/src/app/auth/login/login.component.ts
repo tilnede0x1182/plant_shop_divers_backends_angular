@@ -21,6 +21,7 @@ export class LoginComponent {
   password = '';
   message = '';
 
+  /** Soumet le formulaire de connexion */
   onSubmit() {
     this.auth.login(this.email, this.password).subscribe({
       next: () => {

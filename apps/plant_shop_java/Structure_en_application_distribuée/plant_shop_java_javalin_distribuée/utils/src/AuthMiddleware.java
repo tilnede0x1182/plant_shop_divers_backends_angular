@@ -30,23 +30,52 @@ public interface UserResolver {
         Object resolve(AuthContext auth) throws Exception;
     }
 
-    public static Handler requireUser(Handler next) {
+    /**
+	 * Exige un utilisateur authentifié.
+	 * @param next Handler suivant
+	 * @return Handler protégé
+	 */
+	public static Handler requireUser(Handler next) {
         return requireUser(null, next);
     }
 
-    public static Handler requireUser(UserResolver resolver, Handler next) {
+    /**
+	 * Exige un utilisateur authentifié avec résolution.
+	 * @param resolver Résolveur d'utilisateur
+	 * @param next Handler suivant
+	 * @return Handler protégé
+	 */
+	public static Handler requireUser(UserResolver resolver, Handler next) {
         return ctx -> handle(ctx, resolver, next, false);
     }
 
-    public static Handler requireAdmin(Handler next) {
+    /**
+	 * Exige un administrateur.
+	 * @param next Handler suivant
+	 * @return Handler protégé
+	 */
+	public static Handler requireAdmin(Handler next) {
         return requireAdmin(null, next);
     }
 
-    public static Handler requireAdmin(UserResolver resolver, Handler next) {
+    /**
+	 * Exige un administrateur avec résolution.
+	 * @param resolver Résolveur d'utilisateur
+	 * @param next Handler suivant
+	 * @return Handler protégé
+	 */
+	public static Handler requireAdmin(UserResolver resolver, Handler next) {
         return ctx -> handle(ctx, resolver, next, true);
     }
 
-    private static void handle(Context ctx, UserResolver resolver, Handler next, boolean adminOnly) throws Exception {
+    /**
+	 * Gère l'authentification et appelle le handler.
+	 * @param ctx Contexte Javalin
+	 * @param resolver Résolveur optionnel
+	 * @param next Handler suivant
+	 * @param adminOnly true si admin requis
+	 */
+	private static void handle(Context ctx, UserResolver resolver, Handler next, boolean adminOnly) throws Exception {
         AuthContext auth = AuthContext.fromHeaders(ctx);
         if (!auth.isAuthenticated()) {
             throw new UnauthorizedResponse("Authentification requise");

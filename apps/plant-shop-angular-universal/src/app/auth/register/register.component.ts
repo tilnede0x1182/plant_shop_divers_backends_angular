@@ -23,6 +23,7 @@ export class RegisterComponent {
   message = '';
   passwordConfirmation: string = '';
 
+  /** Soumet le formulaire d inscription */
   onSubmit() {
     if (this.password !== this.passwordConfirmation) {
       this.message = '❌ Les mots de passe ne correspondent pas';

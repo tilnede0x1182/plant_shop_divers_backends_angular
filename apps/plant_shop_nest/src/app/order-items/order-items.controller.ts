@@ -43,7 +43,7 @@ export class OrderItemsController {
     return this.orderItemsService.findOneForUser(+id, user);
   }
 
-  //**
+  /**
    * Crée un nouvel order-item
    * @param data Données de l'order-item
    * @param req Requête contenant l'utilisateur courant

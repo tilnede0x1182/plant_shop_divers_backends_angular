@@ -6,7 +6,16 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
 
+/**
+ * Utilitaire de téléchargement des dépendances depuis Maven Central.
+ */
 public class InstallLibs {
+	/**
+	 * Point d entrée du script d installation des librairies.
+	 * Télécharge les JARs listés dans config/libs.yaml.
+	 * @param args String[] Arguments CLI (non utilisés)
+	 * @throws Exception En cas d erreur réseau ou I/O
+	 */
     public static void main(String[] args) throws Exception {
         Path yaml = Path.of("config/libs.yaml");
         if (!Files.exists(yaml)) {

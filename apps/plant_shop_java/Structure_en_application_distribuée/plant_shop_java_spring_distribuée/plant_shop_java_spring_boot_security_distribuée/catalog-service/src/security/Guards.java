@@ -8,17 +8,28 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import util.ForwardedIdentity;
 
+/**
+ * Garde de sécurité pour les routes protégées.
+ */
 @Component
 public class Guards {
 
     private final HttpServletRequest request;
 
-    @Autowired
+    /**
+	 * Constructeur avec injection de requête.
+	 * @param request Requête HTTP
+	 */
+	@Autowired
     public Guards(HttpServletRequest request) {
         this.request = request;
     }
 
-    public User requireUser() {
+    /**
+	 * Exige un utilisateur authentifié.
+	 * @return Utilisateur authentifié
+	 */
+	public User requireUser() {
         ForwardedIdentity identity = resolveIdentity();
         if (!identity.authenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentification requise");
@@ -26,7 +37,11 @@ public class Guards {
         return toUser(identity);
     }
 
-    public User requireAdmin() {
+    /**
+	 * Exige un administrateur.
+	 * @return Utilisateur admin
+	 */
+	public User requireAdmin() {
         User user = requireUser();
         if (!user.isAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès administrateur requis");
@@ -34,14 +49,23 @@ public class Guards {
         return user;
     }
 
-    private User toUser(ForwardedIdentity identity) {
+    /**
+	 * Convertit une identité en User.
+	 * @param identity Identité à convertir
+	 * @return Utilisateur créé
+	 */
+	private User toUser(ForwardedIdentity identity) {
         User user = new User();
         user.id = identity.userId();
         user.isAdmin = identity.admin();
         return user;
     }
 
-    private ForwardedIdentity resolveIdentity() {
+    /**
+	 * Résout l'identité depuis les headers.
+	 * @return Identité résolue
+	 */
+	private ForwardedIdentity resolveIdentity() {
         String idHeader = request.getHeader("X-User-Id");
         if (idHeader == null || idHeader.isBlank()) {
             return ForwardedIdentity.anonymous();

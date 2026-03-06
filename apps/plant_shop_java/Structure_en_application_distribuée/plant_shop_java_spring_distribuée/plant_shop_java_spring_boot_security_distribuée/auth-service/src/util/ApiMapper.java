@@ -6,13 +6,24 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import model.User;
 
+/**
+ * Utilitaire de conversion modèles vers format API.
+ */
 public final class ApiMapper {
 
-    private ApiMapper() {
+    /**
+	 * Constructeur privé - classe utilitaire.
+	 */
+	private ApiMapper() {
         // utilitaire statique
     }
 
-    public static Map<String, Object> toUser(User user) {
+    /**
+	 * Convertit un User en Map API.
+	 * @param user Utilisateur à convertir
+	 * @return Map pour API
+	 */
+	public static Map<String, Object> toUser(User user) {
         Map<String, Object> map = base();
         map.put("id", user.id);
         map.put("name", user.name);
@@ -22,11 +33,20 @@ public final class ApiMapper {
         return map;
     }
 
-    private static String toIso(Timestamp timestamp) {
+    /**
+	 * Convertit un timestamp en chaîne ISO.
+	 * @param timestamp Timestamp à convertir
+	 * @return Chaîne ISO ou null
+	 */
+	private static String toIso(Timestamp timestamp) {
         return timestamp == null ? null : timestamp.toInstant().atOffset(ZoneOffset.UTC).toString();
     }
 
-    private static Map<String, Object> base() {
+    /**
+	 * Crée une Map de base ordonnée.
+	 * @return LinkedHashMap vide
+	 */
+	private static Map<String, Object> base() {
         return new LinkedHashMap<>();
     }
 }

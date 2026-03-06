@@ -34,7 +34,11 @@ public AuthController(Connection db) {
         this.userRepo = new UserRepository(db);
     }
 
-    public static Map<String, Integer> getSessions() {
+    /**
+	 * Retourne les sessions actives.
+	 * @return Map des sessions (sessionId -> userId)
+	 */
+	public static Map<String, Integer> getSessions() {
         return sessions;
     }
 

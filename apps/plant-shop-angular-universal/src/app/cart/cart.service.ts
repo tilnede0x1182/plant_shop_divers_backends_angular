@@ -22,7 +22,13 @@ export class CartService {
     this.updateCount();
   }
 
-  /** Ajouter une plante */
+  /**
+   * Ajouter une plante au panier
+   * @param id Identifiant de la plante
+   * @param name Nom de la plante
+   * @param price Prix unitaire
+   * @param stock Stock disponible
+   */
   add(id: number, name: string, price: number, stock: number) {
     if (!this.items[id]) {
       this.items[id] = { id, name, price, quantity: 0, stock };
@@ -42,7 +48,12 @@ export class CartService {
     this.updateCount(); // Persistance + compteur
   }
 
-  /** Mettre à jour quantité */
+  /**
+   * Mettre à jour la quantité
+   * @param id Identifiant de la plante
+   * @param quantity Nouvelle quantité
+   * @return Quantité corrigée
+   */
   update(id: number, quantity: number): number {
     if (!this.items[id]) return 0;
     const stock = this.items[id].stock;
@@ -60,7 +71,10 @@ export class CartService {
     return corrected;
   }
 
-  /** Supprimer un produit */
+  /**
+   * Supprimer un produit du panier
+   * @param id Identifiant de la plante
+   */
   remove(id: number) {
     delete this.items[id];
     this.save();
@@ -106,7 +120,11 @@ export class CartService {
     localStorage.setItem(this.storageKey, JSON.stringify(this.items));
   }
 
-  /** Modale stock insuffisant (alignée sur l'implémentation Rails) */
+  /**
+   * Modale stock insuffisant (alignée sur l'implémentation Rails)
+   * @param name Nom de la plante
+   * @param stock Stock disponible
+   */
   private showStockAlert(name: string, stock: number) {
     if (typeof window === 'undefined' || !document?.body) return;
     const alert = document.createElement('div');

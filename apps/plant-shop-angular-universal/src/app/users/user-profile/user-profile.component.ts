@@ -18,6 +18,7 @@ export class UserProfileComponent implements OnInit {
 
   protected user: Utilisateur | null = null;
 
+  /** Charge le profil de l utilisateur courant */
   ngOnInit(): void {
     this.auth.getCurrentUser().subscribe({
       next: (currentUser) => {

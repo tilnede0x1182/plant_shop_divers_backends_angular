@@ -74,7 +74,12 @@ public void update(Plant p) throws SQLException {
         }
     }
 
-    public void updateStock(int id, int newStock) throws SQLException {
+    /**
+	 * Met à jour le stock d'une plante.
+	 * @param id Identifiant de la plante
+	 * @param newStock Nouveau stock
+	 */
+	public void updateStock(int id, int newStock) throws SQLException {
         String sql = "UPDATE plants SET stock=? WHERE id=?";
         try (PreparedStatement ps = db.prepareStatement(sql)) {
             ps.setInt(1, newStock);

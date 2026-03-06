@@ -82,7 +82,11 @@ public int create(User u) throws SQLException {
         }
     }
 
-    public void update(User u) throws SQLException {
+    /**
+	 * Met à jour un utilisateur.
+	 * @param u Utilisateur à mettre à jour
+	 */
+	public void update(User u) throws SQLException {
         boolean updatePassword = u.passwordHash != null && !u.passwordHash.isEmpty();
         String sql = updatePassword
             ? "UPDATE users SET name=?, email=?, is_admin=?, password_hash=? WHERE id=?"
